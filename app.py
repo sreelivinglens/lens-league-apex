@@ -33570,6 +33570,445 @@ def _try_calibration_line(genre):
     )
 
 
+
+
+def _try_genre_context(genre):
+    """
+    Session 211v2: Genre-specific scoring context ported directly from
+    the Sonnet auto_score.py GENRE_CONTEXT dict.
+    Same rubric language the paid engine uses — now injected into Haiku.
+    Falls back to default for unknown genres.
+    """
+    _HAIKU_GENRE_CONTEXT = {
+        'Creative': (
+        "This is Creative photography covering all technique-driven work: ICM, panning, zoom burst, "
+        "intentional blur, long exposure, star trails, astrophotography, light painting, multiple "
+        "exposure, layered blur patterns, atmospheric mosaics, aerial abstract, and any image where artistic or "
+        "technical execution is the primary creative statement. "
+        "Sharpness is NEVER penalised when absent. Sharpness IS rewarded when present as it "
+        "demonstrates simultaneous technical and artistic control (highest DoD). "
+        "Pure abstract/mosaic/atmospheric work can score equally high or higher on Disruption and Wonder. "
+        "Refer to STEP 0 for full DoD scoring guide.\n\n"
+        "CRITICAL FOR CREATIVE GENRE — ABSTRACTION FIRST:\n"
+        "When the primary subject is geometric pattern, texture, colour field, or aerial abstraction, "
+        "DO NOT attempt to identify incidental small objects in the frame as wildlife or animals unless "
+        "they are unambiguously and clearly identifiable at full resolution. A small white or light shape "
+        "in an aerial abstract is likely a feather, debris, boat, vehicle, or other object — NOT a bird. "
+        "If you cannot confirm the identity of a small object with certainty, treat it as an unidentified "
+        "compositional element and describe only its geometric role (scale reference, anchor point, etc). "
+        "NEVER name it as a specific animal or wildlife subject. Score DM on the compositional decision "
+        "of including it — not on any assumed behavioural moment."
+    ),
+        'Drone': (
+        "This is Drone/Aerial photography. The camera position is elevated — drone, aircraft, "
+        "helicopter, or high vantage point. Score what the elevation REVEALS that ground "
+        "level cannot.\n\n"
+
+        "DoD: Score the difficulty of the aerial operation — wind conditions, altitude, "
+        "restricted airspace, technical precision of the hover or flight path, exposure "
+        "management from moving platform. Consumer drone shots in calm conditions from "
+        "accessible locations score DoD 6.5–7.5. Difficult conditions, permit-restricted "
+        "airspace, or extreme altitude raise DoD.\n\n"
+
+        "DM: Aerial DM requires a TRANSIENT element at its geometric resolution point — "
+        "the same standard as Landscape. A moving subject (boat, vehicle, animal, person) "
+        "at the exact compositional resolution point. Atmospheric conditions (shadow, light "
+        "shaft, fog layer) at the precise moment they create the image. Static aerial "
+        "patterns without a transient element cannot score DM above 7.5.\n\n"
+
+        "Wonder — APPLY THE REVELATION TEST: Ask: does this image show something the "
+        "human eye genuinely cannot see from the ground? "
+        "GENUINE AERIAL REVELATION (Wonder 8.5+): abstract patterns in cultivated land "
+        "that only become legible from altitude; geological formations whose scale and "
+        "geometry collapse without elevation; tidal/seasonal patterns invisible at ground "
+        "level; the juxtaposition of human and natural scale only apparent from above "
+        "(Factory Butte erosion radiating from the butte; salt marsh geometry vs natural "
+        "organic forms; Kenna seaweed cultivation rows). "
+        "LOCATION DOING THE WORK (Wonder cap 8.0): tropical island from above where the "
+        "turquoise colour is the attraction; famous city from drone where the location "
+        "is the content; standard mountain vista taken from drone altitude rather than "
+        "ground level. Being above a beautiful place is not aerial revelation — "
+        "revealing what the place actually IS from altitude is.\n\n"
+
+        "ABSTRACT AERIAL: When the elevation removes all location recognition and the "
+        "image becomes pure form, colour, and geometry (tidal flats as abstract painting, "
+        "mineral deposits as colour field, rice fields as geometric abstraction) — score "
+        "as Creative/Minimalist standards for AQ and Wonder. These can score 9.0+ Wonder "
+        "when the abstraction is complete and the emotional register is specific.\n\n"
+
+        "AQ: Reward images where the elevation creates a genuinely new emotional register — "
+        "insignificance, hidden order, revelation of human impact on landscape, the sublime "
+        "of scale. Penalise images where the emotional response is purely \"wow, pretty "
+        "from above\" without a specific nameable feeling beyond general spectacle."
+    ),
+        'Wildlife': (
+        "This is Wildlife photography.\n\n"
+        "BEFORE SCORING — identify the behavioural act:\n"
+        "Scan the full frame including shadow areas and periphery. Identify every subject "
+        "present. For each subject, determine: what is it doing? Is prey visible? Is a second "
+        "subject present? Is a behavioural act (predation, conflict, display, feeding, courtship) "
+        "in progress? If the image title names a behaviour, actively search for evidence of it. "
+        "Do not default to 'generic motion' without first scanning all areas of the frame.\n\n"
+        "DoD: Score sharpness, focus accuracy, and exposure in challenging conditions. "
+        "A dark subject against bright water or backlit sky is a known exposure challenge — "
+        "penalise if the subject is lost to silhouette when detail was the story. "
+        "Rare behaviour, dangerous proximity, or extreme environmental conditions raise DoD. "
+        "Intentional panning blur on moving subjects is acceptable technique.\n\n"
+        "DM: Score relative to the behavioural act identified above — not relative to generic motion. "
+        "A catch freeze with prey visible scores higher than a takeoff. "
+        "Two subjects in contact scores higher than one subject in flight. "
+        "The decisive moment is the peak completion of the identified act — "
+        "a half-second either side produces a lesser image.\n\n"
+        "WF: Score behavioural rarity explicitly. Common behaviour in ordinary conditions scores low. "
+        "Rare species, rare behavioural interactions, prey visible, multiple subjects in conflict, "
+        "or scientifically significant documentation scores high. "
+        "The wonder is in what the image shows that most humans will never witness in person."
+    ),
+        'Landscapes': (
+        "This is Landscape photography — apply the full Landscape rubric including the "
+        "Location Removal Test, Ubiquity Ceiling, DM transient element requirement, "
+        "and AQ independence test. Long-exposure blur on water, clouds, or moving elements "
+        "is deliberate technique and scores HIGH on DoD and Disruption."
+    ),
+        'Landscape': (
+        "This is Landscape photography. The subject is a place — land, sea, sky, or the "
+        "relationship between them. Long-exposure blur on water, clouds, or moving elements "
+        "is deliberate technique and scores HIGH on DoD and Disruption.\n\n"
+
+        "DoD: Score location access (remote or extreme terrain, predawn climbs, dangerous "
+        "proximity to active geological events, extended expeditions, extreme weather "
+        "conditions requiring specialist equipment). Patience for precise light or "
+        "atmospheric conditions also raises DoD. Accessible tourist locations — however "
+        "visually spectacular — do not score above 8.0 on DoD regardless of technical "
+        "execution quality.\n\n"
+
+        "DM: A landscape DM requires a TRANSIENT element to resolve at its exact geometric "
+        "peak against a permanent one. Examples of genuine landscape DM: storm light "
+        "isolating a single peak while foreground stays dark (Adams, Tetons); moon "
+        "positioned precisely at the dune crest junction (minutes either side collapses "
+        "the relationship); a moving subject (animal, train, boat) reaching the exact "
+        "geometric resolution point in the frame; fog settling at exactly the right "
+        "valley level to isolate a foreground element. Static scenes without a transient "
+        "element cannot score DM above 7.5 regardless of compositional quality. "
+        "\"Good light on a mountain\" is not a decisive moment.\n\n"
+
+        "Wonder: APPLY THE LOCATION REMOVAL TEST before scoring above 8.5. Ask: if this "
+        "exact composition were photographed at an ordinary local location — a nearby "
+        "lake, a familiar hillside — would it still score above 7.5 Wonder on compositional "
+        "and emotional merit alone? If the answer is no, the location is doing the work, "
+        "not the photographer. Wonder above 8.5 requires the photographer to have "
+        "TRANSFORMED the scene, not merely recorded it. "
+        "Kenna's Chicago pier posts score 9.4 Wonder. Iceland glaciers without compositional "
+        "transformation score 8.0 Wonder. The location is not the image.\n\n"
+
+        "UBIQUITY CEILING: The following techniques and locations are so widely photographed "
+        "that they carry a Wonder ceiling of 8.0 unless the photographer's specific "
+        "compositional decision demonstrably transforms the formula beyond recognition: "
+        "mirror lake + mountain reflections; aurora borealis over landscape foreground; "
+        "star trails over rock formations; iconic sunset/sunrise locations (Tuscany cypress "
+        "road, Vik black sand beach, Lake Bled, Dolomites standard viewpoints); golden hour "
+        "on famous peaks. Breaking the ceiling requires evidence of compositional "
+        "transformation — not just better execution of the same formula.\n\n"
+
+        "COMPOSITE/CONSTRUCTED WORKS: Images where large-format prints are physically "
+        "placed in landscapes and photographed (e.g. Nick Brandt style) are Creative genre, "
+        "not Landscape. Redirect scoring to Creative.\n\n"
+
+        "HUMAN FIGURE REDIRECT: When a human figure is the primary narrative subject "
+        "(climber at summit, person against vastness as the emotional statement rather than "
+        "compositional scale anchor) score as Documentary/Adventure, not Landscape. "
+        "A figure used purely for scale (boat in Iceland, lone figure on glacier) remains "
+        "Landscape. The test: is the image about the place or about the person?\n\n"
+
+        "AQ: Name the specific emotion. Landscape AQ vocabulary: presence (the feeling of "
+        "being somewhere), vastness, solitude, peace, unease, transcendence, melancholy, "
+        "suspension, the void. AQ above 8.5 requires the image to deliver the emotion "
+        "INDEPENDENT of location recognition — if the feeling collapses once you know it "
+        "is Iceland, the AQ is the location's, not the photographer's. "
+        "Over-processing (HDR halos, over-saturated skies, heavy tone-mapping) is an AQ "
+        "penalty — restraint is rewarded. Panoramic stitching and multiple-exposure "
+        "composites are accepted technique and do not penalise AQ unless the result "
+        "looks artificial."
+    ),
+        'Street': (
+        "This is Street photography. The photographer was present and captured something "
+        "real — a face, a moment, a condition, a place with life in it.\n\n"
+        "DoD: Score speed of reaction, working in chaos, difficult or hostile light, "
+        "photographing in restricted or culturally specific environments, and the "
+        "physical act of being present in a demanding situation. Motion blur on moving "
+        "subjects is acceptable and often enhances energy.\n\n"
+        "DM: Score the unrepeatable instant — the precise frame where multiple visual "
+        "variables (expression, gesture, light, background alignment) peak simultaneously. "
+        "Reward layered compositions, reflections, shadows, and unexpected juxtapositions.\n\n"
+        "Wonder: Street Wonder operates on three signals — score whichever is strongest:\n"
+        "  EYE WONDER: The compositional find. Something was there and invisible until "
+        "the camera saw it — a shadow theatre, an accidental frame, a juxtaposition that "
+        "could not have been planned. Score 8.0–9.0 when the discovery is complete.\n"
+        "  ACCESS WONDER: The photographer was somewhere most photographers never go, "
+        "or trusted by a community that does not trust cameras. Score 7.5–8.5.\n"
+        "  CULTURAL WONDER: The image shows a world, community, or way of life most "
+        "viewers cannot enter. Score 7.0–8.5 based on cultural specificity and depth.\n"
+        "DO NOT score Wonder on subject rarity — a bus terminal, a market, a street "
+        "corner are not rare. The photographer's eye IS the wonder in street photography.\n\n"
+        "AQ: Reward images where technical choices serve the truth of the moment. "
+        "Grain, available light, and imperfect focus are not penalties when they serve the image. "
+        "OVER-EDITING PENALTY (Street and all genres except Creative): Heavy tone-mapping, "
+        "over-saturated colour, unnatural contrast, crushed shadows, or HDR halos are AQ penalties. "
+        "The moment is the truth — the edit must serve it, not replace it. Restraint is rewarded. "
+        "CLUTTER PENALTY — DISORGANISED vs ORGANISED: "
+        "When the frame has multiple elements of roughly equal visual weight with no clear subject "
+        "hierarchy — the eye moves between them without resolution — cap AQ at 7.0 and Wonder at 7.0 "
+        "regardless of other qualities. This is disorganised clutter. "
+        "Organised clutter is different: a busy frame where a clear primary subject dominates and "
+        "surrounding elements support rather than compete (Vineet Vohra, GMB Akash, Steve McCurry) "
+        "carries no penalty — the hierarchy IS the skill. The test: can a stranger identify the "
+        "primary subject within 2 seconds without explanation? If not, it is disorganised clutter."
+    ),
+        'Macro': (
+        "This is Macro photography. The subject fills the frame at extreme magnification — "
+        "the technique of revelation is the genre's defining characteristic. Subject type "
+        "is secondary: a pen nib, a cloth fibre, an insect eye, a water droplet, or a "
+        "crystal are all equally valid Macro subjects.\n\n"
+        "DoD: Precision at high magnification IS the DoD. Score focus accuracy on the "
+        "primary plane, depth of field control, lighting that reveals surface structure "
+        "without harsh specular reflections, and stability at extreme magnification. "
+        "Handheld field macro in challenging conditions scores higher than controlled "
+        "studio macro. Sub-genre context modifies this where relevant (living subjects "
+        "add behavioural timing difficulty).\n\n"
+        "DM: Score the compositional decision — the exact angle, light position, and "
+        "focal plane chosen. The decisive moment in Macro is the moment of maximum "
+        "structural revelation — when the subject's hidden geometry, texture, or form "
+        "is most completely exposed.\n\n"
+        "Wonder: Score the revelation of the invisible. Macro photography's fundamental "
+        "value is showing the viewer a world that exists but cannot be seen at normal "
+        "scale. A pen nib revealing precision engineering at 10x magnification, a cloth "
+        "fibre showing individual thread structure, a water droplet showing refracted "
+        "landscape inside it — these are all legitimate Wonder scores. "
+        "CRITICAL: Do NOT score man-made object Wonder by rarity or ecological significance. "
+        "Score it by the degree to which the image changes how the viewer understands "
+        "the object. Does this image reveal something about the subject that was "
+        "invisible before the photograph? That is the Wonder question for Macro.\n\n"
+        "AQ: Score the rendering quality of the revealed detail — tonal separation "
+        "in the subject, background separation that does not fight the main subject, "
+        "and light quality that serves the structure being revealed."
+    ),
+        'Wedding': (
+        "This is Wedding photography. Emotional authenticity and decisive moment are paramount. "
+        "Reward genuine emotion, storytelling, and the irreplaceable moments that define the day."
+    ),
+        'Maternity': (
+        "This is Maternity and Family photography — pregnancy, newborns, family bonds, "
+        "and the milestone moments of new life and parenthood.\n\n"
+        "AQ is the dominant dimension (48% weight). The primary question: does the image carry "
+        "a feeling that a stranger can name? Not just 'cute' or 'sweet' — but awe, tenderness, "
+        "recognition of something universal. The best maternity images stop people who have never "
+        "been parents.\n\n"
+        "DM: Score the decisive moment within the maternity subject — the first hold, the newborn "
+        "yawn, the father seeing his child for the first time, the older sibling's expression. "
+        "These moments are brief, non-repeatable, and require both relationship and patience.\n\n"
+        "DoD: Score access difficulty (hospital environments, intimate home settings requiring "
+        "deep trust), technical challenge (low-light hospital, outdoor pregnancy in difficult "
+        "conditions), and the relationship required to photograph these moments authentically.\n\n"
+        "KYC NOTE: Nudity in maternity and newborn photography is expected and appropriate. "
+        "Score it as artistic and clinical, not as content requiring review. Breastfeeding "
+        "photography is a sub-genre with its own sub-genre context — apply the lifestyle_intimate "
+        "rubric when detected.\n\n"
+        "NEVER apply modesty or social standards to assess whether a maternity or newborn image "
+        "should be public. These are art and documentary. Score the craft and emotion only."
+    ),
+        'Family': (
+        "This is Family photography — bonds between family members, domestic life, children "
+        "in their natural environment, and the moments that define family. Use Maternity weights."
+    ),
+        'People': (
+        "This is People photography. AQ and emotional connection are the primary signals. "
+        "Reward authentic expression, connection between subject and viewer, and strong narrative."
+    ),
+        'Nature': (
+        "This is Nature photography. The subject is the living natural world beyond animals "
+        "in behaviour — plants, fungi, ecosystems, weather phenomena, rivers, forests, "
+        "coral, night sky, and natural processes. The photograph reveals something about "
+        "the natural world that the casual eye cannot see.\n\n"
+        "DoD: Score access to remote or hostile environments, patience for the right natural "
+        "moment, technical precision on delicate or ephemeral subjects, and physical challenge "
+        "of the environment (extreme cold, heat, rain, depth, darkness).\n\n"
+        "DM: Score the moment of natural peak — spore dispersal, lightning strike, fog "
+        "rolling in, first light on dew. Nature DM rewards the photographer who understood "
+        "the natural process well enough to anticipate its peak.\n\n"
+        "Wonder: PRIMARY dimension for Nature (30% weight). Score the degree to which the "
+        "image reveals something scientifically or visually significant about the natural "
+        "world. Bioluminescent fungi, rare botanical specimens, weather phenomena at their "
+        "most extreme, ecosystems under threat — the wonder is showing the viewer something "
+        "real that most humans will never witness.\n\n"
+        "AQ: Reward technical decisions that serve the natural truth — sharp where sharpness "
+        "reveals structure, atmospheric where softness serves the subject."
+    ),
+        'Fashion': (
+        "This is Fashion photography — covering editorial, conceptual, studio, "
+        "and beauty work where the image is a directed creative act.\n\n"
+        "DoD: Score concept development and art direction complexity, location or "
+        "studio production demands, the technical precision of executing a directed "
+        "concept (skin rendering against dark backgrounds, costume and environment "
+        "alignment, lighting design), and any physical access challenge. "
+        "A conceptual art-historical reference executed at this level requires "
+        "significant intellectual and production work — score it.\n\n"
+        "DM: Score the moment within the directed setup where concept, body geometry, "
+        "light, and environment align simultaneously into their strongest statement. "
+        "Fashion DM is not reactive — it is the exact frame where the photographer's "
+        "vision is most completely realised. The image that could only have been made "
+        "in that specific instant of that specific setup.\n\n"
+        "Disruption: Score the conceptual statement. Does this image break from "
+        "convention in its genre? Art historical references, unexpected environments, "
+        "backs-to-camera, unconventional framing, temporal duality — reward ideas "
+        "that the viewer has not seen in this form before.\n\n"
+        "Wonder: Score the world the image creates. Does it stop the viewer? "
+        "Does it make the viewer feel they have entered a complete, fully realised "
+        "visual world? Conceptual depth — the Old Masters portrait with modern choker, "
+        "the desert landscape that collapses scale — scores Wonder 8.0–9.0 when the "
+        "concept is fully executed.\n\n"
+        "AQ: Equal weight to Disruption and Wonder. Fashion AQ scores the emotional "
+        "and aesthetic tone the image creates — the precise feeling it produces. "
+        "Technically clean, tonally controlled, emotionally specific."
+    ),
+        'Documentary': (
+        "This is Documentary photography. The photographer witnessed something — an event, "
+        "a condition, or a story — and the image is evidence of that witness.\n\n"
+        "DoD: Score access difficulty — hospitals, disaster zones, conflict areas, slums, "
+        "delivery rooms. Trust, risk, and often personal danger are required. "
+        "Access that most photographers will never have = maximum DoD. "
+        "Chaotic, dark, emotionally charged environments with no control over light or "
+        "position raise DoD significantly.\n\n"
+        "DM: Score the unrepeatable moment that makes the condition undeniable. "
+        "A technically imperfect image that captures the truth of a moment scores "
+        "higher DM than a technically perfect image of a lesser moment. "
+        "The decisive moment in documentary work is the frame that carries the full "
+        "weight of what is happening.\n\n"
+        "Wonder: Score significance — not visual beauty, but the image's power to change "
+        "how the viewer understands something. Does this make the viewer understand a "
+        "reality they could not ignore? Images that document realities most people choose "
+        "not to see score highest.\n\n"
+        "AQ: Weight LOW (10%). Truth matters more than polish. Over-processing documentary "
+        "work aestheticises suffering and weakens the message. Penalise heavy post-processing "
+        "that removes the rawness of the moment. The best documentary photography is "
+        "technically honest."
+    ),
+        'Architecture': (
+        "This is Architecture photography — built environment as subject.\n\n"
+        "DoD: Score the difficulty of access, the technical precision of perspective control "
+        "(converging verticals, corrected distortion, tilt-shift work), and the challenge of "
+        "working within constraints — restricted access, changing light, public spaces. "
+        "Heritage sites with permit requirements, active construction sites, and inaccessible "
+        "interiors raise DoD. Consumer-accessible landmarks in daytime score DoD 6.0–7.5.\n\n"
+        "DM: Architecture has no decisive moment by default — it is a static subject. "
+        "DM scores ONLY when a transient element is present at its compositional peak: "
+        "a person crossing a threshold at exactly the right scale, the moment a shadow "
+        "falls across a surface creating the geometric relationship, light entering at "
+        "a specific angle that will not recur. Without a transient element, DM caps at 7.0. "
+        "Long-exposure light trails through a space are a valid DM element.\n\n"
+        "Wonder — APPLY THE REVELATION TEST: Does this image show a building or space in a way "
+        "that changes how the viewer understands it? "
+        "GENUINE ARCHITECTURAL REVELATION (Wonder 8.5+): an interior geometry that reads as "
+        "pure abstract pattern at this angle; a structural system made visible and beautiful; "
+        "the meeting of human scale and architectural scale that produces awe or insignificance; "
+        "light treating a space as a subject in its own right. "
+        "LOCATION DOING THE WORK (Wonder cap 8.0): famous building photographed from a standard "
+        "viewpoint where the architecture itself is the interest. Being inside the Pantheon is "
+        "not architectural revelation — finding the geometric relationship that explains why the "
+        "Pantheon works is.\n\n"
+        "Disruption: Reward unconventional angle, deliberate abstraction, and frames that refuse "
+        "the expected tourist-brochure composition. Penalise technically correct but compositionally "
+        "predictable frames — the dead-centre symmetric facade, the standard interior overview "
+        "with no compositional decision.\n\n"
+        "AQ: The feeling the space creates — awe, intimacy, unease, transcendence. "
+        "A brutalist housing block and a baroque cathedral can both score high AQ when the "
+        "image carries the specific emotional register of that space rather than simply "
+        "documenting its appearance."
+    ),
+        'Astrophotography': (
+        "This is Astrophotography — the night sky as subject.\n\n"
+        "DoD: Score the technical achievement — tracking mount operation for long exposures "
+        "without star trailing, dark site access (distance from light pollution), stacking "
+        "and processing discipline, accurate focus on infinity in darkness, noise management "
+        "at extreme ISO, and the planning required (moon phase, weather window, season). "
+        "Single-shot Milky Way from a semi-dark site on an entry-level camera scores DoD 6.5–7.5. "
+        "Multi-hour deep sky stacks, planetary imaging with telescope and camera, aurora chasing "
+        "with travel to high latitude, or eclipse photography score DoD 8.0–9.5. "
+        "The technical barrier to well-executed astrophotography is genuinely high — do not "
+        "underweight DoD for clean, well-exposed night sky work.\n\n"
+        "DM: The decisive moment in astrophotography is planning-dependent, not reaction-dependent. "
+        "Milky Way arch at its peak galactic centre alignment over a foreground element: DM 7.5–8.5. "
+        "Eclipse totality at the moment of Baily's Beads or diamond ring: DM 8.5–9.5. "
+        "Aurora at its most active and structured: DM 8.0–9.0. "
+        "Meteor at the precise compositional intersection: DM 8.5–9.5. "
+        "Static star field without transient or peak: DM 6.0–7.0.\n\n"
+        "Wonder: The cosmic scale and the rarity of the astronomical phenomenon are the Wonder signal. "
+        "The Milky Way visible in its full arch is a Wonder 7.5–8.5 subject. "
+        "Total solar eclipse with corona visible: Wonder 9.0–9.5. "
+        "Rare planetary alignment, comet tail, or aurora filling the sky: Wonder 8.5–9.5. "
+        "A well-executed Milky Way with strong foreground integration (reflection, ancient structure, "
+        "human figure) earns Wonder above the base: the juxtaposition of human and cosmic scale. "
+        "Technically correct but compositionally generic star field: Wonder 6.5–7.5.\n\n"
+        "Disruption: Lower weight (10%). A technically correct astrophotograph is inherently unusual "
+        "to most viewers. Reward: star trail circles over an unusual foreground, aurora painted across "
+        "an unexpected environment, galaxy visible above an urban scene. "
+        "Penalise: standard Milky Way arch with standard landscape foreground — technically impressive "
+        "but compositionally expected within the genre.\n\n"
+        "AQ: The emotional register should be specific. Awe and insignificance are the primary AQ "
+        "signals for astrophotography. The feeling that the universe is indifferent and vast. "
+        "When the image also creates connection — the human figure under the stars, the ancient "
+        "building under the rotating sky — AQ rises. Technically clean but emotionally inert "
+        "astrophotography scores AQ 6.0–7.5."
+    ),
+        'Sports': (
+        "This is Sports photography — athletic action, competition, and physical performance.\n\n"
+        "DoD: Score access difficulty (pitch access vs. press gallery vs. public stand), "
+        "technical execution at high speed (shutter priority, AF tracking, burst timing, "
+        "reach of lens), and the conditions (indoor tungsten, floodlit night, harsh noon sun). "
+        "Press photographers at international events with restricted pitch access and technical "
+        "demands (tracking fast subjects, managing stadium light) score DoD 7.5–9.0. "
+        "Public-stand photography at local matches with consumer gear: DoD 5.5–7.0. "
+        "Extreme sports (motor racing, aerial sports, extreme weather events) raise DoD further "
+        "when the photographer's own physical position involves risk or difficulty.\n\n"
+        "DM (DOMINANT DIMENSION — 32%): Score the peak of athletic action — the exact frame "
+        "where the physical achievement is at its maximum and most visually legible. "
+        "The ball leaving the bat at full extension — not just before or just after. "
+        "The peak of the jump at zero velocity. The collision between players at its most "
+        "compressed. The finish-line frame where position is determined. "
+        "These are 1/500th-of-a-second decisions, and the difference between the right frame "
+        "and the frame before or after is the entire score. "
+        "DM in sports is NOT a timing assist — it requires the photographer to have "
+        "anticipated the moment AND pressed the shutter at exactly the right millisecond. "
+        "Reward precise timing severely. Penalise near-misses — the follow-through after "
+        "peak, the wind-up before peak.\n\n"
+        "Wonder: The athletic body at its physical limit is the Wonder signal. "
+        "Score the combination of physical achievement visible in the image AND "
+        "the photographic skill required to capture it. "
+        "A clean peak-action frame of a world-class athlete in competition scores Wonder 8.0–9.0. "
+        "A compositionally revelatory image — the weight of a tackle made visible, the geometry "
+        "of a sprint at maximum acceleration, the isolation of a single athlete against a crowd — "
+        "scores Wonder 8.5–9.5 when the image communicates something about the physical reality "
+        "that slow-motion video cannot.\n\n"
+        "Disruption: Reward unusual angles (low, underwater, through the net), motion blur "
+        "techniques used deliberately (panning on a sprinter to freeze the face and blur the "
+        "background, long-exposure crowd blur around a static athlete), and frames that refuse "
+        "the standard side-on action shot. "
+        "Penalise technically correct but compositionally generic sports frames.\n\n"
+        "AQ: The emotion of athletic performance — determination, pain, triumph, devastation. "
+        "Score the specific emotional state the image captures. A losing face at the finish line "
+        "scores higher AQ than a generic action frame where no emotional state is legible. "
+        "Crowd reaction frames can score high AQ when the collective emotion is specific and readable."
+    ),
+        'default': (
+        "Evaluate using genre-appropriate criteria. Reward artistic intent, "
+        "technical mastery relative to the genre, and emotional resonance."
+    ),
+        'default': (
+            "Evaluate using genre-appropriate criteria. Reward artistic intent, "
+            "technical mastery relative to the genre, and emotional resonance."
+        ),
+    }
+    return _HAIKU_GENRE_CONTEXT.get(genre, _HAIKU_GENRE_CONTEXT['default'])
+
 def _generate_haiku_sherpa(user_id):
     """
     SL-181.48-staging — Cross-image Sherpa synthesis for Haiku users.
@@ -34186,6 +34625,161 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
         return ''
 
 
+
+def _haiku_species_research(species_name, api_key, genre='Wildlife'):
+    """
+    Session 211v2: Wikipedia species lookup for Haiku Wildlife evals.
+    Mirrors the Sonnet species_research() pipeline in auto_score.py.
+    Step 1: Wikipedia REST API (free, no key, no billing)
+    Step 2: Haiku distil call to extract structured facts
+    Returns: context string to inject into scoring prompt, or empty string.
+    Only fires for Wildlife/Nature genre. Falls back silently.
+    """
+    import urllib.request as _wur
+    import urllib.parse as _wup
+    import json as _wj
+
+    if not species_name or not species_name.strip():
+        return ''
+    if genre not in ('Wildlife', 'Nature', 'Birds', 'Bird Photography'):
+        return ''
+
+    try:
+        # Step 1: Wikipedia extract
+        _wiki_params = _wup.urlencode({
+            'action': 'query', 'prop': 'extracts',
+            'explaintext': '1', 'exsectionformat': 'plain',
+            'titles': species_name.strip(), 'format': 'json', 'redirects': '1',
+        })
+        _wiki_req = _wur.Request(
+            f'https://en.wikipedia.org/w/api.php?{_wiki_params}',
+            headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0 (wildlife scoring; contact@shutterleague.com)'},
+        )
+        with _wur.urlopen(_wiki_req, timeout=8) as _wr:
+            _wiki_data = _wj.loads(_wr.read().decode())
+        _pages = _wiki_data.get('query', {}).get('pages', {})
+        _wiki_text = ''
+        for _pg in _pages.values():
+            _t = _pg.get('extract', '')
+            if _t and not _pg.get('missing'):
+                _wiki_text = _t
+                break
+
+        if not _wiki_text:
+            # Fallback: search
+            _search_params = _wup.urlencode({
+                'action': 'query', 'list': 'search',
+                'srsearch': species_name, 'format': 'json', 'srlimit': '2',
+            })
+            _search_req = _wur.Request(
+                f'https://en.wikipedia.org/w/api.php?{_search_params}',
+                headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0'},
+            )
+            with _wur.urlopen(_search_req, timeout=8) as _sr:
+                _search_data = _wj.loads(_sr.read().decode())
+            _results = _search_data.get('query', {}).get('search', [])
+            if _results:
+                _top = _results[0].get('title', '')
+                _search_params2 = _wup.urlencode({
+                    'action': 'query', 'prop': 'extracts',
+                    'explaintext': '1', 'titles': _top,
+                    'format': 'json', 'redirects': '1',
+                })
+                _req2 = _wur.Request(
+                    f'https://en.wikipedia.org/w/api.php?{_search_params2}',
+                    headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0'},
+                )
+                with _wur.urlopen(_req2, timeout=8) as _r2:
+                    _d2 = _wj.loads(_r2.read().decode())
+                for _pg2 in _d2.get('query', {}).get('pages', {}).values():
+                    _t2 = _pg2.get('extract', '')
+                    if _t2 and not _pg2.get('missing'):
+                        _wiki_text = _t2
+                        break
+
+        if not _wiki_text:
+            return ''
+
+        # Step 2: Haiku distil — extract structured facts
+        _distil_prompt = (
+            f"You are a wildlife photography expert. Based on this Wikipedia extract "
+            f"about '{species_name}', extract ONLY these facts as JSON:\n"
+            f"- global_range: one sentence on native geographic range\n"
+            f"- population_status: IUCN status and trend if mentioned\n"
+            f"- wild_behaviour_known: true or false — is wild behaviour well-documented?\n"
+            f"- captive_common: true or false — commonly photographed in captivity or at hides?\n"
+            f"- rarity_note: one sentence on rarity and documentation scarcity for wildlife photographers\n"
+            f"- photo_difficulty: one sentence on difficulty of photographing in the wild\n\n"
+            f"Wikipedia extract (first 3000 chars):\n{_wiki_text[:3000]}\n\n"
+            f"Respond ONLY with valid JSON. No preamble. No markdown."
+        )
+        _distil_payload = _wj.dumps({
+            'model': _HAIKU_MODEL,
+            'max_tokens': 300,
+            'temperature': 0,
+            'messages': [{'role': 'user', 'content': _distil_prompt}]
+        }).encode()
+        _distil_req = _wur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_distil_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+        with _wur.urlopen(_distil_req, timeout=30) as _dr:
+            _distil_raw = _wj.loads(_dr.read().decode())
+        _distil_text = ''.join(
+            b.get('text', '') for b in (_distil_raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+        # Strip markdown fences
+        import re as _re
+        _distil_text = _re.sub(r'```json|```', '', _distil_text).strip()
+        _facts = _wj.loads(_distil_text)
+
+        # Step 3: Build context block
+        _lines = [
+            '',
+            'SPECIES RESEARCH — VERIFIED FROM WIKIPEDIA (ground truth — do not contradict):',
+            f'Species: {species_name}',
+        ]
+        if _facts.get('global_range'):
+            _lines.append(f'Global range: {_facts["global_range"]}')
+        if _facts.get('population_status'):
+            _lines.append(f'IUCN / population: {_facts["population_status"]}')
+        if _facts.get('photo_difficulty'):
+            _lines.append(f'Photography difficulty: {_facts["photo_difficulty"]}')
+        if _facts.get('rarity_note'):
+            _lines.append(f'Documentation rarity: {_facts["rarity_note"]}')
+
+        _captive = _facts.get('captive_common')
+        _behav   = _facts.get('wild_behaviour_known')
+
+        _lines.append('')
+        _lines.append('SCORING ADJUSTMENTS FROM SPECIES RESEARCH:')
+        if _captive is False and _behav is False:
+            _lines.append(f'- {species_name} is rarely photographed wild; wild behaviour poorly documented.')
+            _lines.append('- Wonder MUST credit documentation rarity. DOD MUST reflect wild access difficulty.')
+            _lines.append('- species_note MUST name this rarity explicitly — most viewers have never seen this.')
+        elif _captive is True:
+            _lines.append(f'- {species_name} is commonly photographed in captivity or at hides.')
+            _lines.append('- If captive context confirmed: penalise DOD and Wonder accordingly.')
+            _lines.append('- If wild context confirmed: state this — wild documentation is rarer.')
+        elif _behav is False:
+            _lines.append(f'- Wild behaviour of {species_name} is poorly documented.')
+            _lines.append('- Behavioural documentation Wonder must score higher than well-documented species.')
+        _lines.append('')
+
+        app.logger.info(f'[haiku_species_research] {species_name}: captive={_captive} behav={_behav}')
+        return '\n'.join(_lines)
+
+    except Exception as _sre:
+        app.logger.debug(f'[haiku_species_research] {species_name} failed (non-fatal): {_sre}')
+        return ''
+
 _TRY_HAIKU_PROMPT = (
     "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
     "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
@@ -34268,6 +34862,9 @@ _TRY_HAIKU_PROMPT = (
     "Write what 8.0 would require for THIS image.\n\n"
 
     "INTEREST AREA: {genre}\n\n"
+
+    "GENRE SCORING CONTEXT:\n"
+    "{genre_context}\n\n"
 
     "WILDLIFE GENRE — MANDATORY PRE-SCORE READ (applies to every Wildlife image):\n"
     "Before scoring any dimension, you must establish three things by reading the image. "
@@ -34475,7 +35072,64 @@ _TRY_HAIKU_PROMPT = (
     "Name the pattern across their work — one strength, one gap — in 2 sentences. "
     "Do not say what they should do next. That is in what_next. Max 50 words.\n\n"
 
-"Return ONLY valid JSON, nothing else, no markdown:\n"
+"CAMERA DATA CONTEXT:\n"
+    "{exif_context}\n"
+    "If camera data is provided, use it in tech_read for gear-specific observations.\n\n"
+
+    "SPECIES NOTE (Wildlife only, blank for other genres):\n"
+    "species_note: One sentence. Name the species precisely if visually confident. "
+    "Then state one ecological fact that most viewers have never heard -- "
+    "something that reframes what was captured. "
+    "Example: Black Kite -- one of only three raptor species documented as deliberate "
+    "fire-followers; this behaviour has a scientific name: pyrogenic foraging. "
+    "If species cannot be identified confidently, leave blank. Max 40 words.\n\n"
+
+    "TECHNICAL READ:\n"
+    "tech_read: One paragraph, max 60 words. Before scoring, examine technically: "
+    "(1) Is the primary subject sharp, soft, or affected by conditions beyond the "
+    "photographer's control -- heat shimmer, rain, atmospheric haze, motion blur? "
+    "Name the cause, not just the effect. Defend the photographer where conditions "
+    "caused limitations they could not avoid. "
+    "(2) Is exposure balanced or compromised -- highlight clipping, shadow crush? "
+    "(3) If camera data is provided, make one gear-specific observation: "
+    "was the focal length appropriate, was the shutter speed sufficient, "
+    "what does the ISO tell us about conditions? "
+    "Tone: precise and fair -- the voice of a senior editor examining a contact sheet.\n\n"
+
+    "VISUAL FLOW AND COMPOSITIONAL WASTE:\n"
+    "visual_flow: One sentence only. Where does the viewer's eye enter the frame "
+    "and where does it travel? Name the specific element that draws the eye in and "
+    "where it exits or rests. If there is dead space -- foreground, edge, or sky "
+    "that adds no information -- name it in the same sentence. "
+    "Example: Eye enters along the flame line from lower left, meets the raptor at "
+    "centre-right, then rises into the smoke canopy -- the lower 12 percent of the "
+    "frame is dark foreground that adds no narrative; cropping it tightens the energy. "
+    "Max 40 words.\n\n"
+
+    "AWARD CONTEXT (Wildlife and Nature only, blank for all other genres):\n"
+    "award_context: One sentence. If the behaviour, difficulty, or emotional register "
+    "is genuinely at competition level, name the specific Indian or international award "
+    "category and what the gap to a shortlist is. "
+    "Prioritise Indian awards first: Sanctuary Asia Wildlife Photographer of the Year, "
+    "Nature inFocus Photography Awards, GoPro Wildlife Awards India. "
+    "International: Wildlife Photographer of the Year NHM, Birds Photographer of the Year. "
+    "Only mention an award if genuinely competitive. Do not inflate. "
+    "If not competitive, leave blank. Max 35 words.\n\n"
+
+    "EDIT TIPS:\n"
+    "edit_tips: 2-3 specific post-processing suggestions for THIS image only. "
+    "Each must follow this exact structure: "
+    "WHAT: [what to do] | WHY: [why it helps this specific image] | HOW: [specific Lightroom tool or technique]\n"
+    "Example: "
+    "WHAT: Crop 10-12 percent off the bottom | WHY: Dark foreground adds no narrative "
+    "and pulls the frame bottom-heavy | HOW: Use 4:5 ratio, anchor the bird at the "
+    "lower-right third, ensure flame line forms a clean diagonal.\n"
+    "WHAT: Sharpen subject only | WHY: Viewers expect the primary subject to be the "
+    "sharpest element | HOW: Mask the bird precisely, apply Texture plus 20, "
+    "Clarity plus 10 inside mask only; reduce noise reduction to minimum inside mask.\n"
+    "Specific to THIS image. Not generic advice. Max 120 words total.\n\n"
+
+    "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
     "\"dim_obs_dod\": \"<one sentence>\", "
     "\"dim_obs_vd\": \"<one sentence>\", "
@@ -34491,7 +35145,12 @@ _TRY_HAIKU_PROMPT = (
     "\"master_name\": \"<photographer name>\", "
     "\"master_why\": \"<one sentence>\", "
     "\"what_next\": \"<max 120 words>\", "
-    "\"conclusion\": \"<max 70 words>\"}"
+    "\"conclusion\": \"<max 70 words>\", "
+    "\"species_note\": \"<one sentence or blank>\", "
+    "\"tech_read\": \"<max 60 words>\", "
+    "\"visual_flow\": \"<one sentence>\", "
+    "\"award_context\": \"<one sentence or blank>\", "
+    "\"edit_tips\": \"<max 120 words>\"}" 
 )
 
 
@@ -34553,16 +35212,42 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
         'Raghu Rai, Henri Cartier-Bresson, Paul Nicklen, Steve McCurry, Sebastiao Salgado'
     )
 
+    # Session 211: fetch EXIF from DB for gear-specific tech read
+    _exif_ctx_block = ''
+    try:
+        with app.app_context():
+            _ex_img = Image.query.get(image_id)
+            if _ex_img:
+                _ex_parts = []
+                if _ex_img.exif_make or _ex_img.exif_model:
+                    _ex_parts.append(' '.join(filter(None, [_ex_img.exif_make, _ex_img.exif_model])))
+                if _ex_img.exif_lens:
+                    _ex_parts.append(_ex_img.exif_lens)
+                if _ex_img.exif_focal_length_35mm:
+                    _ex_parts.append(f'{int(_ex_img.exif_focal_length_35mm)}mm')
+                if _ex_img.exif_aperture_raw:
+                    _ex_parts.append(f'f/{_ex_img.exif_aperture_raw}')
+                if _ex_img.exif_shutter_raw:
+                    _ex_parts.append(str(_ex_img.exif_shutter_raw))
+                if _ex_img.exif_iso_raw:
+                    _ex_parts.append(f'ISO {_ex_img.exif_iso_raw}')
+                if _ex_parts:
+                    _exif_ctx_block = 'CAMERA DATA: ' + '  ·  '.join(_ex_parts)
+    except Exception as _ex_err:
+        app.logger.debug(f'[try_haiku] exif fetch non-fatal: {_ex_err}')
+
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
+              .replace('{genre_context}', _try_genre_context(genre or 'default'))
               .replace('{calibration}', _try_calibration_line(genre or ''))
               .replace('{history_context}', _history_ctx)
               .replace('{photographer_context}', _ctx_block)
-              .replace('{master_library}', _master_lib))
+              .replace('{master_library}', _master_lib)
+              .replace('{exif_context}', _exif_ctx_block))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 1800,  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
+        'max_tokens': 2400,  # Session 211 v2: expanded for new moat fields  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -34629,12 +35314,39 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     master_name    = (d.get('master_name')    or '').strip()[:100]
     master_why     = (d.get('master_why')     or '').strip()[:400]
     # Session 211: per-dimension observations + conclusion
-    dim_obs_dod    = (d.get('dim_obs_dod')    or '').strip()[:250]
-    dim_obs_vd     = (d.get('dim_obs_vd')     or '').strip()[:250]
-    dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:250]
-    dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:250]
-    dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:250]
+    dim_obs_dod    = (d.get('dim_obs_dod')    or '').strip()[:350]
+    dim_obs_vd     = (d.get('dim_obs_vd')     or '').strip()[:350]
+    dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:350]
+    dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:350]
+    dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:350]
     conclusion     = (d.get('conclusion')     or '').strip()[:500]
+    # Session 211 additions
+    species_note   = (d.get('species_note')   or '').strip()[:300]
+    # Session 211v2: Wikipedia enrichment — fires when engine identifies a species
+    # Runs synchronously here (inside background thread) — adds ~1-2s for Wildlife
+    if species_note and genre and genre in ('Wildlife', 'Nature', 'Birds', 'Bird Photography'):
+        try:
+            _wiki_enrichment = _haiku_species_research(species_note, api_key, genre)
+            if _wiki_enrichment and _wiki_enrichment.strip():
+                # Append Wikipedia rarity note to species_note
+                # Extract just the rarity_note line from the context block
+                import re as _sre
+                _rarity_match = _sre.search(r'Documentation rarity: (.+)', _wiki_enrichment)
+                _iucn_match   = _sre.search(r'IUCN / population: (.+)', _wiki_enrichment)
+                _wiki_add = ''
+                if _iucn_match:
+                    _wiki_add += f' IUCN: {_iucn_match.group(1).strip()}.'
+                if _rarity_match:
+                    _wiki_add += f' {_rarity_match.group(1).strip()}'
+                if _wiki_add:
+                    species_note = (species_note.rstrip('.') + '.' + _wiki_add).strip()[:500]
+                    app.logger.info(f'[haiku_wiki] enriched species_note for image={image_id}')
+        except Exception as _we:
+            app.logger.debug(f'[haiku_wiki] enrichment failed (non-fatal): {_we}')
+    tech_read      = (d.get('tech_read')      or '').strip()[:400]
+    visual_flow    = (d.get('visual_flow')    or '').strip()[:200]
+    award_context  = (d.get('award_context')  or '').strip()[:300]
+    edit_tips      = (d.get('edit_tips')      or '').strip()[:600]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -34686,6 +35398,12 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'dim_obs_wf':    dim_obs_wf,
                 'dim_obs_aq':    dim_obs_aq,
                 'conclusion':    conclusion,
+                # Session 211 additions — moat fields
+                'species_note':  species_note,
+                'tech_read':     tech_read,
+                'visual_flow':   visual_flow,
+                'award_context': award_context,
+                'edit_tips':     edit_tips,
             })
             db.session.commit()
             app.logger.info(
@@ -34789,6 +35507,11 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'dim_obs_wf':    dim_obs_wf,
                 'dim_obs_aq':    dim_obs_aq,
                 'conclusion':    conclusion,
+                'species_note':  species_note,
+                'tech_read':     tech_read,
+                'visual_flow':   visual_flow,
+                'award_context': award_context,
+                'edit_tips':     edit_tips,
             }
         except Exception as e:
             db.session.rollback()
@@ -36434,6 +37157,12 @@ def try_result(image_id):
         dim_obs_wf         = audit.get('dim_obs_wf', ''),
         dim_obs_aq         = audit.get('dim_obs_aq', ''),
         conclusion         = audit.get('conclusion', ''),
+        # Session 211 additions — moat fields
+        species_note       = audit.get('species_note', ''),
+        tech_read          = audit.get('tech_read', ''),
+        visual_flow        = audit.get('visual_flow', ''),
+        award_context      = audit.get('award_context', ''),
+        edit_tips          = audit.get('edit_tips', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
