@@ -273,6 +273,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .hf-note{font-size:12px;color:#8A8A86}
 .hf-btn{font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid #1A2744;background:#fff;color:#1A2744;cursor:pointer;font-family:inherit;min-height:40px;text-decoration:none;display:inline-flex;align-items:center}
 
+/* ── FLASH MESSAGES ── */
+.flash-msg{padding:12px 16px;border-radius:8px;font-size:14px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.12);line-height:1.5}
+.flash-success{background:#F0FDF4;border:1px solid #BBF7D0;color:#166534}
+.flash-error{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C}
+.flash-info{background:#EFF6FF;border:1px solid #BFDBFE;color:#1A2744}
+.flash-warning{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+
 /* ── TABLE PAGINATION ── */
 .tbl-pagination{display:flex;align-items:center;gap:10px;padding:12px 0 4px;border-top:1px solid #EEE;margin-top:8px}
 .pg-btn{font-size:13px;padding:6px 14px;border-radius:7px;border:1px solid #E0DDD6;background:#FAFAF6;color:#1A1A18;cursor:pointer;font-family:inherit;min-height:36px;transition:background .12s}
@@ -394,6 +401,22 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </style>
 </head>
 <body>
+
+{# ── FLASH MESSAGES ── #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div id="flash-bar" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;min-width:320px;max-width:560px;width:90vw">
+  {% for category, message in messages %}
+  <div class="flash-msg flash-{{ category }}" onclick="this.remove()" style="cursor:pointer">
+    {% if category == 'success' %}✓{% elif category == 'error' %}✗{% else %}ℹ{% endif %}
+    {{ message }}
+    <span style="float:right;opacity:.5;margin-left:12px">✕</span>
+  </div>
+  {% endfor %}
+</div>
+<script>setTimeout(function(){ var b=document.getElementById('flash-bar'); if(b) b.remove(); }, 5000);</script>
+{% endif %}
+{% endwith %}
 
 {# ── BULK DELETE CONFIRM MODAL ── #}
 <div id="del-modal-bg" class="del-modal-bg" onclick="if(event.target===this)closeBulkModal()">
