@@ -2371,6 +2371,66 @@ def _run_startup_tasks():
                 conn.commit()
             print('Database ready.')
 
+            # Session 211: upsert critical master_references entries that may be
+            # missing from live DB because seed_master_references() only runs on
+            # empty table. These run every boot, idempotently — safe.
+            try:
+                _critical_masters = [
+                    {
+                        'name': 'Charlie Hamilton James',
+                        'genre_tags': 'Wildlife,Birds,Fire,Raptor',
+                        'region': 'UK',
+                        'tier': 'Tier 1',
+                        'known_for': 'Black Kites hunting insects at Australian wildfires — BBC Natural World and NHM. Raptors in extreme conditions, fire-following foraging behaviour, behavioural wildlife at fire front.',
+                        'reference_when': 'ANY raptor, bird of prey, or kite near or at a fire or burn. Raptors in wildfire, extreme conditions, fire-following bird behaviour. Black Kite, Brahminy Kite, any raptor hunting at fire line.',
+                        'do_not_reference': 'Street,Fashion,Landscape,Portrait,Marine',
+                        'is_platform_mentor': False,
+                    },
+                    {
+                        'name': 'Baiju Patil',
+                        'genre_tags': 'Wildlife,Birds,India',
+                        'region': 'India',
+                        'tier': 'Tier 1',
+                        'known_for': 'Indian bird behaviour, Sanctuary Asia award winner, raptor and wetland bird specialist.',
+                        'reference_when': 'Indian bird behaviour, raptors in India, wetland birds, Sanctuary Asia standard wildlife.',
+                        'do_not_reference': 'Street,Fashion,Landscape,Marine',
+                        'is_platform_mentor': False,
+                    },
+                ]
+                _upserted = 0
+                for _cm in _critical_masters:
+                    _existing = db.session.execute(db.text(
+                        "SELECT id FROM master_references WHERE name = :name"
+                    ), {'name': _cm['name']}).fetchone()
+                    if _existing:
+                        db.session.execute(db.text(
+                            "UPDATE master_references SET genre_tags=:genre_tags, "
+                            "known_for=:known_for, reference_when=:reference_when, "
+                            "tier=:tier, do_not_reference=:do_not_ref, is_active=TRUE "
+                            "WHERE name=:name"
+                        ), {
+                            'name': _cm['name'], 'genre_tags': _cm['genre_tags'],
+                            'known_for': _cm['known_for'], 'reference_when': _cm['reference_when'],
+                            'tier': _cm['tier'], 'do_not_ref': _cm['do_not_reference'],
+                        })
+                    else:
+                        db.session.execute(db.text(
+                            "INSERT INTO master_references "
+                            "(name, genre_tags, region, tier, known_for, reference_when, do_not_reference, is_platform_mentor, is_active) "
+                            "VALUES (:name, :genre_tags, :region, :tier, :known_for, :reference_when, :do_not_ref, :mentor, TRUE)"
+                        ), {
+                            'name': _cm['name'], 'genre_tags': _cm['genre_tags'],
+                            'region': _cm['region'], 'tier': _cm['tier'],
+                            'known_for': _cm['known_for'], 'reference_when': _cm['reference_when'],
+                            'do_not_ref': _cm['do_not_reference'], 'mentor': _cm['is_platform_mentor'],
+                        })
+                    _upserted += 1
+                db.session.commit()
+                print(f'[master_ref_upsert] {_upserted} critical entries upserted OK')
+            except Exception as _mru_err:
+                db.session.rollback()
+                print(f'[master_ref_upsert] {_mru_err}')
+
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
                 # Import after full module load to avoid forward-reference error
@@ -34214,18 +34274,22 @@ _TRY_HAIKU_PROMPT = (
     "Do not wait for the photographer to tell you. 9 out of 10 will not. The image must "
     "be read on its own terms.\n\n"
 
-    "STEP 1 — READ THE ANIMAL, NOT THE SCENE.\n"
+    "STEP 1 — READ THE ANIMAL, NOT THE SCENE. COMMIT TO ONE BEHAVIOUR NAME.\n"
     "Identify: species (as precisely as visual evidence allows), posture, direction of "
     "movement or attention, and relationship to the environment around it. "
     "These four things together name the behaviour. Do not name the environment first. "
-    "A bird facing a fire is not \'bird in fire\' — ask what the bird is doing. "
+    "Direction is the key read: a bird flying TOWARD a fire is foraging or hunting — "
+    "not fleeing, not being flushed. A bird flying AWAY from a fire is escaping. "
     "A flamingo with head submerged is filter-feeding, not drowning. "
-    "A tiger crouching with ears back and eyes forward is stalking, not resting. "
-    "An elephant with trunk raised toward another animal is communicating or threatening. "
-    "A bird tangled in a net is in distress — the story is the entanglement, not the species. "
+    "A tiger crouching, ears back, eyes forward is stalking, not resting. "
+    "An elephant trunk raised toward another animal is communicating or threatening. "
+    "A bird tangled in a net: the story is the entanglement, not the species. "
     "A python coiled around prey mid-constriction is at peak predatory moment. "
-    "Read posture + direction + environment together. Name the behaviour in one clause "
-    "before you score anything.\n\n"
+    "Read posture + direction + environment together. Name the behaviour in one clause. "
+    "CRITICAL: Once you commit to a behaviour name, use it consistently across ALL "
+    "five dimension scores, takeaway, impression, what_next, and conclusion. "
+    "If you name it foraging in WF, do not call it flushing in DOD. "
+    "Contradicting yourself across dimensions is a scoring error.\n\n"
 
     "STEP 2 — SCORE THE RARITY OF THAT BEHAVIOUR BEING PHOTOGRAPHED.\n"
     "Not the rarity of the species — the rarity of a camera being present for this "
@@ -34309,13 +34373,12 @@ _TRY_HAIKU_PROMPT = (
 
     "IMPRESSION:\n"
     "2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking "
-    "to someone they respect. If PHOTOGRAPHER HISTORY is provided above, open with "
-    "one sentence acknowledging what you have seen from them before, then move to "
-    "this photograph. If no history, open directly on this photograph. "
-    "Name what is genuinely strong. Do not use jargon. Do not use dimension names. "
-    "Do not mention the score. Max 60 words.\n\n"
+    "to someone they respect. Name what is genuinely strong in this specific frame. "
+    "Do NOT mention vantage, composition critique, or what to do next — those belong "
+    "in what_next. Do NOT repeat any observation that will appear in what_next or conclusion. "
+    "Do not use jargon. Do not use dimension names. Do not mention the score. Max 60 words.\n\n"
 
-    "STRENGTH AND NEXT LEAP:\n"
+"STRENGTH AND NEXT LEAP:\n"
     "strength_name: The plain-English name of the strongest dimension "
     "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
     "'Depth of Difficulty', 'Authentic Quality').\n"
@@ -34356,14 +34419,15 @@ _TRY_HAIKU_PROMPT = (
     "the SUBJECT of this specific image, not the visual style.\n\n"
 
     "master_name: Exactly one name from the library above.\n"
-    "master_why: One sentence (max 35 words) — what this master did DIFFERENTLY in the "
-    "same situation: name the specific vantage point, proximity to subject, or exact moment chosen. "
-    "Format: \'[Master] [specific action in same situation]. You are [what photographer hasn\'t done yet].\'\n"
-    "Example: \'Hamilton James positioned at fire-line proximity so the eye of the bird reads against smoke. "
-    "You are 40% further back — the next frame needs the eye, not the wingspan.\'\n"
-    "Never write about general photographic style or career approach. Always name a physical decision.\n\n"
+    "master_why: Maximum 25 words. One sentence only. "
+    "State the specific physical decision this master made in the same type of situation "
+    "that this photographer has not yet made. "
+    "Format: [Master] [specific action]. You [what photographer hasn't done]. "
+    "Example: 'Hamilton James positioned at fire-line level so the raptor's eye reads against smoke. "
+    "You are shooting from distance where both fire and sky compete.' "
+    "25 words maximum — if you cannot fit it, cut words, do not extend.\n\n"
 
-    "{history_context}\n\n"
+"{history_context}\n\n"
 
     "PHOTOGRAPHER CONTEXT:\n"
     "{photographer_context}\n\n"
@@ -34396,20 +34460,22 @@ _TRY_HAIKU_PROMPT = (
     "Plain English. No dimension codes. No jargon. Max 120 words.\n\n"
 
     "CONCLUSION:\n"
-    "This is the final section — written in the voice of the platform, not the engine. "
-    "If PHOTOGRAPHER HISTORY is empty (this is their first evaluation): "
-    "Write 2-3 sentences. Tell them what this one photograph reveals about how they see. "
-    "Then say that you want to see more — across subjects, distances, light. "
-    "Close with this exact sentence: "
-    "'The standard we are measuring against was built from 312 blind calibrations — "
-    "not preference, not taste — what makes an image hold attention, create feeling, "
-    "and outlast the five seconds it gets on a feed.' "
-    "Do not mention pricing. Do not mention upgrading. Max 70 words.\n"
+    "Written in the voice of the platform, not the engine. "
+    "Do NOT repeat any observation already made in impression, what_next, or master_why. "
+    "This section says one thing only: what this photograph tells us about the photographer, "
+    "and that we want to see more. "
+    "If PHOTOGRAPHER HISTORY is empty (eval 1): "
+    "2-3 sentences. What does this one image reveal about how this person sees? "
+    "Then invite the next photograph. "
+    "Close with this exact sentence: 'The standard we are measuring against was built from "
+    "312 blind calibrations — not preference, not taste — what makes an image hold attention, "
+    "create feeling, and outlast the five seconds it gets on a feed.' "
+    "Do not mention upgrading. Do not mention pricing. Max 70 words.\n"
     "If PHOTOGRAPHER HISTORY has prior images (eval 2+): "
-    "Write 2-3 sentences. Name the pattern — which dimension is consistently strong, "
-    "which is consistently the gap. Say it is not a judgement but a map. Max 60 words.\n\n"
+    "Name the pattern across their work — one strength, one gap — in 2 sentences. "
+    "Do not say what they should do next. That is in what_next. Max 50 words.\n\n"
 
-    "Return ONLY valid JSON, nothing else, no markdown:\n"
+"Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
     "\"dim_obs_dod\": \"<one sentence>\", "
     "\"dim_obs_vd\": \"<one sentence>\", "
@@ -34561,7 +34627,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:250]
     what_next      = (d.get('what_next')      or '').strip()[:700]   # Session 211: 120 words ~700 chars
     master_name    = (d.get('master_name')    or '').strip()[:100]
-    master_why     = (d.get('master_why')     or '').strip()[:250]
+    master_why     = (d.get('master_why')     or '').strip()[:400]
     # Session 211: per-dimension observations + conclusion
     dim_obs_dod    = (d.get('dim_obs_dod')    or '').strip()[:250]
     dim_obs_vd     = (d.get('dim_obs_vd')     or '').strip()[:250]
@@ -36846,5 +36912,3 @@ if __name__ == '__main__':
     else:
         # Local development: `python app.py` (no args) -- unchanged behavior.
         app.run(debug=True)
-
-
