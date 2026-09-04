@@ -16826,12 +16826,14 @@ def admin_bust_contest_cache(user_id):
         except Exception:
             continue
     db.session.commit()
-    flash(
+    _msg = (
         f'Contest cache cleared for {_user.full_name or _user.username} '
         f'({_cleared} image{"s" if _cleared != 1 else ""} updated). '
-        f'Fresh award recommendations will load on their next scorecard visit.',
-        'success'
+        f'Fresh award recommendations will load on their next scorecard visit.'
     )
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'ok': True, 'message': _msg})
+    flash(_msg, 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
@@ -18006,7 +18008,10 @@ def admin_toggle_subscription(user_id):
         'track': user.subscription_track, 'plan': user.subscription_plan
     })
     status = 'activated' if user.is_subscribed else 'deactivated'
-    flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
+    _msg = f'Subscription {status} for {user.full_name or user.username}.'
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'ok': True, 'message': _msg, 'status': status})
+    flash(_msg, 'success')
     return redirect(url_for('admin_users'))
 
 
