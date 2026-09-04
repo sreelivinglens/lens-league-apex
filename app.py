@@ -18771,21 +18771,15 @@ def admin_master_references_suggest():
             genres_str = ', '.join(genres_to_refresh)
             try:
                 _prompt = (
-                    'You are updating the master photographer reference library for a photography '
-                    'evaluation platform. For EACH of the following genres, provide the top world-level '
-                    'and top Indian photographers whose work should be referenced when giving feedback. '
-                    f'GENRES: {genres_str} '
-                    'Return ONLY a valid JSON array. No markdown, no explanation. '
-                    '[{"genre": "Wildlife", "photographers": [{'
-                    '"name": "Full Name", "region": "Country", "tier": "Tier 1 or Tier 2", '
-                    '"known_for": "One specific sentence", '
-                    '"reference_when": "The specific situation where this is the right reference", '
-                    '"do_not_reference": "comma-separated wrong genres"'
-                    '}]}] '
-                    'Rules: Up to 15 world + 15 Indian photographers per genre. '
-                    'Tier 1 = NatGeo/Magnum/WPP. Tier 2 = regionally acclaimed. '
-                    'reference_when must name the specific subject or situation. '
-                    'Include recent award winners (last 3 years). No generic entries.'
+                    'For the ' + genres_str + ' genre in photography, list the top 15 world-level'
+                    ' and top 15 Indian photographers. Return ONLY a valid JSON array, no markdown: '
+                    '[{"genre": "GENRE", "photographers": [{"name": "Full Name",'
+                    ' "region": "Country", "tier": "Tier 1 or Tier 2",'
+                    ' "known_for": "one sentence about what they are known for",'
+                    ' "reference_when": "the specific situation where they are the right reference",'
+                    ' "do_not_reference": "genres where this is the wrong match"}]}]'
+                    ' Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally acclaimed.'
+                    ' Include recent award winners. Only JSON, nothing else.'
                 )
                 _payload = _bj.dumps({
                     'model': 'claude-sonnet-4-6',
