@@ -1264,34 +1264,23 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <strong>Master reference library</strong> — these photographers are cited by the Haiku and Sonnet engines when giving feedback. The engine picks the most relevant name per genre and subject. Refresh every 3 weeks to add new award winners and emerging masters. Review all suggestions before approving.
       </div>
 
-      {# Genre filter + Refresh controls #}
-      {# Refresh CTA — three genre groups #}
-      <div style="margin-bottom:20px;padding:16px 18px;background:#F0F4FF;border:1px solid #C8D4E8;border-radius:10px">
-        <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:4px">Refresh the reference library</div>
-        <div style="font-size:13px;color:#6B6B68;margin-bottom:14px">Run each group once every 3 weeks. Each call takes ~30 seconds. Review and approve before saving.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Wildlife','Wildlife')">Wildlife</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Street','Street')">Street</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Documentary','Documentary')">Documentary</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Landscape','Landscape')">Landscape</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Nature','Nature')">Nature</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Macro','Macro')">Macro</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Sports','Sports')">Sports</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Astrophotography','Astrophotography')">Astrophotography</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Creative','Creative')">Creative</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Architecture','Architecture')">Architecture</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Drone','Drone')">Drone</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Fashion','Fashion')">Fashion</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('Wedding','Wedding')">Wedding</button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:8px 14px;font-size:12px;min-height:36px" onclick="mrSuggestGroup('People','People')">People</button>
-          <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:6px 10px;border:1px solid #C8D4E8;border-radius:7px;font-size:13px;font-family:inherit;background:#fff;min-height:36px">
-            <option value="">Filter table by genre</option>
-            {% for g in ['Wildlife','Street','Documentary','Landscape','Nature','Macro','Sports','Astrophotography','Creative','Architecture','Drone','Fashion','Wedding','People'] %}
-            <option value="{{ g }}">{{ g }}</option>
-            {% endfor %}
-          </select>
+      {# Refresh CTA #}
+      <div style="margin-bottom:20px;padding:16px 18px;background:#F0F4FF;border:1px solid #C8D4E8;border-radius:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:2px">Refresh the reference library</div>
+          <div style="font-size:13px;color:#6B6B68">Select a genre and ask Sonnet to suggest new photographers. ~15 seconds. Review before saving.</div>
         </div>
+        <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:8px 12px;border:1px solid #C8D4E8;border-radius:7px;font-size:14px;font-family:inherit;background:#fff;min-height:40px">
+          <option value="">Filter / select genre</option>
+          {% for g in ['Wildlife','Street','Documentary','Landscape','Nature','Macro','Sports','Astrophotography','Creative','Architecture','Drone','Fashion','Wedding','People'] %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 20px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup(document.getElementById('mr-genre-filter').value||'Wildlife', document.getElementById('mr-genre-filter').value||'Wildlife')">
+          <i class="ti ti-sparkles" style="margin-right:6px"></i>Suggest new entries
+        </button>
       </div>
+
 
       <div id="mr-suggest-status" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:14px"></div>
 
