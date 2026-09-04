@@ -922,9 +922,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         </tbody>
       </table>
       <div id="ps-pagination" class="tbl-pagination" style="display:none">
-        <button class="pg-btn" id="ps-prev" onclick="psPage(-1)">← Prev</button>
+        <button class="pg-btn" id="ps-prev" onclick="event.stopPropagation();psPage(-1)">← Prev</button>
         <span class="pg-info" id="ps-info"></span>
-        <button class="pg-btn" id="ps-next" onclick="psPage(1)">Next →</button>
+        <button class="pg-btn" id="ps-next" onclick="event.stopPropagation();psPage(1)">Next →</button>
       </div>
       {% else %}
       <div style="font-size:14px;color:#8A8A86;padding:10px 0">No paid subscribers yet.</div>
@@ -1004,9 +1004,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         </tbody>
       </table>
       <div id="hk-pagination" class="tbl-pagination" style="display:none">
-        <button class="pg-btn" id="hk-prev" onclick="hkPage(-1)">← Prev</button>
+        <button class="pg-btn" id="hk-prev" onclick="event.stopPropagation();hkPage(-1)">← Prev</button>
         <span class="pg-info" id="hk-info"></span>
-        <button class="pg-btn" id="hk-next" onclick="hkPage(1)">Next →</button>
+        <button class="pg-btn" id="hk-next" onclick="event.stopPropagation();hkPage(1)">Next →</button>
       </div>
       <div id="bulk-result" class="bulk-result"></div>
       <div id="bulk-bar" class="bulk-bar hidden">
