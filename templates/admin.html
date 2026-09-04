@@ -488,6 +488,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div class="sb-group">
     <div class="sb-group-label">Members</div>
     <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers</a>
+    <a class="sb-item" onclick="navTo('uat-members','b-uat-body','cUAT')"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning{% if uat_users %}<span class="sb-badge warn">{{ uat_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('haiku-members','b-haiku-body','cHM')">
       <i class="ti ti-users"></i> Haiku members
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
@@ -874,19 +875,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <thead><tr><th style="width:22%">Member</th><th style="width:10%">Plan</th><th style="width:10%">Joined</th><th style="width:10%">Best eval</th><th style="width:7%">Images</th><th style="width:10%">Cache</th><th style="width:9%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
         <tbody id="ps-tbody">
           {% for pu in paid_users %}
-          {% set is_uat = pu.subscription_plan in ('uat', 'beta') %}
-          <tr class="ps-row" style="{% if is_uat %}background:#FFFBEB;{% endif %}">
+          <tr class="ps-row">
             <td>
               <div class="ps-name">{{ pu.full_name }}</div>
               <div class="ps-meta">{{ pu.email }}</div>
             </td>
             <td>
-              {% if is_uat %}
-              <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:#FDE68A;color:#92400E;letter-spacing:.04em">UAT</span>
-              {% else %}
               <span style="font-size:12px;color:#1A1A18;font-weight:500">{{ pu.subscription_track }}</span>
               <span style="font-size:11px;color:#8A8A86;display:block">{{ pu.subscription_plan }}</span>
-              {% endif %}
             </td>
             <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ pu.joined_date or '—' }}</td>
             <td>
@@ -900,20 +896,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <div class="ps-actions">
                 {% if pu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.latest_image_id) }}">Latest</a>{% endif %}
                 {% if pu.best_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=pu.best_image_id) }}">Best</a>{% endif %}
-                {% if not is_uat %}
                 <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=pu.id) }}" style="display:inline"><button class="psa" type="submit">Bust cache</button></form>
-                {% endif %}
-                {% if is_uat %}
-                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Revoke UAT for {{ pu.full_name }}?')">
-                  <input type="hidden" name="plan" value="uat">
-                  <input type="hidden" name="track" value="{{ pu.subscription_track }}">
-                  <button class="psa" type="submit" style="background:#FDE68A;border-color:#C8A84B;font-weight:600">Revoke UAT</button>
-                </form>
-                {% else %}
                 <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=pu.id) }}" style="display:inline" onsubmit="return confirm('Deactivate subscription for {{ pu.full_name }}?')">
                   <button class="psa" type="submit" style="color:#B91C1C">Deactivate</button>
                 </form>
-                {% endif %}
                 <button class="psa" onclick="confirmDeletePaid({{ pu.id }}, '{{ pu.full_name|replace("'","\\'")|e }}')" style="color:#B91C1C;border-color:#FECACA">Delete</button>
               </div>
             </td>
@@ -928,6 +914,60 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       </div>
       {% else %}
       <div style="font-size:14px;color:#8A8A86;padding:10px 0">No paid subscribers yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── UAT & LEARNING MEMBERS ── #}
+  <div id="uat-members" class="section">
+    <div class="sec-hdr" onclick="tog('uat-body','cUAT')">
+      <div class="sec-title"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning <span class="sec-badge warn">{{ uat_users|length if uat_users else 0 }}</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Non-paying · Sonnet access · newest first</span><span class="chev closed" id="cUAT">▼</span></div>
+    </div>
+    <div id="b-uat-body" class="sec-body" style="display:none">
+      <div class="guide" style="margin-bottom:12px;font-size:13px"><strong>UAT / beta / learning</strong> — these members have Sonnet access but are not billed. Use Revoke UAT to move them to Haiku world, or toggle subscription to activate a paid plan.</div>
+      {% if uat_users %}
+      <table class="ps-table">
+        <thead><tr><th style="width:24%">Member</th><th style="width:10%">Plan</th><th style="width:11%">Joined</th><th style="width:10%">Best eval</th><th style="width:7%">Images</th><th style="width:9%">Cache</th><th style="width:9%">Last upload</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody>
+          {% for uu in uat_users %}
+          <tr style="background:#FFFBEB">
+            <td>
+              <div class="ps-name">{{ uu.full_name }}</div>
+              <div class="ps-meta">{{ uu.email }}</div>
+            </td>
+            <td>
+              <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:#FDE68A;color:#92400E;letter-spacing:.04em">{{ uu.subscription_plan|upper }}</span>
+            </td>
+            <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ uu.joined_date or '—' }}</td>
+            <td>
+              <div class="ps-score">{% if uu.best_score %}{{ '%.2f'|format(uu.best_score) }}{% else %}—{% endif %}</div>
+            </td>
+            <td style="font-size:14px">{{ uu.image_count }}</td>
+            <td><span class="ps-cache-age">{{ uu.contest_cache_age }}</span></td>
+            <td style="font-size:13px;color:#8A8A86">{{ uu.last_upload_date or '—' }}</td>
+            <td>
+              <div class="ps-actions">
+                <a class="psa" href="{{ url_for('admin_user_detail', user_id=uu.id) }}">Profile</a>
+                {% if uu.latest_image_id %}<a class="psa" href="{{ url_for('image_detail', image_id=uu.latest_image_id) }}">Latest</a>{% endif %}
+                <form method="POST" action="{{ url_for('admin_bust_contest_cache', user_id=uu.id) }}" style="display:inline"><button class="psa" type="submit">Bust cache</button></form>
+                <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=uu.id) }}" style="display:inline" onsubmit="return confirm('Revoke UAT access for {{ uu.full_name }}?')">
+                  <input type="hidden" name="plan" value="{{ uu.subscription_plan }}">
+                  <input type="hidden" name="track" value="{{ uu.subscription_track }}">
+                  <button class="psa" type="submit" style="background:#FDE68A;border-color:#C8A84B;font-weight:600">Revoke UAT</button>
+                </form>
+                <button class="psa" onclick="confirmDeletePaid({{ uu.id }}, '{{ uu.full_name|replace("'","\\'")|e }}')" style="color:#B91C1C;border-color:#FECACA">Delete</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="haiku-footer">
+        <span class="hf-note">{{ uat_users|length }} UAT/Learning members</span>
+      </div>
+      {% else %}
+      <div style="font-size:14px;color:#8A8A86;padding:10px 0">No UAT or Learning members.</div>
       {% endif %}
     </div>
   </div>
@@ -1661,7 +1701,7 @@ function executeBulkDelete(delType){
     });
 }
 (function(){
-  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','haiku-members','deleted-accounts','audit-log','danger'];
+  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','uat-members','haiku-members','deleted-accounts','audit-log','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
   function onScroll(){
     var cur='';
