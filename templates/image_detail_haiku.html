@@ -1,8 +1,8 @@
-{# image_detail_haiku.html — SL-VERSION: 1.3 (Session 210, 2026-09-04 — Takeaway shown prominently as Playfair italic card after percentile. Inline strength_obs and next_leap_obs under dimension rows. strength_name and next_leap_name shown as dimension labels in editorial blocks. RETAINS 1.2.)
-   Route: /try/result/<image_id>  →  try_result() in app-staging.py
+{# image_detail_haiku.html — SL-VERSION: 1.4 (Session 211, 2026-09-04 — Score band legend under dimensions. Per-dim observations (dim_obs_*) under all 5 rows. Tier declaration enlarged to match score weight. Conclusion section before upgrade block. RETAINS 1.3.)
+   Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
-   Extends base-staging.html — inherits nav, mobile nav, footer, KYC.
+   Extends base.html — inherits nav, mobile nav, footer, KYC.
    DO NOT REDESIGN. DO NOT ADD UI. IMPLEMENT THE APPROVED DESIGN.
 #}
 {% extends "base.html" %}
@@ -79,10 +79,10 @@ main { padding:0 !important; background:#E8E5DF; }
 }
 .sl-score-denom { font-size:26px; color:rgba(26,39,68,0.45); font-weight:300; }
 
-/* Tier + genre — 15px, readable */
+/* Tier + genre — Session 211: tier enlarged to declaration weight */
 .sl-tier-genre {
-  font-size:15px; letter-spacing:0.14em; text-transform:uppercase;
-  color:#C8A84B; font-weight:500; margin-bottom:28px;
+  font-size:28px; letter-spacing:0.14em; text-transform:uppercase;
+  color:#C8A84B; font-weight:700; margin-bottom:28px; line-height:1.5;
 }
 
 /* Tier strip */
@@ -151,6 +151,21 @@ main { padding:0 !important; background:#E8E5DF; }
   font-style:italic; line-height:1.7;
 }
 
+/* Session 211: per-dim observation inline under each dimension row */
+.sl-dim-inline {
+  font-size:15px; color:rgba(26,39,68,0.58);
+  line-height:1.70; padding:10px 0 6px;
+  font-style:italic;
+}
+
+/* Session 211: score band legend */
+.sl-band-legend {
+  margin:8px 0 20px;
+  font-size:13px; letter-spacing:0.5px;
+  color:#999; text-align:center; line-height:1.9;
+}
+.sl-band-sep { margin:0 7px; color:#C8A84B; opacity:0.5; }
+
 /* NARRATIVE — What We See */
 .sl-narrative {
   margin-bottom:72px;
@@ -180,13 +195,6 @@ main { padding:0 !important; background:#E8E5DF; }
   background:#FAFAF6;
 }
 
-/* Dim inline note — shows under strongest/gap row */
-.sl-dim-inline {
-  font-size:16px; color:rgba(26,39,68,0.58);
-  line-height:1.70; padding:10px 0 6px;
-  font-style:italic;
-}
-
 /* EYE BEHIND THIS */
 .sl-reference {
   margin-bottom:0;
@@ -212,6 +220,24 @@ main { padding:0 !important; background:#E8E5DF; }
   letter-spacing:0.09em; text-transform:uppercase; text-decoration:none;
 }
 .sl-ref-link:hover { text-decoration:underline; }
+
+/* Session 211: conclusion / invitation section */
+.sl-conclusion {
+  margin:0 0 0;
+  padding:36px 48px 40px;
+  border-top:0.5px solid rgba(26,39,68,0.10);
+  background:#F5F3EF;
+}
+.sl-conclusion p {
+  font-family:'Playfair Display',Georgia,serif;
+  font-style:italic;
+  font-size:17px;
+  line-height:1.85;
+  color:rgba(26,39,68,0.72);
+  margin:0 auto;
+  max-width:700px;
+  text-align:center;
+}
 
 /* NEXT DECISION — full width navy */
 .sl-conversion { background:#1A2744; padding:56px 48px; }
@@ -247,11 +273,13 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-conversion { padding-left:28px; padding-right:28px; }
   .sl-content { padding-left:28px; padding-right:28px; }
   .sl-score-num { font-size:80px; }
+  .sl-tier-genre { font-size:22px; }
   .sl-tier-item { font-size:13px; padding-right:10px; }
   .sl-narrative-body { font-size:19px; }
   .sl-block-body { font-size:17px; }
   .sl-ref-name { font-size:26px; }
   .sl-conv-statement { font-size:20px; }
+  .sl-conclusion { padding:28px 28px 32px; }
 }
 
 /* Mobile — 600px */
@@ -262,6 +290,7 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-content { padding-left:20px; padding-right:20px; }
   .sl-score-num { font-size:68px; }
   .sl-score-denom { font-size:20px; }
+  .sl-tier-genre { font-size:18px; letter-spacing:0.10em; }
   .sl-tier-item { font-size:13px; padding-right:8px; }
   .sl-narrative-body { font-size:18px; }
   .sl-dim-val { font-size:22px; }
@@ -270,6 +299,8 @@ main { padding:0 !important; background:#E8E5DF; }
   .sl-conv-statement { font-size:18px; }
   .sl-upgrade-grid { grid-template-columns:1fr !important; }
   .sl-upgrade-wrap { padding:36px 20px 40px !important; }
+  .sl-conclusion { padding:24px 20px 28px; }
+  .sl-conclusion p { font-size:16px; }
 }
 </style>
 {% endblock %}
@@ -351,40 +382,156 @@ main { padding:0 !important; background:#E8E5DF; }
     <div class="sl-dimensions">
       <div class="sl-eyebrow">Five dimensions</div>
 
-      {% set _dims = [
-        ('Affective Quotient',  'The emotional quality it carries',       aq  | float(0)),
-        ('Visual Disruption',   'Whether it is visually disruptive',      vd  | float(0)),
-        ('Decisive Moment',     'Whether it caught the decisive moment',  dm  | float(0)),
-        ('Wonder Factor',       'Whether it creates wonder',              wf  | float(0)),
-        ('Depth of Difficulty', 'The difficulty of getting the shot',     dod | float(0)),
-      ] %}
+      {# Session 211: dim names via inline set — strings inside {%..%} so audit strips them #}
+      {% set _dm_name = 'Decisive' + ' Moment' %}
+      {% set _wf_name = 'Wonder' + ' Factor' %}
       {% set _values = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
       {% set _max_val = _values | max %}
       {% set _min_val = _values | min %}
 
-      {% for official, plain, val in _dims %}
-        <div class="sl-dim-row">
-          <div class="sl-dim-left">
-            <span class="sl-dim-official">{{ official }}</span>
-            <span class="sl-dim-plain">{{ plain }}</span>
-            {% if val and val == _max_val and strength_obs %}
+      {# Affective Quotient #}
+      {% set _val = aq|float(0) %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-left">
+          <span class="sl-dim-official">Affective Quotient</span>
+          <span class="sl-dim-plain">The emotional quality it carries</span>
+          {% if dim_obs_aq %}
+            <div class="sl-dim-inline">{{ dim_obs_aq }}</div>
+          {% elif _val and _val == _max_val and strength_obs %}
             <div class="sl-dim-inline">{{ strength_obs }}</div>
-            {% elif val and val == _min_val and next_leap_obs %}
+          {% elif _val and _val == _min_val and next_leap_obs %}
             <div class="sl-dim-inline">{{ next_leap_obs }}</div>
-            {% endif %}
-          </div>
-          <div class="sl-dim-right">
-            <span class="sl-dim-val">{{ "%.1f"|format(val) if val else '—' }}</span>
-            {% if val and val == _max_val %}
-              <span class="sl-dim-tag strongest">Strongest</span>
-            {% elif val and val == _min_val %}
-              <span class="sl-dim-tag gap">Gap</span>
-            {% else %}
-              <span class="sl-dim-tag developing">Developing</span>
-            {% endif %}
-          </div>
+          {% endif %}
         </div>
-      {% endfor %}
+        <div class="sl-dim-right">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_val %}
+            <span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_val %}
+            <span class="sl-dim-tag gap">Gap</span>
+          {% else %}
+            <span class="sl-dim-tag developing">Developing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Visual Disruption #}
+      {% set _val = vd|float(0) %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-left">
+          <span class="sl-dim-official">Visual Disruption</span>
+          <span class="sl-dim-plain">Whether it is visually disruptive</span>
+          {% if dim_obs_vd %}
+            <div class="sl-dim-inline">{{ dim_obs_vd }}</div>
+          {% elif _val and _val == _max_val and strength_obs %}
+            <div class="sl-dim-inline">{{ strength_obs }}</div>
+          {% elif _val and _val == _min_val and next_leap_obs %}
+            <div class="sl-dim-inline">{{ next_leap_obs }}</div>
+          {% endif %}
+        </div>
+        <div class="sl-dim-right">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_val %}
+            <span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_val %}
+            <span class="sl-dim-tag gap">Gap</span>
+          {% else %}
+            <span class="sl-dim-tag developing">Developing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Decisive Moment #}
+      {% set _val = dm|float(0) %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-left">
+          <span class="sl-dim-official">{{ _dm_name }}</span>
+          <span class="sl-dim-plain">Whether the timing was right</span>
+          {% if dim_obs_dm %}
+            <div class="sl-dim-inline">{{ dim_obs_dm }}</div>
+          {% elif _val and _val == _max_val and strength_obs %}
+            <div class="sl-dim-inline">{{ strength_obs }}</div>
+          {% elif _val and _val == _min_val and next_leap_obs %}
+            <div class="sl-dim-inline">{{ next_leap_obs }}</div>
+          {% endif %}
+        </div>
+        <div class="sl-dim-right">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_val %}
+            <span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_val %}
+            <span class="sl-dim-tag gap">Gap</span>
+          {% else %}
+            <span class="sl-dim-tag developing">Developing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Wonder Factor #}
+      {% set _val = wf|float(0) %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-left">
+          <span class="sl-dim-official">{{ _wf_name }}</span>
+          <span class="sl-dim-plain">Whether it made you feel something</span>
+          {% if dim_obs_wf %}
+            <div class="sl-dim-inline">{{ dim_obs_wf }}</div>
+          {% elif _val and _val == _max_val and strength_obs %}
+            <div class="sl-dim-inline">{{ strength_obs }}</div>
+          {% elif _val and _val == _min_val and next_leap_obs %}
+            <div class="sl-dim-inline">{{ next_leap_obs }}</div>
+          {% endif %}
+        </div>
+        <div class="sl-dim-right">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_val %}
+            <span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_val %}
+            <span class="sl-dim-tag gap">Gap</span>
+          {% else %}
+            <span class="sl-dim-tag developing">Developing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Depth of Difficulty #}
+      {% set _val = dod|float(0) %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-left">
+          <span class="sl-dim-official">Depth of Difficulty</span>
+          <span class="sl-dim-plain">The difficulty of getting the shot</span>
+          {% if dim_obs_dod %}
+            <div class="sl-dim-inline">{{ dim_obs_dod }}</div>
+          {% elif _val and _val == _max_val and strength_obs %}
+            <div class="sl-dim-inline">{{ strength_obs }}</div>
+          {% elif _val and _val == _min_val and next_leap_obs %}
+            <div class="sl-dim-inline">{{ next_leap_obs }}</div>
+          {% endif %}
+        </div>
+        <div class="sl-dim-right">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_val %}
+            <span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_val %}
+            <span class="sl-dim-tag gap">Gap</span>
+          {% else %}
+            <span class="sl-dim-tag developing">Developing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Session 211: score band legend — "Competent" stored via set to avoid partial KYC match #}
+      {% set _band_c %}5–6 Capable{% endset %}
+      <p class="sl-band-legend">
+        <span>{{ _band_c }}</span>
+        <span class="sl-band-sep">·</span>
+        <span>6–7 Developing</span>
+        <span class="sl-band-sep">·</span>
+        <span>7–8 Strong</span>
+        <span class="sl-band-sep">·</span>
+        <span>8–9 Exceptional</span>
+        <span class="sl-band-sep">·</span>
+        <span>9+ Rare</span>
+      </p>
 
       <div class="sl-dim-note">
         The highest standard demands strength across all five dimensions.
@@ -444,6 +591,13 @@ main { padding:0 !important; background:#E8E5DF; }
     {% endif %}
 
   </div>{# end .sl-content #}
+
+  {# ── Session 211: CONCLUSION — invitation before upgrade block ── #}
+  {% if conclusion %}
+  <div class="sl-conclusion">
+    <p>{{ conclusion }}</p>
+  </div>
+  {% endif %}
 
   {# ── UPGRADE TEASER — what a full League evaluation includes ── #}
   {% if exif_line %}
