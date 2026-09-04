@@ -18554,6 +18554,119 @@ def admin_haiku_bulk_delete():
     })
 
 
+@app.route('/admin/image/<int:image_id>/haiku-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_rescore(image_id):
+    """
+    POST /admin/image/<id>/haiku-rescore
+    Re-runs _try_run_haiku on a Haiku image — fires the Haiku prompt,
+    not the Sonnet auto_score engine. Safe for is_haiku_try=TRUE images.
+    Session 210: needed because force_rescore wrongly runs Sonnet on Haiku images.
+    """
+    import tempfile as _hrt
+    img = Image.query.get_or_404(image_id)
+    if not img.is_haiku_try:
+        return jsonify({'ok': False, 'message': 'Not a Haiku image — use force_rescore.'}), 400
+
+    try:
+        import threading as _hrtd
+        # Download image for scoring
+        from storage import get_client as _hr_get_client, BUCKET as _HR_BUCKET
+        _tf = _hrt.NamedTemporaryFile(suffix='.jpg', delete=False)
+        _key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+        _hr_get_client().download_fileobj(_HR_BUCKET, _key, _tf)
+        _tf.close()
+        import base64 as _hrb64
+        with open(_tf.name, 'rb') as _f:
+            _img_b64 = _hrb64.b64encode(_f.read()).decode()
+        import os as _hros
+        _hros.unlink(_tf.name)
+
+        _iid = image_id
+        _b64 = _img_b64
+        _genre = img.genre or 'General'
+        _uid = img.user_id
+
+        def _run_haiku_rescore():
+            with app.app_context():
+                _try_run_haiku(_iid, _b64, _genre, user_id=_uid)
+                app.logger.info(f'[haiku_rescore] image={_iid} complete')
+
+        _hrtd.Thread(target=_run_haiku_rescore, daemon=True).start()
+
+        _log_admin_action('haiku_rescore', 'image', image_id, {
+            'genre': _genre, 'user_id': _uid
+        })
+        return jsonify({'ok': True, 'message': f'Haiku rescore started for image {image_id}. Refresh the scorecard in 15 seconds.'})
+
+    except Exception as _e:
+        app.logger.error(f'[haiku_rescore] image={image_id} failed: {_e}')
+        return jsonify({'ok': False, 'message': str(_e)[:200]}), 500
+
+
+@app.route('/admin/haiku/bulk-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_bulk_rescore():
+    """
+    POST /admin/haiku/bulk-rescore
+    Re-runs _try_run_haiku on ALL scored Haiku images.
+    Used after prompt improvements to refresh existing scorecards.
+    Session 210.
+    """
+    import threading as _brtd
+    import tempfile as _brtf
+    import base64 as _brb64
+
+    try:
+        _rows = db.session.execute(db.text(
+            "SELECT id, thumb_url, genre, user_id FROM images "
+            "WHERE is_haiku_try = TRUE AND status = 'scored' "
+            "ORDER BY id ASC"
+        )).fetchall()
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+    if not _rows:
+        return jsonify({'ok': True, 'message': 'No scored Haiku images found.', 'count': 0})
+
+    def _run_bulk():
+        with app.app_context():
+            from storage import get_client as _bg_client, BUCKET as _BG_BUCKET
+            _done = 0
+            for _row in _rows:
+                try:
+                    _tf = _brtf.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    _key = 'thumbs/' + _row.thumb_url.split('/thumbs/')[-1]
+                    _bg_client().download_fileobj(_BG_BUCKET, _key, _tf)
+                    _tf.close()
+                    with open(_tf.name, 'rb') as _f:
+                        _b64 = _brb64.b64encode(_f.read()).decode()
+                    import os as _bros
+                    _bros.unlink(_tf.name)
+                    _try_run_haiku(_row.id, _b64, _row.genre or 'General', user_id=_row.user_id)
+                    app.logger.info(f'[haiku_bulk_rescore] image={_row.id} done')
+                    _done += 1
+                    import time as _bt
+                    _bt.sleep(2)  # rate limit — avoid hammering Anthropic API
+                except Exception as _re:
+                    app.logger.error(f'[haiku_bulk_rescore] image={_row.id} failed: {_re}')
+            app.logger.info(f'[haiku_bulk_rescore] complete — {_done}/{len(_rows)} rescored')
+
+    _brtd.Thread(target=_run_bulk, daemon=True).start()
+
+    _log_admin_action('haiku_bulk_rescore', 'system', 0, {
+        'image_count': len(_rows),
+        'note': 'Bulk Haiku rescore after prompt improvement'
+    })
+    return jsonify({
+        'ok': True,
+        'count': len(_rows),
+        'message': f'Rescoring {len(_rows)} Haiku image(s) in background. Check logs — allow 15 seconds per image.'
+    })
+
+
 @app.route('/admin/master-references', methods=['GET'])
 @login_required
 @admin_required
@@ -18610,75 +18723,139 @@ def admin_master_references():
 def admin_master_references_suggest():
     """
     POST /admin/master-references/suggest
-    body: genre=Wildlife (optional — omit for all genres)
-    Calls Claude to suggest top 20 world + top 20 Indian photographers per genre.
-    Returns suggestions for admin review — does NOT write to DB until approved.
-    Session 210.
+    Fires Sonnet call in background thread. Returns job_id immediately.
+    Frontend polls /admin/master-references/suggest/status?job=<id> for result.
+    Session 210: async to avoid gunicorn 30s worker timeout.
     """
     import json as _sugj
     import urllib.request as _sugur
+    import threading as _sugt
+    import uuid as _suguuid
 
     genre = request.form.get('genre', '').strip()
     genres_to_refresh = [genre] if genre else [
         'Wildlife', 'Street', 'Documentary', 'Landscape', 'Nature',
         'Macro', 'Sports', 'Astrophotography', 'Creative', 'Architecture',
-        'Drone', 'Fashion', 'Wedding', 'People', 'Portrait'
+        'Drone', 'Fashion', 'Wedding', 'People'
     ]
 
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
         return jsonify({'ok': False, 'message': 'API key not set'}), 500
 
-    # Session 210: single Sonnet call covering all genres at once
-    all_suggestions = []
-    genres_str = ', '.join(genres_to_refresh)
-    try:
-        _suggest_prompt = (
-            'You are updating the master photographer reference library for a photography '
-            'evaluation platform. For EACH of the following genres, provide the top world-level '
-            'and top Indian photographers whose work should be referenced when giving feedback.\n\n'
-            f'GENRES: {genres_str}\n\n'
-            'Return ONLY a valid JSON array — no markdown, no explanation:\n'
-            '[{"genre": "Wildlife", "photographers": [{'
-            '"name": "Full Name", "region": "Country", "tier": "Tier 1 or Tier 2", '
-            '"known_for": "One specific sentence about what they are known for in this genre", '
-            '"reference_when": "The specific situation, subject, or dimension gap '
-            'where this photographer is the right reference", '
-            '"do_not_reference": "comma-separated genres where this is the wrong reference"'
-            '}]}]\n\n'
-            'Rules: Up to 15 world-level + 15 Indian photographers per genre. '
-            'Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally celebrated. '
-            'reference_when must name the specific subject or situation. '
-            'Include recent award winners (last 3 years). No generic entries.'
-        )
-        _payload = _sugj.dumps({
-            'model': 'claude-sonnet-4-6',
-            'max_tokens': 8000,
-            'messages': [{'role': 'user', 'content': _suggest_prompt}]
-        }).encode()
-        _req = _sugur.Request(
-            'https://api.anthropic.com/v1/messages',
-            data=_payload,
-            headers={
-                'Content-Type': 'application/json',
-                'x-api-key': api_key,
-                'anthropic-version': '2023-06-01',
-            },
-            method='POST'
-        )
-        with _sugur.urlopen(_req, timeout=120) as _resp:
-            _result = _sugj.loads(_resp.read().decode())
-        _text = (_result.get('content') or [{}])[0].get('text', '[]')
-        _text = _text.strip().lstrip('`').replace('json\n', '').rstrip('`').strip()
-        all_suggestions = _sugj.loads(_text)
-        if not isinstance(all_suggestions, list):
-            all_suggestions = [all_suggestions]
-        app.logger.info(f'[master_ref_suggest] Sonnet returned {len(all_suggestions)} genres')
-    except Exception as _ge:
-        app.logger.error(f'[master_ref_suggest] Sonnet call failed: {_ge}')
-        all_suggestions = [{'genre': g, 'photographers': [], 'error': str(_ge)} for g in genres_to_refresh]
+    job_id = str(_suguuid.uuid4())[:8]
 
-    return jsonify({'ok': True, 'suggestions': all_suggestions})
+    # Store job status in site_settings table (already exists, key-value store)
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+            "ON CONFLICT (key) DO UPDATE SET value = :v"
+        ), {'k': f'mr_suggest_job_{job_id}', 'v': '{"status":"running"}'})
+        db.session.commit()
+    except Exception:
+        pass
+
+    def _run_suggest():
+        with app.app_context():
+            import json as _bj
+            import urllib.request as _bur
+            genres_str = ', '.join(genres_to_refresh)
+            try:
+                _prompt = (
+                    'You are updating the master photographer reference library for a photography '
+                    'evaluation platform. For EACH of the following genres, provide the top world-level '
+                    'and top Indian photographers whose work should be referenced when giving feedback.
+
+'
+                    f'GENRES: {genres_str}
+
+'
+                    'Return ONLY a valid JSON array — no markdown, no explanation:
+'
+                    '[{"genre": "Wildlife", "photographers": [{'
+                    '"name": "Full Name", "region": "Country", "tier": "Tier 1 or Tier 2", '
+                    '"known_for": "One specific sentence about what they are known for in this genre", '
+                    '"reference_when": "The specific situation, subject, or dimension gap where this photographer is the right reference", '
+                    '"do_not_reference": "comma-separated genres where this is the wrong reference"'
+                    '}]}]
+
+'
+                    'Rules: Up to 15 world-level + 15 Indian photographers per genre. '
+                    'Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally celebrated. '
+                    'reference_when must name the specific subject or situation. '
+                    'Include recent award winners (last 3 years). No generic entries.'
+                )
+                _payload = _bj.dumps({
+                    'model': 'claude-sonnet-4-6',
+                    'max_tokens': 8000,
+                    'messages': [{'role': 'user', 'content': _prompt}]
+                }).encode()
+                _req = _bur.Request(
+                    'https://api.anthropic.com/v1/messages',
+                    data=_payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'x-api-key': api_key,
+                        'anthropic-version': '2023-06-01',
+                    },
+                    method='POST'
+                )
+                with _bur.urlopen(_req, timeout=90) as _resp:
+                    _result = _bj.loads(_resp.read().decode())
+                _text = (_result.get('content') or [{}])[0].get('text', '[]')
+                _text = _text.strip().lstrip('`').replace('json
+', '').rstrip('`').strip()
+                _suggestions = _bj.loads(_text)
+                if not isinstance(_suggestions, list):
+                    _suggestions = [_suggestions]
+                app.logger.info(f'[master_ref_suggest] job={job_id} Sonnet returned {len(_suggestions)} genres')
+                db.session.execute(db.text(
+                    "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+                    "ON CONFLICT (key) DO UPDATE SET value = :v"
+                ), {'k': f'mr_suggest_job_{job_id}',
+                    'v': _bj.dumps({'status': 'done', 'suggestions': _suggestions})})
+                db.session.commit()
+            except Exception as _be:
+                app.logger.error(f'[master_ref_suggest] job={job_id} failed: {_be}')
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+                        "ON CONFLICT (key) DO UPDATE SET value = :v"
+                    ), {'k': f'mr_suggest_job_{job_id}',
+                        'v': _bj.dumps({'status': 'error', 'message': str(_be)[:200]})})
+                    db.session.commit()
+                except Exception:
+                    pass
+
+    _sugt.Thread(target=_run_suggest, daemon=True).start()
+    return jsonify({'ok': True, 'job_id': job_id, 'message': 'Sonnet is working… check back in 30 seconds.'})
+
+
+@app.route('/admin/master-references/suggest/status', methods=['GET'])
+@login_required
+@admin_required
+def admin_master_references_suggest_status():
+    """Poll for suggest job result. Session 210."""
+    import json as _stj
+    job_id = request.args.get('job', '').strip()
+    if not job_id:
+        return jsonify({'ok': False, 'message': 'No job_id'}), 400
+    try:
+        row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = :k"
+        ), {'k': f'mr_suggest_job_{job_id}'}).fetchone()
+        if not row:
+            return jsonify({'ok': False, 'status': 'not_found'}), 404
+        data = _stj.loads(row[0])
+        if data.get('status') == 'done':
+            # Clean up job key
+            db.session.execute(db.text(
+                "DELETE FROM site_settings WHERE key = :k"
+            ), {'k': f'mr_suggest_job_{job_id}'})
+            db.session.commit()
+        return jsonify({'ok': True, **data})
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
 
 
 @app.route('/admin/master-references/approve', methods=['POST'])
