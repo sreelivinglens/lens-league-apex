@@ -18569,8 +18569,11 @@ def admin_haiku_rescore(image_id):
     """
     import tempfile as _hrt
     img = Image.query.get_or_404(image_id)
+    # Session 210: removed is_haiku_try guard — admin can force Haiku rescore on any image
+    # Ensure the image is marked as haiku_try so try_result renders correctly
     if not img.is_haiku_try:
-        return jsonify({'ok': False, 'message': 'Not a Haiku image — use force_rescore.'}), 400
+        img.is_haiku_try = True
+        db.session.commit()
 
     try:
         import threading as _hrtd
