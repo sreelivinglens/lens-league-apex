@@ -516,7 +516,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <i class="ti ti-users"></i> Haiku members
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
     </a>
-    <a class="sb-item" onclick="navTo('new-signups','b-ns-body','cNS')"><i class="ti ti-user-plus"></i> New signups{% if new_signups_30days %}<span class="sb-badge">{{ new_signups_30days }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('deleted-accounts','b-deleted-body','cDA')"><i class="ti ti-user-off" style="color:#B91C1C"></i> Deleted accounts{% if deleted_users %}<span class="sb-badge" style="background:#FEF2F2;color:#B91C1C">{{ deleted_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('engagement','b-en-body','cEN')"><i class="ti ti-chart-line"></i> Engagement</a>
   </div>
@@ -1028,7 +1027,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <thead><tr><th style="width:32px"><input type="checkbox" class="hk-cb" id="hk-select-all" title="Select all" onchange="hkSelectAll(this)"></th><th style="width:26%">Member</th><th style="width:20%">Evals used</th><th style="width:12%">Joined</th><th style="width:12%">Last active</th><th style="width:10%">Status</th><th style="width:12%;text-align:right"></th></tr></thead>
         <tbody>
           {% for u in haiku_users %}
-          <tr class="hk-table-row">
+          <tr class="hk-table-row" {% if u.created_at and (now - u.created_at).days <= 7 %}style="background:#F8FBF8"{% endif %}>
             <td style="width:32px;padding-right:4px"><input type="checkbox" class="hk-cb hk-row-cb" data-uid="{{ u.id }}" data-name="{{ u.full_name or u.username }}" onchange="hkCbChange()"></td>
             <td>
               <div style="font-weight:500;font-size:14px">{{ u.full_name or u.username }}</div>
@@ -1177,55 +1176,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div id="reinstate-result" class="bulk-result" style="margin-top:10px"></div>
     </div>
   </div>
-  <div id="new-signups" class="section">
-    <div class="sec-hdr" onclick="tog('ns-body','cNS')">
-      <div class="sec-title"><i class="ti ti-user-plus"></i> New signups <span class="sec-badge">{{ new_signups_30days }}</span></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Last 30 days</span><span class="chev closed" id="cNS">▼</span></div>
-    </div>
-    <div id="b-ns-body" class="sec-body" style="display:none">
-      <div class="guide ok" style="margin-bottom:10px;font-size:13px"><strong>Send welcome nudge</strong> to anyone with 0 uploads who signed up more than 48 hours ago.</div>
-      {% if recent_signups %}
-      <table class="signup-table">
-        <thead><tr><th>Member</th><th>Signed up</th><th>Track</th><th>Uploads</th><th>Status</th><th style="text-align:right">Action</th></tr></thead>
-        <tbody>
-          {% for u in recent_signups %}
-          {% set ns_hu = namespace(used=0) %}
-          {% for hu in haiku_users if hu.id == u.id %}{% set ns_hu.used = hu.haiku_used or 0 %}{% endfor %}
-          {% set haiku_used = ns_hu.used %}
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:14px">{{ u.full_name or u.username }}</div>
-              <div style="font-size:11px;color:#8A8A86">{{ u.email }}</div>
-            </td>
-            <td style="font-size:13px;color:#8A8A86;white-space:nowrap">{{ u.created_at.strftime('%-d %b %Y') if u.created_at else '—' }}</td>
-            <td style="font-size:13px">{% if u.is_subscribed and u.subscription_plan not in ('play', None) %}Sonnet{% else %}Haiku{% endif %}</td>
-            <td style="font-size:13px;font-weight:500;color:{% if haiku_used == 0 %}#B45309{% else %}#2E7D32{% endif %}">
-              {{ haiku_used }}
-            </td>
-            <td>
-              {% if not u.is_active %}<span class="status-badge sb-unverified">Unverified</span>
-              {% elif not u.onboarding_complete %}<span class="status-badge sb-onboard">Onboarding</span>
-              {% else %}<span class="status-badge sb-verified">Active</span>{% endif %}
-            </td>
-            <td style="text-align:right">
-              {% if haiku_used == 0 %}
-              <button class="ra" onclick="openNudge({{ u.id }}, 'welcome')" style="background:#EFF6FF;border-color:#C8D4E8;color:#1A2744">Welcome nudge</button>
-              {% elif u.is_subscribed and u.subscription_plan not in ('play', None) %}
-              <span style="font-size:12px;color:#8A8A86">Sonnet member</span>
-              {% else %}
-              <button class="ra" onclick="openNudge({{ u.id }}, 'engage')" style="background:#F0FDF4;border-color:#BBF7D0;color:#166534">Re-engage</button>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <div style="font-size:14px;color:#8A8A86;padding:10px 0">No signups in the last 30 days.</div>
-      {% endif %}
-    </div>
-  </div>
-
   {# ── ENGAGEMENT ── #}
   <div id="engagement" class="section">
     <div class="sec-hdr" onclick="tog('en-body','cEN')">
