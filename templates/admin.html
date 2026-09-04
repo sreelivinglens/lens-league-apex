@@ -1270,14 +1270,20 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:4px">Refresh the reference library</div>
         <div style="font-size:13px;color:#6B6B68;margin-bottom:14px">Run each group once every 3 weeks. Each call takes ~30 seconds. Review and approve before saving.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Wildlife,Nature,Macro,Landscape,Astrophotography','Nature & Wildlife')">
-            <i class="ti ti-sparkles" style="margin-right:5px"></i>Nature & Wildlife
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Wildlife,Nature,Macro','Wildlife & Nature')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Wildlife & Nature
           </button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Street,Documentary,People,Portrait,Fashion','People & Street')">
-            <i class="ti ti-sparkles" style="margin-right:5px"></i>People & Street
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Landscape,Astrophotography,Architecture','Landscape & Space')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Landscape & Space
           </button>
-          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Sports,Architecture,Drone,Creative,Wedding','Other genres')">
-            <i class="ti ti-sparkles" style="margin-right:5px"></i>Other genres
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Street,Documentary,People','Street & People')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Street & People
+          </button>
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Fashion,Wedding,Portrait','Fashion & Wedding')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Fashion & Wedding
+          </button>
+          <button class="btn-hard-del" style="background:#1A2744;border:none;padding:10px 16px;font-size:13px;min-height:42px;white-space:nowrap" onclick="mrSuggestGroup('Sports,Drone,Creative','Sports & Other')">
+            <i class="ti ti-sparkles" style="margin-right:5px"></i>Sports & Other
           </button>
           <select id="mr-genre-filter" onchange="mrGenreFilter()" style="padding:8px 12px;border:1px solid #C8D4E8;border-radius:7px;font-size:14px;font-family:inherit;background:#fff;min-height:42px;margin-left:8px">
             <option value="">Filter table by genre</option>
