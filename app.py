@@ -18736,11 +18736,17 @@ def admin_master_references_suggest():
     import uuid as _suguuid
 
     genre = request.form.get('genre', '').strip()
-    genres_to_refresh = [genre] if genre else [
-        'Wildlife', 'Street', 'Documentary', 'Landscape', 'Nature',
-        'Macro', 'Sports', 'Astrophotography', 'Creative', 'Architecture',
-        'Drone', 'Fashion', 'Wedding', 'People'
-    ]
+    # Support comma-separated genre groups e.g. 'Wildlife,Nature,Macro'
+    if genre and ',' in genre:
+        genres_to_refresh = [g.strip() for g in genre.split(',') if g.strip()]
+    elif genre:
+        genres_to_refresh = [genre]
+    else:
+        genres_to_refresh = [
+            'Wildlife', 'Street', 'Documentary', 'Landscape', 'Nature',
+            'Macro', 'Sports', 'Astrophotography', 'Creative', 'Architecture',
+            'Drone', 'Fashion', 'Wedding', 'People'
+        ]
 
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
