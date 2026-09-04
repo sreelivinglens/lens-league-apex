@@ -16430,7 +16430,18 @@ def admin_dashboard():
     try:
         import json as _puj
         from datetime import datetime as _pudt
-        _sub_users = User.query.filter(User.is_subscribed==True, User.subscription_plan!='play').order_by(User.full_name).all()
+        # Include all genuinely subscribed users (excluding play) PLUS
+        # UAT/beta/learning users who may have is_subscribed=False from
+        # the pre-subscription-system era (e.g. early UAT members like Divya).
+        from sqlalchemy import or_
+        _sub_users = User.query.filter(
+            User.subscription_plan != None,
+            User.subscription_plan != 'play',
+            or_(
+                User.is_subscribed == True,
+                User.subscription_plan.in_(['uat', 'beta', 'learning'])
+            )
+        ).order_by(User.full_name).all()
         for _pu in _sub_users:
             # Latest scored image
             _latest = db.session.query(Image).filter(
