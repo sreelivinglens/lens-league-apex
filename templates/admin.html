@@ -933,7 +933,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           {% for uu in uat_users %}
           <tr style="background:#FFFBEB">
             <td>
-              <div class="ps-name">{{ uu.full_name }}</div>
+              <div class="ps-name">{{ uu.full_name }}{% if not uu.is_active %} <span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;background:#FEF2F2;color:#B91C1C;vertical-align:middle">inactive</span>{% endif %}</div>
               <div class="ps-meta">{{ uu.email }}</div>
             </td>
             <td>
