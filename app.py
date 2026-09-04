@@ -33767,6 +33767,21 @@ _TRY_HAIKU_PROMPT = (
 
     "{history_context}\n\n"
 
+    "PHOTOGRAPHER CONTEXT:\n"
+    "{photographer_context}\n\n"
+
+    "CRITICAL INSTRUCTION ON PHOTOGRAPHER CONTEXT:\n"
+    "If photographer context is provided above, use it ONLY to:\n"
+    "1. Recalibrate your DOD score — rare access, rare behaviour, or extreme "
+    "physical conditions the image cannot show change the difficulty ceiling.\n"
+    "2. Tell them what the world's best photographers did differently in this "
+    "same situation — specific, named, concrete.\n"
+    "3. Name what the frame reveals that the photographer could not see from "
+    "inside the moment — something they did not already know.\n"
+    "NEVER repeat or summarise what the photographer told you. "
+    "NEVER validate their context by echoing it. "
+    "Respond to it — go beyond it. The photographer already knows what they told you.\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
     "\"takeaway\": \"<one sentence>\", "
@@ -33781,7 +33796,7 @@ _TRY_HAIKU_PROMPT = (
 )
 
 
-def _try_run_haiku(image_id, img_b64, genre, user_id=None):
+def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=None):
     """
     Single Haiku call: all 10 DDI fields per Session 186 handoff spec.
     181.15: expanded from 6 fields (dod/vd/dm/wf/aq/takeaway) to 10 fields.
@@ -33805,10 +33820,19 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
 
     # SL-181.1: genre placeholder plus platform calibration anchors
     # 181.15: also inject history context
+    # Session 210: inject photographer context — engine must respond to it, never mirror it
+    _ctx_block = ''
+    if photographer_context and photographer_context.strip():
+        _ctx_block = (
+            f'The photographer provided this context about the image:\n'
+            f'"{photographer_context.strip()}"\n'
+            f'Use this ONLY to recalibrate DOD and to tell them what they don\'t already know.'
+        )
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
               .replace('{calibration}', _try_calibration_line(genre or ''))
-              .replace('{history_context}', _history_ctx))
+              .replace('{history_context}', _history_ctx)
+              .replace('{photographer_context}', _ctx_block))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
@@ -35260,6 +35284,10 @@ def try_upload():
     if not genre:
         return jsonify({'error': True, 'message': 'Please select an interest area.'}), 400
 
+    # Session 210: photographer context from 'subject' field — max 500 chars, never required
+    # The 'subject' field already exists in upload.html — we wire it to the engine here.
+    _photographer_context = (request.form.get('subject', '') or '').strip()[:500]
+
     from engine.scoring import normalise_genre, GENRE_IDS
     genre = normalise_genre(genre)
     if genre not in GENRE_IDS:
@@ -35456,13 +35484,13 @@ def try_upload():
 
     _uid_for_thread = current_user.id
 
-    def _haiku_thread(iid, b64, g, uid):
+    def _haiku_thread(iid, b64, g, uid, ctx):
         with app.app_context():
-            _try_run_haiku(iid, b64, g, user_id=uid)
+            _try_run_haiku(iid, b64, g, user_id=uid, photographer_context=ctx)
 
     threading.Thread(
         target=_haiku_thread,
-        args=(image_id, img_b64, genre, _uid_for_thread),
+        args=(image_id, img_b64, genre, _uid_for_thread, _photographer_context),
         daemon=True
     ).start()
 
