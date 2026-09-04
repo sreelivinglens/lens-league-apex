@@ -1395,6 +1395,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         </form>
       </div>
       <div style="font-size:13px;color:#8A8A86">Bulk image delete and other irreversible actions are available below — please read the warning above before proceeding.</div>
+      <div style="padding:16px 0;border-bottom:1px solid #FECACA">
+        <div style="font-size:14px;font-weight:600;color:#1A1A18;margin-bottom:4px">Rescore all Haiku images</div>
+        <div style="font-size:13px;color:#8A8A86;margin-bottom:12px">Re-runs the Haiku engine on all scored Haiku images. Use after prompt improvements to refresh existing scorecards. Allow ~15 seconds per image. Current count: check logs.</div>
+        <button class="btn-bot-del" onclick="if(confirm('Rescore ALL Haiku images with the current prompt? Allow 15 seconds per image. Check logs for progress.')){fetch('/admin/haiku/bulk-rescore',{method:'POST'}).then(function(r){return r.json();}).then(function(d){showFlash(d.message,d.ok?'success':'error');});}">Rescore all Haiku images →</button>
+      </div>
       {% include 'admin_danger_partial.html' ignore missing %}
     </div>
   </div>
@@ -1803,7 +1808,7 @@ function mrSuggest() {
   var status = document.getElementById('mr-suggest-status');
   status.style.display = 'block';
   status.className = 'bulk-result ok';
-  status.textContent = 'Asking Claude for suggestions' + (genre ? ' for ' + genre : '') + '… this takes 20-30 seconds.';
+  status.textContent = 'Starting Sonnet… this takes 30–60 seconds.';
   document.getElementById('mr-suggestions-area').style.display = 'none';
 
   var fd = new FormData();
@@ -1812,31 +1817,51 @@ function mrSuggest() {
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.ok){ status.className='bulk-result err'; status.textContent='Failed: '+(d.message||'unknown'); return; }
-      _mrPendingSuggestions = [];
-      var list = document.getElementById('mr-suggestions-list');
-      list.innerHTML = '';
-      d.suggestions.forEach(function(genreGroup){
-        if(!genreGroup.photographers || !genreGroup.photographers.length) return;
-        var hdr = document.createElement('div');
-        hdr.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin:14px 0 8px';
-        hdr.textContent = genreGroup.genre;
-        list.appendChild(hdr);
-        genreGroup.photographers.forEach(function(p, i){
-          var id = 'mr-sug-' + genreGroup.genre + '-' + i;
-          _mrPendingSuggestions.push({...p, genre_tags: genreGroup.genre, _id: id});
-          var row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F5F3EF';
-          row.innerHTML = '<input type="checkbox" id="'+id+'" checked style="margin-top:3px;flex-shrink:0">'
-            + '<div><div style="font-size:14px;font-weight:500">'+p.name+' <span style="font-size:12px;color:#8A8A86;font-weight:400">('+p.region+') '+p.tier+'</span></div>'
-            + '<div style="font-size:13px;color:#4A4840;margin-top:3px">'+p.known_for+'</div>'
-            + '<div style="font-size:12px;color:#8A6A00;margin-top:2px">Use when: '+(p.reference_when||'—')+'</div></div>';
-          list.appendChild(row);
-        });
-      });
-      status.style.display = 'none';
-      document.getElementById('mr-suggestions-area').style.display = 'block';
+      // Poll for result
+      var jobId = d.job_id;
+      var dots = 0;
+      var pollInterval = setInterval(function(){
+        dots = (dots + 1) % 4;
+        status.textContent = 'Sonnet working' + '.'.repeat(dots+1) + ' (30–60 seconds)';
+        fetch('/admin/master-references/suggest/status?job=' + jobId)
+          .then(function(r){ return r.json(); })
+          .then(function(result){
+            if(result.status === 'running') return; // keep polling
+            clearInterval(pollInterval);
+            if(result.status === 'error'){
+              status.className = 'bulk-result err';
+              status.textContent = '✗ ' + (result.message || 'Sonnet call failed.');
+              return;
+            }
+            // Done — render suggestions
+            _mrPendingSuggestions = [];
+            var list = document.getElementById('mr-suggestions-list');
+            list.innerHTML = '';
+            (result.suggestions || []).forEach(function(genreGroup){
+              if(!genreGroup.photographers || !genreGroup.photographers.length) return;
+              var hdr = document.createElement('div');
+              hdr.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin:14px 0 8px';
+              hdr.textContent = genreGroup.genre;
+              list.appendChild(hdr);
+              genreGroup.photographers.forEach(function(p, i){
+                var id = 'mr-sug-' + genreGroup.genre.replace(/\s/g,'') + '-' + i;
+                _mrPendingSuggestions.push(Object.assign({}, p, {genre_tags: genreGroup.genre, _id: id}));
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F5F3EF';
+                row.innerHTML = '<input type="checkbox" id="'+id+'" checked style="margin-top:3px;flex-shrink:0">'
+                  + '<div><div style="font-size:14px;font-weight:500">'+p.name+' <span style="font-size:12px;color:#8A8A86;font-weight:400">('+p.region+') '+p.tier+'</span></div>'
+                  + '<div style="font-size:13px;color:#4A4840;margin-top:3px">'+(p.known_for||'')+'</div>'
+                  + '<div style="font-size:12px;color:#8A6A00;margin-top:2px">Use when: '+(p.reference_when||'—')+'</div></div>';
+                list.appendChild(row);
+              });
+            });
+            status.style.display = 'none';
+            document.getElementById('mr-suggestions-area').style.display = 'block';
+          })
+          .catch(function(){ /* keep polling on network hiccup */ });
+      }, 3000);
     })
-    .catch(function(){ status.className='bulk-result err'; status.textContent='Network error.'; });
+    .catch(function(){ status.className='bulk-result err'; status.textContent='Network error — please try again.'; });
 }
 
 function mrApproveAll() {
