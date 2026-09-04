@@ -242,6 +242,39 @@ ALL_MASTERS = {
     'Edgerton':               'Harold+Edgerton+photography',
     # Platform mentor — pinned query avoids wrong-person Google results
     'Ashok Kochhar':          'Ashok+Kochhar+soulfulphotographer+street+portrait+photography',
+    # Session 210 additions — Indian and global masters from reference library
+    'Shaaz Jung':             'Shaaz+Jung+photography+leopard',
+    'Dhritiman Mukherjee':    'Dhritiman+Mukherjee+wildlife+photography',
+    'Baiju Patil':            'Baiju+Patil+wildlife+photography+ReFocus',
+    'Rathika Ramasamy':       'Rathika+Ramasamy+bird+photography',
+    'Aishwarya Sridhar':      'Aishwarya+Sridhar+wildlife+photographer',
+    'Varun Aditya':           'Varun+Aditya+nature+photography+NatGeo',
+    'Sudhir Shivaram':        'Sudhir+Shivaram+wildlife+photography',
+    'Kalyan Varma':           'Kalyan+Varma+wildlife+photography',
+    'Charlie Hamilton James': 'Charlie+Hamilton+James+wildlife+photography+BBC',
+    'Steve Winter':           'Steve+Winter+wildlife+photography+NatGeo+snow+leopard',
+    'Thomas Mangelsen':       'Thomas+Mangelsen+nature+photography',
+    'Vineet Vohra':           'Vineet+Vohra+street+photography+India',
+    'Sohrab Hura':            'Sohrab+Hura+Magnum+photography',
+    'Dimpy Bhalotia':         'Dimpy+Bhalotia+photography',
+    'Ketaki Sheth':           'Ketaki+Sheth+photography+Mumbai',
+    'Raghubir Singh':         'Raghubir+Singh+colour+photography+India',
+    'Alex Webb':              'Alex+Webb+Magnum+photography',
+    'Martin Parr':            'Martin+Parr+photography',
+    'Bruce Gilden':           'Bruce+Gilden+street+photography',
+    'Matt Stuart':            'Matt+Stuart+street+photography',
+    'Nick Brandt':            'Nick+Brandt+photography+Africa',
+    'Levon Biss':             'Levon+Biss+microsculpture+photography',
+    'Babak Tafreshi':         'Babak+Tafreshi+night+sky+photography',
+    'Rogelio Bernal Andreo':  'Rogelio+Bernal+Andreo+astrophotography',
+    'Julius Shulman':         'Julius+Shulman+architecture+photography',
+    'Ezra Stoller':           'Ezra+Stoller+architecture+photography',
+    'Neil Leifer':            'Neil+Leifer+sports+photography',
+    'Walter Iooss':           'Walter+Iooss+sports+photography',
+    'Jose Villa':             'Jose+Villa+wedding+photography',
+    'Jonas Peterson':         'Jonas+Peterson+wedding+photography',
+    'Eliot Porter':           'Eliot+Porter+nature+photography',
+    'Michael Kenna':          'Michael+Kenna+landscape+photography',
 }
 
 # ---------------------------------------------------------------------------
@@ -33754,16 +33787,176 @@ _TRY_HAIKU_PROMPT = (
     "is limiting this dimension for THIS photograph. Honest. No jargon.\n\n"
 
     "WHAT NEXT:\n"
-    "One actionable instruction the photographer can carry to their next session. "
-    "Device-aware if format is known. If the same gap appears in history, name "
-    "the pattern directly — what to watch for, not what to fix abstractly. "
-    "Plain English. No jargon. Max 80 words.\n\n"
+    "This is the Sherpa speaking directly. One specific, actionable instruction "
+    "for the photographer's next session with this subject or genre. "
+    "Name what the reference photographer (from the library above) specifically did "
+    "in a similar situation that this photographer has not yet done — concrete, not abstract. "
+    "Then name the one thing to change: vantage, timing, proximity, or the moment to wait for. "
+    "If the same gap appears in their history, name the pattern — not 'work on composition' "
+    "but 'you arrive at scenes and document them — the next frame needs you to architect "
+    "where the viewer enters before you press the shutter.' "
+    "Plain English. No codes. No jargon. Max 80 words.\n\n"
 
-    "MASTER REFERENCE:\n"
-    "master_name: One photographer whose body of work is most relevant to this "
-    "image's strengths or genre. A real, well-known name. Not generic.\n"
-    "master_why: One sentence (max 25 words) connecting their work to what "
-    "this photographer is doing or reaching toward.\n\n"
+    "MASTER REFERENCE — HOW TO CHOOSE:\n"
+    "Select one photographer whose work most closely mirrors what this photographer "
+    "is reaching toward. Match on SUBJECT and BEHAVIOUR first, then on the specific "
+    "dimension where they need to grow. Never match on visual style alone.\n\n"
+
+    "REFERENCE LIBRARY — use only names from this list:\n\n"
+
+    "WILDLIFE (animals in natural behaviour, birds, big cats, marine, insects):\n"
+    "World: Charlie Hamilton James — raptors hunting in wildfire and extreme conditions, BBC/NHM. "
+    "Use when: fire + birds, raptors, extreme behavioural access.\n"
+    "World: Paul Nicklen — underwater and polar wildlife, climate urgency, National Geographic. "
+    "Use when: marine, polar, survival-in-extreme-environment is the story.\n"
+    "World: Steve Winter — big cats, snow leopards, patient dangerous tracking, NatGeo. "
+    "Use when: rare access to apex predators over long periods defines the image.\n"
+    "World: Frans Lanting — intimate animal portraits, emotional connection, global ecosystems. "
+    "Use when: the emotional bond between viewer and animal carries the frame.\n"
+    "World: Thomas Mangelsen — unrepeatable moments in nature, bears, seasons, zero manipulation. "
+    "Use when: patience and perfect timing produced a singular natural moment.\n"
+    "India: Shaaz Jung — melanistic leopards, low-light predator behaviour, South India. "
+    "Use when: atmosphere, mystery, and partially revealed subjects define the mood.\n"
+    "India: Dhritiman Mukherjee — rare species, extreme terrain, conservation documentation. "
+    "Use when: ecological rarity or access difficulty is the defining quality.\n"
+    "India: Baiju Patil — birds in precise behavioural moments, Indian wetlands, World No.1 ReFocus 2025. "
+    "Use when: bird behaviour and the decisive moment of action is the story.\n"
+    "India: Rathika Ramasamy — bird photography, patience, storytelling through positioning. "
+    "Use when: disciplined waiting for the right bird behaviour is evident.\n"
+    "India: Aishwarya Sridhar — Wildlife Photographer of the Year, first Indian woman, narrative wildlife. "
+    "Use when: conservation narrative and emotional resonance define the image.\n"
+    "India: Varun Aditya — NatGeo Nature Photographer of Year 2016, moody artistic wildlife and macro. "
+    "Use when: artistic mood and painterly framing override documentary instinct.\n"
+    "India: Sudhir Shivaram — big cats, birds, Indian reserves, educator, disciplined craft. "
+    "Use when: the image is from an Indian reserve and shows controlled technical skill.\n\n"
+
+    "STREET (human life in public spaces, candid, markets, urban, village, transit):\n"
+    "World: Henri Cartier-Bresson — the decisive moment, geometric alignment, human life in flux. "
+    "Use when: timing and geometry between subject and background is the image's defining quality.\n"
+    "World: Vivian Maier — mid-century urban life, self-taught precision, psychological depth in candid. "
+    "Use when: ordinary scenes carry unexpected psychological weight or irony.\n"
+    "World: Garry Winogrand — raw energy, American public life, chaotic frames with inner order. "
+    "Use when: the image has energy and chaos but needs tighter compositional intent.\n"
+    "World: Saul Leiter — colour abstraction, rain, reflections, soft focus, painterly street. "
+    "Use when: colour, reflections, or partial framing creates an abstract or painterly quality.\n"
+    "World: Alex Webb — multi-layered colour, deep shadow, intense equatorial light, Latin America. "
+    "Use when: complex layers, foreground/background interaction, or intense colour define the frame.\n"
+    "World: Martin Parr — satirical colour, consumerism, social class, unsparing observation. "
+    "Use when: the image observes human behaviour with wit or quiet irony.\n"
+    "World: Bruce Gilden — aggressive close flash, raw confrontation, New York streets. "
+    "Use when: extreme proximity and the photographer's presence in the frame is part of the work.\n"
+    "World: Matt Stuart — serendipitous geometry, humour, visual coincidences, London streets. "
+    "Use when: a visual coincidence or geometric accident makes the image.\n"
+    "India: Raghu Rai — Magnum, nominated by HCB, soul of India, Bhopal, festivals, communal emotion. "
+    "Use when: Indian festivals (Holi, Diwali), communal human moments, or social documentary.\n"
+    "India: Raghubir Singh — colour pioneer, vibrant Indian city life, Bombay, Calcutta. "
+    "Use when: rich colour and the layered social fabric of Indian cities define the frame.\n"
+    "India: Vineet Vohra — Leica Ambassador, layered geometric Indian streetscapes, shadow and light. "
+    "Use when: shadow, geometry, and compositional layering in Indian urban spaces.\n"
+    "India: Sohrab Hura — Magnum, visceral personal storytelling, raw psychological landscapes. "
+    "Use when: the image is raw, personal, and psychologically intense.\n"
+    "India: Dimpy Bhalotia — motion, freedom, human spirit, award-winning black and white. "
+    "Use when: motion blur or the physical joy of human movement defines the image.\n"
+    "India: Ketaki Sheth — long-term intimate documentation, Mumbai, geometric order in density. "
+    "Use when: a quiet geometric order is found within dense urban or community life.\n\n"
+
+    "DOCUMENTARY (witnessed events, social issues, health, crisis, environment):\n"
+    "World: Sebastiao Salgado — large-scale human stories, migration, labour, social weight. "
+    "Use when: the image carries humanitarian gravitas and documents human suffering or resilience.\n"
+    "World: James Nachtwey — war, famine, social injustice, unflinching witness photography. "
+    "Use when: the image documents extreme human conditions with moral clarity.\n"
+    "India: Raghu Rai — Bhopal disaster, Indian social documentary, Magnum. "
+    "Use when: Indian social or environmental crisis is documented with emotional weight.\n"
+    "India: Dayanita Singh — intimate long-term Indian portraiture, communities over time. "
+    "Use when: a sustained relationship with a subject or community defines the image.\n\n"
+
+    "LANDSCAPE (land, sea, sky, seascape, cityscape, long exposure):\n"
+    "World: Art Wolfe — pattern, abstraction, natural geometry at scale. "
+    "Use when: the image finds pattern, abstraction, or graphic order in natural form.\n"
+    "World: Nick Brandt — dramatic painterly African landscapes and environments. "
+    "Use when: the image has monumental, cinematic, or elegiac quality.\n"
+    "World: Michael Kenna — minimalist long exposure, quiet landscapes, Japan, fog, water. "
+    "Use when: minimalism, stillness, and reductive composition define the image.\n"
+    "India: Kalyan Varma — Indian natural landscapes, conservation, wilderness. "
+    "Use when: Indian forests, rivers, or natural environments are the subject.\n\n"
+
+    "PEOPLE & PORTRAIT (faces, expression, emotional connection):\n"
+    "World: Steve McCurry — colour, human connection across cultures, Afghan Girl, NatGeo. "
+    "Use when: a face or eyes carry the entire emotional weight of the image.\n"
+    "World: Yousuf Karsh — formal portraiture, monumental black and white, revelation of character. "
+    "Use when: the image attempts to reveal character through controlled light and posture.\n"
+    "World: Dorothea Lange — Depression-era humanity, Migrant Mother, dignity in hardship. "
+    "Use when: the image finds dignity or humanity in difficult human circumstances.\n"
+    "India: Dayanita Singh — intimate Indian portraiture, long-term relationships. "
+    "Use when: intimacy and long-term access to a subject define the image.\n\n"
+
+    "NATURE (plants, fungi, weather, ecosystems — not animals):\n"
+    "World: Eliot Porter — colour nature photography, birds in habitat, fine art natural world. "
+    "Use when: the natural world is rendered with fine-art sensitivity and colour precision.\n"
+    "World: Art Wolfe — pattern and abstraction in natural form, geometric beauty. "
+    "Use when: graphic patterns, textures, or abstraction in the natural world.\n"
+    "India: Varun Aditya — moody nature and macro, NatGeo India. "
+    "Use when: mood and artistic rendering of Indian natural subjects.\n\n"
+
+    "MACRO (extreme close-up, any subject):\n"
+    "World: Levon Biss — microsculpture, insects at extreme magnification, scientific beauty. "
+    "Use when: the image reveals invisible structure or beauty at extreme proximity.\n"
+    "World: Art Wolfe — pattern, texture, abstract natural detail. "
+    "Use when: pattern or texture at close range creates graphic abstraction.\n"
+    "India: Varun Aditya — moody artistic macro, NatGeo Nature Photographer of Year. "
+    "Use when: artistic mood in Indian macro subjects.\n\n"
+
+    "SPORTS (athletic action, competition, physical performance):\n"
+    "World: Neil Leifer — iconic sports moments, Ali, Olympics, Sports Illustrated. "
+    "Use when: the peak moment of athletic achievement is what makes the image.\n"
+    "World: Walter Iooss — fluid sports portraiture, athletes at rest and at peak. "
+    "Use when: the image captures both the athlete's power and their humanity.\n\n"
+
+    "ASTROPHOTOGRAPHY (Milky Way, star trails, aurora, planets):\n"
+    "World: Rogelio Bernal Andreo — deep sky imaging, Milky Way at scale, nebulae. "
+    "Use when: the cosmic scale and technical precision of deep sky work defines the image.\n"
+    "World: Babak Tafreshi — night sky in landscape context, Earth and sky as one frame. "
+    "Use when: the relationship between the landscape and the night sky is the subject.\n\n"
+
+    "CREATIVE / ABSTRACT (technique-driven, ICM, long exposure, experimental):\n"
+    "World: Aaron Siskind — abstract expressionism in photography, surface and texture. "
+    "Use when: the image abstracts the world into pure form, texture, and graphic quality.\n"
+    "World: Ernst Haas — colour abstraction, motion blur as artistic statement. "
+    "Use when: motion blur or colour abstraction is the deliberate technique.\n\n"
+
+    "ARCHITECTURE (built environment, interiors, urban geometry):\n"
+    "World: Julius Shulman — modernist architecture, clean lines, human scale in buildings. "
+    "Use when: the image captures the relationship between architecture and human life.\n"
+    "World: Ezra Stoller — architectural photography as art, light and structure. "
+    "Use when: light and shadow reveal the geometry and intent of the built environment.\n\n"
+
+    "DRONE / AERIAL (patterns from altitude, perspectives impossible from ground):\n"
+    "World: Yann Arthus-Bertrand — Earth from above, human impact, pattern at altitude. "
+    "Use when: the image reveals human impact on the earth or finds pattern at altitude.\n"
+    "World: Art Wolfe — aerial pattern, abstraction, graphic order from above. "
+    "Use when: graphic pattern or abstraction is found from aerial vantage.\n\n"
+
+    "FASHION / EDITORIAL (directed creative work, studio, conceptual):\n"
+    "World: Richard Avedon — direct portraiture, plain background, psychological confrontation. "
+    "Use when: the image strips away context to reveal character through directness.\n"
+    "World: Helmut Newton — provocative, powerful, cinematic fashion narrative. "
+    "Use when: the image constructs a strong cinematic or theatrical narrative.\n\n"
+
+    "WEDDING / CELEBRATION:\n"
+    "World: Jose Villa — film-grain, romantic, light-filled wedding photography. "
+    "Use when: softness, warmth, and romantic light define the image.\n"
+    "World: Jonas Peterson — raw emotion, documentary-style wedding moments. "
+    "Use when: unposed, raw emotional moments are the strength.\n\n"
+
+    "ABSOLUTE RULE: Never assign a wildlife photographer to a street or documentary image. "
+    "Never assign a street photographer to a wildlife or landscape image. "
+    "Never invent a photographer not on this list. "
+    "If uncertain between two names, pick the one whose work most closely matches "
+    "the SUBJECT of this specific image, not the visual style.\n\n"
+
+    "master_name: Exactly one name from the library above.\n"
+    "master_why: One sentence (max 30 words) — what this master did in the same situation "
+    "that this photographer has not yet done. Specific and concrete, not generic praise.\n\n"
 
     "{history_context}\n\n"
 
@@ -33836,7 +34029,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 800,
+        'max_tokens': 1000,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
