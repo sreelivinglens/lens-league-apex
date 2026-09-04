@@ -857,7 +857,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 <a class="ta" href="{{ detail_url }}">View</a>
                 <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
                 {% if img.status == 'scored' %}
-                <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                  {% if admin_engine == 'haiku' %}
+                  {# Session 211: Haiku images must use haiku-rescore — never force_rescore (Rule 26) #}
+                  <button class="ta rescore-btn" type="button" onclick="haikuRescore({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Rescore</button>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                  {% endif %}
                 {% endif %}
                 {% if admin_engine == 'sonnet' %}
                 <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
