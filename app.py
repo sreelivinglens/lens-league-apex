@@ -2271,7 +2271,22 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'blocked_ips migration warning: {_bip_mig}')
 
-            # Session 208 — Audit & Legal: admin_action_log
+            # Session 210 — master_references: add last_updated tracking
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE master_references ADD COLUMN IF NOT EXISTS "
+                    "last_refreshed_at TIMESTAMP"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE master_references ADD COLUMN IF NOT EXISTS "
+                    "added_by VARCHAR(50) DEFAULT 'seed'"
+                ))
+                db.session.commit()
+            except Exception as _mr_mig:
+                db.session.rollback()
+                print(f'master_references migration: {_mr_mig}')
+
+            # Session 210 — Audit & Legal: admin_action_log
             # Permanent record of every destructive or consequential admin action.
             # Used for dispute resolution, subscription audit, and legal evidence trail.
             # Never deleted — append-only. detail column stores JSON snapshot.
@@ -3387,6 +3402,32 @@ def seed_master_references():
             ('Pablo Bartholomew WPP','Documentary','India','Contest Winner','World Press Photo winner, Bhopal. Indian at international standard.','Indian WPP winner, Bhopal documentation','Fashion,Wildlife,Minimalist',False),
             ('Dimpy Bhalotia IPPA 2020','Mobile,Street','India / UK','Contest Winner','IPPA 2020 iPhone Photography Award winner.','IPPA winner, iPhone award, Indian mobile street photography','Studio,Landscape',False),
             ('Juliette Pavy SWPA 2024','Street','France','Contest Winner','Street Photography Awards 2024 Photographer of the Year.','SWPA 2024 Photographer of the Year citation','Wildlife,Fashion,Studio',False),
+            # Session 210 additions — Indian masters and global specialists
+            ('Shaaz Jung','Wildlife,Predator','India — South India','Tier 1','Melanistic leopard and big cat low-light photography, South India forests, atmospheric predator work.','Low-light predator behaviour, melanistic subjects, atmospheric wildlife mood','Street,Fashion,Landscape',False),
+            ('Dhritiman Mukherjee','Wildlife,Conservation','India','Tier 1','Rare species documentation across extreme terrains, conservation storytelling, decades of Indian wildlife.','Rare species access, ecological documentation, extreme terrain wildlife','Street,Fashion',False),
+            ('Baiju Patil','Wildlife,Birds','India','Tier 1','World No.1 ReFocus Awards 2025, darter at Keoladeo, precise bird behavioural moments, Indian wetlands.','Bird behaviour decisive moment, Indian wetland birds, ReFocus 2025 World No.1','Street,Fashion,Urban',False),
+            ('Rathika Ramasamy','Wildlife,Birds','India','Tier 2','Professional bird photography and storytelling, patience and positioning, Indian bird specialist.','Patient bird positioning, bird behaviour storytelling, Indian bird photography','Street,Fashion,Urban',False),
+            ('Varun Aditya','Wildlife,Nature,Macro','India','Tier 1','NatGeo Nature Photographer of Year 2016, moody artistic wildlife and macro, Indian natural world.','Moody artistic wildlife, NatGeo winner, artistic framing over documentary instinct','Street,Fashion,Urban',False),
+            ('Sudhir Shivaram','Wildlife','India','Tier 2','Big cats, birds, Indian reserves, wildlife educator, disciplined technical craft.','Technical discipline in Indian wildlife, big cats and birds in reserves','Street,Fashion,Urban',False),
+            ('Charlie Hamilton James','Wildlife,Birds,Fire','UK','Tier 1','Black kites hunting in Australian wildfires, BBC/NHM, raptors in extreme conditions.','Raptors in wildfire and extreme conditions, behavioural wildlife in fire','Street,Fashion,Landscape',False),
+            ('Steve Winter','Wildlife,BigCats','USA','Tier 1','Snow leopards and tigers for NatGeo, patient dangerous tracking, years-long access to apex predators.','Rare big cat access over time, patience and physical risk, NatGeo big cats','Street,Fashion,Landscape',False),
+            ('Thomas Mangelsen','Wildlife,Nature','USA','Tier 1','Iconic unmanipulated nature moments — bear catching salmon, polar bears, American wilderness seasons.','Unrepeatable natural moments requiring extraordinary patience, zero manipulation','Street,Fashion,Landscape',False),
+            ('Sohrab Hura','Street,Documentary','India','Tier 2','Magnum photographer, visceral personal storytelling, raw psychological landscapes of contemporary India.','Raw visceral personal documentary, psychological intensity, Magnum India','Fashion,Wildlife',False),
+            ('Ketaki Sheth','Street,Documentary','India — Mumbai','Tier 2','Long-term intimate B&W documentation of Mumbai and Siddi community, geometric order in density.','Long-term community documentation, quiet geometric order in dense urban life','Wildlife,Fashion',False),
+            ('Raghubir Singh','Street,Colour','India','Tier 1','Pioneer of Indian colour street photography, vibrant 35mm colour, Bombay and Calcutta social fabric.','Indian colour street pioneer, vibrant city life colour, Indian social fabric','Wildlife,Fashion',False),
+            ('Bruce Gilden','Street','USA','Tier 2','Aggressive close flash photography, raw confrontation, New York street faces.','Extreme proximity and confrontation, flash street, raw New York faces','Wildlife,Landscape,Fashion',False),
+            ('Matt Stuart','Street,Humour','UK','Tier 2','Serendipitous geometric coincidences, visual humour, London streets, HCB disciple.','Visual serendipity and coincidence, geometric humour in street','Wildlife,Landscape,Fashion',False),
+            ('Levon Biss','Macro,Science','UK','Tier 1','Microsculpture — insects at extreme magnification revealing invisible structure, Museum of Natural History.','Extreme magnification revealing hidden structure and beauty','Wildlife,Street,Fashion',False),
+            ('Babak Tafreshi','Astrophotography','Iran / USA','Tier 1','Night sky in landscape context, Earth and sky as unified frame, TWAN, NatGeo night sky specialist.','Night sky integrated with landscape, Earth-sky relationship as subject','Street,Fashion,Urban',False),
+            ('Rogelio Bernal Andreo','Astrophotography','Spain / USA','Tier 1','Deep sky imaging, Milky Way at scale, nebulae and cosmic structure, technical precision.','Deep sky imaging precision, cosmic scale and structure','Street,Fashion,Urban',False),
+            ('Julius Shulman','Architecture','USA','Tier 1','Case Study Houses, modernist architecture at golden hour, human scale in built environment.','Modernist architecture photography, relationship between architecture and human life','Street,Fashion,Wildlife',False),
+            ('Ezra Stoller','Architecture','USA','Tier 1','Architectural photography as art, light and shadow revealing structural geometry and intent.','Light revealing architectural geometry, structure as subject','Street,Fashion,Wildlife',False),
+            ('Neil Leifer','Sports','USA','Tier 1','Muhammad Ali, Olympics, Sports Illustrated — iconic peak sports moments.','Peak athletic achievement moments, iconic sports decisive moment','Wildlife,Landscape,Fashion',False),
+            ('Walter Iooss','Sports','USA','Tier 1','Sports portraiture and peak action, athletes at rest and at their limit, Sports Illustrated decades.','Athletic power and humanity combined, sports portraiture','Wildlife,Landscape,Fashion',False),
+            ('Jose Villa','Wedding','USA','Tier 1','Film-grain romantic wedding photography, warm light, ethereal wedding moments.','Soft romantic film quality, warm light, intimate wedding moments','Wildlife,Documentary,Street',False),
+            ('Jonas Peterson','Wedding','Australia','Tier 1','Raw documentary wedding moments, unposed emotion, photojournalistic wedding style.','Unposed raw emotion, documentary wedding style, photojournalistic approach','Wildlife,Landscape,Street',False),
+            ('Eliot Porter','Nature,Landscape','USA','Tier 1','Colour nature photography pioneer, birds in habitat, fine art sensitivity to natural world colour.','Fine art colour precision in natural world, birds in habitat','Street,Fashion,Urban',False),
+            ('Michael Kenna','Landscape,Minimalist','UK','Tier 1','Long exposure minimalism, Japanese and French landscapes, pre-dawn stillness, near-abstract landscape.','Minimalist landscape, long exposure stillness, near-abstract reductive composition','Street,Fashion,Studio',False),
         ]
         for row in MSEED:
             db.session.execute(db.text(
@@ -16650,6 +16691,36 @@ def admin_dashboard():
     except Exception as _aal_e:
         app.logger.warning(f'[admin_dashboard] audit log fetch failed: {_aal_e}')
 
+    # Master references for admin panel
+    _mr_refs_list = []
+    _mr_stale = True
+    _mr_total = 0
+    _mr_days = None
+    try:
+        _mr_rows = db.session.execute(db.text(
+            "SELECT id, name, genre_tags, region, tier, known_for, is_active, "
+            "COALESCE(added_by, 'seed') as added_by "
+            "FROM master_references ORDER BY "
+            "CASE tier WHEN 'Tier 1' THEN 1 WHEN 'Contest Winner' THEN 2 "
+            "WHEN 'Tier 2' THEN 3 ELSE 4 END, name ASC LIMIT 200"
+        )).fetchall()
+        _mr_last = db.session.execute(db.text(
+            "SELECT MAX(last_refreshed_at) FROM master_references "
+            "WHERE last_refreshed_at IS NOT NULL"
+        )).scalar()
+        _mr_refs_list = [
+            {'id': r.id, 'name': r.name, 'genre_tags': r.genre_tags,
+             'region': r.region or '', 'tier': r.tier,
+             'known_for': r.known_for or '', 'is_active': r.is_active,
+             'added_by': r.added_by or 'seed'}
+            for r in _mr_rows
+        ]
+        _mr_total = sum(1 for r in _mr_refs_list if r['is_active'])
+        _mr_stale = _mr_last is None or (datetime.utcnow() - _mr_last).days > 21
+        _mr_days = (datetime.utcnow() - _mr_last).days if _mr_last else None
+    except Exception as _mr_err:
+        app.logger.warning(f'[admin_dashboard] master_refs failed: {_mr_err}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine, sonnet_new_today=sonnet_new_today, haiku_new_today=haiku_new_today,
@@ -16692,7 +16763,11 @@ def admin_dashboard():
                                "AND aal.target_type = 'user' AND aal.action = 'soft_delete' "
                                "WHERE u.is_active = FALSE AND u.role != 'admin' "
                                "ORDER BY aal.created_at DESC LIMIT 50"
-                           )).fetchall())
+                           )).fetchall(),
+                           master_refs=_mr_refs_list,
+                           master_refs_stale=_mr_stale,
+                           master_refs_total=_mr_total,
+                           master_refs_days=_mr_days)
 
 
 # ── OPTION 2: Audit Log full search page — Session 208 ─────────────────────────────
@@ -18477,6 +18552,205 @@ def admin_haiku_bulk_delete():
             if _failed else ''
         ),
     })
+
+
+@app.route('/admin/master-references', methods=['GET'])
+@login_required
+@admin_required
+def admin_master_references():
+    """
+    GET /admin/master-references
+    Shows master reference library with staleness indicator and refresh controls.
+    Session 210.
+    """
+    import json as _mrj
+    try:
+        _rows = db.session.execute(db.text(
+            "SELECT id, name, genre_tags, region, tier, known_for, reference_when, "
+            "do_not_reference, is_platform_mentor, is_active, created_at, last_refreshed_at, added_by "
+            "FROM master_references ORDER BY "
+            "CASE tier WHEN 'Platform Mentor' THEN 0 WHEN 'Tier 1' THEN 1 "
+            "WHEN 'Contest Winner' THEN 2 WHEN 'Tier 2' THEN 3 ELSE 4 END, "
+            "name ASC"
+        )).fetchall()
+        _total = len(_rows)
+        _last_refresh = db.session.execute(db.text(
+            "SELECT MAX(last_refreshed_at) FROM master_references WHERE last_refreshed_at IS NOT NULL"
+        )).scalar()
+        _days_since = None
+        if _last_refresh:
+            _days_since = (datetime.utcnow() - _last_refresh).days
+        return jsonify({
+            'ok': True,
+            'total': _total,
+            'days_since_refresh': _days_since,
+            'stale': (_days_since is None or _days_since > 21),
+            'refs': [
+                {
+                    'id': r.id,
+                    'name': r.name,
+                    'genre_tags': r.genre_tags,
+                    'region': r.region or '',
+                    'tier': r.tier,
+                    'known_for': r.known_for or '',
+                    'reference_when': r.reference_when or '',
+                    'is_active': r.is_active,
+                    'added_by': r.added_by or 'seed',
+                }
+                for r in _rows
+            ]
+        })
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+
+@app.route('/admin/master-references/suggest', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_references_suggest():
+    """
+    POST /admin/master-references/suggest
+    body: genre=Wildlife (optional — omit for all genres)
+    Calls Claude to suggest top 20 world + top 20 Indian photographers per genre.
+    Returns suggestions for admin review — does NOT write to DB until approved.
+    Session 210.
+    """
+    import json as _sugj
+    import urllib.request as _sugur
+
+    genre = request.form.get('genre', '').strip()
+    genres_to_refresh = [genre] if genre else [
+        'Wildlife', 'Street', 'Documentary', 'Landscape', 'Nature',
+        'Macro', 'Sports', 'Astrophotography', 'Creative', 'Architecture',
+        'Drone', 'Fashion', 'Wedding', 'People', 'Portrait'
+    ]
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return jsonify({'ok': False, 'message': 'API key not set'}), 500
+
+    # Session 210: single Sonnet call covering all genres at once
+    all_suggestions = []
+    genres_str = ', '.join(genres_to_refresh)
+    try:
+        _suggest_prompt = (
+            'You are updating the master photographer reference library for a photography '
+            'evaluation platform. For EACH of the following genres, provide the top world-level '
+            'and top Indian photographers whose work should be referenced when giving feedback.\n\n'
+            f'GENRES: {genres_str}\n\n'
+            'Return ONLY a valid JSON array — no markdown, no explanation:\n'
+            '[{"genre": "Wildlife", "photographers": [{'
+            '"name": "Full Name", "region": "Country", "tier": "Tier 1 or Tier 2", '
+            '"known_for": "One specific sentence about what they are known for in this genre", '
+            '"reference_when": "The specific situation, subject, or dimension gap '
+            'where this photographer is the right reference", '
+            '"do_not_reference": "comma-separated genres where this is the wrong reference"'
+            '}]}]\n\n'
+            'Rules: Up to 15 world-level + 15 Indian photographers per genre. '
+            'Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally celebrated. '
+            'reference_when must name the specific subject or situation. '
+            'Include recent award winners (last 3 years). No generic entries.'
+        )
+        _payload = _sugj.dumps({
+            'model': 'claude-sonnet-4-6',
+            'max_tokens': 8000,
+            'messages': [{'role': 'user', 'content': _suggest_prompt}]
+        }).encode()
+        _req = _sugur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+        with _sugur.urlopen(_req, timeout=120) as _resp:
+            _result = _sugj.loads(_resp.read().decode())
+        _text = (_result.get('content') or [{}])[0].get('text', '[]')
+        _text = _text.strip().lstrip('`').replace('json\n', '').rstrip('`').strip()
+        all_suggestions = _sugj.loads(_text)
+        if not isinstance(all_suggestions, list):
+            all_suggestions = [all_suggestions]
+        app.logger.info(f'[master_ref_suggest] Sonnet returned {len(all_suggestions)} genres')
+    except Exception as _ge:
+        app.logger.error(f'[master_ref_suggest] Sonnet call failed: {_ge}')
+        all_suggestions = [{'genre': g, 'photographers': [], 'error': str(_ge)} for g in genres_to_refresh]
+
+    return jsonify({'ok': True, 'suggestions': all_suggestions})
+
+
+@app.route('/admin/master-references/approve', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_references_approve():
+    """
+    POST /admin/master-references/approve
+    body: entries=JSON array of photographer dicts
+    Writes approved entries to master_references table.
+    Session 210.
+    """
+    import json as _apj
+    raw = request.form.get('entries', '[]')
+    try:
+        entries = _apj.loads(raw)
+    except Exception:
+        return jsonify({'ok': False, 'message': 'Invalid JSON'}), 400
+
+    added = 0
+    skipped = 0
+    for e in entries:
+        name = (e.get('name') or '').strip()
+        if not name:
+            continue
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO master_references "
+                "(name, genre_tags, region, tier, known_for, reference_when, do_not_reference, "
+                "is_platform_mentor, last_refreshed_at, added_by) "
+                "VALUES (:n, :gt, :r, :t, :kf, :rw, :dnr, FALSE, NOW(), 'admin_refresh') "
+                "ON CONFLICT DO NOTHING"
+            ), {
+                'n':   name,
+                'gt':  e.get('genre_tags') or e.get('genre', ''),
+                'r':   e.get('region', ''),
+                't':   e.get('tier', 'Tier 2'),
+                'kf':  e.get('known_for', ''),
+                'rw':  e.get('reference_when', ''),
+                'dnr': e.get('do_not_reference', ''),
+            })
+            added += 1
+        except Exception as _ae:
+            app.logger.warning(f'[master_ref_approve] {name}: {_ae}')
+            skipped += 1
+
+    db.session.commit()
+    _log_admin_action('master_ref_refresh', 'system', 0, {
+        'added': added, 'skipped': skipped,
+        'genres': list({e.get('genre_tags','') for e in entries})
+    })
+    return jsonify({'ok': True, 'added': added, 'skipped': skipped,
+                    'message': f'{added} photographers added to reference library.'})
+
+
+@app.route('/admin/master-references/<int:ref_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_reference_toggle(ref_id):
+    """Toggle is_active on a master reference entry. Session 210."""
+    try:
+        db.session.execute(db.text(
+            "UPDATE master_references SET is_active = NOT is_active WHERE id = :rid"
+        ), {'rid': ref_id})
+        db.session.commit()
+        _new_state = db.session.execute(
+            db.text("SELECT is_active FROM master_references WHERE id = :rid"), {'rid': ref_id}
+        ).scalar()
+        return jsonify({'ok': True, 'is_active': _new_state})
+    except Exception as _e:
+        db.session.rollback()
+        return jsonify({'ok': False, 'message': str(_e)}), 500
 
 
 @app.route('/admin/fix-beta-plans', methods=['POST'])
@@ -33798,159 +34072,14 @@ _TRY_HAIKU_PROMPT = (
     "Plain English. No codes. No jargon. Max 80 words.\n\n"
 
     "MASTER REFERENCE — HOW TO CHOOSE:\n"
-    "Select one photographer whose work most closely mirrors what this photographer "
-    "is reaching toward. Match on SUBJECT and BEHAVIOUR first, then on the specific "
-    "dimension where they need to grow. Never match on visual style alone.\n\n"
+    "Select one photographer from the REFERENCE LIBRARY below whose work most closely "
+    "mirrors what this photographer is reaching toward. Match on SUBJECT and BEHAVIOUR first, "
+    "then on the specific dimension where they need to grow. Never match on visual style alone.\n\n"
 
-    "REFERENCE LIBRARY — use only names from this list:\n\n"
+    "REFERENCE LIBRARY for {genre}:\n"
+    "{master_library}\n\n"
 
-    "WILDLIFE (animals in natural behaviour, birds, big cats, marine, insects):\n"
-    "World: Charlie Hamilton James — raptors hunting in wildfire and extreme conditions, BBC/NHM. "
-    "Use when: fire + birds, raptors, extreme behavioural access.\n"
-    "World: Paul Nicklen — underwater and polar wildlife, climate urgency, National Geographic. "
-    "Use when: marine, polar, survival-in-extreme-environment is the story.\n"
-    "World: Steve Winter — big cats, snow leopards, patient dangerous tracking, NatGeo. "
-    "Use when: rare access to apex predators over long periods defines the image.\n"
-    "World: Frans Lanting — intimate animal portraits, emotional connection, global ecosystems. "
-    "Use when: the emotional bond between viewer and animal carries the frame.\n"
-    "World: Thomas Mangelsen — unrepeatable moments in nature, bears, seasons, zero manipulation. "
-    "Use when: patience and perfect timing produced a singular natural moment.\n"
-    "India: Shaaz Jung — melanistic leopards, low-light predator behaviour, South India. "
-    "Use when: atmosphere, mystery, and partially revealed subjects define the mood.\n"
-    "India: Dhritiman Mukherjee — rare species, extreme terrain, conservation documentation. "
-    "Use when: ecological rarity or access difficulty is the defining quality.\n"
-    "India: Baiju Patil — birds in precise behavioural moments, Indian wetlands, World No.1 ReFocus 2025. "
-    "Use when: bird behaviour and the decisive moment of action is the story.\n"
-    "India: Rathika Ramasamy — bird photography, patience, storytelling through positioning. "
-    "Use when: disciplined waiting for the right bird behaviour is evident.\n"
-    "India: Aishwarya Sridhar — Wildlife Photographer of the Year, first Indian woman, narrative wildlife. "
-    "Use when: conservation narrative and emotional resonance define the image.\n"
-    "India: Varun Aditya — NatGeo Nature Photographer of Year 2016, moody artistic wildlife and macro. "
-    "Use when: artistic mood and painterly framing override documentary instinct.\n"
-    "India: Sudhir Shivaram — big cats, birds, Indian reserves, educator, disciplined craft. "
-    "Use when: the image is from an Indian reserve and shows controlled technical skill.\n\n"
-
-    "STREET (human life in public spaces, candid, markets, urban, village, transit):\n"
-    "World: Henri Cartier-Bresson — the decisive moment, geometric alignment, human life in flux. "
-    "Use when: timing and geometry between subject and background is the image's defining quality.\n"
-    "World: Vivian Maier — mid-century urban life, self-taught precision, psychological depth in candid. "
-    "Use when: ordinary scenes carry unexpected psychological weight or irony.\n"
-    "World: Garry Winogrand — raw energy, American public life, chaotic frames with inner order. "
-    "Use when: the image has energy and chaos but needs tighter compositional intent.\n"
-    "World: Saul Leiter — colour abstraction, rain, reflections, soft focus, painterly street. "
-    "Use when: colour, reflections, or partial framing creates an abstract or painterly quality.\n"
-    "World: Alex Webb — multi-layered colour, deep shadow, intense equatorial light, Latin America. "
-    "Use when: complex layers, foreground/background interaction, or intense colour define the frame.\n"
-    "World: Martin Parr — satirical colour, consumerism, social class, unsparing observation. "
-    "Use when: the image observes human behaviour with wit or quiet irony.\n"
-    "World: Bruce Gilden — aggressive close flash, raw confrontation, New York streets. "
-    "Use when: extreme proximity and the photographer's presence in the frame is part of the work.\n"
-    "World: Matt Stuart — serendipitous geometry, humour, visual coincidences, London streets. "
-    "Use when: a visual coincidence or geometric accident makes the image.\n"
-    "India: Raghu Rai — Magnum, nominated by HCB, soul of India, Bhopal, festivals, communal emotion. "
-    "Use when: Indian festivals (Holi, Diwali), communal human moments, or social documentary.\n"
-    "India: Raghubir Singh — colour pioneer, vibrant Indian city life, Bombay, Calcutta. "
-    "Use when: rich colour and the layered social fabric of Indian cities define the frame.\n"
-    "India: Vineet Vohra — Leica Ambassador, layered geometric Indian streetscapes, shadow and light. "
-    "Use when: shadow, geometry, and compositional layering in Indian urban spaces.\n"
-    "India: Sohrab Hura — Magnum, visceral personal storytelling, raw psychological landscapes. "
-    "Use when: the image is raw, personal, and psychologically intense.\n"
-    "India: Dimpy Bhalotia — motion, freedom, human spirit, award-winning black and white. "
-    "Use when: motion blur or the physical joy of human movement defines the image.\n"
-    "India: Ketaki Sheth — long-term intimate documentation, Mumbai, geometric order in density. "
-    "Use when: a quiet geometric order is found within dense urban or community life.\n\n"
-
-    "DOCUMENTARY (witnessed events, social issues, health, crisis, environment):\n"
-    "World: Sebastiao Salgado — large-scale human stories, migration, labour, social weight. "
-    "Use when: the image carries humanitarian gravitas and documents human suffering or resilience.\n"
-    "World: James Nachtwey — war, famine, social injustice, unflinching witness photography. "
-    "Use when: the image documents extreme human conditions with moral clarity.\n"
-    "India: Raghu Rai — Bhopal disaster, Indian social documentary, Magnum. "
-    "Use when: Indian social or environmental crisis is documented with emotional weight.\n"
-    "India: Dayanita Singh — intimate long-term Indian portraiture, communities over time. "
-    "Use when: a sustained relationship with a subject or community defines the image.\n\n"
-
-    "LANDSCAPE (land, sea, sky, seascape, cityscape, long exposure):\n"
-    "World: Art Wolfe — pattern, abstraction, natural geometry at scale. "
-    "Use when: the image finds pattern, abstraction, or graphic order in natural form.\n"
-    "World: Nick Brandt — dramatic painterly African landscapes and environments. "
-    "Use when: the image has monumental, cinematic, or elegiac quality.\n"
-    "World: Michael Kenna — minimalist long exposure, quiet landscapes, Japan, fog, water. "
-    "Use when: minimalism, stillness, and reductive composition define the image.\n"
-    "India: Kalyan Varma — Indian natural landscapes, conservation, wilderness. "
-    "Use when: Indian forests, rivers, or natural environments are the subject.\n\n"
-
-    "PEOPLE & PORTRAIT (faces, expression, emotional connection):\n"
-    "World: Steve McCurry — colour, human connection across cultures, Afghan Girl, NatGeo. "
-    "Use when: a face or eyes carry the entire emotional weight of the image.\n"
-    "World: Yousuf Karsh — formal portraiture, monumental black and white, revelation of character. "
-    "Use when: the image attempts to reveal character through controlled light and posture.\n"
-    "World: Dorothea Lange — Depression-era humanity, Migrant Mother, dignity in hardship. "
-    "Use when: the image finds dignity or humanity in difficult human circumstances.\n"
-    "India: Dayanita Singh — intimate Indian portraiture, long-term relationships. "
-    "Use when: intimacy and long-term access to a subject define the image.\n\n"
-
-    "NATURE (plants, fungi, weather, ecosystems — not animals):\n"
-    "World: Eliot Porter — colour nature photography, birds in habitat, fine art natural world. "
-    "Use when: the natural world is rendered with fine-art sensitivity and colour precision.\n"
-    "World: Art Wolfe — pattern and abstraction in natural form, geometric beauty. "
-    "Use when: graphic patterns, textures, or abstraction in the natural world.\n"
-    "India: Varun Aditya — moody nature and macro, NatGeo India. "
-    "Use when: mood and artistic rendering of Indian natural subjects.\n\n"
-
-    "MACRO (extreme close-up, any subject):\n"
-    "World: Levon Biss — microsculpture, insects at extreme magnification, scientific beauty. "
-    "Use when: the image reveals invisible structure or beauty at extreme proximity.\n"
-    "World: Art Wolfe — pattern, texture, abstract natural detail. "
-    "Use when: pattern or texture at close range creates graphic abstraction.\n"
-    "India: Varun Aditya — moody artistic macro, NatGeo Nature Photographer of Year. "
-    "Use when: artistic mood in Indian macro subjects.\n\n"
-
-    "SPORTS (athletic action, competition, physical performance):\n"
-    "World: Neil Leifer — iconic sports moments, Ali, Olympics, Sports Illustrated. "
-    "Use when: the peak moment of athletic achievement is what makes the image.\n"
-    "World: Walter Iooss — fluid sports portraiture, athletes at rest and at peak. "
-    "Use when: the image captures both the athlete's power and their humanity.\n\n"
-
-    "ASTROPHOTOGRAPHY (Milky Way, star trails, aurora, planets):\n"
-    "World: Rogelio Bernal Andreo — deep sky imaging, Milky Way at scale, nebulae. "
-    "Use when: the cosmic scale and technical precision of deep sky work defines the image.\n"
-    "World: Babak Tafreshi — night sky in landscape context, Earth and sky as one frame. "
-    "Use when: the relationship between the landscape and the night sky is the subject.\n\n"
-
-    "CREATIVE / ABSTRACT (technique-driven, ICM, long exposure, experimental):\n"
-    "World: Aaron Siskind — abstract expressionism in photography, surface and texture. "
-    "Use when: the image abstracts the world into pure form, texture, and graphic quality.\n"
-    "World: Ernst Haas — colour abstraction, motion blur as artistic statement. "
-    "Use when: motion blur or colour abstraction is the deliberate technique.\n\n"
-
-    "ARCHITECTURE (built environment, interiors, urban geometry):\n"
-    "World: Julius Shulman — modernist architecture, clean lines, human scale in buildings. "
-    "Use when: the image captures the relationship between architecture and human life.\n"
-    "World: Ezra Stoller — architectural photography as art, light and structure. "
-    "Use when: light and shadow reveal the geometry and intent of the built environment.\n\n"
-
-    "DRONE / AERIAL (patterns from altitude, perspectives impossible from ground):\n"
-    "World: Yann Arthus-Bertrand — Earth from above, human impact, pattern at altitude. "
-    "Use when: the image reveals human impact on the earth or finds pattern at altitude.\n"
-    "World: Art Wolfe — aerial pattern, abstraction, graphic order from above. "
-    "Use when: graphic pattern or abstraction is found from aerial vantage.\n\n"
-
-    "FASHION / EDITORIAL (directed creative work, studio, conceptual):\n"
-    "World: Richard Avedon — direct portraiture, plain background, psychological confrontation. "
-    "Use when: the image strips away context to reveal character through directness.\n"
-    "World: Helmut Newton — provocative, powerful, cinematic fashion narrative. "
-    "Use when: the image constructs a strong cinematic or theatrical narrative.\n\n"
-
-    "WEDDING / CELEBRATION:\n"
-    "World: Jose Villa — film-grain, romantic, light-filled wedding photography. "
-    "Use when: softness, warmth, and romantic light define the image.\n"
-    "World: Jonas Peterson — raw emotion, documentary-style wedding moments. "
-    "Use when: unposed, raw emotional moments are the strength.\n\n"
-
-    "ABSOLUTE RULE: Never assign a wildlife photographer to a street or documentary image. "
-    "Never assign a street photographer to a wildlife or landscape image. "
-    "Never invent a photographer not on this list. "
+    "ABSOLUTE RULE: Use only names from the library above. Never invent a photographer. "
     "If uncertain between two names, pick the one whose work most closely matches "
     "the SUBJECT of this specific image, not the visual style.\n\n"
 
@@ -34021,11 +34150,38 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             f'"{photographer_context.strip()}"\n'
             f'Use this ONLY to recalibrate DOD and to tell them what they don\'t already know.'
         )
+
+    # Session 210: build master reference library from DB for this genre
+    _master_lib_lines = []
+    try:
+        with app.app_context():
+            _ref_rows = db.session.execute(db.text(
+                'SELECT name, region, tier, known_for, reference_when '
+                'FROM master_references '
+                'WHERE is_active = TRUE AND genre_tags ILIKE :pat '
+                'ORDER BY is_platform_mentor DESC, '
+                'CASE tier WHEN \'Platform Mentor\' THEN 0 WHEN \'Tier 1\' THEN 1 '
+                'WHEN \'Contest Winner\' THEN 2 WHEN \'Tier 2\' THEN 3 ELSE 4 END, '
+                'RANDOM() LIMIT 15'
+            ), {'pat': f'%{genre or "General"}%'}).fetchall()
+            for _rr in _ref_rows:
+                _origin = f'({_rr.region})' if _rr.region else ''
+                _when = f' Use when: {_rr.reference_when}' if _rr.reference_when else ''
+                _master_lib_lines.append(
+                    f'- {_rr.name} {_origin}: {_rr.known_for or ""}.{_when}'
+                )
+    except Exception as _ml_err:
+        app.logger.warning(f'[try_haiku] master_library query failed (non-fatal): {_ml_err}')
+    _master_lib = '\n'.join(_master_lib_lines) if _master_lib_lines else (
+        'Raghu Rai, Henri Cartier-Bresson, Paul Nicklen, Steve McCurry, Sebastiao Salgado'
+    )
+
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
               .replace('{calibration}', _try_calibration_line(genre or ''))
               .replace('{history_context}', _history_ctx)
-              .replace('{photographer_context}', _ctx_block))
+              .replace('{photographer_context}', _ctx_block)
+              .replace('{master_library}', _master_lib))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
@@ -35063,6 +35219,8 @@ def try_welcome():
     _aq_insight        = None
     _tier_insight      = None
     _master_insight    = None
+    _master_name_dash  = ''  # Session 210: master_name from latest image for link
+    _master_why_dash   = ''
     try:
         import json as _saj
         _sadv_row = db.session.execute(
@@ -35079,6 +35237,17 @@ def try_welcome():
             _aq_insight         = _sadv.get('aq_insight', '').strip() or None
             _tier_insight       = _sadv.get('tier_insight', '').strip() or None
             _master_insight     = _sadv.get('master_insight', '').strip() or None
+        # Session 210: pull master_name + master_why from latest scored image audit_json
+        if _images:
+            _latest_audit_row = db.session.execute(
+                db.text("SELECT audit_json FROM images WHERE user_id=:uid AND is_haiku_try=TRUE "
+                        "AND status='scored' ORDER BY id DESC LIMIT 1"),
+                {'uid': current_user.id}
+            ).fetchone()
+            if _latest_audit_row and _latest_audit_row[0]:
+                _la = _saj.loads(_latest_audit_row[0])
+                _master_name_dash = (_la.get('master_name') or '').strip()
+                _master_why_dash  = (_la.get('master_why')  or '').strip()
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
@@ -35357,6 +35526,9 @@ def try_welcome():
         aq_insight         = _aq_insight,
         tier_insight       = _tier_insight,
         master_insight     = _master_insight,
+        master_name_dash   = _master_name_dash,
+        master_why_dash    = _master_why_dash,
+        all_masters        = ALL_MASTERS,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
         prev_score         = _prev_score,
