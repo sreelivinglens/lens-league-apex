@@ -16490,10 +16490,11 @@ def admin_dashboard():
     _uat_users = []
     try:
         from sqlalchemy import or_ as _uat_or
+        # Include ALL UAT/beta/learning users regardless of is_active —
+        # many legacy UAT members may have is_active=False from early cleanup runs.
         _uat_rows = User.query.filter(
             User.subscription_plan.in_(['uat', 'beta', 'learning']),
             User.role != 'admin',
-            User.is_active == True,
         ).order_by(User.created_at.desc()).all()
         for _uu in _uat_rows:
             _uu_latest = db.session.query(Image).filter(
@@ -16532,6 +16533,7 @@ def admin_dashboard():
                 'best_score':      _uu_best.score if _uu_best else None,
                 'last_upload_date': _uu_latest.scored_at.strftime('%-d %b') if _uu_latest and _uu_latest.scored_at else None,
                 'contest_cache_age': _uu_cache_age,
+                'is_active': _uu.is_active,
             })
     except Exception as _uue:
         app.logger.warning(f'[admin_dashboard] uat_users query failed: {_uue}')
