@@ -1,4 +1,4 @@
-# SL-VERSION: 181.84 (Session 208, 2026-09-02 — calibration_logs: ADD COLUMN image_id INTEGER (engine query was failing with column does not exist). RETAINS 181.83.)
+# SL-VERSION: 181.85 (Session 210, 2026-09-04 — bulk bot/user delete route for Haiku members panel: POST /admin/haiku/bulk-delete. Two delete types: bot (hard delete + email ban in blocked_ips + audit log bot_delete) and user (hard delete + audit log delete_user). Checkbox selection in admin.html haiku members table.)
 
 import os
 import re
@@ -18029,6 +18029,238 @@ def admin_delete_user(user_id):
         flash(f'Delete failed: {str(e)[:120]}', 'error')
 
     return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/haiku/bulk-delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_bulk_delete():
+    """
+    POST /admin/haiku/bulk-delete
+    Body: user_ids=1,2,3  delete_type=bot|user
+    Bulk hard-delete Haiku members.
+      bot  → hard delete + ban email in blocked_ips + log action='bot_delete'
+      user → hard delete + log action='delete_user'
+    Returns JSON {deleted: N, failed: [{id, reason}]}
+    Session 210 — bulk bot/user delete from Haiku members table.
+    """
+    import json as _bdj
+    _raw_ids  = request.form.get('user_ids', '').strip()
+    _del_type = request.form.get('delete_type', 'user').strip()  # 'bot' or 'user'
+
+    if not _raw_ids:
+        return jsonify({'ok': False, 'message': 'No user IDs supplied.'}), 400
+    if _del_type not in ('bot', 'user'):
+        return jsonify({'ok': False, 'message': 'Invalid delete_type.'}), 400
+
+    try:
+        _uid_list = [int(x.strip()) for x in _raw_ids.split(',') if x.strip().isdigit()]
+    except Exception:
+        return jsonify({'ok': False, 'message': 'Malformed user_ids.'}), 400
+
+    if not _uid_list:
+        return jsonify({'ok': False, 'message': 'No valid user IDs.'}), 400
+
+    _deleted = 0
+    _failed  = []
+
+    for _uid in _uid_list:
+        _user = User.query.get(_uid)
+        if not _user:
+            _failed.append({'id': _uid, 'reason': 'not found'})
+            continue
+        if _user.role == 'admin':
+            _failed.append({'id': _uid, 'reason': 'cannot delete admin'})
+            continue
+
+        _uname = _user.full_name or _user.username or f'user {_uid}'
+        _uemail = _user.email or ''
+
+        try:
+            _image_ids = [img.id for img in _user.images]
+
+            # 1. CalibrationNotes
+            try:
+                from models import CalibrationNote
+                CalibrationNote.query.filter_by(admin_id=_uid).delete()
+                if _image_ids:
+                    CalibrationNote.query.filter(
+                        CalibrationNote.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} calibration notes: {_e}')
+
+            # 2. ImageReports
+            try:
+                ImageReport.query.filter_by(reporter_id=_uid).delete()
+                if _image_ids:
+                    ImageReport.query.filter(
+                        ImageReport.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} image reports: {_e}')
+
+            # 3. Peer ratings
+            try:
+                PeerRating.query.filter_by(rater_id=_uid).delete()
+                if _image_ids:
+                    PeerRating.query.filter(
+                        PeerRating.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} peer ratings: {_e}')
+
+            # 4. Rating assignments
+            try:
+                RatingAssignment.query.filter_by(rater_id=_uid).delete()
+                if _image_ids:
+                    RatingAssignment.query.filter(
+                        RatingAssignment.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} rating assignments: {_e}')
+
+            # 5. Peer pool entries
+            try:
+                PeerPoolEntry.query.filter_by(user_id=_uid).delete()
+                if _image_ids:
+                    PeerPoolEntry.query.filter(
+                        PeerPoolEntry.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} peer pool: {_e}')
+
+            # 6. Contest entries
+            try:
+                ContestEntry.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} contest entries: {_e}')
+
+            # 7. Open contest entries
+            try:
+                OpenContestEntry.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} open contest entries: {_e}')
+
+            # 8. BOW submissions
+            try:
+                from models import BowSubmission
+                BowSubmission.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} bow submissions: {_e}')
+
+            # 9. POTY entries
+            try:
+                db.session.execute(
+                    db.text('DELETE FROM poty_entry_images WHERE entry_id IN '
+                            '(SELECT id FROM poty_entries WHERE user_id = :uid)'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM poty_entries WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} poty: {_e}')
+
+            # 10. Raw submissions + scored_phash_cache + upload_history_log
+            try:
+                if _image_ids:
+                    db.session.execute(
+                        db.text('DELETE FROM raw_submissions WHERE image_id = ANY(:ids)'),
+                        {'ids': _image_ids}
+                    )
+                db.session.execute(
+                    db.text('DELETE FROM scored_phash_cache WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM upload_history_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM seasonal_shown_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM advisory_shown_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} log tables: {_e}')
+
+            # 11. Images + R2 cleanup
+            for _img in list(_user.images):
+                try:
+                    db.session.execute(
+                        db.text('DELETE FROM raw_submissions WHERE image_id = :iid'),
+                        {'iid': _img.id}
+                    )
+                except Exception:
+                    pass
+                if _img.thumb_url:
+                    try:
+                        _key = _img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                        r2.delete_file(_key)
+                    except Exception:
+                        pass
+                if _img.card_url:
+                    try:
+                        _key = _img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                        r2.delete_file(_key)
+                    except Exception:
+                        pass
+                db.session.delete(_img)
+
+            # 12. Bot delete: ban email in blocked_ips
+            if _del_type == 'bot' and _uemail:
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO blocked_ips (ip_address, reason, blocked_by) "
+                        "VALUES (:ip, :reason, :by) "
+                        "ON CONFLICT (ip_address) DO NOTHING"
+                    ), {
+                        'ip':     _uemail,
+                        'reason': f'Bot account — auto-banned on bulk bot delete (was user {_uid})',
+                        'by':     current_user.email or 'admin',
+                    })
+                except Exception as _e:
+                    app.logger.warning(f'[bulk_delete] uid={_uid} email ban failed: {_e}')
+
+            # 13. Delete user row
+            db.session.delete(_user)
+            db.session.commit()
+
+            # 14. Audit log
+            _action = 'bot_delete' if _del_type == 'bot' else 'delete_user'
+            _log_admin_action(_action, 'user', _uid, {
+                'username':    _uname,
+                'email':       _uemail,
+                'delete_type': _del_type,
+                'note':        'Bulk delete — Haiku members panel',
+            })
+
+            app.logger.info(
+                f'[bulk_delete] {_action} uid={_uid} email={_uemail} '
+                f'by admin={current_user.id}'
+            )
+            _deleted += 1
+
+        except Exception as _exc:
+            db.session.rollback()
+            app.logger.error(f'[bulk_delete] uid={_uid} FAILED: {_exc}')
+            _failed.append({'id': _uid, 'reason': str(_exc)[:120]})
+
+    _label = 'bot-deleted' if _del_type == 'bot' else 'deleted'
+    return jsonify({
+        'ok':      True,
+        'deleted': _deleted,
+        'failed':  _failed,
+        'message': f'{_deleted} user(s) {_label}.' + (
+            f' {len(_failed)} failed: ' + ', '.join(str(f["id"]) for f in _failed)
+            if _failed else ''
+        ),
+    })
 
 
 @app.route('/admin/fix-beta-plans', methods=['POST'])
