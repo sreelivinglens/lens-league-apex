@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.3-main (Session 210, 2026-09-04 — bulk-bar position:relative, master refs pagination removed, all sections clickable fix.) #}
+{# SL-VERSION: admin-2.4 (Session 211, 2026-09-05 — Haiku rescore button guarded per engine tab. haikuRescore() with tile progress bar, score update in-place, polling /try/status/<id>.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -835,8 +835,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         {% if recent %}
           {% for img in recent %}
           {% set detail_url = url_for('try_result', image_id=img.id) if admin_engine == 'haiku' else url_for('image_detail', image_id=img.id) %}
-          <div class="img-tile">
-            <a href="{{ detail_url }}" style="display:block;text-decoration:none">
+          <div class="img-tile" data-image-id="{{ img.id }}">
+            <a href="{{ detail_url }}" style="display:block;text-decoration:none;position:relative">
               {% if img.thumb_url %}
               <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
               {% else %}
@@ -845,6 +845,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <span class="tile-badge {% if admin_engine == 'haiku' %}badge-free{% elif img.status == 'scored' %}badge-scored{% elif img.status == 'error' %}badge-error{% else %}badge-pending{% endif %}">
                 {% if admin_engine == 'haiku' %}FREE{% else %}{{ img.status|upper }}{% endif %}
               </span>
+              {# Session 211: rescore progress bar — hidden until scoring fires #}
+              <div class="tile-progress" style="display:none;position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,0.2)">
+                <div class="tile-progress-bar" style="height:100%;width:0%;background:#C8A84B;transition:width 0.5s ease;border-radius:0 2px 2px 0"></div>
+              </div>
+              <div class="tile-scoring-label" style="display:none;position:absolute;top:8px;left:8px;background:rgba(26,39,68,0.85);color:#C8A84B;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:2px">Scoring…</div>
             </a>
             <div class="tile-body">
               <a href="{{ detail_url }}" style="text-decoration:none;color:inherit">
@@ -857,7 +862,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 <a class="ta" href="{{ detail_url }}">View</a>
                 <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
                 {% if img.status == 'scored' %}
-                <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                  {% if admin_engine == 'haiku' %}
+                  <button class="ta rescore-btn" type="button" onclick="haikuRescore({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Rescore</button>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                  {% endif %}
                 {% endif %}
                 {% if admin_engine == 'sonnet' %}
                 <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
@@ -1894,58 +1903,85 @@ function reinstateUser(userId, userName){
 
 // ── HAIKU RESCORE ────────────────────────────────────────────────────────────
 function haikuRescore(imageId, userName, btn) {
-  if(!confirm('Rescore ' + userName + '\'s latest image with the current Haiku prompt?\n\nThe score may change slightly.')) return;
+  if(!confirm('Rescore ' + userName + ' with the current Haiku prompt?')) return;
+
+  // Find the tile and its progress elements
+  var tile = btn.closest('.img-tile') || document.querySelector('[data-image-id="' + imageId + '"]');
+  var progressWrap = tile ? tile.querySelector('.tile-progress') : null;
+  var progressBar  = tile ? tile.querySelector('.tile-progress-bar') : null;
+  var scoringLabel = tile ? tile.querySelector('.tile-scoring-label') : null;
+  var scoreEl      = tile ? tile.querySelector('.tile-score') : null;
+  var tierEl       = tile ? tile.querySelector('.tile-tier') : null;
+
+  // Show progress bar and label on tile
+  if (progressWrap) progressWrap.style.display = 'block';
+  if (scoringLabel) scoringLabel.style.display = 'block';
+
   btn.disabled = true;
   btn.textContent = '…';
   btn.style.opacity = '0.6';
+
+  // Animate bar from 0 to 85% while scoring runs
+  var barPct = 0;
+  var barTimer = setInterval(function() {
+    barPct = Math.min(barPct + (Math.random() * 6 + 3), 85);
+    if (progressBar) progressBar.style.width = barPct + '%';
+  }, 800);
 
   fetch('/admin/image/' + imageId + '/haiku-rescore', {method:'POST'})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if (!d.ok) {
+        clearInterval(barTimer);
+        if (progressWrap) progressWrap.style.display = 'none';
+        if (scoringLabel) scoringLabel.style.display = 'none';
         btn.textContent = 'Rescore';
         btn.disabled = false;
         btn.style.opacity = '1';
         showFlash(d.message || 'Failed.', 'error');
         return;
       }
-      // Rescore started — begin polling for completion
-      showFlash('Rescore started — watching for completion…', 'success');
-      var dots = 0;
-      var dotTimer = setInterval(function() {
-        dots = (dots + 1) % 4;
-        btn.textContent = 'Scoring' + '.'.repeat(dots || 1);
-      }, 600);
+
+      showFlash('Scoring ' + userName + '…', 'success');
 
       var pollStart = Date.now();
-      var pollLimit = 180000; // 3 min timeout
+      var pollLimit = 180000;
 
       function pollStatus() {
         if (Date.now() - pollStart > pollLimit) {
-          clearInterval(dotTimer);
+          clearInterval(barTimer);
+          if (progressWrap) progressWrap.style.display = 'none';
+          if (scoringLabel) scoringLabel.style.display = 'none';
           btn.textContent = 'Rescore';
           btn.disabled = false;
           btn.style.opacity = '1';
-          showFlash('Timeout — rescore may still be running. Reload to check.', 'error');
+          showFlash('Timeout — reload to check.', 'error');
           return;
         }
         fetch('/try/status/' + imageId)
           .then(function(r){ return r.json(); })
           .then(function(s){
             if (s.status === 'scored' && s.score) {
-              clearInterval(dotTimer);
-              btn.textContent = '✓ ' + (s.score ? s.score.toFixed(2) : '') + ' ' + (s.tier || '');
-              btn.style.opacity = '1';
-              btn.style.color = '#1a7a3a';
-              btn.style.borderColor = '#1a7a3a';
-              showFlash(userName + ' rescored: ' + (s.score ? s.score.toFixed(2) : '') + ' — ' + (s.tier || ''), 'success');
-              // Re-enable after 5s so admin can rescore again if needed
+              // Complete — fill bar to 100%
+              clearInterval(barTimer);
+              if (progressBar) progressBar.style.width = '100%';
+              if (scoringLabel) { scoringLabel.textContent = '✓ Done'; scoringLabel.style.color = '#4ade80'; }
+
+              // Update score + tier on tile in place
+              if (scoreEl) scoreEl.textContent = s.score.toFixed(2);
+              if (tierEl)  { tierEl.textContent = s.tier || ''; tierEl.style.color = '#C8A84B'; }
+
+              showFlash(userName + ': ' + s.score.toFixed(2) + ' — ' + (s.tier || ''), 'success');
+
+              // Reset tile after 3s
               setTimeout(function(){
+                if (progressWrap) progressWrap.style.display = 'none';
+                if (scoringLabel) { scoringLabel.style.display = 'none'; scoringLabel.textContent = 'Scoring…'; scoringLabel.style.color = '#C8A84B'; }
+                if (progressBar) progressBar.style.width = '0%';
                 btn.textContent = 'Rescore';
                 btn.disabled = false;
-                btn.style.color = '';
-                btn.style.borderColor = '';
-              }, 5000);
+                btn.style.opacity = '1';
+              }, 3000);
             } else {
               setTimeout(pollStatus, 4000);
             }
@@ -1956,10 +1992,13 @@ function haikuRescore(imageId, userName, btn) {
       setTimeout(pollStatus, 4000);
     })
     .catch(function(){
+      clearInterval(barTimer);
+      if (progressWrap) progressWrap.style.display = 'none';
+      if (scoringLabel) scoringLabel.style.display = 'none';
       btn.textContent = 'Rescore';
       btn.disabled = false;
       btn.style.opacity = '1';
-      showFlash('Network error — please try again.', 'error');
+      showFlash('Network error.', 'error');
     });
 }
 
