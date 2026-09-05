@@ -1,4 +1,4 @@
-# SL-VERSION: 181.98 (Session 212, 2026-09-05 — Three fixes: (1) GROUP A language ban extended to all dim_obs fields + added 'in flight', 'bird in flight', 'soaring bird', 'stark white line' to banned list — pelican dim_obs was still using raptor/flight language. (2) Stability anchor: _try_run_haiku now fetches previous score before building prompt, injects anchor telling engine to stay within ±0.4 unless it can name a clear error — fixes ±0.3 drift on rescore. (3) Banned phrases expanded: 'one frame away', 'the stillness before it', 'not quite caught', 'almost visible but not quite' — new pattern phrases replacing the old half-second template.)
+# SL-VERSION: 181.99 (Session 212, 2026-09-05 — DOD full rewrite: five layers (field difficulty, compositional knowledge, light recognition, technical execution, post-processing vision). Compositional knowledge layer covers Japanese aesthetics (Ma/wabi-sabi/mono no aware), Western principles (Fibonacci/Rembrandt/Gestalt/rule of odds), Indian layered narrative, American documentary flatness. Mobile track DOD separate scale: background clutter = DOD failure, clean background = DOD achievement, physical proximity = commitment, timing anticipation. Mobile advisory deepened: what to observe and score, not just what not to suggest.)
 
 import os
 import re
@@ -34485,43 +34485,123 @@ _TRY_HAIKU_PROMPT = (
 
     "DIMENSIONS AND WHAT EACH SCORE MEANS:\n\n"
 
-    "1. dod - Depth of Difficulty: how hard was it to make this photograph? "
-    "Right time, right place, right conditions, physical effort, AND the vision "
-    "to complete the image in post-processing.\n"
-    "   9.0-9.5  Extraordinary access, conditions or physical achievement. Rare.\n"
-    "   8.0-8.9  Sharp subject AND deliberate technique simultaneously, or "
-    "difficult conditions handled well.\n"
-    "   7.5-8.5  Deliberate in-camera technique (intentional camera movement, long exposure, "
-    "panning, multiple exposure, infrared, ND filter) that requires precise execution and "
-    "control. The harder the technique is to execute consistently, the higher the score. "
-    "A well-controlled technique that most photographers could not replicate belongs here.\n"
-    "   6.5-7.9  Skilled single technique, or conditions requiring real patience.\n"
-    "   5.0-6.4  Competent capture in ordinary conditions.\n"
-    "   Below 5  Anyone standing there could have made this frame.\n"
-    "POST-PROCESSING AS DOD — CRITICAL RULE:\n"
-    "DOD includes the vision to see what an image can become and the skill to execute "
-    "that transformation. A photographer who crushes blacks, lifts subject exposure, "
-    "converts to monochrome, and produces bilateral symmetry from a high-contrast scene "
-    "has made decisions most photographers would not make and could not execute. "
-    "Score this at 7.5-8.5 regardless of whether the technique was in-camera or in post. "
-    "The difficulty is the vision, not the tool.\n"
+    "1. dod - Depth of Difficulty: how hard was it to make this photograph?\n"
+    "DOD is the FULL STACK of what the photographer had to know, see, and decide. "
+    "It is not just how hard the location was to reach. It includes every layer of "
+    "knowledge and execution that most photographers do not have.\n\n"
+
+    "THE FIVE LAYERS OF DOD — score the highest layer the photographer demonstrates:\n\n"
+
+    "LAYER 1 — FIELD DIFFICULTY (access, conditions, physical effort)\n"
+    "   9.0-9.5  Extraordinary access almost no photographer can achieve — active "
+    "wildfire, war zone, extreme altitude, rare species in wild behaviour\n"
+    "   8.0-8.9  Difficult conditions requiring sustained field effort — darkness, "
+    "weather, dangerous proximity, remote terrain, rare timing\n"
+    "   6.5-7.9  Conditions requiring patience and planning — early morning, "
+    "reserved location, unpredictable subject\n"
+    "   5.0-6.4  Ordinary accessible conditions — public place, daylight, "
+    "no special access required\n"
+    "   Below 5  Anyone standing there with a camera could have made this frame\n\n"
+
+    "LAYER 2 — COMPOSITIONAL KNOWLEDGE (the photographer knew a visual principle "
+    "and deployed it deliberately)\n"
+    "This is the most under-scored layer. A photographer who applies a compositional "
+    "principle that most photographers do not know exists has demonstrated real difficulty. "
+    "Score 7.5-8.5 when the image shows deliberate application of:\n"
+    "   Japanese aesthetics:\n"
+    "   - Ma (間): deliberate emptiness as subject — knowing when to leave space is "
+    "harder than filling it. Most photographers fight empty space; this one used it.\n"
+    "   - Wabi-sabi: finding beauty in imperfection, asymmetry, transience — using "
+    "a crack, a fade, an incomplete moment as the point, not despite it\n"
+    "   - Mono no aware: the feeling of things passing — capturing the pathos of "
+    "a moment that is already leaving\n"
+    "   Western compositional principles (deployed deliberately, not accidentally):\n"
+    "   - Fibonacci spiral / divine proportion — subject placed at the eye of the spiral\n"
+    "   - Rembrandt triangle / chiaroscuro — one triangle of light on the shadow side "
+    "of a face, or classical light-from-darkness structure\n"
+    "   - Gestalt continuation — the eye is led through the frame by a line or curve "
+    "the photographer placed deliberately\n"
+    "   - Gestalt closure — the photographer left something incomplete and the viewer's "
+    "mind completes it, creating engagement\n"
+    "   - Rule of odds — three subjects, five elements, deliberately asymmetric grouping\n"
+    "   Indian visual traditions:\n"
+    "   - Layered narrative planes — foreground, middle, background each carry "
+    "separate narrative, read simultaneously\n"
+    "   - Symbolic colour — colour chosen for meaning, not just aesthetics\n"
+    "   - Community as texture — the crowd as a compositional element with its own rhythm\n"
+    "   American documentary tradition:\n"
+    "   - Deliberate flatness — Walker Evans / Garry Winogrand non-composition: "
+    "the difficulty of NOT composing, letting the subject fill the frame honestly\n"
+    "   - Street geometry — using architectural lines, shadows, and reflections as "
+    "compositional structure the photographer found, not placed\n"
+    "   Score 8.0+ when the compositional principle is rare — most photographers "
+    "would not know to apply it, let alone execute it correctly\n\n"
+
+    "LAYER 3 — LIGHT RECOGNITION AND USE\n"
+    "Seeing and capturing light that most photographers walk past:\n"
+    "   8.5-9.0  Selective ambient light — subject lit, background not, through a "
+    "specific brief angle of natural light. Cannot be manufactured. Cannot be repeated.\n"
+    "   8.0-8.5  Chiaroscuro — deep shadow and bright light used as compositional "
+    "structure, not just as exposure conditions\n"
+    "   7.5-8.0  Shadow as subject — the cast shadow tells the story, not the object\n"
+    "   7.0-7.5  Colour temperature contrast — mixing artificial and natural light "
+    "deliberately, holding both without losing either\n"
+    "   6.5-7.0  Golden/blue hour used compositionally — not just present at the "
+    "right time, but positioned and framed for the specific quality of that light\n"
+    "   5.0-6.5  Competent exposure management in available light\n\n"
+
+    "LAYER 4 — TECHNICAL EXECUTION\n"
+    "In-camera technique requiring precise control:\n"
+    "   8.0-8.5  ND filter, ICM, long exposure, panning, multiple exposure, infrared "
+    "— executed with precision and creative intent\n"
+    "   7.5-8.0  Technique that most photographers attempt and most fail at — "
+    "handheld field macro, fast-moving subject tracking in difficult conditions\n"
+    "   6.5-7.5  Single deliberate technique executed competently\n\n"
+
+    "LAYER 5 — POST-PROCESSING VISION\n"
+    "Seeing the finished image before making it, and executing that transformation:\n"
+    "   8.0-8.5  Complete tonal transformation — monochrome conversion, selective "
+    "exposure isolation, manufactured darkness — that most photographers would not "
+    "conceive for this subject\n"
+    "   7.5-8.0  Deliberate post-processing decision that changes the meaning of "
+    "the image, not just its appearance\n\n"
+
+    "MOBILE TRACK DOD — SEPARATE SCALE:\n"
+    "If the photographer is on MOBILE TRACK (smartphone), apply this adjusted scale. "
+    "A phone photographer demonstrating compositional knowledge or light recognition "
+    "is achieving MORE difficulty relative to their tool than a camera photographer "
+    "doing the same. DOD for mobile must account for what the phone cannot do:\n"
+    "   Phone-specific DOD signals that raise the score:\n"
+    "   - Clean background separation WITHOUT bokeh — the photographer moved "
+    "physically to isolate the subject, not used aperture\n"
+    "   - Clutter awareness — the photographer recognised and eliminated competing "
+    "elements that a phone cannot blur out. A cluttered background on a phone image "
+    "is a DOD failure. A clean background is a DOD achievement.\n"
+    "   - Proximity as zoom — the photographer got physically close rather than "
+    "zooming digitally, preserving image quality\n"
+    "   - Compositional knowledge applied — a phone photographer who uses Ma, "
+    "Rembrandt light, or deliberate negative space has done something technically "
+    "harder than a camera photographer doing the same, because they had fewer tools\n"
+    "   - Timing without continuous burst — phone burst modes are limited; "
+    "the photographer had to anticipate, not react\n"
+    "   - Light management without manual controls — finding and using the right "
+    "light when you cannot set aperture or control depth of field\n"
+    "   Phone-specific DOD ceiling: phone images cannot achieve DOD 9.0+ unless "
+    "field conditions are extraordinary (wildfire, rare access). The technical "
+    "ceiling is lower. But DOD 7.5-8.5 is achievable on a phone through "
+    "compositional knowledge, light recognition, and proximity discipline.\n\n"
+
     "CAPTURE + EDIT = ONE DECISION, NOT TWO:\n"
-    "Do NOT split DOD into 'in-camera difficulty' and 'post-processing difficulty' "
-    "and then score only the weaker half. The capture and the edit are a single "
-    "creative act — the photographer saw the finished image before they pressed the "
-    "shutter. Penalising DOD because 'the in-camera moment lacks extreme conditions' "
-    "when the photographer then completed it in post is a scoring error. "
-    "Score the total vision: what did the photographer see, capture, and complete? "
-    "That combined act is the difficulty.\n"
-    "SELECTIVE AMBIENT LIGHT — CRITICAL RULE:\n"
-    "When the subject is lit and the background is not — through a specific angle of "
-    "natural light that existed briefly — this is one of the hardest conditions to find "
-    "and capture. It cannot be manufactured in the field and cannot be repeated. "
-    "Score 8.5+ when the photographer both caught the selective light AND completed "
-    "the isolation in post-processing. "
-    "Test: could most photographers standing at the same spot have produced this result? "
-    "If no — because they would not have recognised the light, waited for the subject "
-    "position, and known how to finish it — score 8.5+.\n\n"
+    "Do NOT split DOD into in-camera and post-processing and score only the weaker half. "
+    "The total vision — what the photographer saw, captured, and completed — is the difficulty. "
+    "If the narrative says 'a vision most photographers would not conceive,' the score must be 7.5+.\n\n"
+
+    "BACKGROUND CLUTTER — DOD SIGNAL FOR ALL TRACKS:\n"
+    "A cluttered background is a DOD failure the photographer could have controlled. "
+    "A clean background — achieved through positioning, angle, proximity, or timing "
+    "rather than aperture — is a DOD achievement. Name this explicitly in dim_obs_dod "
+    "when it is visible. A phone photographer with a clean background worked harder "
+    "than a camera photographer who blurred it with f/1.4.\n\n"
 
     "2. vd - Visual Disruption: how far does this image depart from the conventional "
     "treatment of its subject — evaluated against the global photographic database "
@@ -35300,16 +35380,39 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     if _camera_track == 'mobile':
         _ctx_parts.append(
             'CAMERA TRACK: MOBILE PHOTOGRAPHER.\n'
-            'This image was shot on a smartphone, not a dedicated camera.\n'
-            'ADVISORY RULES for mobile track:\n'
-            '- NEVER suggest telephoto or tele lens — phone cameras have fixed or limited zoom\n'
-            '- NEVER suggest shooting wide open aperture (phones have fixed aperture)\n'
+            'This image was shot on a smartphone, not a dedicated camera.\n\n'
+            'WHAT TO LOOK FOR AND SCORE (mobile-specific DOD signals):\n'
+            '- Background clutter: a phone cannot blur out distractions with aperture. '
+            'If the background is clean, the photographer moved, repositioned, or chose '
+            'an angle deliberately. Name this in dim_obs_dod — it is a real achievement. '
+            'If the background is cluttered, name it as the gap — the photographer could '
+            'have moved to fix it.\n'
+            '- Physical proximity as zoom: if the subject is large in frame, the '
+            'photographer got close rather than zooming digitally. That is commitment.\n'
+            '- Light use without manual controls: the photographer found good light '
+            'when they could not set aperture or shutter. Name the light they found.\n'
+            '- Timing discipline: phone burst modes are limited. A peak moment '
+            'captured on mobile required anticipation, not reaction.\n'
+            '- Compositional knowledge: a phone photographer who uses Ma, Rembrandt '
+            'light, negative space, or deliberate framing has achieved more difficulty '
+            'relative to their tool than a camera user doing the same.\n\n'
+            'ADVISORY RULES (what NOT to suggest):\n'
+            '- NEVER suggest telephoto or tele lens — phone cameras cannot do this\n'
+            '- NEVER suggest shooting wide open aperture — phones have fixed aperture\n'
             '- NEVER suggest RAW capture as if it requires a camera body\n'
-            '- DO suggest: proximity (get physically closer instead of zooming)\n'
+            '- NEVER suggest ND filters as primary technique advice\n'
+            '- DO suggest: move closer physically instead of zooming\n'
+            '- DO suggest: find cleaner backgrounds by moving position\n'
             '- DO suggest: computational photography strengths (portrait mode, night mode)\n'
-            '- DO suggest: framing decisions that work within phone constraints\n'
-            '- Tone: a phone photographer is often a first-time or casual photographer — '
-            'advisory must be encouraging and achievable, not professional-gear-focused'
+            '- DO suggest: timing — wait for the moment, then shoot\n'
+            '- DO suggest: light — phone cameras reward good natural light more than '
+            'cameras do because you cannot compensate with aperture\n\n'
+            'TONE: A phone photographer may not know they had compositional options. '
+            'The scorecard must teach them something they did not know — not just '
+            'confirm what they did. The most valuable sentence for a mobile photographer '
+            'is: "You could have moved two steps left and the wall behind would have '
+            'disappeared — the subject would have stood against open sky instead." '
+            'Specific. Achievable. Does not require new equipment.'
         )
     else:
         _ctx_parts.append('CAMERA TRACK: CAMERA (DSLR/Mirrorless). '
