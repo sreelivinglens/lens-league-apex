@@ -1,4 +1,4 @@
-# SL-VERSION: 182.07 (Session 213, 2026-09-05 — Two-call architecture: Hotfix re-deploy. No code changes from 182.06. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.08 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -35877,7 +35877,23 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
         app.logger.info(f'[try_haiku] master override: {_python_master_name} (group={_v_group})')
     else:
         # Non-wildlife or unknown group — use DB library
-        _master_lib = _master_lib_fallback
+        # Wildlife safety net: if genre is Wildlife but pre-call returned no group
+        # (low confidence, heavily bokeh'd, subject unclear) — use a safe Wildlife
+        # default rather than letting the DB library pick a non-wildlife photographer.
+        _genre_lower = (genre or '').lower()
+        if _genre_lower == 'wildlife' and not _v_group:
+            _master_lib = (
+                'MASTER REFERENCE OVERRIDE — USE THIS NAME ONLY:\n'
+                '- Vincent Munier\n\n'
+                'Rationale: Munier photographs wildlife in conditions of low visibility, '
+                'difficult light, and atmospheric mood — subject partially obscured or '
+                'merged with environment. Use when subject is unclear or confidence is low.\n\n'
+                'master_name field MUST be: Vincent Munier\n'
+                'Do not choose a different name.'
+            )
+            app.logger.info('[try_haiku] master wildlife fallback: Vincent Munier (low confidence, no group)')
+        else:
+            _master_lib = _master_lib_fallback
 
     # Session 211: fetch EXIF from DB for gear-specific tech read
     _exif_ctx_block = ''
