@@ -46,10 +46,10 @@ button{font:inherit;cursor:pointer}
 .navstart{background:var(--gold);color:var(--dark) !important;border:none;border-radius:2px;padding:10px 20px;font-size:14px;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
 
 /* ── SCROLL 1: HERO ── */
-.hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 68px);min-height:calc(100dvh - 68px);align-items:stretch}
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 68px);min-height:calc(100dvh - 68px);max-height:calc(100vh - 68px);max-height:calc(100dvh - 68px);align-items:stretch;overflow:hidden}
 .hero-photograph{background:var(--panel-bg);display:flex;flex-direction:column;min-height:520px}
 .hero-photograph-img-wrap{flex:1;padding:28px 28px 0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-photograph-img{max-width:100%;max-height:100%;object-fit:contain;object-position:center;cursor:zoom-in;display:block}
+.hero-photograph-img{max-width:100%;max-height:100%;object-fit:contain;object-position:center top;cursor:zoom-in;display:block}
 
 /* Credential panel */
 .hero-credential{background:var(--panel-bg);border-top:1px solid rgba(200,168,75,.2);padding:20px 28px 22px;flex-shrink:0}
@@ -70,7 +70,7 @@ button{font:inherit;cursor:pointer}
 .credential-logo-text{font-size:13px;color:rgba(245,243,239,.7);letter-spacing:1px;text-transform:uppercase}
 
 /* Hero text */
-.hero-text{display:flex;flex-direction:column;justify-content:center;padding:0 6vw;background:var(--cream)}
+.hero-text{display:flex;flex-direction:column;justify-content:center;padding:32px 6vw;background:var(--cream);overflow-y:auto}
 .hero-kicker{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
 .hero-h1{font-size:clamp(34px,4vw,58px);line-height:1.5;letter-spacing:-.04em;color:var(--blue-mid);font-weight:600;margin-bottom:22px}
 .hero-h1 em{font-style:italic;color:var(--gold)}
@@ -83,7 +83,7 @@ button{font:inherit;cursor:pointer}
 .hero-dim:last-child{border-bottom:none}
 .dim-label{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);min-width:76px;flex-shrink:0}
 .dim-q{font-size:16px;color:#3d3530;line-height:1.7}
-.hero-standard{font-size:17px;line-height:1.7;color:#2C4070;margin-top:14px;font-weight:500}
+.hero-standard{font-size:16px;line-height:1.7;color:#2C4070;margin-top:16px;font-weight:400}
 .hero-standard br+span,.hero-standard{font-weight:400}
 
 /* Lightbox */
