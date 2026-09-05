@@ -209,12 +209,12 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
 .sl-footer-grid { display:grid; grid-template-columns:1.8fr 1fr 1fr 1fr 1fr; gap:2rem; margin-bottom:2.5rem; }
 
 /* MOBILE BOTTOM NAV */
-.sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#F5F3EF; border-top:0.5px solid rgba(26,39,68,0.12); padding:6px 0 8px; z-index:200; }
+.sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); padding:6px 0 8px; z-index:200; }
 .sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
 .sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,39,68,0.42); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
 .sl-mob-nav-item.active { color:#C8A84B; }
 .sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
-.sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#F5F3EF; border-top:0.5px solid rgba(26,39,68,0.12); z-index:199; padding:8px 0; }
+.sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); z-index:199; padding:8px 0; }
 .sl-mob-more-drawer.open { display:block; }
 .sl-mob-drawer-item { display:block; padding:13px 24px; font-size:14px; color:rgba(26,39,68,0.65); text-decoration:none; border-bottom:0.5px solid rgba(26,39,68,0.06); }
 .sl-mob-drawer-item:last-child { border-bottom:none; }
@@ -281,7 +281,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     <a href="{{ url_for('try_gallery') }}">My evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">The League</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -291,7 +291,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     <a href="{{ url_for('science') }}">Science</a>
     <a href="{{ url_for('contests') }}">Programmes</a>
     <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="active">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="active">The League</a>
     <a href="{{ url_for('login') }}">Login</a>
     <a href="{{ url_for('register') }}" style="background:#1A2744;color:#C8A84B;padding:8px 18px;border-radius:4px;font-weight:600;font-size:13px;border:1px solid #C8A84B;">Register</a>
     {% endif %}
@@ -315,7 +315,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
   <!-- VERIFIED -->
   <div class="sl-verified">
     <div class="sl-vtag">✓ <b>AI verified</b></div>
-    <div class="sl-vtag">◉ <b>Calibrated · {{ calibrated_count }} images</b></div>
+    <div class="sl-vtag">◉ <b>Calibrated against {{ calibrated_count }} blind evaluations</b></div>
     <div class="sl-vtag">★ <b>Expert calibrated</b></div>
   </div>
 
@@ -515,7 +515,7 @@ canvas.sl-spark { width:100%; height:44px; display:block; }
     <div class="sl-cta-ey">This is what an evaluation looks like</div>
     <div class="sl-cta-h">To have your own images evaluated against this standard —</div>
     <div class="sl-cta-sub">Honest. Unbiased. The work determines everything.</div>
-    <a href="{{ url_for('pricing') }}" class="sl-cta-btn">Join the League of Photographers →</a>
+    <a href="{{ url_for('pricing') }}" class="sl-cta-btn">Join the League →</a>
     <div class="sl-cta-rule-bot"></div>
   </div>
 
