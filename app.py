@@ -1,4 +1,4 @@
-# SL-VERSION: 182.04 (Session 212, 2026-09-05 — Four prompt fixes: (1) Water bird master override: GROUP A must use Munier/Laman/Salgado — Nick Brandt explicitly banned for any bird image (African land mammals only). (2) Added to banned phrases: 'bilateral perfection', 'fractional shift', master name in what_next, proximity contradiction (suffocating language only in vision section not gap description). (3) Edit tips: strict rule every WHY must follow a WHAT, every HOW must follow WHY, three complete tip examples shown. (4) Template: score overlay anchored to inline-block image wrapper so gradient sits on actual image, not black letterbox area.)
+# SL-VERSION: 182.05 (Session 212, 2026-09-05 — Fix: David Yarrow added to water bird master ban alongside Nick Brandt. Yarrow = large African mammals and human subjects only — never birds or water birds. Pelican must resolve to Munier/Laman/Salgado.)
 
 import os
 import re
@@ -35058,7 +35058,8 @@ _TRY_HAIKU_PROMPT = (
     "  spoonbill, swan, duck, grebe, kingfisher): "
     "  MUST pick Vincent Munier, Tim Laman, or Sebastiao Salgado (flamingos). "
     "  Nick Brandt = African land mammals ONLY — never for water birds, never for birds. "
-    "  Brandt does not photograph birds. Do not pick Brandt for any bird image.\n"
+    "  David Yarrow = large African mammals and human subjects — never for birds or water birds. "
+    "  Brandt and Yarrow do not photograph birds. Do not pick either for any bird image.\n"
     "- Tiger, leopard, snow leopard: Steve Winter or Nick Nichols.\n"
     "- Indian bird behaviour (any species): prefer Baiju Patil, Kalyan Varma, Aishwarya Sridhar.\n"
     "- Indian street/documentary: Raghu Rai, Vineet Vohra, GMB Akash.\n\n"
