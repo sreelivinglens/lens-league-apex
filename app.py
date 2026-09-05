@@ -1,4 +1,4 @@
-# SL-VERSION: 181.97 (Session 212, 2026-09-05 — Global language rule: every output field must pass the two-year photographer test. Banned: timing jargon (half-second away, temporal centre, execution window), composition jargon (bilateral symmetry, compositional tension, negative space as subject, diagonal tension), critic language (reads against, resolves, sits in the frame, emotional register, affective). Each banned phrase replaced with plain-English equivalent. Sherpa test added: would a mountain guide say this?)
+# SL-VERSION: 181.98 (Session 212, 2026-09-05 — Three fixes: (1) GROUP A language ban extended to all dim_obs fields + added 'in flight', 'bird in flight', 'soaring bird', 'stark white line' to banned list — pelican dim_obs was still using raptor/flight language. (2) Stability anchor: _try_run_haiku now fetches previous score before building prompt, injects anchor telling engine to stay within ±0.4 unless it can name a clear error — fixes ±0.3 drift on rescore. (3) Banned phrases expanded: 'one frame away', 'the stillness before it', 'not quite caught', 'almost visible but not quite' — new pattern phrases replacing the old half-second template.)
 
 import os
 import re
@@ -34670,11 +34670,17 @@ _TRY_HAIKU_PROMPT = (
     "Group B, check for a water reflection — presence = Group A, absence = Group B.\n"
     "GROUP A LANGUAGE BAN: Once committed to Group A (water bird), the following "
     "words are BANNED from every field in the output — takeaway, impression, "
-    "dim_obs, what_next, conclusion, imagine, tech_read, all of them: "
-    "'raptor', 'soaring', 'thermal soaring', 'stooping', 'predatory diving', "
-    "'prey strike', 'hunting dive'. Water birds do not do these things. "
+    "dim_obs_dod, dim_obs_vd, dim_obs_dm, dim_obs_wf, dim_obs_aq, "
+    "what_next, conclusion, imagine, tech_read, visual_flow, all of them: "
+    "'raptor', 'soaring', 'soaring bird', 'thermal soaring', 'stooping', "
+    "'predatory diving', 'prey strike', 'hunting dive', 'in flight', "
+    "'bird in flight', 'stark white line', 'pure geometry'. "
+    "Water birds do not soar on thermals, stoop, or dive like raptors. "
+    "A water bird with wings spread on water is NOT 'in flight' — it is "
+    "displaying, drying, or landing. Never describe a GROUP A bird as "
+    "'soaring', 'in flight', or 'a bird in flight' — these are raptor behaviours. "
     "If any of these words appear in your output for a Group A image, you have "
-    "made a subject-group error. Stop and rewrite.\n\n"
+    "made a subject-group error. Stop and rewrite every affected field.\n\n"
 
     "STEP 1 — READ THE ANIMAL. COMMIT TO ONE BEHAVIOUR NAME.\n"
     "Now that you have the subject group, read the specific behaviour. "
@@ -34872,9 +34878,13 @@ _TRY_HAIKU_PROMPT = (
     "  'the peak of [X] is one half-second away'\n"
     "  'a fraction of a second from'\n"
     "  'just outside the frame's temporal centre'\n"
-    "  These are generic timing phrases that apply to any photograph. "
-    "  If timing is the gap, name the SPECIFIC GESTURE OR MOMENT that was missed — "
-    "  not that it was missed by a fraction of time.\n"
+    "  'one frame away'\n"
+    "  'the stillness before it'\n"
+    "  'not quite caught'\n"
+    "  'almost visible, but not quite'\n"
+    "  These are vague proximity phrases that tell the photographer nothing specific. "
+    "  If timing or a specific moment is the gap, name the EXACT GESTURE OR ELEMENT "
+    "  that was needed — not that it was missed by a small margin.\n"
     "- VARIED EXAMPLES — note how each names something specific to that image:\n"
     "  Wildlife silhouette: 'The geometry here is extraordinary — the gap is "
     "  proximity: tighter framing would collapse the void into something suffocating.'\n"
@@ -35171,6 +35181,8 @@ _TRY_HAIKU_PROMPT = (
     "Clarity plus 10 inside mask only; reduce noise reduction to minimum inside mask.\n"
     "Specific to THIS image. Not generic advice. Max 120 words total.\n\n"
 
+    "{stability_anchor}\n\n"
+
     "LANGUAGE RULE — APPLIES TO EVERY FIELD IN THE OUTPUT:\n"
     "This scorecard is read by working photographers, not critics or academics. "
     "Every sentence must pass this test: would a photographer who has been shooting "
@@ -35363,6 +35375,46 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     except Exception as _ex_err:
         app.logger.debug(f'[try_haiku] exif fetch non-fatal: {_ex_err}')
 
+    # Session 212: stability anchor — fetch previous score to reduce ±0.3 drift on rescore
+    # Injects previous score into prompt so engine anchors to it rather than rescoring freely
+    _stability_anchor_block = ''
+    try:
+        with app.app_context():
+            _prev_row = db.session.execute(
+                db.text(
+                    "SELECT score, dod_score, disruption_score, dm_score, "
+                    "wonder_score, aq_score FROM images WHERE id = :iid "
+                    "AND status = 'scored' AND score IS NOT NULL"
+                ),
+                {'iid': image_id}
+            ).fetchone()
+            if _prev_row and _prev_row[0]:
+                _ps = float(_prev_row[0])
+                _pd = float(_prev_row[1]) if _prev_row[1] else None
+                _pv = float(_prev_row[2]) if _prev_row[2] else None
+                _pm = float(_prev_row[3]) if _prev_row[3] else None
+                _pw = float(_prev_row[4]) if _prev_row[4] else None
+                _pa = float(_prev_row[5]) if _prev_row[5] else None
+                _stability_anchor_block = (
+                    f'SCORE STABILITY ANCHOR — THIS IMAGE HAS BEEN SCORED BEFORE:\n'
+                    f'Previous overall score: {_ps:.2f}\n'
+                )
+                if all(x is not None for x in [_pd, _pv, _pm, _pw, _pa]):
+                    _stability_anchor_block += (
+                        f'Previous dimension scores: DOD {_pd:.1f} · VD {_pv:.1f} · '
+                        f'DM {_pm:.1f} · WF {_pw:.1f} · AQ {_pa:.1f}\n'
+                    )
+                _stability_anchor_block += (
+                    f'Your new scores must not drift more than 0.4 from these previous scores '
+                    f'UNLESS you find a clear error in the previous scoring that you can name. '
+                    f'If the previous score was {_ps:.2f} and you would score it {_ps:.2f} ± 0.3, '
+                    f'stay within that range. Score stability is a platform trust requirement. '
+                    f'If you genuinely find a significant error in the previous scoring, '
+                    f'you may correct it — but name the reason in your dim_obs.'
+                )
+    except Exception as _sa_err:
+        app.logger.debug(f'[try_haiku] stability_anchor fetch non-fatal: {_sa_err}')
+
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
               .replace('{genre_context}', _try_genre_context(genre or 'default'))
@@ -35370,7 +35422,8 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
               .replace('{history_context}', _history_ctx)
               .replace('{photographer_context}', _ctx_block)
               .replace('{master_library}', _master_lib)
-              .replace('{exif_context}', _exif_ctx_block))
+              .replace('{exif_context}', _exif_ctx_block)
+              .replace('{stability_anchor}', _stability_anchor_block))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
