@@ -83,6 +83,8 @@ button{font:inherit;cursor:pointer}
 .hero-dim:last-child{border-bottom:none}
 .dim-label{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);min-width:76px;flex-shrink:0}
 .dim-q{font-size:16px;color:#3d3530;line-height:1.7}
+.hero-standard{font-size:17px;line-height:1.7;color:#2C4070;margin-top:14px;font-weight:500}
+.hero-standard br+span,.hero-standard{font-weight:400}
 
 /* Lightbox */
 .hero-lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
@@ -327,7 +329,7 @@ button{font:inherit;cursor:pointer}
     {% else %}
       <a href="{{ url_for('register') }}" class="bigbtn">Start with your first 10 free →</a>
     {% endif %}
-    <div class="micronote">No subscription. No credit card.</div>
+    <div class="hero-standard">A new standard for photography.<br>Created by photographers. Built for the photography of today — and for how photography will evolve tomorrow.</div>
   </div>
 </section>
 
