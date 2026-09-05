@@ -1,4 +1,4 @@
-# SL-VERSION: 182.05 (Session 212, 2026-09-05 — Fix: David Yarrow added to water bird master ban alongside Nick Brandt. Yarrow = large African mammals and human subjects only — never birds or water birds. Pelican must resolve to Munier/Laman/Salgado.)
+# SL-VERSION: 182.06 (Session 213, 2026-09-05 — Two-call architecture: _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -34502,6 +34502,283 @@ def _haiku_species_research(species_name, api_key, genre='Wildlife'):
         app.logger.debug(f'[haiku_species_research] {species_name} failed (non-fatal): {_sre}')
         return ''
 
+
+# ── Session 213 — TWO-CALL ARCHITECTURE ─────────────────────────────────────
+# Pre-call: lightweight vision identify before scoring prompt is built.
+# Engine receives facts, not questions. Master reference and DOD anchors
+# come from Python dicts, not engine choice.
+# Cost: ~₹0.02 per call extra. Eliminates all master reference bans permanently.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_HAIKU_VISION_SYSTEM = (
+    "You are a visual analyst. Describe exactly what you see in the photograph. "
+    "Do NOT score, evaluate, or give feedback. Do NOT infer — only describe what is "
+    "clearly visible. If something is ambiguous, say so. "
+    "Respond ONLY with valid JSON. No preamble, no markdown fences. "
+    "Never use a literal double-quote inside a string value — use single quotes instead."
+)
+
+_HAIKU_VISION_PROMPT = (
+    "Examine this photograph. Answer each question based only on what you can see.\n\n"
+    "1. What is the PRIMARY subject? (e.g. 'Pelican', 'Tiger', 'Butterfly', 'Person', 'Landscape')\n"
+    "2. Which subject group does it belong to?\n"
+    "   A=water_bird, B=aerial_raptor, C=ground_mammal, D=primate, "
+    "E=aquatic_marine, F=macro_invertebrate, G=urban_wildlife, H=human, I=landscape_nature, J=other\n"
+    "   CRITICAL: If a reflection is visible below the animal, it is AT water — group A not B.\n"
+    "3. What is the environment? (e.g. 'dark still water', 'open sky', 'forest floor', 'urban street')\n"
+    "4. What specific behaviour is happening? "
+    "(e.g. 'wings spread drying on water', 'thermal soaring', 'prey in talons', 'resting portrait')\n"
+    "5. Is the primary subject rendered as a silhouette — shape only, no surface detail visible? yes/no\n"
+    "6. What is the lighting? (backlit/frontlit/sidelit/overcast/low_light_dark_background)\n"
+    "7. How confident are you in the subject identification? (high/medium/low)\n"
+    "   low = silhouette, heavily processed, very small/distant subject\n\n"
+    "Return this exact JSON:\n"
+    "{\n"
+    "  \"subject_type\": \"<common name of primary subject>\",\n"
+    "  \"subject_group\": \"<single letter: A/B/C/D/E/F/G/H/I/J>\",\n"
+    "  \"environment\": \"<brief environment description>\",\n"
+    "  \"behaviour\": \"<specific behaviour name>\",\n"
+    "  \"is_silhouette\": <true|false>,\n"
+    "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
+    "  \"confidence\": \"<high|medium|low>\"\n"
+    "}"
+)
+
+
+def _try_vision_analyse(img_b64):
+    """
+    Session 213 — TWO-CALL ARCHITECTURE: Lightweight pre-call.
+    ~500 token prompt + image. Identifies subject before scoring prompt is built.
+    Returns: {subject_type, subject_group, environment, behaviour, is_silhouette,
+              lighting, confidence}
+    Falls back to empty dict on any failure — scoring proceeds without it.
+    Cost: ~₹0.02 per call. Eliminates all master reference bans permanently.
+    """
+    import urllib.request as _ur
+    import json as _json
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        app.logger.error('[haiku_vision] ANTHROPIC_API_KEY not set')
+        return {}
+
+    payload = _json.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 300,
+        'temperature': 0,
+        'system': _HAIKU_VISION_SYSTEM,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': _HAIKU_VISION_PROMPT}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=30) as resp:
+            raw = _json.loads(resp.read().decode())
+        text = ''.join(
+            b.get('text', '') for b in (raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+        # Strip any accidental markdown fences
+        import re as _re
+        text = _re.sub(r'```json|```', '', text).strip()
+        result = _json.loads(text)
+        app.logger.info(
+            f'[haiku_vision] group={result.get("subject_group","?")} '
+            f'subject={result.get("subject_type","?")} '
+            f'behaviour={result.get("behaviour","?")} '
+            f'silhouette={result.get("is_silhouette","?")} '
+            f'confidence={result.get("confidence","?")}'
+        )
+        return result
+    except Exception as _e:
+        app.logger.warning(f'[haiku_vision] failed ({_e}) — scoring continues without pre-call')
+        return {}
+
+
+def _pick_master_haiku(subject_group, environment, genre):
+    """
+    Session 213 — Python dict lookup. Engine never chooses master reference.
+    Returns: (master_name, why_template_hint)
+    why_template_hint is a brief string to help the engine write master_why correctly.
+    Falls back to None so _try_run_haiku falls through to DB library path.
+    """
+    _g = (subject_group or '').strip().upper()
+    _env = (environment or '').lower()
+    _genre = (genre or '').lower()
+
+    # ── Group A: Water birds ─────────────────────────────────────────────────
+    if _g == 'A':
+        # Flamingos → Salgado
+        if 'flamingo' in _env:
+            return ('Sebastiao Salgado',
+                    'Salgado photographed flamingo colonies at scale — vast formations '
+                    'as a single living texture. You are still working the individual bird.')
+        # Dark water / night / low light → Munier
+        if any(w in _env for w in ('dark', 'night', 'low light', 'dusk', 'dawn', 'still water')):
+            return ('Vincent Munier',
+                    'Munier waits for the animal to become inseparable from its environment. '
+                    'You have the bird — you have not yet dissolved it into the water.')
+        # Default water bird → Laman
+        return ('Tim Laman',
+                'Laman built proximity to water birds through sustained field presence. '
+                'You are shooting from the distance the bird will tolerate, not the distance that fills the frame.')
+
+    # ── Group B: Aerial raptors ──────────────────────────────────────────────
+    if _g == 'B':
+        if any(w in _env for w in ('fire', 'smoke', 'burn', 'wildfire')):
+            return ('Charlie Hamilton James',
+                    'Hamilton James positioned at fire-line level so the raptor reads against smoke. '
+                    'You are shooting from distance where fire and sky compete.')
+        return ('Nick Nichols',
+                'Nichols tracked raptors over sustained field seasons to reach the peak behavioural moment. '
+                'You have the bird in frame — you have not yet reached its peak act.')
+
+    # ── Group C: Ground mammals ──────────────────────────────────────────────
+    if _g == 'C':
+        _subj = _env  # environment often carries species hint
+        if any(w in _subj for w in ('tiger', 'leopard', 'snow leopard')):
+            return ('Steve Winter',
+                    'Winter spent years on the same individuals to reach proximity without habituation. '
+                    'You have the cat in frame — you do not yet have its intention.')
+        if any(w in _subj for w in ('elephant', 'rhino', 'hippo')):
+            return ('Nick Nichols',
+                    'Nichols worked inside forest elephant family groups over decades. '
+                    'You have the animal — you have not yet entered its world.')
+        # Default big cat / predator
+        return ('Steve Winter',
+                'Winter stayed with the same territory for years to find the moment the predator committed. '
+                'You have the animal — you are still waiting for its decision.')
+
+    # ── Group D: Primates ────────────────────────────────────────────────────
+    if _g == 'D':
+        return ('Frans Lanting',
+                'Lanting held his position until the primate stopped performing for the lens. '
+                'You have the expression — you have not yet disappeared from the frame.')
+
+    # ── Group E: Aquatic / Marine ────────────────────────────────────────────
+    if _g == 'E':
+        return ('Paul Nicklen',
+                'Nicklen entered the water column to find the angle the surface photographer never reaches. '
+                'You are shooting from the boundary — Nicklen crossed it.')
+
+    # ── Group F: Macro / Invertebrate ───────────────────────────────────────
+    if _g == 'F':
+        return ('Piotr Naskrecki',
+                'Naskrecki works at subject magnification levels that reveal structure invisible to the naked eye. '
+                'You are close — you are not yet at the scale where the hidden world opens.')
+
+    # ── Group G: Urban wildlife ──────────────────────────────────────────────
+    if _g == 'G':
+        if any(w in _env for w in ('leopard', 'tiger', 'elephant')):
+            return ('Baiju Patil',
+                    'Patil documents large predators inside Indian cities — he builds trust with the local '
+                    'community to reach access no visiting photographer can get. '
+                    'You found the animal. He finds the story behind why it is there.')
+        return ('Charlie Hamilton James',
+                'Hamilton James follows animals into the human boundary where no wildlife photographer expects to go. '
+                'You have the animal in a human context — you have not yet made the human context the point.')
+
+    # ── Groups H/I/J: Human/landscape/other — no override, fall through to DB ─
+    return (None, '')
+
+
+def _build_dod_anchors(subject_group, behaviour):
+    """
+    Session 213 — Python dict. Returns correct DOD scale text for injection.
+    Replaces the 7-group taxonomy block in _TRY_HAIKU_PROMPT (~3,000 tokens)
+    once two-call is verified and taxonomy block is removed.
+    Currently used to inject a VERIFIED SUBJECT block into the prompt.
+    """
+    _g = (subject_group or '').strip().upper()
+    _b = (behaviour or '').lower()
+
+    _ANCHORS = {
+        'A': (
+            "GROUP A — WATER BIRDS. DOD scale for this subject:\n"
+            "  5-6: Bird standing or swimming in daylight, standard conditions\n"
+            "  6-7: Colonial behaviour, feeding sequence, coordinated flock movement\n"
+            "  7-8: Specific light condition (dawn/dusk), reflection intact, precise moment within behaviour\n"
+            "  8-8.5: Night or low-light, still dark water, perfect reflection\n"
+            "  8.5-9: Rare behaviour (mid-air prey catch, pelican cooperative fishing, flamingo courtship peak)\n"
+            "LANGUAGE RULE: NEVER use raptor/soaring/thermal soaring/stooping/predatory diving/"
+            "in-flight/stark white line for a water bird. Wings spread at water = displaying/drying/landing."
+        ),
+        'B': (
+            "GROUP B — AERIAL RAPTORS. DOD scale for this subject:\n"
+            "  5-6: Generic soaring in good light\n"
+            "  6-7: Bird in flight with good tracking, hunting scan from perch\n"
+            "  7-8: Active hunt with prey visible, raptor at fire following insects\n"
+            "  8-9: Stoop at prey contact, kill moment, raptor inside active wildfire\n"
+            "  9+: Fewer than 50 documented photographs of this specific behaviour globally"
+        ),
+        'C': (
+            "GROUP C — GROUND MAMMALS. DOD scale for this subject:\n"
+            "  5-6: Animal resting, grazing, walking in daylight reserve\n"
+            "  6-7: Alert posture, herd interaction, social behaviour\n"
+            "  7-8: Active stalk, courtship display\n"
+            "  8-9: Kill moment or prey contact, birth, rare foraging in extreme conditions\n"
+            "  9+: Behaviour documented fewer than 50 times globally"
+        ),
+        'D': (
+            "GROUP D — PRIMATES. DOD scale for this subject:\n"
+            "  5-6: Grooming, resting, common social interaction\n"
+            "  6-7: Infant care, play behaviour, foraging\n"
+            "  7-8: Territorial conflict, tool use, dominance display\n"
+            "  8-9: Rare behaviour — coalition formation, deceptive behaviour, wild unhabituated individual"
+        ),
+        'E': (
+            "GROUP E — AQUATIC / MARINE. DOD scale for this subject:\n"
+            "  6-7: Dolphin bow-riding, sea turtle swimming, fish school\n"
+            "  7-8: Cetacean breach, hunting sequence, crocodilian ambush\n"
+            "  8-9: Prey contact underwater, whale cooperative hunting, rare species documentation"
+        ),
+        'F': (
+            "GROUP F — MACRO / INVERTEBRATE. DOD scale for this subject:\n"
+            "  5-6: Common insect or frog in standard conditions\n"
+            "  6-7: Behavioural moment — feeding, mating, display\n"
+            "  7-8: Rare species, handheld field macro of live behavioural moment\n"
+            "  8-9: Snake predation, spider at prey-contact, rare species in behaviour"
+        ),
+        'G': (
+            "GROUP G — URBAN WILDLIFE. DOD floor elevated by urban context:\n"
+            "  Leopard or large predator in city = DOD 8.5+ baseline.\n"
+            "  The contrast of wild creature in human environment IS the difficulty signal.\n"
+            "  Do not score urban wildlife on the same scale as reserve photography."
+        ),
+    }
+
+    anchor = _ANCHORS.get(_g, '')
+
+    # Silhouette / deliberate transformation note
+    _sil_note = ''
+    if any(w in _b for w in ('silhouette', 'backlit', 'shape only')):
+        _sil_note = (
+            "\nDELIBERATE TRANSFORMATION: Subject is rendered as silhouette. "
+            "If deliberate — clean exposure within dark field, geometric intent — "
+            "the silhouette IS the photograph. Never name species clarity or subject "
+            "visibility as the gap for a deliberate silhouette."
+        )
+
+    return anchor + _sil_note
+
+
+# ── End Session 213 two-call helpers ─────────────────────────────────────────
+
 _TRY_HAIKU_PROMPT = (
     "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
     "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
@@ -34734,6 +35011,8 @@ _TRY_HAIKU_PROMPT = (
 
     "GENRE SCORING CONTEXT:\n"
     "{genre_context}\n\n"
+
+    "{verified_subject}\n\n"
 
     "WILDLIFE GENRE — MANDATORY PRE-SCORE READ (applies to every Wildlife image):\n"
     "Before scoring any dimension, complete Steps 0-4 in order. Do not skip to scoring. "
@@ -35514,7 +35793,53 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     if _ctx_parts:
         _ctx_block = '\n\n'.join(_ctx_parts)
 
+    # Session 213: Pre-call — identify subject before building scoring prompt
+    # Engine receives facts, not questions. Master + DOD anchors come from Python.
+    _vision = _try_vision_analyse(img_b64)
+    _v_group    = _vision.get('subject_group', '')     # A/B/C/D/E/F/G/H/I/J
+    _v_subject  = _vision.get('subject_type', '')
+    _v_env      = _vision.get('environment', '')
+    _v_behaviour= _vision.get('behaviour', '')
+    _v_sil      = _vision.get('is_silhouette', False)
+    _v_conf     = _vision.get('confidence', '')        # high/medium/low
+
+    # Build VERIFIED SUBJECT block — injected into prompt as ground truth
+    # Species_note gate: only fire when confidence is high and not silhouette
+    _verified_subject_block = ''
+    if _vision:
+        _vs_lines = ['VERIFIED SUBJECT (identified by pre-call vision analysis — do not contradict):']
+        if _v_subject:
+            _vs_lines.append(f'Primary subject: {_v_subject}')
+        if _v_group:
+            _vs_lines.append(f'Subject group: {_v_group}')
+        if _v_behaviour:
+            _vs_lines.append(f'Behaviour: {_v_behaviour}')
+        if _v_env:
+            _vs_lines.append(f'Environment: {_v_env}')
+        if _v_sil:
+            _vs_lines.append(
+                'IS SILHOUETTE: yes — subject rendered as shape only. '
+                'Do NOT name species clarity or subject visibility as the gap. '
+                'The silhouette IS the photograph if deliberate.'
+            )
+        if _v_conf == 'low':
+            _vs_lines.append(
+                'Confidence: LOW — subject may be silhouette, small, or distant. '
+                'Do not name species in species_note. Return blank species_note.'
+            )
+        # Inject group-specific DOD anchors
+        _dod_anchor = _build_dod_anchors(_v_group, _v_behaviour)
+        if _dod_anchor:
+            _vs_lines.append('')
+            _vs_lines.append(_dod_anchor)
+        _verified_subject_block = '\n'.join(_vs_lines)
+
+    # Session 213: Master reference — Python dict first, DB library as fallback
+    # Engine cannot choose master reference for wildlife groups A-G
+    _python_master_name, _python_master_hint = _pick_master_haiku(_v_group, _v_env, genre)
+
     # Session 210: build master reference library from DB for this genre
+    # Used as fallback when Python dict returns None (non-wildlife genres)
     _master_lib_lines = []
     try:
         with app.app_context():
@@ -35535,9 +35860,24 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 )
     except Exception as _ml_err:
         app.logger.warning(f'[try_haiku] master_library query failed (non-fatal): {_ml_err}')
-    _master_lib = '\n'.join(_master_lib_lines) if _master_lib_lines else (
+    _master_lib_fallback = '\n'.join(_master_lib_lines) if _master_lib_lines else (
         'Raghu Rai, Henri Cartier-Bresson, Paul Nicklen, Steve McCurry, Sebastiao Salgado'
     )
+
+    # Build final master_lib for prompt injection
+    if _python_master_name:
+        # Python dict won — inject as single override, not a library to choose from
+        _master_lib = (
+            f'MASTER REFERENCE OVERRIDE — USE THIS NAME ONLY:\n'
+            f'- {_python_master_name}\n\n'
+            f'Rationale: {_python_master_hint}\n\n'
+            f'master_name field MUST be: {_python_master_name}\n'
+            f'Do not choose a different name.'
+        )
+        app.logger.info(f'[try_haiku] master override: {_python_master_name} (group={_v_group})')
+    else:
+        # Non-wildlife or unknown group — use DB library
+        _master_lib = _master_lib_fallback
 
     # Session 211: fetch EXIF from DB for gear-specific tech read
     _exif_ctx_block = ''
@@ -35611,7 +35951,8 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
               .replace('{photographer_context}', _ctx_block)
               .replace('{master_library}', _master_lib)
               .replace('{exif_context}', _exif_ctx_block)
-              .replace('{stability_anchor}', _stability_anchor_block))
+              .replace('{stability_anchor}', _stability_anchor_block)
+              .replace('{verified_subject}', _verified_subject_block))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
