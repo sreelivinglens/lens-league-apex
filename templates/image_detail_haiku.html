@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.6 (Session 211, 2026-09-05 — dim_obs all 5 rows. Score band legend. Tier enlarged. Species/tech/visual-flow/award/edit sections. Imagine gold section. Edit tips WHAT/WHY/HOW cards. Section order: Edit→Imagine→Award→Conclusion. Processing state with progress bar + polling. League career statement. 8.5+ CTA button. Conclusion gate on tier not score.)
+{# image_detail_haiku.html — SL-VERSION: 1.7 (Session 212, 2026-09-05 — Photo bar: score 36px, name 22px white, tier 16px gold. Name moved above tier/genre in verdict section, 22px. Conclusion background changed to #EDE4D3 warm pastel with gold borders, font 19px.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -238,19 +238,20 @@ main { padding:0 !important; background:#E8E5DF; }
   color:#1A2744;
 }
 
-/* Session 211: conclusion / invitation section */
+/* Session 212: conclusion — distinct warm pastel, separated from surrounding */
 .sl-conclusion {
   margin:0 0 0;
-  padding:36px 48px 40px;
-  border-top:0.5px solid rgba(26,39,68,0.10);
-  background:#F5F3EF;
+  padding:44px 48px 48px;
+  border-top:0.5px solid rgba(200,168,75,0.25);
+  border-bottom:0.5px solid rgba(200,168,75,0.25);
+  background:#EDE4D3;
 }
 .sl-conclusion p {
   font-family:'Playfair Display',Georgia,serif;
   font-style:italic;
-  font-size:17px;
-  line-height:1.85;
-  color:rgba(26,39,68,0.72);
+  font-size:19px;
+  line-height:1.90;
+  color:rgba(26,39,68,0.80);
   margin:0 auto;
   max-width:700px;
   text-align:center;
@@ -354,20 +355,20 @@ main { padding:0 !important; background:#E8E5DF; }
       </div>
     {% endif %}
     <div class="sl-photo-meta">
-      <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
         {% if score %}
-        <span style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.02em">{{ "%.2f"|format(score|float) }}</span>
+        <span style="font-size:36px;font-weight:700;color:#fff;letter-spacing:-0.03em;line-height:1">{{ "%.2f"|format(score|float) }}</span>
         {% endif %}
         {% if photographer_name %}
-        <span style="color:rgba(255,255,255,0.75);font-size:13px">{{ photographer_name }}</span>
+        <span style="color:#fff;font-size:22px;font-weight:500;letter-spacing:0.01em;line-height:1">{{ photographer_name }}</span>
         {% endif %}
         {% if tier %}
-        <span style="color:#C8A84B;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">{{ tier }}</span>
+        <span style="color:#C8A84B;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;line-height:1">{{ tier }}</span>
         {% endif %}
       </span>
       <span style="display:flex;align-items:center;gap:12px">
-        <span style="color:rgba(255,255,255,0.55);font-size:12px">{{ asset_name or '—' }}</span>
-        <span style="color:rgba(255,255,255,0.40);font-size:12px">{{ genre or '—' }}</span>
+        <span style="color:rgba(255,255,255,0.55);font-size:13px">{{ asset_name or '—' }}</span>
+        <span style="color:rgba(255,255,255,0.40);font-size:13px">{{ genre or '—' }}</span>
       </span>
     </div>
   </div>
@@ -446,12 +447,12 @@ main { padding:0 !important; background:#E8E5DF; }
         <span class="sl-score-denom">/10</span>
       </div>
 
+      {% if photographer_name %}
+      <div style="font-size:22px;font-weight:500;color:#1A2744;margin-bottom:10px;letter-spacing:0.01em;line-height:1.3">{{ photographer_name }}</div>
+      {% endif %}
       <div class="sl-tier-genre">
         {{ tier or '—' }}&nbsp;·&nbsp;{{ genre or '—' }}
       </div>
-      {% if photographer_name %}
-      <div style="font-size:15px;color:rgba(26,39,68,0.55);margin-top:6px;letter-spacing:0.02em">{{ photographer_name }}</div>
-      {% endif %}
 
       {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
       <div class="sl-tier-strip">
