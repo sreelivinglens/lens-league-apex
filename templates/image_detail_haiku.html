@@ -362,7 +362,71 @@ main { padding:0 !important; background:#E8E5DF; }
   {# ── EDITORIAL CONTENT COLUMN ── #}
   <div class="sl-content">
 
+    {# ── PROCESSING STATE — shown when scoring is still in progress ── #}
+    {% if not score %}
+    <div id="sl-processing" style="padding:60px 48px;text-align:center;max-width:860px;margin:0 auto">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:20px">Evaluating your photograph</div>
+      <div style="height:4px;background:rgba(26,39,68,0.08);border-radius:2px;margin-bottom:24px;overflow:hidden">
+        <div id="sl-progress-bar" style="height:100%;background:#C8A84B;border-radius:2px;width:0%;transition:width 0.4s ease"></div>
+      </div>
+      <div style="font-size:16px;color:rgba(26,39,68,0.55);line-height:1.7">The engine is reading your image across five dimensions.<br>This takes 60–90 seconds.</div>
+      <div id="sl-processing-msg" style="font-size:14px;color:rgba(26,39,68,0.40);margin-top:12px;font-style:italic">Starting evaluation…</div>
+    </div>
+    <div id="sl-image-id" data-id="{{ image_id }}" style="display:none"></div>
+    <script>
+    (function() {
+      var imageId = parseInt(document.getElementById('sl-image-id').getAttribute('data-id'), 10);
+      var progress = 0;
+      var messages = [
+        'Reading the frame…',
+        'Identifying subject and behaviour…',
+        'Scoring five dimensions…',
+        'Writing your evaluation…',
+        'Almost done…',
+      ];
+      var msgIdx = 0;
+      var bar = document.getElementById('sl-progress-bar');
+      var msg = document.getElementById('sl-processing-msg');
+      var pollInterval = 4000;
+      var startTime = Date.now();
+      var maxWait = 180000; // 3 min timeout
+
+      function advanceProgress() {
+        progress = Math.min(progress + (Math.random() * 8 + 4), 90);
+        if (bar) bar.style.width = progress + '%';
+        if (msg && msgIdx < messages.length) {
+          msg.textContent = messages[Math.min(msgIdx, messages.length - 1)];
+          msgIdx++;
+        }
+      }
+
+      function poll() {
+        if (Date.now() - startTime > maxWait) {
+          if (msg) msg.textContent = 'Taking longer than expected — refresh the page.';
+          return;
+        }
+        advanceProgress();
+        fetch('/try/status/' + imageId)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.status === 'scored' && data.score) {
+              if (bar) bar.style.width = '100%';
+              if (msg) msg.textContent = 'Done — loading your scorecard…';
+              setTimeout(function() { window.location.reload(); }, 800);
+            } else {
+              setTimeout(poll, pollInterval);
+            }
+          })
+          .catch(function() { setTimeout(poll, pollInterval); });
+      }
+
+      setTimeout(poll, pollInterval);
+    })();
+    </script>
+    {% endif %}
+
     {# ── 2. SCORE + TIER ── #}
+    {% if score %}
     <div class="sl-verdict">
       <div class="sl-score-line">
         <span class="sl-score-num">{{ "%.2f"|format(score|float) if score else '—' }}</span>
@@ -633,24 +697,10 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
-    {# ── 12. AWARD CONTEXT — career language all scores, League CTA at 8.5+ ── #}
-    {% if award_context %}
-    <div style="border-top:0.5px solid rgba(26,39,68,0.08);padding-top:20px;margin-bottom:{% if score and score|float >= 8.5 %}16{% else %}48{% endif %}px">
-      <div style="font-size:{% if score and score|float >= 8.5 %}16{% else %}15{% endif %}px;color:rgba(26,39,68,{% if score and score|float >= 8.5 %}0.65{% else %}0.50{% endif %});line-height:1.75;font-style:italic">{{ award_context }}</div>
-    </div>
-    {% if score and score|float >= 8.5 %}
-    <div style="margin-bottom:48px;padding:20px 24px;background:#1A2744;border-radius:3px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.6;font-family:'Playfair Display',serif;font-style:italic">Your work is ready for the League of Photographers.</div>
-      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:13px;font-weight:700;padding:12px 20px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">Join the League →</a>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {# ── 13. EDIT SUGGESTIONS — What/Why/How ── #}
+    {# ── 12. EDIT SUGGESTIONS — What/Why/How ── #}
     {% if edit_tips %}
     <div style="margin-bottom:64px;padding-top:48px;border-top:0.5px solid rgba(26,39,68,0.08)">
       <div class="sl-eyebrow">Edit Suggestions</div>
-      {# Session 211v3: WHAT/WHY/HOW rendered as separate cards #}
       {% for _tip in edit_tips.split('WHAT:') if _tip.strip() %}
       <div style="margin-bottom:16px;padding:18px 20px;background:#FAFAF6;border-radius:3px;border-left:3px solid rgba(26,39,68,0.15)">
         {% for _part in ('WHAT: ' + _tip).split('|') %}{% if _part.strip() %}
@@ -666,19 +716,30 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
-  </div>{# end .sl-content #}
-
-  {# Session 211v3: IMAGINE — the 9+ vision #}
-  {% if imagine %}
-  <div style="padding:0 48px;background:#F5F3EF">
-    <div style="max-width:860px;margin:0 auto">
-      <div class="sl-imagine">
-        <div class="sl-imagine-eyebrow">Imagine</div>
-        <div class="sl-imagine-body">{{ imagine }}</div>
-      </div>
+    {# ── 13. IMAGINE — the 9+ vision, inside editorial flow ── #}
+    {% if imagine %}
+    <div class="sl-imagine" style="margin-bottom:64px">
+      <div class="sl-imagine-eyebrow">Imagine</div>
+      <div class="sl-imagine-body">{{ imagine }}</div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
+
+    {# ── 14. AWARD CONTEXT — career language, League CTA at 8.5+ ── #}
+    {% if award_context %}
+    <div style="border-top:0.5px solid rgba(26,39,68,0.08);padding-top:24px;margin-bottom:{% if score and score|float >= 8.5 %}16{% else %}48{% endif %}px">
+      <div style="font-size:15px;color:rgba(26,39,68,{% if score and score|float >= 8.5 %}0.65{% else %}0.48{% endif %});line-height:1.8;font-style:italic">{{ award_context }}</div>
+    </div>
+    {% if score and score|float >= 8.5 %}
+    <div style="margin-bottom:48px;padding:20px 24px;background:#1A2744;border-radius:3px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.6;font-family:'Playfair Display',serif;font-style:italic">Your work is ready for the League of Photographers.</div>
+      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:13px;font-weight:700;padding:12px 20px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">Join the League →</a>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% endif %}{# end score block #}
+
+  </div>{# end .sl-content #}
 
   {# Session 211: CONCLUSION -- invitation before upgrade block #}
   {% if conclusion %}
