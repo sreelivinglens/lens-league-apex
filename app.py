@@ -1,4 +1,4 @@
-# SL-VERSION: 182.11 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.12 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -544,7 +544,7 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
     return sent
 
 
-FREE_IMAGE_LIMIT = 10  # Staging only: 10 free Haiku evaluations. Production stays 3 until free tier launches officially.
+FREE_IMAGE_LIMIT = 10  # Free tier: 10 evaluations lifetime. Official as of Session 213.
 HAIKU_LAUNCH_DATE = '2026-08-30'  # Date Haiku free tier opened to public. Anyone registered before this is Sonnet/UAT.
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
@@ -13033,7 +13033,7 @@ def image_detail(image_id):
     # ── First-eval full access — every free user's very first evaluated     ──
     # ── image shows the full scorecard (dimension scores, mission block,     ──
     # ── location advisory) even without a subscription. This is deliberately ──
-    # ── ONE moment, not all 3 free evaluations — it demonstrates full value  ──
+    # ── ONE moment, not all 10 free evaluations — it demonstrates full value  ──
     # ── once, then the normal subscriber gate applies again. See image_detail──
     # ── .html "SUBSCRIBER GATE" for where this is consumed. ──────────────────
     _is_first_eval = False
@@ -31297,9 +31297,9 @@ def send_welcome_email(user):
         'Award. Eight tiers, the top jury-reviewed:\n'
         'Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
         'Consistency wins. One great photograph isn\'t enough.\n'
-        'Your first three evaluations are free - plenty to see how this works. When you\'re ready '
+        'Your first ten evaluations are free - plenty to see how this works. When you\'re ready '
         'to chase that standing, enter Weekly Assignments, or keep shooting past those first '
-        'three, that\'s when you subscribe.\n'
+        'ten, that\'s when you subscribe.\n'
         'See plans: ' + pricing_url + '\n\n'
 
         'WHAT AWAITS YOU\n'
@@ -36211,7 +36211,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                                             f'<a href="{_e1_result_url}" style="display:inline-block;background:#1A2744;color:#C8A84B;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 24px;border-radius:3px;text-decoration:none;margin-bottom:28px;">See your full evaluation →</a>'
                                             '</td></tr>'
                                             '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
-                                            f'<p style="margin:0;font-size:14px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; <a href="{_e1_site}" style="color:#C8A84B;">shutterleague.com</a></p>'
+                                            f'<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; <a href="{_e1_site}" style="color:#C8A84B;">shutterleague.com</a></p>'
                                             '</td></tr>'
                                             '</table></td></tr></table></body></html>'
                                         ),
@@ -37417,7 +37417,7 @@ def try_page():
     """
     GET /try -- Free user Haiku evaluation page.
     SL 172.1. Registered free users only (@login_required).
-    Quota: FREE_IMAGE_LIMIT = 3 lifetime (total_uploads_ever).
+    Quota: FREE_IMAGE_LIMIT = 10 lifetime (total_uploads_ever).
     """
     from engine.scoring import GENRE_CHOICES
 
@@ -37576,7 +37576,7 @@ def try_upload():
 
         # ── Watermark check (Sonnet — same as main /upload route) ────────────
         # Runs before saving to images table — a watermarked image must never
-        # enter the DB or consume one of the user's 3 free evaluations.
+        # enter the DB or consume one of the user's 10 free evaluations.
         _try_api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if _try_api_key and os.path.exists(thumb_path):
             try:
