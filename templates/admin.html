@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.5 (Session 211, 2026-09-05 — Removed dangerous latest_image_id Rescore from Haiku members panel. Rescored wrong image when user had multiple uploads. Use image tile grid to rescore specific images.) #}
+{# SL-VERSION: admin-2.6 (Session 212, 2026-09-05 — Fixed orphaned endif on line 1083: stray closing tag left when Rescore button was removed in 2.5, causing Jinja TemplateSyntaxError on admin page load.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1080,7 +1080,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% endif %}
                 {# Session 211: Rescore removed from user row — use image tile grid below to rescore specific images.
                    u.latest_image_id rescored the wrong image when user had multiple uploads. #}
-                {% endif %}
                 <a class="ra" href="{{ url_for('admin_emailer') }}">Email all</a>
               </div>
             </td>
