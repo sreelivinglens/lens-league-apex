@@ -359,7 +359,7 @@
       <li>One-time purchase — no subscription</li>
     </ul>
     <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
-    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹200</button>
   </div>
 
 </div>
@@ -402,7 +402,7 @@
         <th style="width:36%"> </th>
         <th class="hl">Annual ₹4,000</th>
         <th>6 Months ₹2,500</th>
-        <th>100 for 100 ₹100</th>
+        <th>100 for 100 ₹200</th>
       </tr>
     </thead>
     <tbody>
@@ -470,10 +470,10 @@
 var _isLoggedIn = document.getElementById('pr-data').dataset.loggedin === 'true';
 var _loginUrl   = document.getElementById('pr-data').dataset.loginurl;
 var _currentPlan = 'annual';
-var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹100'];
+var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹200'];
 var _planKeys    = ['annual','half_yearly','play'];
 var _planRzp     = ['annual','halfyearly','play'];
-var _planCharges = [4000, 2500, 100];
+var _planCharges = [4000, 2500, 200];
 
 function _getPlanData(plan) {
   var idx = _planKeys.indexOf(plan);
