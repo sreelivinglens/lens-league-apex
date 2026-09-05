@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.5 (Session 211, 2026-09-05 — dim_obs all 5 rows. Score band legend. Tier enlarged. Species/tech/visual-flow/award/edit sections. Imagine gold section. Edit tips WHAT/WHY/HOW cards. Section order: Edit→Imagine→Award→Conclusion. Processing state with progress bar + polling. League career statement. 8.5+ CTA button. Conclusion gate on tier not score.)
+{# image_detail_haiku.html — SL-VERSION: 1.6 (Session 211, 2026-09-05 — dim_obs all 5 rows. Score band legend. Tier enlarged. Species/tech/visual-flow/award/edit sections. Imagine gold section. Edit tips WHAT/WHY/HOW cards. Section order: Edit→Imagine→Award→Conclusion. Processing state with progress bar + polling. League career statement. 8.5+ CTA button. Conclusion gate on tier not score.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -354,8 +354,21 @@ main { padding:0 !important; background:#E8E5DF; }
       </div>
     {% endif %}
     <div class="sl-photo-meta">
-      <span>{{ asset_name or '—' }}</span>
-      <span>{{ genre or '—' }}</span>
+      <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        {% if score %}
+        <span style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.02em">{{ "%.2f"|format(score|float) }}</span>
+        {% endif %}
+        {% if photographer_name %}
+        <span style="color:rgba(255,255,255,0.75);font-size:13px">{{ photographer_name }}</span>
+        {% endif %}
+        {% if tier %}
+        <span style="color:#C8A84B;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">{{ tier }}</span>
+        {% endif %}
+      </span>
+      <span style="display:flex;align-items:center;gap:12px">
+        <span style="color:rgba(255,255,255,0.55);font-size:12px">{{ asset_name or '—' }}</span>
+        <span style="color:rgba(255,255,255,0.40);font-size:12px">{{ genre or '—' }}</span>
+      </span>
     </div>
   </div>
 
