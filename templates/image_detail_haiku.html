@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 2.3 (Session 212, 2026-09-05 — Full rebuild from approved mock: image hero full+uncropped with score/name/tier gradient overlay. No italics anywhere. Conclusion soft sage #E8F0E9. Delete button red pill bg rgba(180,40,40,0.18) border rgba(220,60,60,0.50) text #FF7070. Zone B #EEEAE2 distinct. Zone award pastel blue #EBF3FB. Tier strip journey. Score left in dim rows. DB backfill for is_haiku_try in app.py companion.)
+{# image_detail_haiku.html — SL-VERSION: 2.4 (Session 212, 2026-09-05 — GAP tag: only shows when lowest score is >0.4 below average — prevents Exceptional scores being labelled Gap. Edit tips parser: handles both newline format (new) and pipe format (legacy) — WHAT/WHY/HOW each on own line with margin, blank line between tip cards.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED mock scorecard_v2_mockup Session 212
    Extends base.html — inherits nav, mobile nav, footer, KYC.
@@ -311,6 +311,7 @@ main{padding:0!important;background:#E0DDD7}
       {% set _vals = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
       {% set _max_v = _vals | max %}
       {% set _min_v = _vals | min %}
+      {% set _avg_v = (_vals | sum) / 5 %}
       {% for _code, _plain, _val, _obs in [
         ('Affective Quotient','The emotional quality it carries', aq|float(0), dim_obs_aq),
         ('Visual Disruption','Whether it is visually disruptive', vd|float(0), dim_obs_vd),
@@ -322,7 +323,7 @@ main{padding:0!important;background:#E0DDD7}
         <div class="sl-dim-score-col">
           <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
           {% if _val and _val == _max_v %}<span class="sl-dim-tag strongest">Strongest</span>
-          {% elif _val and _val == _min_v %}<span class="sl-dim-tag gap">Gap</span>
+          {% elif _val and _val == _min_v and (_avg_v - _val) > 0.4 %}<span class="sl-dim-tag gap">Gap</span>
           {% else %}<span class="sl-dim-tag ok">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>{% endif %}
         </div>
         <div class="sl-dim-text-col">
@@ -404,14 +405,24 @@ main{padding:0!important;background:#E0DDD7}
   <div class="sl-zone-edit">
     <div class="sl-zone-inner">
       <div class="sl-eyebrow-mid">Edit suggestions</div>
-      {% set _tips = edit_tips.split('\n\n') %}
-      {% for _tip in _tips if _tip.strip() %}
+      {# Parser: newline format (WHAT:\nWHY:\nHOW:\n\n) — preferred from 182.02+
+         Fallback: pipe format (WHAT: x | WHY: y | HOW: z) from older scores #}
+      {% set _tips_clean = edit_tips.replace(' | WHY:', '\nWHY:').replace(' | HOW:', '\nHOW:').replace(' | WHAT:', '\n\nWHAT:').replace('WHAT: ', '\n\nWHAT: ') %}
+      {% set _tip_blocks = _tips_clean.split('\n\n') %}
+      {% for _block in _tip_blocks if _block.strip() and ('WHAT' in _block or 'WHY' in _block or 'HOW' in _block) %}
       <div class="sl-edit-card">
-        {% for _line in _tip.strip().split('\n') if _line.strip() %}
-          {% if _line.upper().startswith('WHAT') %}<span class="sl-edit-label what">What</span><div class="sl-edit-text" style="margin-bottom:10px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line }}</div>
-          {% elif _line.upper().startswith('WHY') %}<span class="sl-edit-label why">Why</span><div class="sl-edit-text" style="margin-bottom:10px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line }}</div>
-          {% elif _line.upper().startswith('HOW') %}<span class="sl-edit-label how">How</span><div class="sl-edit-text">{{ _line.split(':',1)[1].strip() if ':' in _line else _line }}</div>
-          {% else %}<div class="sl-edit-text">{{ _line }}</div>{% endif %}
+        {% for _line in _block.strip().split('\n') if _line.strip() %}
+          {% set _lu = _line.strip().upper() %}
+          {% if _lu.startswith('WHAT') %}
+            <span class="sl-edit-label what">What</span>
+            <div class="sl-edit-text" style="margin-bottom:12px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% elif _lu.startswith('WHY') %}
+            <span class="sl-edit-label why">Why</span>
+            <div class="sl-edit-text" style="margin-bottom:12px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% elif _lu.startswith('HOW') %}
+            <span class="sl-edit-label how">How</span>
+            <div class="sl-edit-text">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% endif %}
         {% endfor %}
       </div>
       {% endfor %}
