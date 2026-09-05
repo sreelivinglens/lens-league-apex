@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.4 (Session 211, 2026-09-04 — Score band legend under dimensions. Per-dim observations (dim_obs_*) under all 5 rows. Tier declaration enlarged to match score weight. Conclusion section before upgrade block. RETAINS 1.3.)
+{# image_detail_haiku.html — SL-VERSION: 1.5 (Session 211, 2026-09-04 — Score band legend under dimensions. Per-dim observations (dim_obs_*) under all 5 rows. Tier declaration enlarged to match score weight. Conclusion section before upgrade block. RETAINS 1.3.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -633,18 +633,17 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
-    {# ── 12. AWARD CONTEXT — simple tier message, League CTA for 9.0+ ── #}
+    {# ── 12. AWARD CONTEXT — career language all scores, League CTA at 8.5+ ── #}
     {% if award_context %}
-    <div style="margin-bottom:{% if score and score|float >= 9.0 %}24{% else %}48{% endif %}px">
-      <div style="font-size:16px;color:rgba(26,39,68,0.65);line-height:1.75;font-style:italic;border-top:0.5px solid rgba(26,39,68,0.08);padding-top:20px">{{ award_context }}</div>
+    <div style="border-top:0.5px solid rgba(26,39,68,0.08);padding-top:20px;margin-bottom:{% if score and score|float >= 8.5 %}16{% else %}48{% endif %}px">
+      <div style="font-size:{% if score and score|float >= 8.5 %}16{% else %}15{% endif %}px;color:rgba(26,39,68,{% if score and score|float >= 8.5 %}0.65{% else %}0.50{% endif %});line-height:1.75;font-style:italic">{{ award_context }}</div>
     </div>
-    {% endif %}
-    {# League CTA — only for 9.0+ scores #}
-    {% if score and score|float >= 9.0 %}
+    {% if score and score|float >= 8.5 %}
     <div style="margin-bottom:48px;padding:20px 24px;background:#1A2744;border-radius:3px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.6">At this level, your image stands among the best on the platform.</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.6;font-family:'Playfair Display',serif;font-style:italic">Your work is ready for the League of Photographers.</div>
       <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:13px;font-weight:700;padding:12px 20px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">Join the League →</a>
     </div>
+    {% endif %}
     {% endif %}
 
     {# ── 13. EDIT SUGGESTIONS — What/Why/How ── #}
