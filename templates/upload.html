@@ -499,7 +499,7 @@
   </script>
   {% else %}
   <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
-    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of {{ _trial_limit }}</strong><br>
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation — {{ _trial_limit - evals_used }} remaining</strong><br>
     Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
   </div>
   {% endif %}
