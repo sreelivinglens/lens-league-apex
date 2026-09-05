@@ -342,18 +342,24 @@ canvas.spark{flex:1;height:48px;display:block}
 
   <!-- IDENTITY -->
   {% if user_hero %}
+  {% set _show_latest = latest_image and latest_image.id != user_hero.id %}
+  {% set _id_image = latest_image if _show_latest else user_hero %}
   <div class="identity">
     <div class="id-greeting" id="sl-greeting">Good morning</div>
     <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
     <div class="id-score-row">
-      <span class="id-score">{{ "%.2f"|format(user_hero.score) }}</span>
+      <span class="id-score">{{ "%.2f"|format(_id_image.score) }}</span>
       <div class="id-meta">
-        <span class="id-tier">{{ user_hero.tier }}</span>
-        <span class="id-genre">{{ user_hero.genre }}</span>
+        <span class="id-tier">{{ _id_image.tier }}</span>
+        <span class="id-genre">{{ _id_image.genre }}</span>
         {% if haiku_percentile %}<span class="id-pct">Top {{ haiku_percentile }}% of all evaluated</span>{% endif %}
       </div>
     </div>
+    {% if _show_latest %}
+    <a href="{{ url_for('try_result', image_id=latest_image.id) }}" class="id-link">Your last evaluation — see the full scorecard →</a>
+    {% else %}
     <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="id-link">Your best so far — see the full evaluation →</a>
+    {% endif %}
   </div>
   {% else %}
   <div class="identity" style="padding-bottom:32px">
