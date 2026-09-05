@@ -1,4 +1,4 @@
-# SL-VERSION: 182.08 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.10 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -34587,15 +34587,17 @@ def _try_vision_analyse(img_b64):
     )
 
     try:
-        with _ur.urlopen(req, timeout=30) as resp:
-            raw = _json.loads(resp.read().decode())
+        with _ur.urlopen(req, timeout=25) as resp:
+            raw = _json.loads(resp.read().decode('utf-8'))
         text = ''.join(
             b.get('text', '') for b in (raw.get('content') or [])
             if b.get('type') == 'text'
         ).strip()
-        # Strip any accidental markdown fences
         import re as _re
         text = _re.sub(r'```json|```', '', text).strip()
+        if not text:
+            app.logger.warning('[haiku_vision] empty response — scoring continues without pre-call')
+            return {}
         result = _json.loads(text)
         app.logger.info(
             f'[haiku_vision] group={result.get("subject_group","?")} '
@@ -34605,8 +34607,11 @@ def _try_vision_analyse(img_b64):
             f'confidence={result.get("confidence","?")}'
         )
         return result
+    except _json.JSONDecodeError as _je:
+        app.logger.warning(f'[haiku_vision] JSON parse failed ({_je}) — scoring continues without pre-call')
+        return {}
     except Exception as _e:
-        app.logger.warning(f'[haiku_vision] failed ({_e}) — scoring continues without pre-call')
+        app.logger.warning(f'[haiku_vision] failed ({type(_e).__name__}: {_e}) — scoring continues without pre-call')
         return {}
 
 
@@ -35795,7 +35800,9 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
 
     # Session 213: Pre-call — identify subject before building scoring prompt
     # Engine receives facts, not questions. Master + DOD anchors come from Python.
+    app.logger.info(f'[try_haiku] pre-call starting image={image_id} genre={genre}')
     _vision = _try_vision_analyse(img_b64)
+    app.logger.info(f'[try_haiku] pre-call complete image={image_id} vision_ok={bool(_vision)}')
     _v_group    = _vision.get('subject_group', '')     # A/B/C/D/E/F/G/H/I/J
     _v_subject  = _vision.get('subject_type', '')
     _v_env      = _vision.get('environment', '')
@@ -35878,20 +35885,22 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     else:
         # Non-wildlife or unknown group — use DB library
         # Wildlife safety net: if genre is Wildlife but pre-call returned no group
-        # (low confidence, heavily bokeh'd, subject unclear) — use a safe Wildlife
-        # default rather than letting the DB library pick a non-wildlife photographer.
+        # OR returned a non-wildlife group (I=landscape, J=other, H=human) —
+        # use Munier as safe default. Never let DB library assign a non-wildlife
+        # photographer (street, portrait, landscape) to a Wildlife image.
         _genre_lower = (genre or '').lower()
-        if _genre_lower == 'wildlife' and not _v_group:
+        _non_wildlife_groups = {'H', 'I', 'J', ''}
+        if _genre_lower == 'wildlife' and _v_group in _non_wildlife_groups:
             _master_lib = (
                 'MASTER REFERENCE OVERRIDE — USE THIS NAME ONLY:\n'
                 '- Vincent Munier\n\n'
-                'Rationale: Munier photographs wildlife in conditions of low visibility, '
-                'difficult light, and atmospheric mood — subject partially obscured or '
-                'merged with environment. Use when subject is unclear or confidence is low.\n\n'
+                'Rationale: Munier photographs wildlife and nature in conditions of low '
+                'visibility, atmospheric mood, subject merged with environment. '
+                'Use when primary subject is flora, weather, or animal partially obscured.\n\n'
                 'master_name field MUST be: Vincent Munier\n'
                 'Do not choose a different name.'
             )
-            app.logger.info('[try_haiku] master wildlife fallback: Vincent Munier (low confidence, no group)')
+            app.logger.info(f'[try_haiku] master wildlife fallback: Vincent Munier (group={_v_group!r}, genre=Wildlife)')
         else:
             _master_lib = _master_lib_fallback
 
