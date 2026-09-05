@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.87 (Session 210, 2026-09-04 — play_exhausted UI: two CTAs "Upgrade to Sonnet" + "Get another 100". play_plan progress bar label. since-bar reflects exhausted state. RETAINS 181.59.) #}
+{# SL-VERSION: 182.10 (Session 213, 2026-09-05 — play_exhausted CTA price corrected: ₹100 → ₹200. Dashboard hero shows latest image score/link when latest ≠ best. RETAINS 181.87.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -677,7 +677,7 @@ canvas.spark{flex:1;height:48px;display:block}
     <div class="exhausted-sub">Your record stands. Every image you submitted is evaluated and preserved. To continue building your record, upgrade to Sonnet for unlimited evaluations — or purchase another 100 to stay in Haiku world.</div>
     <div class="exhausted-btns">
       <a href="{{ url_for('pricing') }}" class="cta-upgrade">Upgrade to Sonnet — unlimited evaluations →</a>
-      <a href="{{ url_for('pricing') }}#play" class="cta-get-more">Get another 100 evaluations — ₹100 →</a>
+      <a href="{{ url_for('pricing') }}#play" class="cta-get-more">Get another 100 evaluations — ₹200 →</a>
     </div>
     <div class="exhausted-note">Your {{ evals_used }} evaluated photographs are safe and always accessible in My Evaluations.</div>
   </div>
