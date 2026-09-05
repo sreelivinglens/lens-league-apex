@@ -857,12 +857,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 <a class="ta" href="{{ detail_url }}">View</a>
                 <a class="ta flag-btn" href="{{ url_for('admin_flag_image', image_id=img.id) }}" onclick="return confirm('Flag image #{{ img.id }}?')">Flag</a>
                 {% if img.status == 'scored' %}
-                  {% if admin_engine == 'haiku' %}
-                  {# Session 211: Haiku images must use haiku-rescore — never force_rescore (Rule 26) #}
-                  <button class="ta rescore-btn" type="button" onclick="haikuRescore({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Rescore</button>
-                  {% else %}
-                  <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
-                  {% endif %}
+                <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
                 {% endif %}
                 {% if admin_engine == 'sonnet' %}
                 <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
@@ -1899,19 +1894,71 @@ function reinstateUser(userId, userName){
 
 // ── HAIKU RESCORE ────────────────────────────────────────────────────────────
 function haikuRescore(imageId, userName, btn) {
-  if(!confirm('Rescore ' + userName + '\'s latest image with the current Haiku prompt?\n\nThe score may change slightly. The scorecard will refresh in ~15 seconds.')) return;
+  if(!confirm('Rescore ' + userName + '\'s latest image with the current Haiku prompt?\n\nThe score may change slightly.')) return;
   btn.disabled = true;
   btn.textContent = '…';
+  btn.style.opacity = '0.6';
+
   fetch('/admin/image/' + imageId + '/haiku-rescore', {method:'POST'})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      btn.textContent = 'Rescore';
-      btn.disabled = false;
-      showFlash(d.message || (d.ok ? 'Rescore started.' : 'Failed.'), d.ok ? 'success' : 'error');
+      if (!d.ok) {
+        btn.textContent = 'Rescore';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        showFlash(d.message || 'Failed.', 'error');
+        return;
+      }
+      // Rescore started — begin polling for completion
+      showFlash('Rescore started — watching for completion…', 'success');
+      var dots = 0;
+      var dotTimer = setInterval(function() {
+        dots = (dots + 1) % 4;
+        btn.textContent = 'Scoring' + '.'.repeat(dots || 1);
+      }, 600);
+
+      var pollStart = Date.now();
+      var pollLimit = 180000; // 3 min timeout
+
+      function pollStatus() {
+        if (Date.now() - pollStart > pollLimit) {
+          clearInterval(dotTimer);
+          btn.textContent = 'Rescore';
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          showFlash('Timeout — rescore may still be running. Reload to check.', 'error');
+          return;
+        }
+        fetch('/try/status/' + imageId)
+          .then(function(r){ return r.json(); })
+          .then(function(s){
+            if (s.status === 'scored' && s.score) {
+              clearInterval(dotTimer);
+              btn.textContent = '✓ ' + (s.score ? s.score.toFixed(2) : '') + ' ' + (s.tier || '');
+              btn.style.opacity = '1';
+              btn.style.color = '#1a7a3a';
+              btn.style.borderColor = '#1a7a3a';
+              showFlash(userName + ' rescored: ' + (s.score ? s.score.toFixed(2) : '') + ' — ' + (s.tier || ''), 'success');
+              // Re-enable after 5s so admin can rescore again if needed
+              setTimeout(function(){
+                btn.textContent = 'Rescore';
+                btn.disabled = false;
+                btn.style.color = '';
+                btn.style.borderColor = '';
+              }, 5000);
+            } else {
+              setTimeout(pollStatus, 4000);
+            }
+          })
+          .catch(function(){ setTimeout(pollStatus, 4000); });
+      }
+
+      setTimeout(pollStatus, 4000);
     })
     .catch(function(){
       btn.textContent = 'Rescore';
       btn.disabled = false;
+      btn.style.opacity = '1';
       showFlash('Network error — please try again.', 'error');
     });
 }
