@@ -34980,11 +34980,22 @@ _TRY_HAIKU_PROMPT = (
 
     "TAKEAWAY:\n"
     "Write exactly one sentence (max 30 words) that names the single most "
-    "important insight about this photograph. Name the specific dimension "
-    "that most defines or limits this image and say precisely why. "
-    "Be direct. Do not use the word score.\n\n"
+    "important insight about this photograph. "
+    "RULES:\n"
+    "- NEVER use dimension code names: never say AQ, VD, DM, WF, DOD, "
+    "  Affective Quotient, Visual Disruption, Decisive Moment, Wonder Factor, "
+    "  Depth of Difficulty. Use plain English: emotional truth, composition, "
+    "  timing, rarity, difficulty.\n"
+    "- Lead with what is STRONG, then name the one gap. "
+    "  Never open with a negative or a limitation.\n"
+    "- Sherpa tone: warm, specific, direct. Not clinical. Not rubric language.\n"
+    "- Example good: 'The emotional truth of this frame is undeniable -- "
+    "  the gap is timing: the peak of the gesture is one half-second away.' \n"
+    "- Example bad: 'Affective Quotient and Wonder Factor anchor this image "
+    "  but Depth of Difficulty limits it.' -- never write this.\n"
+    "Be direct. Do not use the word score. Max 30 words.\n\n"
 
-    "IMPRESSION:\n"
+"IMPRESSION:\n"
     "2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking "
     "to someone they respect. Name what is genuinely strong in this specific frame. "
     "Do NOT mention vantage, composition critique, or what to do next — those belong "
@@ -35151,11 +35162,13 @@ _TRY_HAIKU_PROMPT = (
     "If PHOTOGRAPHER HISTORY is empty (eval 1): "
     "2-3 sentences. What does this one image reveal about how YOU see? "
     "Then invite the next photograph. "
-    "LEAGUE MENTION RULE: if dod+vd+dm+wf+aq averaged together gives a total score of 7.5 or above, "
-    "add exactly one sentence: "
+    "LEAGUE MENTION RULE: Check the tier you calculated. "
+    "If tier is Master, Grandmaster, or Legend (score 8.0+): add this sentence: "
     "'An image at this level belongs in the League of Photographers -- "
     "where it earns a world standing calibrated against every photographer on the platform.' "
-    "If score is below 7.5, do NOT mention the League at all in conclusion. "
+    "If tier is Maverick, Craftsman, Shooter, Contender, or Rookie (score below 8.0): "
+    "do NOT add this sentence. Do NOT mention the League in the conclusion at all. "
+    "The League career statement appears elsewhere on the page -- do not duplicate it.\n"
     "Close with this exact sentence: 'The standard we are measuring against was built from "
     "312 blind calibrations -- not preference, not taste -- what makes an image hold attention, "
     "create feeling, and outlast the five seconds it gets on a feed.' "
@@ -37131,6 +37144,34 @@ def try_upload():
     ).start()
 
     return jsonify({'image_id': image_id})
+
+
+@app.route('/try/status/<int:image_id>')
+@login_required
+def try_image_status(image_id):
+    """
+    Session 211: JSON status check for Haiku scorecard polling.
+    Returns {status, score, tier} for the given image.
+    Only accessible by the image owner or admin.
+    """
+    _row = db.session.execute(
+        db.text(
+            "SELECT status, score, tier, user_id FROM images "
+            "WHERE id = :iid AND is_haiku_try = TRUE"
+        ),
+        {'iid': image_id}
+    ).fetchone()
+
+    if not _row:
+        return jsonify({'error': 'not found'}), 404
+    if current_user.role != 'admin' and _row[3] != current_user.id:
+        return jsonify({'error': 'forbidden'}), 403
+
+    return jsonify({
+        'status': _row[0] or 'processing',
+        'score':  float(_row[1]) if _row[1] else None,
+        'tier':   _row[2] or '',
+    })
 
 
 @app.route('/try/result/<int:image_id>')
