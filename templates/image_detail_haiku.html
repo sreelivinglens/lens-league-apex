@@ -633,11 +633,17 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
-    {# ── 12. AWARD STANDARD ── #}
+    {# ── 12. AWARD CONTEXT — simple tier message, League CTA for 9.0+ ── #}
     {% if award_context %}
-    <div style="margin-bottom:48px;padding:20px 24px;background:#FAFAF6;border-left:3px solid #C8A84B">
-      <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;margin-bottom:8px">Award Standard</div>
-      <div style="font-size:16px;color:#1A2744;line-height:1.7">{{ award_context }}</div>
+    <div style="margin-bottom:{% if score and score|float >= 9.0 %}24{% else %}48{% endif %}px">
+      <div style="font-size:16px;color:rgba(26,39,68,0.65);line-height:1.75;font-style:italic;border-top:0.5px solid rgba(26,39,68,0.08);padding-top:20px">{{ award_context }}</div>
+    </div>
+    {% endif %}
+    {# League CTA — only for 9.0+ scores #}
+    {% if score and score|float >= 9.0 %}
+    <div style="margin-bottom:48px;padding:20px 24px;background:#1A2744;border-radius:3px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.6">At this level, your image stands among the best on the platform.</div>
+      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:13px;font-weight:700;padding:12px 20px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">Join the League →</a>
     </div>
     {% endif %}
 
@@ -665,8 +671,8 @@ main { padding:0 !important; background:#E8E5DF; }
 
   {# Session 211v3: IMAGINE — the 9+ vision #}
   {% if imagine %}
-  <div class="sl-content" style="padding-top:0;padding-bottom:0">
-    <div style="max-width:860px;margin:0 auto;padding:0 48px">
+  <div style="padding:0 48px;background:#F5F3EF">
+    <div style="max-width:860px;margin:0 auto">
       <div class="sl-imagine">
         <div class="sl-imagine-eyebrow">Imagine</div>
         <div class="sl-imagine-body">{{ imagine }}</div>
@@ -679,20 +685,6 @@ main { padding:0 !important; background:#E8E5DF; }
   {% if conclusion %}
   <div class="sl-conclusion">
     <p>{{ conclusion }}</p>
-  </div>
-  {% endif %}
-
-  {# Session 211v3: LEAGUE BANNER — shown for 7.5+ scores #}
-  {% if score and score|float >= 7.5 %}
-  <div style="background:#1A2744;padding:28px 48px;border-top:1px solid rgba(255,255,255,0.08)">
-    <div style="max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:8px">League of Photographers</div>
-        <div style="font-size:18px;color:rgba(255,255,255,0.88);line-height:1.6;font-family:'Playfair Display',serif;font-style:italic">An image at this level earns a world standing.</div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.55);margin-top:6px;line-height:1.6">Calibrated against every photographer on the platform — not a popularity vote.</div>
-      </div>
-      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:14px;font-weight:700;padding:14px 24px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap;flex-shrink:0">See your standing →</a>
-    </div>
   </div>
   {% endif %}
 
