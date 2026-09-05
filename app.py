@@ -1,4 +1,4 @@
-# SL-VERSION: 182.10 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.11 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -4766,7 +4766,7 @@ def first_login_welcome():
 @login_required
 def dashboard():
     # 181.22: Free Haiku users have no paid dashboard — redirect to /try world.
-    # play plan (₹100/100 evals) is also Haiku-world — redirect them too.
+    # play plan (₹200/100 evals) is also Haiku-world — redirect them too.
     if current_user.role != 'admin' and not _is_sonnet_user(current_user):
         return redirect(url_for('try_welcome'))
 
@@ -8144,7 +8144,7 @@ def set_mission_genre():
 @login_required
 def profile():
     # Session 200e: Haiku users — gate = images + history_log (permanent, delete does not restore slot)
-    # play plan (₹100) is Haiku-world — also uses haiku image count
+    # play plan (₹200) is Haiku-world — also uses haiku image count
     if not _is_sonnet_user(current_user):
         images_used = int(db.session.execute(
             db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
@@ -8704,7 +8704,7 @@ def account_deleted():
 def _is_sonnet_user(user):
     """
     Returns True only for genuine Sonnet paid subscribers.
-    The 'play' plan (₹100 / 100 evaluations) is Haiku-world — it must NOT
+    The 'play' plan (₹200 / 100 evaluations) is Haiku-world — it must NOT
     pass Sonnet gates even though is_subscribed=True.
     Sonnet plans: monthly, halfyearly, annual, uat, beta, learning.
     Haiku plans:  play (and NULL / unsubscribed).
@@ -9265,7 +9265,7 @@ def upload():
         return redirect(url_for('onboarding_interests'))
 
     # ── SL 172.2: Free user redirect to /try ─────────────────────────────────
-    # play plan (₹100/100 evals) is Haiku-world — redirect to /try/upload.
+    # play plan (₹200/100 evals) is Haiku-world — redirect to /try/upload.
     _is_free_user = (
         not _is_sonnet_user(current_user) and
         current_user.role != 'admin'
@@ -23543,8 +23543,8 @@ def api_create_payment():
         return jsonify({'error': 'Payment system not available'}), 503
 
     display_prices = {
-        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
-        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
+        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 200},
+        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 200},
     }
     plan_ids = {
         'camera': {
@@ -23557,7 +23557,7 @@ def api_create_payment():
         },
     }
 
-    amount  = display_prices[track].get(plan, 100)
+    amount  = display_prices[track].get(plan, 200)
     plan_id = plan_ids[track].get(plan, '') if plan not in ('monthly', 'play') else None
 
     try:
@@ -36899,7 +36899,7 @@ def try_welcome():
     # Haiku free-tier dashboard. Variables passed: evals_remaining, images,
     # milestone_strength, user_hero, league_hero, sherpa_obs, sherpa_nudge,
     # haiku_percentile. Raw SQL throughout per Rule 10.
-    # play plan (₹100) stays in Haiku world — only true Sonnet users go to dashboard
+    # play plan (₹200) stays in Haiku world — only true Sonnet users go to dashboard
     if current_user.role != 'admin' and _is_sonnet_user(current_user):
         return redirect(url_for('dashboard'))
 
