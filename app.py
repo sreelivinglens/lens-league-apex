@@ -1,4 +1,4 @@
-# SL-VERSION: 182.06 (Session 213, 2026-09-05 — Two-call architecture: _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.07 (Session 213, 2026-09-05 — Two-call architecture: Hotfix re-deploy. No code changes from 182.06. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
