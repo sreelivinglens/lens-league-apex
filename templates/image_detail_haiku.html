@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 1.7 (Session 212, 2026-09-05 — Photo bar: score 36px, name 22px white, tier 16px gold. Name moved above tier/genre in verdict section, 22px. Conclusion background changed to #EDE4D3 warm pastel with gold borders, font 19px.)
+{# image_detail_haiku.html — SL-VERSION: 1.8 (Session 212, 2026-09-05 — What to Explore moved to immediately after takeaway, before five dimensions. Gold-left-bordered panel in warm tan #F0EBE1. Duplicate what_next removed from editorial block. Hierarchy now: score → tier → name → takeaway → what to explore → five dimensions → impression → strongest → next leap → master → technical → visual flow → edit tips → imagine → award → conclusion.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED sl_scorecard_final.html
    Data contract confirmed Session 194 (2026-08-25)
@@ -473,6 +473,14 @@ main { padding:0 !important; background:#E8E5DF; }
       {% if takeaway %}
       <div class="sl-takeaway">{{ takeaway }}</div>
       {% endif %}
+
+      {# ── WHAT TO EXPLORE — moved here: photographer's most urgent question answered first ── #}
+      {% if what_next %}
+      <div style="margin-top:40px;padding:28px 32px;background:#F0EBE1;border-left:3px solid #C8A84B;border-radius:0 3px 3px 0">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8A6A00;margin-bottom:14px">What to explore</div>
+        <div style="font-size:17px;line-height:1.85;color:#1A2744">{{ what_next }}</div>
+      </div>
+      {% endif %}
     </div>
 
     {# ── 3. FIVE DIMENSIONS ── #}
@@ -643,8 +651,8 @@ main { padding:0 !important; background:#E8E5DF; }
     </div>
     {% endif %}
 
-    {# ── 5. STRONGEST MOMENT / 6. NEXT LEAP / 7. WHAT TO EXPLORE ── #}
-    {% if strength_obs or next_leap_obs or what_next %}
+    {# ── 5. STRONGEST MOMENT / 6. NEXT LEAP ── #}
+    {% if strength_obs or next_leap_obs %}
     <div class="sl-editorial">
 
       {% if strength_obs %}
@@ -658,13 +666,6 @@ main { padding:0 !important; background:#E8E5DF; }
       <div>
         <div class="sl-block-label">Next leap{% if next_leap_name %} — {{ next_leap_name }}{% endif %}</div>
         <div class="sl-block-body">{{ next_leap_obs }}</div>
-      </div>
-      {% endif %}
-
-      {% if what_next %}
-      <div>
-        <div class="sl-block-label">What to explore</div>
-        <div class="sl-block-body">{{ what_next }}</div>
       </div>
       {% endif %}
 
