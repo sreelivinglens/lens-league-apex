@@ -1,4 +1,4 @@
-{# SL-VERSION: 182.33-main (Session 204, 2026-08-31 — gallery title: "Recently evaluated from the League." RETAINS 182.32.) #}
+{# SL-VERSION: 182.12 (Session 213, 2026-09-06 — Hero redesign: five-dimension card, new headline/CTA copy. RETAINS 182.33-main.) #}
 <!doctype html>
 <html lang="en">
 <head>
@@ -78,6 +78,11 @@ button{font:inherit;cursor:pointer}
 .hero-solve{font-size:19px;font-weight:600;color:var(--blue-mid);margin-bottom:30px}
 .bigbtn{background:var(--dark);color:#fff;border:none;padding:16px 28px;min-height:52px;font-size:16px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}
 .micronote{font-size:14px;color:var(--muted);margin-top:12px}
+.hero-dims{border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:20px}
+.hero-dim{display:flex;align-items:baseline;gap:12px;padding:9px 14px;border-bottom:1px solid var(--line);background:#fff}
+.hero-dim:last-child{border-bottom:none}
+.dim-label{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);min-width:76px;flex-shrink:0}
+.dim-q{font-size:14px;color:#3d3530;line-height:1.7}
 
 /* Lightbox */
 .hero-lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
@@ -303,20 +308,26 @@ button{font:inherit;cursor:pointer}
   </div>
 
   <div class="hero-text">
-    <div class="hero-kicker">For photographers who still want to grow</div>
-    <h1 class="hero-h1">You know when a photograph<br>could have been <em>more.</em></h1>
-    <p class="hero-lead">You've been making images for years. You get likes. Sometimes you win. But no one has ever told you honestly — where you actually stand, and what to work on next.</p>
-    <p class="hero-solve">That honest answer is what we built.</p>
+    <h1 class="hero-h1">Making you a better photographer.<br>Photo by photo.</h1>
+    <p class="hero-lead">Five questions to see every photograph differently.</p>
+    <div class="hero-dims">
+      <div class="hero-dim"><span class="dim-label">Difficulty</span><span class="dim-q">How difficult was it to capture?</span></div>
+      <div class="hero-dim"><span class="dim-label">Disruption</span><span class="dim-q">How disruptive is the image?</span></div>
+      <div class="hero-dim"><span class="dim-label">Moment</span><span class="dim-q">How decisive was the moment?</span></div>
+      <div class="hero-dim"><span class="dim-label">Wow</span><span class="dim-q">How much does it make you say WOW?</span></div>
+      <div class="hero-dim"><span class="dim-label">Emotion</span><span class="dim-q">What emotion does it create?</span></div>
+    </div>
+    <p class="hero-solve">Learn from each image. Evolve with the next.</p>
     {% if current_user.is_authenticated %}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me where I stand →</a>
+        <a href="{{ url_for('dashboard') }}" class="bigbtn">Start with your first 10 free →</a>
       {% else %}
-        <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me where I stand →</a>
+        <a href="{{ url_for('try_welcome') }}" class="bigbtn">Start with your first 10 free →</a>
       {% endif %}
     {% else %}
-      <a href="{{ url_for('register') }}" class="bigbtn">Show me where I stand →</a>
+      <a href="{{ url_for('register') }}" class="bigbtn">Start with your first 10 free →</a>
     {% endif %}
-    <div class="micronote">Your first 10 evaluations are free. No subscription.</div>
+    <div class="micronote">No subscription. No credit card.</div>
   </div>
 </section>
 
