@@ -1,4 +1,4 @@
-# SL-VERSION: 181.89 (Session 211, 2026-09-05 — Haiku eval overhaul: Wildlife behaviour-read + VD blue-apple rule. Genre contexts from Sonnet 18 genres. Wikipedia species research pipeline. EXIF gear-read. Visual flow + edit tips What/Why/How + imagine field. Award context 8.5+ gate no brand names. Master ref hard overrides raptor+fire→CHJ/Baiju. Camera track + city advisory. Takeaway dimension name ban + positive opener. Conclusion tier gate Master+. Section reorder Edit→Imagine→Award. League career statement all scores. Status polling endpoint /try/status/<id>. Admin rescore progress bar with polling. image_detail_haiku.html v1.5. admin.html rescore guarded.)
+# SL-VERSION: 181.90 (Session 211, 2026-09-05 — Haiku eval overhaul: Wildlife behaviour-read + VD blue-apple rule. Genre contexts from Sonnet 18 genres. Species note conservative gate — blank on silhouette/uncertainty. Wikipedia enrichment gated on confidence words. Wikipedia species research pipeline. EXIF gear-read. Visual flow + edit tips What/Why/How + imagine field. Award context 8.5+ gate no brand names. Master ref hard overrides raptor+fire→CHJ/Baiju. Camera track + city advisory. Takeaway dimension name ban + positive opener. Conclusion tier gate Master+. Section reorder Edit→Imagine→Award. League career statement all scores. Status polling endpoint /try/status/<id>. Admin rescore progress bar with polling. image_detail_haiku.html v1.5. admin.html rescore guarded.)
 
 import os
 import re
@@ -34880,13 +34880,23 @@ _TRY_HAIKU_PROMPT = (
     "{exif_context}\n"
     "If camera data is provided, use it in tech_read for gear-specific observations.\n\n"
 
-    "SPECIES NOTE (Wildlife only, blank for other genres):\n"
-    "species_note: One sentence. Name the species precisely if visually confident. "
-    "Then state one ecological fact that most viewers have never heard -- "
-    "something that reframes what was captured. "
-    "Example: Black Kite -- one of only three raptor species documented as deliberate "
-    "fire-followers; this behaviour has a scientific name: pyrogenic foraging. "
-    "If species cannot be identified confidently, leave blank. Max 40 words.\n\n"
+    "SPECIES NOTE (Wildlife only, blank for all other genres):\n"
+    "species_note: CONSERVATIVE IDENTIFICATION ONLY.\n"
+    "RETURN BLANK (empty string) in ANY of these situations:\n"
+    "- The subject is a silhouette with no visible distinguishing features\n"
+    "- The image is backlit, underexposed, or in low contrast\n"
+    "- The species cannot be identified with HIGH confidence from visible features\n"
+    "- The subject could be more than one species\n"
+    "- You are guessing\n"
+    "ONLY populate species_note when ALL of these are true:\n"
+    "1. The species is clearly identifiable from visible physical features "
+    "(plumage pattern, beak shape, body structure — NOT silhouette alone)\n"
+    "2. You are confident enough to stake the platform's credibility on this identification\n"
+    "3. The ecological fact you state is verifiable and accurate\n"
+    "A wrong species identification destroys platform trust immediately. "
+    "Blank is always safer than wrong. When in doubt: blank.\n"
+    "If confident: one sentence, species name + one verified ecological fact. Max 40 words.\n\n"
+
 
     "TECHNICAL READ:\n"
     "tech_read: One paragraph, max 60 words. Before scoring, examine technically: "
@@ -35182,9 +35192,17 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     conclusion     = (d.get('conclusion')     or '').strip()[:700]
     # Session 211 additions
     species_note   = (d.get('species_note')   or '').strip()[:300]
-    # Session 211v2: Wikipedia enrichment — fires when engine identifies a species
-    # Runs synchronously here (inside background thread) — adds ~1-2s for Wildlife
-    if species_note and genre and genre in ('Wildlife', 'Nature', 'Birds', 'Bird Photography'):
+    # Session 211v2: Wikipedia enrichment — fires ONLY when engine identifies species confidently
+    # Conservative gate: skip if species_note contains uncertainty language
+    _uncertain_words = ('limited', 'suggest', 'possibly', 'unclear', 'silhouette',
+                        'cannot', 'uncertain', 'unknown', 'unidentified', 'similar',
+                        'likely', 'probable', 'appears to', 'may be', 'could be')
+    _species_confident = (
+        species_note and
+        genre and genre in ('Wildlife', 'Nature', 'Birds', 'Bird Photography') and
+        not any(w in species_note.lower() for w in _uncertain_words)
+    )
+    if _species_confident:
         try:
             _wiki_enrichment = _haiku_species_research(species_note, api_key, genre)
             if _wiki_enrichment and _wiki_enrichment.strip():
