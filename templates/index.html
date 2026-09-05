@@ -83,8 +83,8 @@ button{font:inherit;cursor:pointer}
 .hero-dim:last-child{border-bottom:none}
 .dim-label{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);width:100px;flex-shrink:0}
 .dim-q{font-size:16px;color:#3d3530;line-height:1.7}
-.hero-standard{font-size:16px;line-height:1.7;color:#2C4070;margin-top:16px;font-weight:400}
-.hero-standard br+span,.hero-standard{font-weight:400}
+.hero-standard{font-size:15px;line-height:1.75;color:#3d3530;margin-top:28px;font-weight:400;padding-top:20px;border-top:1px solid var(--line)}
+.hero-standard-headline{font-size:18px;font-weight:600;color:#2C4070;display:block;margin-bottom:6px}
 
 /* Lightbox */
 .hero-lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
@@ -314,10 +314,10 @@ button{font:inherit;cursor:pointer}
     <p class="hero-lead">Five questions to see every photograph differently.</p>
     <div class="hero-dims">
       <div class="hero-dim"><span class="dim-label">Difficulty</span><span class="dim-q">How difficult was it to capture?</span></div>
-      <div class="hero-dim"><span class="dim-label">Disruption</span><span class="dim-q">How disruptive is the image?</span></div>
-      <div class="hero-dim"><span class="dim-label">Moment</span><span class="dim-q">How decisive was the moment?</span></div>
-      <div class="hero-dim"><span class="dim-label">Wow</span><span class="dim-q">How much does it make you say WOW?</span></div>
-      <div class="hero-dim"><span class="dim-label">Emotion</span><span class="dim-q">What emotion does it create?</span></div>
+      <div class="hero-dim"><span class="dim-label">Disruption</span><span class="dim-q">Does it break expectations?</span></div>
+      <div class="hero-dim"><span class="dim-label">Moment</span><span class="dim-q">Did you capture the right moment?</span></div>
+      <div class="hero-dim"><span class="dim-label">Wow</span><span class="dim-q">Does it make one say WOW?</span></div>
+      <div class="hero-dim"><span class="dim-label">Emotion</span><span class="dim-q">Does the image make another person feel something?</span></div>
     </div>
     <p class="hero-solve">Learn from each image. Evolve with the next.</p>
     {% if current_user.is_authenticated %}
@@ -329,7 +329,7 @@ button{font:inherit;cursor:pointer}
     {% else %}
       <a href="{{ url_for('register') }}" class="bigbtn">Start with your first 10 free →</a>
     {% endif %}
-    <div class="hero-standard">A new standard for photography.<br>Created by photographers. Built for the photography of today — and for how photography will evolve tomorrow.</div>
+    <div class="hero-standard"><span class="hero-standard-headline">A new standard for photography.</span>Created by photographers. Built for the photography of today — and for how photography will evolve tomorrow.</div>
   </div>
 </section>
 
