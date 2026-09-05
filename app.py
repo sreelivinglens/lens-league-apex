@@ -1,4 +1,4 @@
-# SL-VERSION: 182.00 (Session 212, 2026-09-05 — Fix: try_result strips '312 blind calibrations' → 'hundreds of blind calibrations' from all existing audit_json conclusions — fixes old scored images without rescore. Template v2.0 companion.)
+# SL-VERSION: 182.02 (Session 212, 2026-09-05 — Four prompt fixes: (1) banned phrases extended to all dim_obs fields + added 'half-second earlier/later', 'strike completion', 'peak extension'. (2) 'You keep finding the feeling before you find the frame' removed from example list, banned from repeat use. (3) what_next two-section structure (Next time / Right now) + hard 120-word limit with truncation warning. (4) DB backfill: startup migration sets is_haiku_try=TRUE for all images with haiku_try audit_json source — fixes 0/10 evals_used for older images. Template v2.3 companion.)
 
 import os
 import re
@@ -2430,6 +2430,26 @@ def _run_startup_tasks():
             except Exception as _mru_err:
                 db.session.rollback()
                 print(f'[master_ref_upsert] {_mru_err}')
+
+            # Session 212: backfill is_haiku_try=TRUE for images whose audit_json
+            # contains "source": "haiku_try" but whose is_haiku_try column is not set.
+            # Fixes evals_used showing 0 for older images. Idempotent — safe every boot.
+            try:
+                _ht_result = db.session.execute(db.text(
+                    "UPDATE images SET is_haiku_try = TRUE "
+                    "WHERE (is_haiku_try IS NULL OR is_haiku_try = FALSE) "
+                    "AND (audit_json LIKE '%\"source\":\"haiku_try\"%' "
+                    "  OR audit_json LIKE '%\"source\": \"haiku_try\"%')"
+                ))
+                _ht_count = _ht_result.rowcount
+                db.session.commit()
+                if _ht_count > 0:
+                    print(f'[haiku_try_backfill] Patched {_ht_count} images with is_haiku_try=TRUE OK')
+                else:
+                    print('[haiku_try_backfill] OK — 0 images needed patching')
+            except Exception as _ht_err:
+                db.session.rollback()
+                print(f'[haiku_try_backfill] warning: {_ht_err}')
 
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
@@ -34285,11 +34305,14 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
                 f"Do NOT use the phrase 'consistent strength' or 'that thread runs through'. "
                 f"Vary the structure each time — sometimes name the photographs, sometimes name the pattern, "
                 f"sometimes note the progression, sometimes ask a quiet question. "
-                f"Examples of register (do not copy verbatim): "
+                f"CRITICAL: The phrase 'You keep finding the feeling before you find the frame' "
+                f"has already appeared on a previous scorecard for this photographer. "
+                f"DO NOT use it again. It must not appear in this impression field. "
+                f"Examples of register (do not copy verbatim, use only once per photographer): "
                 f"'Three very different subjects — and in each one, the emotional weight lands.' / "
-                f"'You keep finding the feeling before you find the frame.' / "
                 f"'There is something you do with atmosphere that we are beginning to recognise.' / "
-                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' "
+                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' / "
+                f"'The thread across these images is not subject — it is the feeling you arrive with.' "
                 f"Then continue with 1-2 sentences specific to THIS photograph."
             )
         elif _n == 1 and _consistent_strength_name:
@@ -34953,7 +34976,8 @@ _TRY_HAIKU_PROMPT = (
     "  to THIS image — a specific visible element, a specific gesture, a specific "
     "  relationship between two things in the frame. It must not be a sentence that "
     "  could apply to any photograph of the same subject.\n"
-    "  BANNED PHRASES — never use these or structural variants of them:\n"
+    "  BANNED PHRASES — never use these or structural variants of them "
+    "IN ANY FIELD including dim_obs_dod, dim_obs_vd, dim_obs_dm, dim_obs_wf, dim_obs_aq:\n"
     "  'one half-second away from the frame'\n"
     "  'the peak of [X] is one half-second away'\n"
     "  'a fraction of a second from'\n"
@@ -34962,9 +34986,15 @@ _TRY_HAIKU_PROMPT = (
     "  'the stillness before it'\n"
     "  'not quite caught'\n"
     "  'almost visible, but not quite'\n"
+    "  'a half-second earlier'\n"
+    "  'a half-second later'\n"
+    "  'strike completion' (say instead: the prey visible in the talons)\n"
+    "  'peak extension' (say instead: wings fully spread, talons fully open)\n"
     "  These are vague proximity phrases that tell the photographer nothing specific. "
     "  If timing or a specific moment is the gap, name the EXACT GESTURE OR ELEMENT "
-    "  that was needed — not that it was missed by a small margin.\n"
+    "  that was needed — not that it was missed by a small margin. "
+    "  This ban applies to ALL output fields — takeaway, impression, every dim_obs, "
+    "  strength_obs, next_leap_obs, what_next, imagine, conclusion.\n"
     "- VARIED EXAMPLES — note how each names something specific to that image:\n"
     "  Wildlife silhouette: 'The geometry here is extraordinary — the gap is "
     "  proximity: tighter framing would collapse the void into something suffocating.'\n"
@@ -35086,7 +35116,15 @@ _TRY_HAIKU_PROMPT = (
     "'if you find yourself at this festival again'. "
     "BANNED phrases: 'return to', 'go back', 'come back', 'revisit'. "
     "If any banned phrase appears in your what_next, rewrite it. "
-    "Plain English. No dimension codes. No jargon. Max 120 words.\n\n"
+    "Plain English. No dimension codes. No jargon.\n"
+    "STRUCTURE: what_next has two parts — do not mix them:\n"
+    "Part 1 (Next time — field/positioning advice): what to do differently "
+    "if this scene occurs again. Possibility language only.\n"
+    "Part 2 (Right now — edit/crop advice): what the photographer can do "
+    "to this image today in post-processing. Specific, achievable.\n"
+    "HARD LIMIT: 120 words maximum. Count carefully. Truncate if needed. "
+    "A 120-word what_next is better than a truncated 200-word one. "
+    "If you run out of tokens, this field suffers most — keep it tight.\n\n"
 
     "COMPOSITION INFERENCE -- inject into what_next when relevant:\n"
     "If subject is centred: name the compositional principle that would lift this. "
@@ -37490,6 +37528,7 @@ def try_result(image_id):
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         evals_limit        = FREE_IMAGE_LIMIT,
+        evals_display      = _display_count,
         milestone_strength = _milestone_strength,
         photographer_name  = (
             db.session.execute(db.text('SELECT full_name FROM users WHERE id=:uid'),
