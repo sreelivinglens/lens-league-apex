@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 2.4 (Session 212, 2026-09-05 — GAP tag: only shows when lowest score is >0.4 below average — prevents Exceptional scores being labelled Gap. Edit tips parser: handles both newline format (new) and pipe format (legacy) — WHAT/WHY/HOW each on own line with margin, blank line between tip cards.)
+{# image_detail_haiku.html — SL-VERSION: 2.5 (Session 212, 2026-09-05 — Score overlay fix: image wrapped in inline-block div so gradient overlay sits on actual image not letterbox black area. Score/name/tier now correctly overlays the photograph bottom.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED mock scorecard_v2_mockup Session 212
    Extends base.html — inherits nav, mobile nav, footer, KYC.
@@ -207,10 +207,12 @@ main{padding:0!important;background:#E0DDD7}
 
   {# ════════ SCROLL 1 — THE VERDICT ════════ #}
 
-  {# IMAGE HERO — full, uncropped, natural ratio #}
+  {# IMAGE HERO — full, uncropped, natural ratio, overlay hugs actual image #}
   {% if thumb_url %}
-  <div class="sl-img-hero">
-    <img src="{{ thumb_url }}" alt="{{ asset_name or 'Submitted photograph' }}" loading="eager">
+  <div class="sl-img-hero" style="text-align:center;line-height:0">
+    <div style="position:relative;display:inline-block;width:100%;max-height:70vh;overflow:hidden;background:#0C1018">
+    <img src="{{ thumb_url }}" alt="{{ asset_name or 'Submitted photograph' }}" loading="eager"
+         style="width:100%;max-height:70vh;object-fit:contain;display:block;background:#0C1018">
     {% if score %}
     <div class="sl-score-overlay">
       <div class="sl-score-row">
@@ -226,6 +228,7 @@ main{padding:0!important;background:#E0DDD7}
     </div>
     {% endif %}
     <a class="sl-img-expand" onclick="document.getElementById('sl-lightbox').classList.add('open');return false;" href="#">Expand ↗</a>
+    </div>
   </div>
 
   {# Lightbox #}
