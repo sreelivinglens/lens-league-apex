@@ -1,4 +1,4 @@
-# SL-VERSION: 182.12 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.13 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
 import re
@@ -36679,7 +36679,8 @@ def try_standing(image_id):
         except Exception as _pe:
             app.logger.warning(f'[try_standing] percentile failed: {_pe}')
 
-        _cal_count = 312  # blind calibration count — static display value
+        _cal_count = db.session.execute(db.text("SELECT COUNT(*) FROM calibration_logs")).scalar() or 0
+        _cal_count = f"{_cal_count:,}" if _cal_count > 0 else "hundreds"  # live count
 
     except Exception as _tse:
         from werkzeug.exceptions import HTTPException as _WKHE
