@@ -1,4 +1,4 @@
-# SL-VERSION: 181.90 (Session 211, 2026-09-05 — Haiku eval overhaul: Wildlife behaviour-read + VD blue-apple rule. Genre contexts from Sonnet 18 genres. Species note conservative gate — blank on silhouette/uncertainty. Wikipedia enrichment gated on confidence words. Wikipedia species research pipeline. EXIF gear-read. Visual flow + edit tips What/Why/How + imagine field. Award context 8.5+ gate no brand names. Master ref hard overrides raptor+fire→CHJ/Baiju. Camera track + city advisory. Takeaway dimension name ban + positive opener. Conclusion tier gate Master+. Section reorder Edit→Imagine→Award. League career statement all scores. Status polling endpoint /try/status/<id>. Admin rescore progress bar with polling. image_detail_haiku.html v1.5. admin.html rescore guarded.)
+# SL-VERSION: 181.91 (Session 211, 2026-09-05 — Haiku eval overhaul: Wildlife behaviour-read + VD blue-apple rule. Genre contexts from Sonnet 18 genres. Species note conservative gate — blank on silhouette/uncertainty. Wikipedia enrichment gated on confidence words. Wikipedia species research pipeline. EXIF gear-read. Visual flow + edit tips What/Why/How + imagine field. Award context 8.5+ gate no brand names. Master ref hard overrides raptor+fire→CHJ/Baiju. Camera track + city advisory. Takeaway dimension name ban + positive opener. Conclusion tier gate Master+. Section reorder Edit→Imagine→Award. League career statement all scores. Status polling endpoint /try/status/<id>. Admin rescore progress bar with polling. image_detail_haiku.html v1.5. admin.html rescore guarded.)
 
 import os
 import re
@@ -34592,6 +34592,14 @@ _TRY_HAIKU_PROMPT = (
     "These four things together name the behaviour. Do not name the environment first. "
     "Direction is the key read: a bird flying TOWARD a fire is foraging or hunting — "
     "not fleeing, not being flushed. A bird flying AWAY from a fire is escaping. "
+    "CRITICAL: A bird ON WATER with wings spread is NOT in flight — it may be landing, "
+    "displaying, drying wings, or resting. A REFLECTION below the bird confirms it is "
+    "ON or NEAR the water surface, not soaring. Water birds (pelicans, herons, egrets, "
+    "cormorants, swans) do NOT thermal-soar or stoop like raptors. Never describe water "
+    "bird behaviour as thermal soaring, stooping, or predatory diving unless the image "
+    "clearly shows the bird airborne above land. "
+    "DOD for water bird at night or low light with perfect reflection on still dark water: "
+    "positioning, timing, darkness, stillness all converging = DOD 8.5+, not 7.2.\n"
     "A flamingo with head submerged is filter-feeding, not drowning. "
     "A tiger crouching, ears back, eyes forward is stalking, not resting. "
     "An elephant trunk raised toward another animal is communicating or threatening. "
