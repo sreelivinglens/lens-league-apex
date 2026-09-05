@@ -700,7 +700,7 @@
                placeholder="e.g. Green Bee-eater, Bengal Tiger, Indian Paradise Flycatcher"
                maxlength="120"
                style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:16px; background:var(--bg); color:var(--text);">
-        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">The engine cross-references this against known species data to confirm identification.</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">The engine uses this as ground truth — overrides vision detection if Wikipedia returns the wrong species.</div>
       </div>
 
 
@@ -1669,13 +1669,13 @@
         // S156-P2: if site goes to maintenance mid-poll, stop silently and warn
         // Most network blips recover in the next 2s poll — only warn after 3 consecutive fails
         _pollErrCount = (_pollErrCount || 0) + 1;
-        if (_pollErrCount >= 3) {
+        if (_pollErrCount >= 8) {
           clearInterval(_pollInterval);
           _clearCancelTimer();
           document.getElementById('scoringOverlay').classList.remove('active');
           showError(
-            'Your image may still be uploading. ' +
-            'Check your profile before trying again.'
+            'Your evaluation is processing — this takes up to 2 minutes. ' +
+            'Check My Evaluations in a moment to see your result.'
           );
         }
       };
@@ -1799,7 +1799,7 @@
       'Identifying your subject. Squinting at pixels.',
       'Checking if that\'s actually a bird or a very confident insect.',
       'Measuring the light. Judging the shadows.',
-      'Cross-referencing species data to confirm identification.',
+      'Cross-referencing species. Wikipedia has been consulted.',
       'Calculating your decisive moment. Down to the millisecond.',
       'Evaluating disruption. Did you break a convention on purpose?',
       'Reading the geometry. Every edge. Every void.',
