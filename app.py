@@ -1,4 +1,4 @@
-# SL-VERSION: 181.99 (Session 212, 2026-09-05 — DOD full rewrite: five layers (field difficulty, compositional knowledge, light recognition, technical execution, post-processing vision). Compositional knowledge layer covers Japanese aesthetics (Ma/wabi-sabi/mono no aware), Western principles (Fibonacci/Rembrandt/Gestalt/rule of odds), Indian layered narrative, American documentary flatness. Mobile track DOD separate scale: background clutter = DOD failure, clean background = DOD achievement, physical proximity = commitment, timing anticipation. Mobile advisory deepened: what to observe and score, not just what not to suggest.)
+# SL-VERSION: 182.00 (Session 212, 2026-09-05 — Fix: try_result strips '312 blind calibrations' → 'hundreds of blind calibrations' from all existing audit_json conclusions — fixes old scored images without rescore. Template v2.0 companion.)
 
 import os
 import re
@@ -37477,7 +37477,9 @@ def try_result(image_id):
         dim_obs_dm         = audit.get('dim_obs_dm', ''),
         dim_obs_wf         = audit.get('dim_obs_wf', ''),
         dim_obs_aq         = audit.get('dim_obs_aq', ''),
-        conclusion         = audit.get('conclusion', ''),
+        conclusion         = audit.get('conclusion', '').replace(
+            '312 blind calibrations', 'hundreds of blind calibrations'
+        ),
         # Session 211 additions — moat fields
         species_note       = audit.get('species_note', ''),
         tech_read          = audit.get('tech_read', ''),
