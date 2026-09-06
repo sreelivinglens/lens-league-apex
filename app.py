@@ -1,4 +1,4 @@
-# SL-VERSION: 182.13 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
+# SL-VERSION: 182.14 (Session 216, 2026-09-06 — P1 complete: _build_dod_anchors() now includes STEP 3 DM peaks and STEP 4 WF anchors per group A-G. STEP 3 + STEP 4 removed from _TRY_HAIKU_PROMPT static block. Rule 36 satisfied. Haiku Wildlife scoring now receives group-specific DM and WF anchors via injection only — not broadcast to all images. Group G DM PEAKS added fresh. WONDER UNIVERSAL RULE retained as single append. ~35 lines removed from static prompt.)
 
 import os
 import re
