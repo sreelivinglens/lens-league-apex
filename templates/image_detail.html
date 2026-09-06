@@ -213,6 +213,10 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
 .sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
 .sc-back-lnk:hover{color:var(--sc-dark)}
+/* ── SESSION 214: BACKFILL ENRICHMENT BANNER ── */
+.sc-enrich-banner{display:flex;align-items:center;gap:10px;background:#FFF8EC;border:1px solid #EDD89A;border-radius:8px;padding:11px 16px;margin-bottom:12px;font-size:14px;color:#8B6508}
+.sc-enrich-dot{width:8px;height:8px;border-radius:50%;background:#D6A428;flex-shrink:0;animation:sc-pulse 1.4s ease-in-out infinite}
+@keyframes sc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 .sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
 /* ── SHARED CARD ── */
@@ -713,6 +717,35 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
   {# ── MAIN CENTRE ── #}
   <main class="sc-centre">
+
+
+    {# ── SESSION 214: ENRICHMENT BANNER — shown when backfill rescore is running ── #}
+    {% if backfill_triggered %}
+    <div class="sc-enrich-banner" id="sc-enrich-banner">
+      <span class="sc-enrich-dot"></span>
+      <span>Enriching your scorecard with the latest update — this takes about 30 seconds. The page will refresh automatically.</span>
+    </div>
+    <div id="sc-enrich-image-id" data-id="{{ image.id }}" style="display:none"></div>
+    <script>
+    (function(){
+      var iid = document.getElementById('sc-enrich-image-id').getAttribute('data-id');
+      var banner = document.getElementById('sc-enrich-banner');
+      var start = Date.now(), maxWait = 120000;
+      function poll(){
+        if(Date.now()-start > maxWait){ if(banner) banner.style.display='none'; return; }
+        fetch('/score-status/'+iid)
+          .then(function(r){return r.json();})
+          .then(function(d){
+            if(d.status==='scored'){ window.location.reload(); }
+            else if(d.status==='error'){ if(banner) banner.style.display='none'; }
+            else{ setTimeout(poll, 3000); }
+          })
+          .catch(function(){ setTimeout(poll, 5000); });
+      }
+      setTimeout(poll, 4000);
+    })();
+    </script>
+    {% endif %}
 
     <div class="sc-back-row">
       <a href="{{ url_for('dashboard') }}" class="sc-back-lnk">← Back to Dashboard</a>
