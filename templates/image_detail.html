@@ -214,8 +214,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
 .sc-back-lnk:hover{color:var(--sc-dark)}
 /* ── SESSION 214: BACKFILL ENRICHMENT BANNER ── */
-.sc-enrich-banner{display:flex;align-items:center;gap:10px;background:#FFF8EC;border:1px solid #EDD89A;border-radius:8px;padding:11px 16px;margin-bottom:12px;font-size:14px;color:#8B6508}
-.sc-enrich-dot{width:8px;height:8px;border-radius:50%;background:#D6A428;flex-shrink:0;animation:sc-pulse 1.4s ease-in-out infinite}
+.sc-enrich-banner{display:flex;align-items:flex-start;gap:14px;background:#1A2744;border-radius:10px;padding:16px 20px;margin-bottom:14px}
+.sc-enrich-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.sc-enrich-body{flex:1}
+.sc-enrich-title{font-size:15px;font-weight:700;color:#C8A84B;margin-bottom:4px}
+.sc-enrich-msg{font-size:14px;color:rgba(245,243,239,.80);line-height:1.6}
+.sc-enrich-bar{height:3px;background:rgba(200,168,75,.25);border-radius:2px;margin-top:12px;overflow:hidden}
+.sc-enrich-bar-fill{height:100%;background:#C8A84B;border-radius:2px;width:0%;transition:width 1s linear}
 @keyframes sc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 .sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
@@ -654,6 +659,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _master_why_s  = (_audit.get('master_why')    or '') | trim %}
 {% set _species_note_s= (_audit.get('species_note')  or '') | trim %}
 
+{# Session 214 Part 2 — strength/leap obs, conclusion, award_context #}
+{% set _strength_name_s = (_audit.get('strength_name') or '') | trim %}
+{% set _strength_obs_s  = (_audit.get('strength_obs')  or '') | trim %}
+{% set _next_leap_name_s= (_audit.get('next_leap_name') or '') | trim %}
+{% set _next_leap_obs_s = (_audit.get('next_leap_obs')  or '') | trim %}
+{% set _conclusion_s    = (_audit.get('conclusion')     or '') | trim %}
+{% set _award_context_s = (_audit.get('award_context')  or '') | trim %}
+
 {# Percentile #}
 {% set _top_pct = percentile.top_pct if percentile else none %}
 {% set _pct_display = _top_pct %}
@@ -722,27 +735,76 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {# ── SESSION 214: ENRICHMENT BANNER — shown when backfill rescore is running ── #}
     {% if backfill_triggered %}
     <div class="sc-enrich-banner" id="sc-enrich-banner">
-      <span class="sc-enrich-dot"></span>
-      <span>Enriching your scorecard with the latest update — this takes about 30 seconds. The page will refresh automatically.</span>
+      <span class="sc-enrich-icon">✦</span>
+      <div class="sc-enrich-body">
+        <div class="sc-enrich-title" id="sc-enrich-title">Enriching your scorecard</div>
+        <div class="sc-enrich-msg" id="sc-enrich-msg">Adding the latest analysis — impression, master reference, visual flow, dimension observations and more. Takes about 60 seconds. Page refreshes automatically.</div>
+        <div class="sc-enrich-bar"><div class="sc-enrich-bar-fill" id="sc-enrich-bar-fill"></div></div>
+      </div>
     </div>
     <div id="sc-enrich-image-id" data-id="{{ image.id }}" style="display:none"></div>
     <script>
     (function(){
-      var iid = document.getElementById('sc-enrich-image-id').getAttribute('data-id');
+      var iid    = document.getElementById('sc-enrich-image-id').getAttribute('data-id');
       var banner = document.getElementById('sc-enrich-banner');
-      var start = Date.now(), maxWait = 120000;
+      var title  = document.getElementById('sc-enrich-title');
+      var msg    = document.getElementById('sc-enrich-msg');
+      var bar    = document.getElementById('sc-enrich-bar-fill');
+      var start  = Date.now();
+      var maxWait = 180000;  // 3 min hard stop
+
+      // Animate the progress bar to ~90% over 70 seconds
+      var pct = 0;
+      var barInterval = setInterval(function(){
+        pct = Math.min(pct + (90/70), 90);
+        if(bar) bar.style.width = pct.toFixed(1) + '%';
+      }, 1000);
+
+      function setMsg(t, m){ if(title) title.textContent = t; if(msg) msg.textContent = m; }
+
       function poll(){
-        if(Date.now()-start > maxWait){ if(banner) banner.style.display='none'; return; }
+        var elapsed = Date.now() - start;
+
+        if(elapsed > maxWait){
+          clearInterval(barInterval);
+          setMsg(
+            'Taking longer than expected',
+            'The update is still processing in the background. Refresh this page in a minute or two to see the enriched scorecard.'
+          );
+          if(bar) bar.style.background = '#8B6508';
+          return;
+        }
+
+        // Progressive messages based on elapsed time
+        if(elapsed > 90000){
+          setMsg('Still working…', 'This image is getting a detailed re-evaluation. Hang tight — the page will refresh when done.');
+        } else if(elapsed > 45000){
+          setMsg('Almost there…', 'Finalising the analysis. Refresh is coming.');
+        }
+
         fetch('/score-status/'+iid)
-          .then(function(r){return r.json();})
+          .then(function(r){ return r.json(); })
           .then(function(d){
-            if(d.status==='scored'){ window.location.reload(); }
-            else if(d.status==='error'){ if(banner) banner.style.display='none'; }
-            else{ setTimeout(poll, 3000); }
+            if(d.status === 'scored'){
+              clearInterval(barInterval);
+              if(bar){ bar.style.width = '100%'; bar.style.transition = 'width 0.3s'; }
+              setMsg('Done — loading your enriched scorecard', '');
+              setTimeout(function(){ window.location.reload(); }, 600);
+            } else if(d.status === 'error'){
+              clearInterval(barInterval);
+              setMsg(
+                'Update encountered a problem',
+                'The re-evaluation did not complete. Your existing scorecard is intact — try refreshing the page or contact support if this persists.'
+              );
+              if(bar) bar.style.background = '#B3261E';
+            } else {
+              setTimeout(poll, 4000);
+            }
           })
-          .catch(function(){ setTimeout(poll, 5000); });
+          .catch(function(){ setTimeout(poll, 6000); });
       }
-      setTimeout(poll, 4000);
+
+      setTimeout(poll, 5000);
     })();
     </script>
     {% endif %}
@@ -857,7 +919,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-impression">{{ _impression | safe }}</div>
     {% endif %}
 
-    {# ── SL-181.11 SUMMARY BOX — Strength + Next Leap above the fold ── #}
+    {# ── SL-181.11 SUMMARY BOX — expanded: Strength + obs / Next Leap + obs ── #}
     {% if _strongest_nm or _weakest_nm %}
     <div class="sc-summary-box">
       {% if _strongest_nm %}
@@ -865,6 +927,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <span class="sc-pill-strength">Strength</span>
         <span>{{ _strongest_nm }} — {{ '%.2f'|format(_strongest_val) if _strongest_val else '' }}</span>
       </div>
+      {% if _strength_obs_s %}
+      <div style="font-size:15px;color:var(--sc-text);line-height:1.75;padding:8px 0 4px;border-left:2.5px solid #C5E0BB;padding-left:12px;margin-left:2px">{{ _strength_obs_s | safe }}</div>
+      {% endif %}
       {% endif %}
       {% if _weakest_nm %}
       <div class="sc-summary-divider"></div>
@@ -872,6 +937,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <span class="sc-pill-leap">Next leap</span>
         <span>{{ _weakest_nm }} — {{ '%.2f'|format(_weakest_val) if _weakest_val else '' }}</span>
       </div>
+      {% if _next_leap_obs_s %}
+      <div style="font-size:15px;color:var(--sc-text);line-height:1.75;padding:8px 0 4px;border-left:2.5px solid #c4b5fd;padding-left:12px;margin-left:2px">{{ _next_leap_obs_s | safe }}</div>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}
@@ -1181,6 +1249,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
+    {# ── SESSION 214: IMAGINE — possibility language, forward-looking ── #}
+    {% if _imagine_s %}
+    <div class="sc-imagine-card">
+      <div class="sc-imagine-label">Imagine</div>
+      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | safe }}</div>
+    </div>
+    {% endif %}
+
     {# ── SL-181.11 BODY OF WORK — promoted to named numbered section ── #}
     {% if _body_of_work %}
     <div class="sc-bow-card">
@@ -1247,11 +1323,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% endif %}
 
 
-    {# ── SESSION 214: IMAGINE ── #}
-    {% if _imagine_s %}
-    <div class="sc-imagine-card">
-      <div class="sc-imagine-label">Imagine</div>
-      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | safe }}</div>
+    {# ── SESSION 214: AWARD CONTEXT — score-tier recognition card ── #}
+    {% if _award_context_s %}
+    {% set _ac_score = image.score | float if image.score else 0 %}
+    <div style="background:{% if _ac_score >= 9.0 %}#1A2744{% elif _ac_score >= 8.5 %}#E8F5E2{% else %}var(--sc-cream){% endif %};border-radius:12px;border:{% if _ac_score >= 9.0 %}none{% elif _ac_score >= 8.5 %}1px solid #C5E0BB{% else %}0.5px solid var(--sc-border){% endif %};padding:16px 18px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:{% if _ac_score >= 9.0 %}var(--sc-gold){% elif _ac_score >= 8.5 %}#2A7A3A{% else %}var(--sc-gold-dk){% endif %};margin-bottom:8px">{% if _ac_score >= 9.0 %}🏆 Grandmaster-level recognition{% elif _ac_score >= 8.5 %}🥇 Award-ready{% else %}Your path to recognition{% endif %}</div>
+      <div style="font-size:15px;color:{% if _ac_score >= 9.0 %}rgba(245,243,239,.85){% else %}var(--sc-text){% endif %};line-height:1.8">{{ _award_context_s | safe }}</div>
     </div>
     {% endif %}
 
@@ -1308,13 +1385,33 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and image.score %}
     <div id="sl-launchpad"
          data-image-id="{{ image.id }}"
+         data-score-tier="{% if image.score and image.score|float >= 9.0 %}gm{% elif image.score and image.score|float >= 8.5 %}master{% else %}below{% endif %}"
          data-score="{{ '%.2f'|format(image.score) }}"
          data-threshold="8.5"
+         data-threshold-gm="9.0"
          data-tier="{{ image.tier or '' }}"
          style="margin-bottom:10px">
 
       {% set _lp_score = image.score | float %}
-      {% if _lp_score >= 8.5 %}
+      {% if _lp_score >= 9.0 %}
+      {# 9.0+ — Grandmaster-level card, dark navy, gold, top-tier awards #}
+      <div id="sl-lp-card" style="display:none;background:#1A2744;border-radius:12px;border:none;margin-bottom:10px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-gold)">👑 Major awards — your work qualifies</span>
+          <span id="sl-lp-badge" style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1A2744;background:var(--sc-gold);padding:3px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }}</span>
+        </div>
+        <div id="sl-lp-loading" style="padding:12px 0;color:var(--sc-gold);font-size:15px;line-height:1.6">
+          Finding major awards for your work…
+        </div>
+        <div id="sl-lp-awards" style="display:none"></div>
+        <div id="sl-lp-empty" style="display:none;font-size:15px;color:rgba(245,243,239,.75);line-height:1.7">
+          No open calls right now — check back in a few days. At 9.0+ your work stands among the best on the platform globally.
+        </div>
+        <div id="sl-lp-error" style="display:none;font-size:14px;color:rgba(245,243,239,.6)">
+          Could not load award suggestions. Try again later.
+        </div>
+      </div>
+      {% elif _lp_score >= 8.5 %}
       {# Above threshold — async card, fills in from API — deep blue premium card #}
       <div id="sl-lp-card" style="display:none;background:#E8F5E2;border-radius:12px;border:1px solid #C5E0BB;margin-bottom:10px;padding:18px 20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1397,7 +1494,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
       card.style.display = 'block';
 
-      fetch('/api/contest-suggestions?image_id=' + imageId)
+      fetch('/api/contest-suggestions?image_id=' + imageId + '&score=' + score)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           loading.style.display = 'none';
@@ -1562,6 +1659,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div style="background:#1A1A2E;border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:20px 24px;margin:0 0 10px">
       <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A9FD4;margin-bottom:8px">Seen in the Shutter League pool</div>
       <div style="font-size:15px;line-height:1.75;color:rgba(122,159,212,0.80)">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same 312 blind evaluations as every other photograph.</div>
+    </div>
+    {% endif %}
+
+    {# ── SESSION 214: CONCLUSION — closing paragraph written to YOU ── #}
+    {% if _conclusion_s %}
+    <div style="background:var(--sc-dark);border-radius:12px;padding:20px 22px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--sc-gold);margin-bottom:10px">Your evaluation</div>
+      <div style="font-size:16px;color:rgba(245,243,239,.88);line-height:1.85">{{ _conclusion_s | safe }}</div>
     </div>
     {% endif %}
 
