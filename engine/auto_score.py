@@ -1,3 +1,4 @@
+# SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
 # SL-VERSION: 171.15-staging (Session 215, 2026-09-06 — FIX: background_check and what_stood_out removed from MASTER_FIELDS repeat detector — both are intentional backward-compat duplicates of byline_1 and hard_truth respectively, causing false MASTER_REPEAT logs on every rescore. RETAINS 171.14.)
 # SL-VERSION: 171.14-staging (Session 215, 2026-09-06 — FIX: max_tokens lowered 6000→5000. 6000 caused 206s total scoring time. Estimated actual token need ~4350; 5000 gives safe headroom at lower latency. Also added false-positive phrases to master repeat skip list (Your Wildlife etc). RETAINS 171.13.)
@@ -644,7 +645,20 @@ Here is what that frame would have looked like: [specific, visual, concrete desc
 
 MASTER PHOTOGRAPHER REFERENCES:
 - Every card 1 (transferable_advice) MUST name one master.
-- Reference a SPECIFIC IMAGE or SPECIFIC BODY OF WORK, not just the name.
+- Reference what the master is KNOWN FOR — their established subject, approach, or body of work
+  as it is widely documented. A search link is acceptable (e.g. 'Search: Frans Lanting pelicans').
+- FACT ACCURACY — ABSOLUTE RULE: Do NOT invent or assume specific locations, expedition dates,
+  timeframes, or project names. If you cannot state something as established general knowledge
+  about this photographer, do not state it. Never write '[Master] spent weeks at [specific location]'
+  unless that is documented public knowledge about them.
+  WRONG: 'Sudhir Shivaram worked Ranganathittu for years...' (invented specific)
+  WRONG: 'Frans Lanting worked pelican colonies in the Danube Delta...' (may be inaccurate)
+  RIGHT: 'Frans Lanting has spent decades working waterbird colonies across the world —
+  that patience at ground level is what separates his frames from observation shots.'
+  RIGHT: 'Sudhir Shivaram is known for his intimate access to Indian wildlife — Search:
+  Sudhir Shivaram pelicans.'
+  When in doubt: describe what the master is known for broadly, add a search link, say nothing
+  specific about where or when. A vague true statement is better than a precise false one.
 - NO SEPARATOR LINES — ABSOLUTE RULE: Do NOT use ════, ====, ----, or any repeated character as a visual separator anywhere in any field. The cross-genre note in byline_2 starts with a blank line then the text directly. No dividers, no borders, no horizontal rules.
 
 ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
@@ -957,13 +971,16 @@ SELF-CHECK MANDATORY: Before writing your JSON, scan every text field for photog
 names. If master_name appears in any other field, that is a failure — rewrite the other
 field with a different master before responding.
 master_why: Maximum 25 words. One sentence only. State the specific physical decision this
-master made in the same type of situation that this photographer has not yet made.
-Format: '[Master] [specific physical action in similar situation]. You [what photographer
+master is known for making in this type of situation — what the photographer has not yet done.
+Format: '[Master] [known physical approach in similar situation]. You [what photographer
 has not done].'
 Example: 'Goldin positioned herself inside the domestic moment so the camera disappeared.
 You are present — not yet invisible.'
+FACT RULE: Only state what the master is genuinely known for. Never invent specific
+locations, expeditions, or timeframes. If unsure of specifics, describe their general
+known approach instead — 'waited for the gesture' not 'waited at Lake X for 3 weeks'.
 25 words maximum. If you cannot fit it, cut words, do not extend.
-No career summaries. No 'is known for.' No 'is celebrated for.'
+No career summaries. No 'is known for' as a construction — show the action instead.
 
 TECHNICAL READ:
 tech_read: One paragraph, max 60 words. Forensic examination of this specific image.
