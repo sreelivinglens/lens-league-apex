@@ -13069,6 +13069,36 @@ def image_detail(image_id):
     except Exception as _hpe:
         app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
 
+    # ── Session 214: On-view backfill — populate new scorecard fields on older images ──
+    # Fires once per image when owner/admin views a scored Sonnet image missing
+    # the 7 new fields added Sessions 210–213. Sets img.status = 'processing'
+    # via _force_rescore_in_background. Template shows a banner + polls score_status
+    # until done, then auto-reloads to show the enriched scorecard.
+    _backfill_triggered = False
+    try:
+        if (img.status == 'scored' and img.score and
+                current_user.is_authenticated and
+                (img.user_id == current_user.id or current_user.role == 'admin')):
+            import json as _bf_json
+            _bf_audit = _bf_json.loads(img._audit_json or '{}')
+            if _bf_audit.get('source') != 'haiku_try':
+                _NEW_FIELDS = ('impression', 'visual_flow', 'tech_read',
+                               'imagine', 'master_name', 'dim_obs_dod')
+                if not any(_bf_audit.get(f) for f in _NEW_FIELDS):
+                    _bf_old_score = img.score
+                    _bf_old_tier  = img.tier
+                    img.status = 'processing'
+                    db.session.commit()
+                    threading.Thread(
+                        target=_force_rescore_in_background,
+                        args=(image_id, _bf_old_score, _bf_old_tier, 'scored'),
+                        daemon=True
+                    ).start()
+                    _backfill_triggered = True
+                    app.logger.info(f'[image_detail] backfill rescore triggered image={image_id}')
+    except Exception as _bf_err:
+        app.logger.debug(f'[image_detail] backfill check non-fatal: {_bf_err}')
+
     # Strip [Species: X] prefix from subject for display — it is an internal
     # scoring tag written at upload time (Wildlife genre hint) and must not
     # appear raw on the detail page. We reassign on the local object only;
@@ -13088,6 +13118,7 @@ def image_detail(image_id):
                            all_masters=ALL_MASTERS,
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
+                           backfill_triggered=_backfill_triggered,
                            now=_now)
 
 
@@ -13603,7 +13634,7 @@ def download_card_pdf(image_id):
 
     # ── Reportlab render — pure Python, no system dependencies ──
     try:
-        from engine.reportlab_card import build_scorecard_pdf  # Session 214: see engine/reportlab_card.py — rewritten to Platypus flowables, no truncation
+        from engine.reportlab_card import build_scorecard_pdf
         # S162.2 — evaluated_on date for scorecard PDF meta line
         _eval_date = ''
         _date_src = img.scored_at or img.created_at
@@ -13635,21 +13666,6 @@ def download_card_pdf(image_id):
             'mentor_location_2': _mentor_2,
             'days_since_language': _days_since,
             'photo_url':         _photo_url,
-            # Session 214 — missing fields now passed through
-            'impression':        (_audit.get('impression') or '').strip(),
-            'what_next':         (_audit.get('what_next') or '').strip(),
-            'body_of_work':      (_audit.get('body_of_work') or '').strip(),
-            'master_name':       (_audit.get('master_name') or '').strip(),
-            'master_why':        (_audit.get('master_why') or '').strip(),
-            'dim_obs_dod':       (_audit.get('dim_obs_dod') or '').strip(),
-            'dim_obs_vd':        (_audit.get('dim_obs_vd') or '').strip(),
-            'dim_obs_dm':        (_audit.get('dim_obs_dm') or '').strip(),
-            'dim_obs_wf':        (_audit.get('dim_obs_wf') or '').strip(),
-            'dim_obs_aq':        (_audit.get('dim_obs_aq') or '').strip(),
-            'tech_read':         (_audit.get('tech_read') or '').strip(),
-            'visual_flow':       (_audit.get('visual_flow') or '').strip(),
-            'imagine':           (_audit.get('imagine') or '').strip(),
-            'species_note':      (_audit.get('species_note') or '').strip(),
         }
         _pdf_bytes = build_scorecard_pdf(_pdf_data)
     except Exception as _rle:
