@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.16 (Session 215, 2026-09-06 — Three fixes: (1) Photographer name: use image.photographer_name not current_user — admin viewing any image was showing 'Admin'. (2) Dim observations: upgraded from 14px list to Haiku-level layout with 26px score left + obs text right, always visible. (3) Tech read + Visual flow: removed from hidden accordion, rendered as open warm-sand zone after master reference card. RETAINS 182.15 / 182.14.) #}
 {# SL-VERSION: image_detail-182.14 (Session 214, 2026-09-06 — Seven Haiku fields ported: impression, tech_read, visual_flow, imagine, master_name/why, dim_obs per dimension, species_note. Tier journey strip. Strength_obs + next_leap_obs in summary box always visible. Conclusion dark card before action bar. Award_context score-tier card. Contest launchpad dual threshold 8.5/9.0. Imagine moved to forward-looking position. Backfill enrichment banner: dark navy, gold progress bar, progressive messaging, auto-reload on completion. Fixes JS status check ok/scored. RETAINS 181.23-main.)
 {# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.23-main (Session 207, 2026-09-02 — NAV: sc-topnav (#111214 near-black) removed entirely. sl-top-nav from base.html now renders — correct navy colour, standard paid links. RETAINS 181.22.)
@@ -687,7 +688,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _is_pb = (stats and stats.best_this_year and image.score and image.score >= stats.best_this_year) %}
 
 {# Photographer name #}
-{% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else (image.photographer_name or '') %}
+{# Session 215 FIX: use image owner name, not viewer. current_user may be admin viewing another member's image. #}
+{% set _name = (image.photographer_name or '') %}
+{% if not _name and current_user.is_authenticated and image.user_id == current_user.id %}
+  {% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) %}
+{% endif %}
 
 {# Scored date #}
 {% set _scored_date = image.scored_at.strftime('%-d %b %Y') if image.scored_at else '' %}
@@ -939,13 +944,23 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         } %}
         {% set _has_dim_obs = _dim_obs_map.values() | select | list | length > 0 %}
         {% if _has_dim_obs %}
-        <div style="margin-top:14px;border-top:0.5px solid var(--sc-border);padding-top:12px;display:flex;flex-direction:column;gap:10px">
+        {# Session 215: upgraded dim obs to Haiku-level visual weight — score left, obs right #}
+        <div style="margin-top:16px;border-top:0.5px solid var(--sc-border);padding-top:16px;display:flex;flex-direction:column;gap:0">
           {% for _attr, _nm, _em, _ar in _ddi_cols %}
             {% set _obs = _dim_obs_map.get(_attr, '') %}
+            {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
             {% if _obs %}
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--sc-dark);margin-bottom:3px">{{ _nm }}</div>
-              <div style="font-size:14px;color:var(--sc-text);line-height:1.75">{{ _obs | safe }}</div>
+            {% set _is_stg = (_val and _nm == _strongest_nm) %}
+            {% set _is_lp  = (_val and _nm == _weakest_nm) %}
+            <div style="display:grid;grid-template-columns:64px 1fr;gap:0 16px;padding:14px 0;border-bottom:0.5px solid var(--sc-border);align-items:start">
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:2px">
+                <span style="font-size:26px;font-weight:700;color:var(--sc-dark);line-height:1;font-variant-numeric:tabular-nums">{{ '%.1f'|format(_val) if _val else '—' }}</span>
+                <span style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-top:4px;text-align:center;{% if _is_stg %}color:#C8A84B;font-weight:700{% elif _is_lp %}color:var(--sc-text){% else %}color:var(--sc-muted){% endif %}">{% if _is_stg %}Strongest{% elif _is_lp %}Next leap{% elif _val and _val >= 8.0 %}Exceptional{% elif _val and _val >= 7.0 %}Strong{% else %}Good{% endif %}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);font-weight:500">{{ _nm }}</span>
+                <div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _obs | safe }}</div>
+              </div>
             </div>
             {% endif %}
           {% endfor %}
@@ -1091,36 +1106,6 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
       {% endif %}
 
-      {# ── SESSION 214: TECHNICAL READ ── #}
-      {% if _tech_read_s %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#E6F1FB">🔬</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Technical read</div>
-            <div class="sc-acc-teaser">{{ _tech_read_s | replace('■','') | replace('▪','') | replace('•','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _tech_read_s | safe }}</div>
-      </div>
-      {% endif %}
-
-      {# ── SESSION 214: VISUAL FLOW ── #}
-      {% if _visual_flow_s %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#F0EEFF">👁</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">Visual flow</div>
-            <div class="sc-acc-teaser">{{ _visual_flow_s | replace('■','') | replace('▪','') | replace('•','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _visual_flow_s | safe }}</div>
-      </div>
-      {% endif %}
-
     </div>
     {% endif %}
 
@@ -1166,6 +1151,20 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       <div class="sc-master-label">Master reference</div>
       <div class="sc-master-name">{{ _master_name_s }}</div>
       {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | safe }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {# ── SESSION 215: TECH READ + VISUAL FLOW — open zones, not accordion ── #}
+    {% if _tech_read_s or _visual_flow_s %}
+    <div style="background:#F8F4EE;border-radius:12px;padding:20px 22px;margin-bottom:10px">
+      {% if _tech_read_s %}
+      <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Technical read</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80;{% if _visual_flow_s %}margin-bottom:20px{% endif %}">{{ _tech_read_s | safe }}</div>
+      {% endif %}
+      {% if _visual_flow_s %}
+      <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Visual flow</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80">{{ _visual_flow_s | safe }}</div>
+      {% endif %}
     </div>
     {% endif %}
 
