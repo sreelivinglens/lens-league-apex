@@ -1,3 +1,4 @@
+# SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
 # SL-VERSION: 171.15-staging (Session 215, 2026-09-06 — FIX: background_check and what_stood_out removed from MASTER_FIELDS repeat detector — both are intentional backward-compat duplicates of byline_1 and hard_truth respectively, causing false MASTER_REPEAT logs on every rescore. RETAINS 171.14.)
 # SL-VERSION: 171.14-staging (Session 215, 2026-09-06 — FIX: max_tokens lowered 6000→5000. 6000 caused 206s total scoring time. Estimated actual token need ~4350; 5000 gives safe headroom at lower latency. Also added false-positive phrases to master repeat skip list (Your Wildlife etc). RETAINS 171.13.)
 # SL-VERSION: 171.13-staging (Session 215, 2026-09-06 — FIX: httpx timeout raised 90s→150s on main scoring call and recalibrate_audit call. 6000 max_tokens generates larger responses; 90s was insufficient causing stuck images on complex Wildlife rescores. RETAINS 171.12.)
@@ -5605,6 +5606,25 @@ def build_audit_data(result, image_obj):
         # ── Session 132 — Mobile DDI: device attribution for share card ────────
         "camera_track":  getattr(image_obj, 'camera_track', '') or '',
         "device_label":  _build_audit_device_label(image_obj),
+        # ── Session 215 — 18 new scorecard fields ────────────────────────────────
+        "impression":      result.get("impression", ""),
+        "strength_name":   result.get("strength_name", ""),
+        "strength_obs":    result.get("strength_obs", ""),
+        "next_leap_name":  result.get("next_leap_name", ""),
+        "next_leap_obs":   result.get("next_leap_obs", ""),
+        "dim_obs_dod":     result.get("dim_obs_dod", ""),
+        "dim_obs_vd":      result.get("dim_obs_disruption", "") or result.get("dim_obs_vd", ""),
+        "dim_obs_dm":      result.get("dim_obs_dm", ""),
+        "dim_obs_wf":      result.get("dim_obs_wonder", "") or result.get("dim_obs_wf", ""),
+        "dim_obs_aq":      result.get("dim_obs_aq", ""),
+        "master_name":     result.get("master_name", ""),
+        "master_why":      result.get("master_why", ""),
+        "tech_read":       result.get("tech_read", ""),
+        "visual_flow":     result.get("visual_flow", ""),
+        "imagine":         result.get("imagine", ""),
+        "conclusion":      result.get("conclusion", "").replace("312 blind calibrations", "hundreds of blind calibrations"),
+        "award_context":   result.get("award_context", ""),
+        "species_note":    result.get("species_note", ""),
     }
 
 
