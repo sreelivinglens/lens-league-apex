@@ -1,4 +1,4 @@
-# SL-VERSION: 182.15 (Session 216, 2026-09-06 — Preflight false resolution error fixed: ingest_image() replaced with compute_phash() in upload_preflight(). ingest_image() runs a 1500px gate that always fails on the browser thumbnail (≤600px by design), showing users a false 'resolution too low' error even when their actual file is valid. compute_phash() has no resolution gate — safe for thumbnails. False ValueError catch removed. Similarity check remains non-fatal.)
+# SL-VERSION: 182.16 (Session 216, 2026-09-06 — DM shutter speed rules added to _TRY_HAIKU_PROMPT. Three rules: (1) fast shutter ≥1/500s = anticipation, do not score DM low on static appearance alone; (2) trust pre-call behaviour string over pixel posture; (3) when no EXIF and ambiguous, score on posture quality and note uncertainty in dim_obs_dm. Prevents false low DM on frozen-motion Wildlife frames.)
 
 import os
 import re
@@ -35516,6 +35516,31 @@ _TRY_HAIKU_PROMPT = (
 "CAMERA DATA CONTEXT:\n"
     "{exif_context}\n"
     "If camera data is provided, use it in tech_read for gear-specific observations.\n\n"
+
+    "SHUTTER SPEED AND DECISIVE MOMENT — WILDLIFE:\n"
+    "A still frame cannot tell you whether the animal was moving. "
+    "Use shutter speed as the primary signal for DM on Wildlife images.\n\n"
+    "RULE 1 — WHEN EXIF SHUTTER SPEED IS AVAILABLE:\n"
+    "Fast shutter (1/500s or faster): the photographer was shooting for motion. "
+    "Even if the animal appears static in the frame, fast shutter means anticipation — "
+    "the photographer positioned and timed for potential movement. "
+    "Do NOT score DM low on the basis that the subject 'appears at rest'. "
+    "Score DM on whether the frame captures the animal at its most intentional, alert, "
+    "or decisive posture — ears forward, gaze locked, body coiled. "
+    "A tiger at 1/1000s with direct gaze and alert posture = DM 6.5-7.5, not 5.1.\n"
+    "Slow shutter (1/100s or slower on a Wildlife subject): the photographer accepted "
+    "a static subject. Score DM on posture and moment quality within that stillness.\n\n"
+    "RULE 2 — WEIGHT THE PRE-CALL BEHAVIOUR STRING:\n"
+    "The vision pre-call has already identified the subject behaviour. "
+    "If the verified_subject block says 'walking', 'mid-stride', 'stalking', 'alert scanning', "
+    "or any active behaviour — trust that read. Do not override it with 'subject appears at rest' "
+    "based on the still frame alone. The pre-call saw the same image and committed to a behaviour.\n\n"
+    "RULE 3 — WHEN NO EXIF AND BEHAVIOUR IS AMBIGUOUS:\n"
+    "If no shutter speed is available AND the subject could be frozen-motion OR genuinely static, "
+    "do not make a confident low DM call. Instead: score DM on the quality of the posture, "
+    "gaze, and geometry — and note in dim_obs_dm: 'No shutter data — if this was a frozen "
+    "moment of movement, the timing reads as [stronger/weaker]; scored on visible posture.' "
+    "Never penalise a photographer for a moment you cannot verify was static.\n\n"
 
     "SPECIES NOTE (Wildlife only, blank for all other genres):\n"
     "species_note: CONSERVATIVE IDENTIFICATION ONLY.\n"
