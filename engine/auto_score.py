@@ -1,3 +1,4 @@
+# SL-VERSION: 171.11-staging (Session 215, 2026-09-06 — P0: Added 18 new field format discipline rules to SCORE_PROMPT. impression, strength_name, strength_obs, next_leap_name, next_leap_obs, dim_obs_dod/disruption/dm/wonder/aq, master_name, master_why, tech_read, visual_flow, imagine, conclusion, award_context, species_note — all now have explicit format rules matching Haiku prompt discipline. Sherpa test, banned phrases, character limits, score gates, tier gate on conclusion, award_context thresholds, species_note conservative gate. RETAINS 171.10-staging.)
 # SL-VERSION: 171.10-staging (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: Platform Mentor rule tightened — ONLY Street/Fashion/Conceptual. Removed Nature, overthinking, cross-genre blanket triggers. RETAINS 171.9-staging.)
 # SL-VERSION: 171.9-staging (Session 184, 2026-08-14 — Prompt caching fix: switched SYSTEM_BRIEF cache TTL from 5min to 1hr on Calls 2/3/4. 5min TTL was expiring between infrequent scoring calls so cache was written but never read. 1hr TTL matches SL scoring cadence. VISION_SYSTEM cache_control removed — 165 tokens is below Sonnet 4.6 minimum of 1024, was silently skipped every call. RETAINS 171.8-staging.)
 # SL-VERSION: 171.8-staging (Session 184, 2026-08-14 — Prompt caching enabled on all 4 API calls. Retains 171.7.)
@@ -894,6 +895,197 @@ Read all four cards together. Ask:
 2. Is there a sentence in any card that could have appeared in the last scorecard unchanged? If yes — make it specific to this image.
 3. Does every card feel like it is speaking to THIS photographer about THIS image — or does it feel like a template with the subject swapped in? If template — rewrite.
 
+═══════════════════════════════════════════════════════════
+NEW SCORECARD FIELDS — FORMAT DISCIPLINE RULES (Session 215)
+These fields appear in the JSON schema below. Each has strict rules.
+Apply the Sherpa test to every sentence: would a mountain guide say this?
+═══════════════════════════════════════════════════════════
+
+IMPRESSION:
+2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking to someone they
+respect. This is the first thing the photographer reads on the full scorecard. Name what is
+genuinely strong in this specific frame. Prove the engine saw THIS image.
+NEVER open with: 'This image', 'The photograph', 'Your composition', 'You saw'.
+NEVER mention dimensions by name, score numbers, what is missing, or what to do next.
+NEVER repeat any observation that will appear in conclusion or master_why.
+Score gate — same register as hard_truth:
+Score 4-6: warm and specific — 'What a scene to be at.' / 'Lovely instinct here.'
+Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct, and it paid off.'
+Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience.'
+Max 60 words. Plain English. No jargon.
+
+STRENGTH AND NEXT LEAP:
+strength_name: The plain-English name of the strongest dimension
+(e.g. 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', 'Authentic Quality').
+strength_obs: One sentence (max 35 words) explaining specifically what is working in this
+dimension for THIS photograph. Concrete. Physical. No jargon. Name the specific element.
+next_leap_name: The plain-English name of the weakest dimension.
+next_leap_obs: One sentence (max 35 words) explaining specifically what is limiting this
+dimension for THIS photograph. Name the one decision that would move it into the next band.
+Honest. No jargon.
+DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette, monochrome, or
+high-contrast isolation — the gap must describe what strengthens the transformation, never
+what reverses it. Never write 'more detail would help', 'subject visibility limits this',
+'species is unclear'. Write instead: what posture, proximity, or geometric decision would
+make this transformation hit harder.
+
+DIM OBS — ONE SENTENCE PER DIMENSION:
+dim_obs_dod: Why THIS specific DOD score. Name the physical difficulty, access, or technical
+challenge — or what was missing. Image-specific. No generic dimension definition.
+dim_obs_disruption: Why THIS disruption score. Name the specific compositional choice or
+treatment — what it broke from convention, or why it followed it. Image-specific.
+dim_obs_dm: Why THIS moment score. Was this the peak of the act? If not, name exactly what
+stronger moment was available — what the photographer would have needed to wait for.
+dim_obs_wonder: Why THIS wonder score. Name the type (access, eye, cultural, emotional) and
+what created it — or what would have elevated it. Image-specific.
+dim_obs_aq: Why THIS AQ score. Name the specific emotion a stranger would feel and what
+in the image creates it. If no specific emotion: name what the image creates instead.
+All five: max 40 words each. Sherpa voice. Never a textbook definition.
+
+MASTER REFERENCE — DEDICATED FIELDS:
+master_name: Exactly one photographer name from the masters pool above. Match on SUBJECT and
+BEHAVIOUR first — not visual style, career reputation, or general approach.
+ONE MASTER PER SCORECARD — ABSOLUTE RULE: master_name must NOT appear anywhere else in
+the scorecard (not in transferable_advice, byline_1, byline_2, or any other field).
+The master appears ONLY here. All other cards must use a DIFFERENT master from the pool.
+SELF-CHECK MANDATORY: Before writing your JSON, scan every text field for photographer
+names. If master_name appears in any other field, that is a failure — rewrite the other
+field with a different master before responding.
+master_why: Maximum 25 words. One sentence only. State the specific physical decision this
+master made in the same type of situation that this photographer has not yet made.
+Format: '[Master] [specific physical action in similar situation]. You [what photographer
+has not done].'
+Example: 'Goldin positioned herself inside the domestic moment so the camera disappeared.
+You are present — not yet invisible.'
+25 words maximum. If you cannot fit it, cut words, do not extend.
+No career summaries. No 'is known for.' No 'is celebrated for.'
+
+TECHNICAL READ:
+tech_read: One paragraph, max 60 words. Forensic examination of this specific image.
+(1) Is the primary subject sharp, soft, or affected by conditions beyond the photographer's
+control — atmospheric haze, rain, motion blur? Name the CAUSE, not just the effect. Defend
+the photographer where conditions caused limitations they could not avoid.
+(2) Is exposure balanced or compromised — highlight clipping, shadow crush?
+CRITICAL: If the subject is cleanly exposed within a dark or black background, this is
+almost certainly a deliberate post-processing or ND filter decision — NOT a night shot,
+NOT underexposure. Say: the darkness is manufactured — shadows crushed in post or ND
+filter used to isolate the subject. Do NOT infer time of day from background darkness alone.
+(3) If EXIF data is present, make one gear-specific observation: was the focal length
+appropriate, was the shutter speed sufficient, what does the ISO tell us about conditions?
+Tone: precise and fair — the voice of a senior editor examining a contact sheet.
+
+VISUAL FLOW:
+visual_flow: One sentence only. Where does the viewer's eye enter the frame and where does
+it travel? Name the specific element that draws the eye in and where it exits or rests.
+If there is dead space — foreground, edge, or sky that adds no information — name it in
+the same sentence.
+Example: 'Eye enters at the woman's direct gaze, travels along the diagonal of the two
+bodies toward lower left, then rests — the empty mat space at the right edge adds no
+narrative; a tighter crop there strengthens the line.'
+Max 40 words.
+
+IMAGINE:
+imagine: One paragraph. Second person. Present tense. Paint the specific 9+ version of
+this photograph — the image this moment was reaching toward but did not yet fully become.
+Not what went wrong. Not what to fix. What the extraordinary frame looks like — if
+conditions align, if the subject cooperates, if the moment comes again.
+TONE RULES — CRITICAL: This is a POSSIBILITY, not a directive. Moments are not repeatable
+on demand. NEVER say 'go back for it', 'return to this location', 'revisit this scene'.
+Use ONLY possibility language: 'imagine if', 'there is a version of this image where',
+'if this moment comes again', 'the frame that could exist'.
+Use the actual elements in this image — same subject, same behaviour — but describe the
+frame where everything aligns. Name colour, light, proximity, posture, background.
+Sensory and specific.
+CAMERA TRACK: If photographer is on mobile track — never describe a frame that requires
+telephoto reach, wide aperture bokeh, or equipment a phone cannot achieve.
+Master name MUST NOT appear here. No location advice here — that belongs in byline_2.
+Max 80 words. No jargon. No dimension names. Pure vision.
+
+CONCLUSION:
+conclusion: Written in the voice of the platform, not the engine. Always address the
+photographer directly as YOU — never as 'this photographer' or 'the photographer'.
+First person address only. Sherpa tone — warm, personal, direct.
+DO NOT repeat any observation already made in impression, byline_1, byline_2, or master_why.
+This section says one thing only: what this photograph tells us about YOU, and that we want
+to see more.
+If photographer history is empty (eval 1): 2-3 sentences. What does this one image reveal
+about how YOU see? Then invite the next photograph.
+TIER GATE — MANDATORY: If tier is Master, Grandmaster, or Legend (score 8.0+), add this
+sentence: 'An image at this level belongs in the League of Photographers — where it earns
+a world standing calibrated against every photographer on the platform.'
+If tier is Maverick, Craftsman, Shooter, Contender, or Rookie (score below 8.0): do NOT
+add this sentence. Do NOT mention the League here at all.
+Close with this exact sentence: 'The standard we are measuring against was built from
+hundreds of blind calibrations — not preference, not taste — what makes an image hold
+attention, create feeling, and outlast the five seconds it gets on a feed.'
+Do not mention upgrading. Do not mention pricing. Max 90 words.
+If photographer history has prior images (eval 2+): name the pattern across their work —
+one strength, one gap — in 2 sentences max. Do not say what they should do next (that is
+in byline_2). Max 50 words in that case.
+
+AWARD CONTEXT:
+award_context: Score-gated. Three tiers. Never name specific award bodies or brands
+(no Sanctuary Asia, World Press Photo, NHM, Sony, Nature inFocus, India Press Photo).
+SCORE BELOW 8.5: Use this exact sentence: 'The League of Photographers features genuinely
+international work — images that stand a chance for recognition, earn income through
+commissioned work, sales and print editions, and be featured in exhibitions, grants and
+awards.'
+SCORE 8.5 to 8.9: One sentence. Must start with EXACTLY 'At 8.5+' — not 8.0+, not 8.4+,
+not 8.6+. Always 8.5+. Say: 'At 8.5+ your work is ready for serious [genre] photography
+awards and the League of Photographers — where images at this level earn income through
+commissions, print sales, and exhibition placement.' Replace [genre] with actual genre.
+SCORE 9.0 and above: One sentence. Must start with EXACTLY 'At 9.0+'. Say: 'At 9.0+ your
+[genre] work stands among the best on the platform — the League of Photographers opens
+doors to major awards, commissions, gallery exhibitions, and grant opportunities.'
+THRESHOLD RULE: The number after 'At' must be exactly 8.5 or 9.0. Never 8.0+, 8.2+,
+8.4+, 8.6+, 8.8+, or any other number. If score is 8.49, it is below 8.5 — use tier 1.
+If score is 8.50, use tier 2 starting with 'At 8.5+'. One sentence per tier. Max 40 words.
+
+SPECIES NOTE:
+species_note: Wildlife and Nature genres only. Blank string for all other genres.
+CONSERVATIVE IDENTIFICATION ONLY. Return blank ('') in ANY of these situations:
+- The subject is a silhouette with no visible distinguishing features
+- The image is backlit, underexposed, or in low contrast
+- The species cannot be identified with HIGH confidence from visible features
+- The subject could be more than one species
+- You are guessing
+ONLY populate species_note when ALL of these are true:
+1. Species clearly identifiable from visible physical features (plumage pattern, beak shape,
+   body structure — NOT silhouette alone)
+2. You are confident enough to stake the platform's credibility on this identification
+3. The ecological fact you state is verifiable and accurate
+A wrong species identification destroys platform trust immediately. Blank is always safer
+than wrong. When in doubt: blank.
+If confident: one sentence, species name + one verified ecological fact. Max 40 words.
+SILHOUETTE RULE — CRITICAL: When species_note is blank because the subject is rendered as
+silhouette, do NOT name species clarity as a gap in strength_obs, next_leap_obs, or
+anywhere else on the scorecard. A silhouette is a compositional choice, not a failure.
+
+SHERPA TEST — APPLY TO EVERY SENTENCE IN EVERY NEW FIELD:
+Before writing any sentence, ask: would a Sherpa guiding someone up a mountain say this?
+A Sherpa says: 'rest here, the next section is steep, you will need both hands.'
+A Sherpa does not say: 'the vertical trajectory presents an execution window requiring
+bilateral limb engagement.'
+Write like the first. Never like the second.
+
+ADDITIONAL BANNED PHRASES FOR ALL NEW FIELDS:
+'emotional register' (say: the feeling this creates)
+'affective quality' (say: what it makes you feel)
+'bilateral symmetry' (say: the subject and its reflection are mirror images)
+'compositional tension' (say: the eye does not know where to settle)
+'negative space as subject' (say: the emptiness around the subject is what you see first)
+'triangular composition', 'leading line', 'frame within frame', 'diagonal tension'
+'half-second away', 'temporal centre', 'execution window', 'decisive window'
+'reads against' (say: appears in front of / stands out from)
+'resolves' (say: comes together / becomes clear)
+'sits in the frame' (say: is placed / appears)
+'the geometry is yours' (say: the composition is a decision only you would make)
+'likely adds', 'likely improves', 'likely transforms'
+'You keep finding the feeling before you find the frame' — BANNED from all fields, forever.
+Master name must NOT appear in imagine, conclusion, impression, strength_obs, next_leap_obs,
+dim_obs_*, or visual_flow. It lives ONLY in master_why (and the existing cards that already
+use a different master from the pool per the ONE MASTER PER SCORECARD rule above).
+
 Return this exact JSON structure:
 {{
   "dod": <float 0-10>,
@@ -948,7 +1140,25 @@ FORMAT:
   "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window only — one sentence maximum. Null if only one location is relevant.>",
   "mentor_location_3": "<Always return null. Third location advisory removed to reduce response length.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
-  "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>"
+  "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>",
+  "impression": "<SCORECARD OPENING PARAGRAPH. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. Max 60 words. Plain English. No jargon.>",
+  "strength_name": "<Plain-English name of the strongest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
+  "strength_obs": "<One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
+  "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
+  "next_leap_obs": "<One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
+  "dim_obs_dod": "<One sentence, max 40 words. Why this specific DOD score. Name the physical difficulty, access, or technical challenge — or what was missing. Image-specific. No generic dimension definition.>",
+  "dim_obs_disruption": "<One sentence, max 40 words. Why this disruption score. Name the specific compositional choice or treatment — what it broke from convention, or why it followed it. Image-specific.>",
+  "dim_obs_dm": "<One sentence, max 40 words. Why this moment score. Was this the peak of the act? If not, name exactly what stronger moment was available and what the photographer would have needed to wait for. Image-specific.>",
+  "dim_obs_wonder": "<One sentence, max 40 words. Why this wonder score. Name the type (access, eye, cultural, emotional) and what created it — or what would have elevated it. Image-specific.>",
+  "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific.>",
+  "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
+  "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
+  "tech_read": "<One paragraph, max 60 words. Forensic: (1) subject sharpness — name the CAUSE of any softness, defend the photographer where conditions caused it; (2) exposure — name any clipping or crush; CRITICAL: dark background does NOT mean night — if subject is cleanly exposed against black, say the darkness is manufactured (crushed shadows or ND filter), never assume nocturnal; (3) one gear observation if EXIF present. Tone: senior editor examining a contact sheet.>",
+  "visual_flow": "<One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
+  "imagine": "<One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. Max 80 words. No jargon. No dimension names. Pure vision.>",
+  "conclusion": "<Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations from impression, byline_1, byline_2, or master_why. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. Max 90 words. If eval 2+: name the pattern across their work (one strength, one gap, max 50 words). If eval 1: 2-3 sentences then invite next photograph.>",
+  "award_context": "<Score-gated. No specific award body or brand names ever. BELOW 8.5: 'The League of Photographers features genuinely international work — images that stand a chance for recognition, earn income through commissioned work, sales and print editions, and be featured in exhibitions, grants and awards.' 8.5-8.9: Start with EXACTLY 'At 8.5+' (not 8.0+, not 8.6+, always 8.5+): 'At 8.5+ your work is ready for serious [genre] photography awards and the League of Photographers — where images at this level earn income through commissions, print sales, and exhibition placement.' 9.0+: Start with EXACTLY 'At 9.0+': 'At 9.0+ your [genre] work stands among the best on the platform — the League of Photographers opens doors to major awards, commissions, gallery exhibitions, and grant opportunities.' Replace [genre] with actual genre. One sentence per tier. Max 40 words. THRESHOLD: only 8.5 or 9.0 after 'At' — no other numbers.>",
+  "species_note": "<Wildlife and Nature only. Blank string for all other genres. CONSERVATIVE: blank if silhouette, backlit, uncertain, or guessing. ONLY populate when species is clearly identifiable from visible physical features AND you are confident enough to stake platform credibility on it AND the ecological fact is verifiable. If confident: species name + one verified ecological fact. Max 40 words. SILHOUETTE RULE: if blank because of silhouette, do NOT name species clarity as a gap anywhere else on the scorecard.>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
