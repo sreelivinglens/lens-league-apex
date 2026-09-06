@@ -1,4 +1,4 @@
-{# image_detail_haiku.html — SL-VERSION: 2.5 (Session 212, 2026-09-05 — Score overlay fix: image wrapped in inline-block div so gradient overlay sits on actual image not letterbox black area. Score/name/tier now correctly overlays the photograph bottom.)
+{# image_detail_haiku.html — SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer. Rule 31 fix: species_note removed from mid-card sl-zone-species block. Now renders only in evaluation record footer alongside EXIF. Gestalt proximity: species belongs with record data, not verdict. Never mid-card.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED mock scorecard_v2_mockup Session 212
    Extends base.html — inherits nav, mobile nav, footer, KYC.
@@ -377,16 +377,6 @@ main{padding:0!important;background:#E0DDD7}
 
   {# ════════ SCROLL 3 — THE CRAFT ════════ #}
 
-  {# Species (Wildlife) #}
-  {% if species_note %}
-  <div class="sl-zone-species">
-    <div class="sl-zone-inner">
-      <div class="sl-eyebrow-dim">Species and behaviour</div>
-      <div style="font-size:17px;color:#1A2744;line-height:1.75;font-weight:400">{{ species_note }}</div>
-    </div>
-  </div>
-  {% endif %}
-
   {# Zone D — Technical: warm sand #}
   {% if tech_read or visual_flow %}
   <div class="sl-zone-tech">
@@ -533,11 +523,17 @@ main{padding:0!important;background:#E0DDD7}
     </div>
   </div>
 
-  {# EXIF #}
-  {% if exif_line %}
+  {# EXIF + Species footer — evaluation record #}
+  {% if exif_line or species_note %}
   <div style="padding:14px 36px;background:#F5F3EF;border-top:1px solid rgba(26,39,68,0.08)">
+    {% if exif_line %}
     <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Camera data</div>
-    <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6">{{ exif_line }}</div>
+    <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6;margin-bottom:{% if species_note %}10px{% else %}0{% endif %}">{{ exif_line }}</div>
+    {% endif %}
+    {% if species_note %}
+    <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Species and behaviour</div>
+    <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6">{{ species_note }}</div>
+    {% endif %}
   </div>
   {% endif %}
 
