@@ -11704,6 +11704,15 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                     except Exception as _gme:
                         app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
+            # Session 214 — mark backfill complete so image_detail doesn't re-trigger
+            try:
+                import json as _bf214j
+                _bf214_audit = _bf214j.loads(img._audit_json or '{}')
+                _bf214_audit['_sl214_backfill_done'] = True
+                img._audit_json = _bf214j.dumps(_bf214_audit)
+            except Exception:
+                pass
+
             if img.is_public and not img.is_flagged:
                 _ensure_share_token(img)
             db.session.commit()
@@ -13070,10 +13079,8 @@ def image_detail(image_id):
         app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
 
     # ── Session 214: On-view backfill — populate new scorecard fields on older images ──
-    # Fires once per image when owner/admin views a scored Sonnet image missing
-    # the 7 new fields added Sessions 210–213. Sets img.status = 'processing'
-    # via _force_rescore_in_background. Template shows a banner + polls score_status
-    # until done, then auto-reloads to show the enriched scorecard.
+    # Fires ONCE per image — guarded by _sl214_backfill_done flag in audit_json.
+    # Force rescore writes the flag on completion so this never re-triggers.
     _backfill_triggered = False
     try:
         if (img.status == 'scored' and img.score and
@@ -13081,21 +13088,19 @@ def image_detail(image_id):
                 (img.user_id == current_user.id or current_user.role == 'admin')):
             import json as _bf_json
             _bf_audit = _bf_json.loads(img._audit_json or '{}')
-            if _bf_audit.get('source') != 'haiku_try':
-                _NEW_FIELDS = ('impression', 'visual_flow', 'tech_read',
-                               'imagine', 'master_name', 'dim_obs_dod')
-                if not any(_bf_audit.get(f) for f in _NEW_FIELDS):
-                    _bf_old_score = img.score
-                    _bf_old_tier  = img.tier
-                    img.status = 'processing'
-                    db.session.commit()
-                    threading.Thread(
-                        target=_force_rescore_in_background,
-                        args=(image_id, _bf_old_score, _bf_old_tier, 'scored'),
-                        daemon=True
-                    ).start()
-                    _backfill_triggered = True
-                    app.logger.info(f'[image_detail] backfill rescore triggered image={image_id}')
+            if (_bf_audit.get('source') != 'haiku_try' and
+                    not _bf_audit.get('_sl214_backfill_done')):
+                _bf_old_score = img.score
+                _bf_old_tier  = img.tier
+                img.status = 'processing'
+                db.session.commit()
+                threading.Thread(
+                    target=_force_rescore_in_background,
+                    args=(image_id, _bf_old_score, _bf_old_tier, 'scored'),
+                    daemon=True
+                ).start()
+                _backfill_triggered = True
+                app.logger.info(f'[image_detail] backfill rescore triggered image={image_id}')
     except Exception as _bf_err:
         app.logger.debug(f'[image_detail] backfill check non-fatal: {_bf_err}')
 
@@ -13118,7 +13123,6 @@ def image_detail(image_id):
                            all_masters=ALL_MASTERS,
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
-                           backfill_triggered=_backfill_triggered,
                            now=_now)
 
 
