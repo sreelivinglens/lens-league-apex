@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.17 (Session 215, 2026-09-06 — (1) Dim obs: padding-top on text column for breathing space between score and analysis. (2) Removed 'What SL saw' accordion — duplicated impression/strength_obs/next_leap_obs already shown above. (3) Conclusion: dark background removed, replaced with Haiku-standard sage green open zone. RETAINS 182.16.) #}
 {# SL-VERSION: image_detail-182.16 (Session 215, 2026-09-06 — Three fixes: (1) Photographer name: use image.photographer_name not current_user — admin viewing any image was showing 'Admin'. (2) Dim observations: upgraded from 14px list to Haiku-level layout with 26px score left + obs text right, always visible. (3) Tech read + Visual flow: removed from hidden accordion, rendered as open warm-sand zone after master reference card. RETAINS 182.15 / 182.14.) #}
 {# SL-VERSION: image_detail-182.14 (Session 214, 2026-09-06 — Seven Haiku fields ported: impression, tech_read, visual_flow, imagine, master_name/why, dim_obs per dimension, species_note. Tier journey strip. Strength_obs + next_leap_obs in summary box always visible. Conclusion dark card before action bar. Award_context score-tier card. Contest launchpad dual threshold 8.5/9.0. Imagine moved to forward-looking position. Backfill enrichment banner: dark navy, gold progress bar, progressive messaging, auto-reload on completion. Fixes JS status check ok/scored. RETAINS 181.23-main.)
 {# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
@@ -957,7 +958,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
                 <span style="font-size:26px;font-weight:700;color:var(--sc-dark);line-height:1;font-variant-numeric:tabular-nums">{{ '%.1f'|format(_val) if _val else '—' }}</span>
                 <span style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-top:4px;text-align:center;{% if _is_stg %}color:#C8A84B;font-weight:700{% elif _is_lp %}color:var(--sc-text){% else %}color:var(--sc-muted){% endif %}">{% if _is_stg %}Strongest{% elif _is_lp %}Next leap{% elif _val and _val >= 8.0 %}Exceptional{% elif _val and _val >= 7.0 %}Strong{% else %}Good{% endif %}</span>
               </div>
-              <div style="display:flex;flex-direction:column;gap:3px">
+              <div style="display:flex;flex-direction:column;gap:3px;padding-top:4px">
                 <span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);font-weight:500">{{ _nm }}</span>
                 <div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _obs | safe }}</div>
               </div>
@@ -1059,55 +1060,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ⑥ WHAT SL SAW IN YOUR PHOTOGRAPH — all accordions CLOSED by default #}
-    {% if _what_stood_out or _what_you_did or _what_eye %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What SL saw in your photograph</div></div>
 
-      {% if _what_stood_out %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#ede9fe">✨</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What stood out</div>
-            <div class="sc-acc-teaser">{{ _what_stood_out | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_stood_out | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _what_you_did %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#e8f5e2">🏆</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What you did that others didn't</div>
-            <div class="sc-acc-teaser">{{ _what_you_did | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_you_did | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _what_eye %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fff8e6">👁️</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What your eye read</div>
-            <div class="sc-acc-teaser">{{ _what_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_eye | safe }}</div>
-      </div>
-      {% endif %}
-
-    </div>
-    {% endif %}
 
     {# ── SL-181.11 LOCATION ADVISORY — promoted to first-class named card ── #}
     {# This is the differentiator no competitor has. No longer buried in accordion. #}
@@ -1583,9 +1536,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
     {# ── SESSION 214: CONCLUSION — closing paragraph written to YOU ── #}
     {% if _conclusion_s %}
-    <div style="background:var(--sc-dark);border-radius:12px;padding:20px 22px;margin-bottom:10px">
-      <div style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--sc-gold);margin-bottom:10px">Your evaluation</div>
-      <div style="font-size:16px;color:rgba(245,243,239,.88);line-height:1.85">{{ _conclusion_s | safe }}</div>
+    <div style="background:#E8F0E9;border-radius:12px;border-top:1px solid rgba(60,120,70,0.18);border-bottom:1px solid rgba(60,120,70,0.18);padding:28px 24px;margin-bottom:10px;text-align:center">
+      <div style="font-size:18px;color:#1A3020;line-height:1.85;font-weight:500;max-width:640px;margin:0 auto">{{ _conclusion_s | safe }}</div>
     </div>
     {% endif %}
 
