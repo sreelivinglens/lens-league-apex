@@ -1,3 +1,4 @@
+# SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
 # SL-VERSION: 171.15-staging (Session 215, 2026-09-06 — FIX: background_check and what_stood_out removed from MASTER_FIELDS repeat detector — both are intentional backward-compat duplicates of byline_1 and hard_truth respectively, causing false MASTER_REPEAT logs on every rescore. RETAINS 171.14.)
@@ -1128,6 +1129,61 @@ Return this exact JSON structure:
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
   "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do — that belongs in background_check only. This field contains ONLY what worked and why it matters. FAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. If uncertain, do NOT mention species at all. Write around it — describe behaviour, light, moment. WILDLIFE BEHAVIOUR RULE: if species research block is present, name the species geographic rarity and why this frame matters. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. BULLET FORMAT — 3 bullets. Each bullet is 2 lines: observation + what it means. Blank line between bullets.
+
+GEAR-SPECIFIC COACHING RULES — MANDATORY when EXIF confirms the device:
+Apply these when the exact make/model is confirmed in the EXIF block above.
+Never invent gear that is not confirmed. Never suggest gear the photographer does not have.
+
+MOBILE PHONE (any iPhone, Samsung, Google Pixel, OnePlus, etc.):
+- For focus: say "press and hold on the subject until AE/AF lock appears — the yellow box locks
+  both focus and exposure so the frame stays sharp as you wait for the moment."
+- For low-light sharpness: say "switch to Night mode and brace against a wall or tree."
+- For telephoto: only on iPhone Pro/Pro Max — say "use your 5x zoom lens" NOT "use a longer lens."
+- For closeness: say "move physically closer — your phone's wide lens performs best at 30-50cm."
+- NEVER say: "use a faster lens", "shoot wide open", "use f/1.8", "use a 300mm", "use a tripod"
+  unless confirmed available. Mobile photographers do not think in f-stops or mm.
+
+iPHONE SPECIFICALLY:
+- iPhone 15 Pro / 16 Pro / Pro Max: "use your 5x optical zoom for compression"
+- iPhone 14 Pro / 15 standard: "use your 3x zoom" — note it is 3x not 5x
+- iPhone SE / standard models: "use portrait mode to add computational depth"
+- For any iPhone: "tap and hold to lock AE/AF, then slide the sun icon to adjust exposure"
+
+SONY ALPHA SERIES (A6000/A6100/A6400/A6600/A6700 etc.):
+- For action/wildlife: "increase burst rate — hold the shutter in continuous shooting mode
+  (set drive mode to Hi+ for up to 11fps) and shoot through the peak moment."
+- For sharpness: "set shutter speed to at least 1/[2x focal length]s — at 300mm that is 1/600s minimum."
+- For tracking: "switch AF mode to Wide Tracking or Zone AF — the subject will stay locked
+  even as it moves through the frame."
+- For reach: "if using the kit 18-135mm, 135mm is your longest — move closer or crop in post."
+
+CANON EOS R SERIES (R5/R6/R7/R8/R10/R50 etc.):
+- For action: "use Animal Eye AF — the camera will lock on and track the subject's eye automatically."
+- For burst: "switch to Electronic Shutter for silent 20fps — useful for skittish wildlife."
+- For low light: "the R5/R6 sensor handles ISO 3200-6400 cleanly — push the ISO and keep the
+  shutter speed high rather than sacrificing sharpness for exposure."
+
+NIKON Z SERIES (Z6/Z7/Z8/Z9/Z50/Z30 etc.):
+- For wildlife: "use subject-detection AF set to Animals — the Z system will hold the eye
+  even through partial cover."
+- For burst: "Z8/Z9 can shoot 20fps silently — use pre-release capture so the peak moment
+  is never missed."
+
+FUJIFILM (X-T/X-S/X-H series):
+- For colour: "the film simulation you chose affects the mood more than post-processing —
+  Velvia for saturation, Classic Chrome for muted documentary, Acros for black and white."
+- For reach: "the APS-C sensor gives you a 1.5x crop — a 300mm lens gives 450mm equivalent reach."
+
+OLYMPUS / OM SYSTEM (OM-D series):
+- For reach: "the Micro Four Thirds sensor doubles focal length — a 300mm lens gives 600mm
+  equivalent reach, more than most wildlife photographers carry."
+- For stabilisation: "IBIS on OM-D allows sharp handheld shots at 1/15s or slower — use it
+  for panning and low-light static subjects."
+
+THESE RULES OVERRIDE GENERIC ADVICE: When the device is confirmed, use these specific
+instructions. A photographer with a Sony A6600 and a 300mm lens does not need to be told
+"use a longer lens" — they need to know their burst rate, their minimum shutter speed,
+and how to keep AF locked. Give them that.
 
 CRITICAL EXIF HONESTY RULE: If the EXIF context says partial camera data, metadata missing, or no specific values are confirmed — DO NOT INVENT SETTINGS. Never write 1/1600s with a 600mm lens unless those exact values appear in the EXIF block. A wrong setting stated confidently destroys trust immediately. If EXIF is absent or partial: write around what is VISUALLY OBSERVABLE only — composition, light, subject placement, background quality. Apply sharpness chain, time-of-day, catchlight rules ONLY when the relevant EXIF values are explicitly confirmed.
 
@@ -5623,6 +5679,16 @@ def build_audit_data(result, image_obj):
         # ── Session 132 — Mobile DDI: device attribution for share card ────────
         "camera_track":  getattr(image_obj, 'camera_track', '') or '',
         "device_label":  _build_audit_device_label(image_obj),
+        # ── Session 215.2 — EXIF display fields for evaluation record footer ────
+        "exif_camera":     (getattr(image_obj, 'make', '') or '') + ' ' + (getattr(image_obj, 'model', '') or ''),
+        "exif_lens":       getattr(image_obj, 'lens', '') or '',
+        "exif_focal":      getattr(image_obj, 'focal_length', '') or '',
+        "exif_exposure":   ' · '.join(filter(None, [
+                               getattr(image_obj, 'aperture', '') or '',
+                               getattr(image_obj, 'shutter',  '') or '',
+                               getattr(image_obj, 'iso',      '') or '',
+                           ])),
+        "exif_software":   getattr(image_obj, 'software', '') or '',
         # ── Session 215 — 18 new scorecard fields ────────────────────────────────
         "impression":      result.get("impression", ""),
         "strength_name":   result.get("strength_name", ""),
