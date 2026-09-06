@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.7 (Session 215, 2026-09-06 — Image grid: (1) pagination Previous/Next now anchor to #images so page lands at grid, not top. (2) Client-side search/filter row added above image grid: text search by photographer/title/genre/tier via data- attributes + genre dropdown + tier dropdown. No route changes. RETAINS admin-2.6.) #}
+{# SL-VERSION: admin-2.7 (Session 215, 2026-09-06 — Image grid: (1) pagination Previous/Next anchor to #images. (2) Server-side search form: text input + genre dropdown both navigate via q param — searches all 330 images via existing route ILIKE on genre/username/title. Genre dropdown navigates immediately on change. Search button submits. Clear link resets. RETAINS admin-2.6.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -827,26 +827,24 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <a class="img-filter {% if admin_q == 'pending' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='pending') }}#images">Pending</a>
         <a class="img-filter {% if admin_q == 'error' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='error') }}#images">Failures</a>
       </div>
-      {# Image grid local search — client-side, no route change needed #}
-      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-        <input id="ig-search" type="text" placeholder="Photographer, title, genre, tier…" autocomplete="off"
-          oninput="igFilter()"
+      {# Image grid search — server-side via q param, searches all images not just current page #}
+      {% set _ig_q = admin_q if admin_q not in ('flagged','pending','error') else '' %}
+      <form method="GET" action="{{ url_for('admin_dashboard') }}" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center" onsubmit="igSubmit(event)">
+        <input type="hidden" name="engine" value="{{ admin_engine }}">
+        <input type="hidden" name="track" value="{{ admin_track }}">
+        <input id="ig-search" type="text" name="q" value="{{ _ig_q }}"
+          placeholder="Photographer, username, title, genre…" autocomplete="off"
           style="flex:1;min-width:180px;padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;outline:none;min-height:40px">
-        <select id="ig-genre" onchange="igFilter()" style="padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:40px">
+        <select id="ig-genre" onchange="igGenreNav(this)"
+          style="padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:40px">
           <option value="">All genres</option>
-          <option>Wildlife</option><option>Street</option><option>Documentary</option>
-          <option>Landscape</option><option>People</option><option>Wedding</option>
-          <option>Nature</option><option>Creative</option><option>Drone</option>
-          <option>Macro</option><option>Fashion</option><option>Sports</option>
-          <option>Architecture</option><option>Astrophotography</option>
+          {% for _g in ['Wildlife','Street','Documentary','Landscape','People','Wedding','Nature','Creative','Drone','Macro','Fashion','Sports','Architecture','Astrophotography'] %}
+          <option value="{{ _g }}" {% if _ig_q|lower == _g|lower %}selected{% endif %}>{{ _g }}</option>
+          {% endfor %}
         </select>
-        <select id="ig-tier" onchange="igFilter()" style="padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:40px">
-          <option value="">All tiers</option>
-          <option>Grandmaster</option><option>Master</option><option>Maverick</option>
-          <option>Craftsman</option><option>Contender</option><option>Shooter</option><option>Rookie</option>
-        </select>
-        <span id="ig-count" style="font-size:12px;color:#8A8A86;white-space:nowrap"></span>
-      </div>
+        <button type="submit" style="padding:8px 16px;border-radius:8px;border:1px solid #C8A84B;background:#C8A84B;color:#1A1A18;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px">Search</button>
+        {% if _ig_q %}<a href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track) }}#images" style="font-size:13px;color:#8A8A86;white-space:nowrap;line-height:40px;text-decoration:none">✕ Clear</a>{% endif %}
+      </form>
 
       {# The route already filters recent by engine (is_haiku_try IS TRUE/NOT TRUE).
          So recent contains ONLY the images for the active engine tab.
@@ -855,7 +853,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         {% if recent %}
           {% for img in recent %}
           {% set detail_url = url_for('try_result', image_id=img.id) if admin_engine == 'haiku' else url_for('image_detail', image_id=img.id) %}
-          <div class="img-tile" data-image-id="{{ img.id }}" data-user="{{ (recent_users.get(img.user_id, '')|lower) }}" data-genre="{{ (img.genre or '')|lower }}" data-tier="{{ (img.tier or '')|lower }}" data-title="{{ (img.title or '')|lower }}">
+          <div class="img-tile" data-image-id="{{ img.id }}">
             <a href="{{ detail_url }}" style="display:block;text-decoration:none;position:relative">
               {% if img.thumb_url %}
               <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
@@ -1509,27 +1507,25 @@ document.getElementById('q').addEventListener('keydown',function(e){
   if(e.key==='Escape'){ this.value=''; doSearch(''); }
 });
 
-// ── Image grid local search/filter ──
-function igFilter(){
-  var q     = (document.getElementById('ig-search').value || '').toLowerCase().trim();
-  var genre = (document.getElementById('ig-genre').value  || '').toLowerCase();
-  var tier  = (document.getElementById('ig-tier').value   || '').toLowerCase();
-  var tiles = document.querySelectorAll('.image-grid .img-tile');
-  var shown = 0;
-  tiles.forEach(function(t){
-    var user  = (t.dataset.user  || '');
-    var tgenre= (t.dataset.genre || '');
-    var ttier = (t.dataset.tier  || '');
-    var title = (t.dataset.title || '');
-    var match = true;
-    if(q     && user.indexOf(q) === -1 && title.indexOf(q) === -1 && tgenre.indexOf(q) === -1 && ttier.indexOf(q) === -1) match = false;
-    if(genre && tgenre !== genre) match = false;
-    if(tier  && ttier  !== tier)  match = false;
-    t.style.display = match ? '' : 'none';
-    if(match) shown++;
-  });
-  var countEl = document.getElementById('ig-count');
-  if(countEl) countEl.textContent = (q || genre || tier) ? shown + ' shown' : '';
+// ── Image grid search — server-side navigation ──
+function igGenreNav(sel){
+  // Genre dropdown: navigate immediately with the genre as q param
+  var val = sel.value;
+  var engine = document.querySelector('[name=engine]') ? document.querySelector('[name=engine]').value : 'sonnet';
+  var track  = document.querySelector('[name=track]')  ? document.querySelector('[name=track]').value  : 'all';
+  var base = window.location.pathname;
+  if(val){
+    window.location.href = base + '?engine=' + engine + '&track=' + track + '&q=' + encodeURIComponent(val) + '#images';
+  } else {
+    window.location.href = base + '?engine=' + engine + '&track=' + track + '#images';
+  }
+}
+function igSubmit(e){
+  // On form submit, append #images anchor so page lands at grid
+  e.preventDefault();
+  var form = e.target;
+  var url = form.action + '?' + new URLSearchParams(new FormData(form)).toString() + '#images';
+  window.location.href = url;
 }
 
 // ── Haiku nudge modal ──
