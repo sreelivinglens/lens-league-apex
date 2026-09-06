@@ -1,551 +1,630 @@
 """
-Shutter League — Reportlab Scorecard PDF  Session 141
-SL-VERSION: 162.2 (Session 162, 2026-07-26 — evaluated_on date added to Page 1 meta line)
+Shutter League — Reportlab Scorecard PDF
+SL-VERSION: 214.1 (Session 214, 2026-09-06 — Full rewrite: raw canvas → Platypus
+flowables. Eliminates truncation on all long-text sections. Auto-paginates.
+Adds missing fields: impression, what_next, body_of_work, master_name/why,
+dim_obs per dimension, visual_flow, tech_read, imagine, species_note.
+Fixes _clean(): bullets now split to paragraphs not collapsed to spaces.
+Applies to Sonnet scorecard PDF (build_scorecard_pdf).
+Haiku PDF already uses Platypus — no change needed there.
+)
 
-Two A4 portrait pages, pure Python, no system deps.
-
-Page 1: Photo hero · Score band · Dimensions · Opening bold ·
-        Four evaluation rows (full width, gold-labelled)
-Page 2: Edit Guide · Where to Shoot Next · HCB quote
-
-70yr rule: minimum 11pt body, 12pt preferred. Pastel backgrounds throughout.
+Entry point: build_scorecard_pdf(data: dict) -> bytes
 """
+
+import io, re, textwrap
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.lib.colors import HexColor, white, black, Color
-from reportlab.pdfgen import canvas as rl_canvas
-from reportlab.lib.utils import ImageReader
-import io, textwrap, re, requests
+from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
+    Table, TableStyle, Image as RLImage, PageBreak, KeepTogether,
+    CondPageBreak,
+)
+from reportlab.platypus.flowables import Flowable
+import requests
 
 # ── Palette ───────────────────────────────────────────────────────────────────
-NAVY      = HexColor('#D6EAF8')   # pastel sky blue (light bg)
-NAVY_DK   = HexColor('#1A2A3A')   # dark footer
-NAVY_ROW  = HexColor('#BFD9EE')   # slightly deeper pastel for alt rows
-GOLD      = HexColor('#B8860B')   # dark gold — readable on light bg
-GOLD_DK   = HexColor('#8B6508')
-CREAM     = HexColor('#F6F2E9')
-DARK      = HexColor('#1A1A18')
-DARK2     = HexColor('#3A3A38')
-BORDER    = HexColor('#D0CAB8')
-MUTED     = HexColor('#555555')
-BAND_BD   = HexColor('#A0BDD0')   # muted blue border
-DIM_LBL   = HexColor('#334455')   # dark label text
-ROW_SEP   = HexColor('#A0BDD0')
+NAVY_DK   = colors.HexColor('#1A2A3A')
+GOLD      = colors.HexColor('#B8860B')
+GOLD_DK   = colors.HexColor('#8B6508')
+GOLD_LT   = colors.HexColor('#FFF8EC')
+GOLD_BD   = colors.HexColor('#EDD89A')
+CREAM     = colors.HexColor('#F6F2E9')
+DARK      = colors.HexColor('#1A1A18')
+DARK2     = colors.HexColor('#3A3A38')
+MUTED     = colors.HexColor('#555555')
+BORDER    = colors.HexColor('#D0CAB8')
+SKY       = colors.HexColor('#D6EAF8')
+SKY_LT    = colors.HexColor('#EBF5FB')
+BLUE_DK   = colors.HexColor('#1A6A9A')
+GREEN_DK  = colors.HexColor('#1A6A3A')
+GREEN_LT  = colors.HexColor('#E8F2EC')
+GREEN_BD  = colors.HexColor('#A8CEB0')
+GREEN_TXT = colors.HexColor('#1A3A2A')
+GREEN_LBL = colors.HexColor('#2A6A3A')
+ROSE_DK   = colors.HexColor('#8A3A6A')
+PURPLE_LT = colors.HexColor('#F5F0FF')
+PURPLE_BD = colors.HexColor('#C4B8EE')
+PURPLE_TXT= colors.HexColor('#2a1060')
+PURPLE_LBL= colors.HexColor('#4a3280')
+BLUE_LT   = colors.HexColor('#F6F8FF')
+BLUE_BD   = colors.HexColor('#C5D0EE')
+BLUE_LBL  = colors.HexColor('#185FA5')
+PINK_LT   = colors.HexColor('#FFF0F5')
+PINK_BD   = colors.HexColor('#F5C0D0')
+PINK_LBL  = colors.HexColor('#A0304A')
+PISTA_LT  = colors.HexColor('#E8F5E2')
+PISTA_BD  = colors.HexColor('#C5E0BB')
+PISTA_TXT = colors.HexColor('#1a3a1a')
+WHITE     = colors.white
 
-# Pastel sky blue gradient stops (light → very light)
-GRAD_TOP  = HexColor('#EBF5FB')   # near-white sky — top of page (lightest)
-GRAD_MID  = HexColor('#D6EAF8')   # pastel sky blue
-GRAD_BOT  = HexColor('#C2DCF0')   # medium pastel sky — bottom of page (slightly deeper)
-
-# Pastel where-to-shoot background
-WHERE_BG      = HexColor('#E8F2EC')
-WHERE_TXT     = HexColor('#1A3A2A')
-WHERE_LBL     = HexColor('#2A6A3A')
-WHERE_DAYS_BG = HexColor('#D4EAD8')
-WHERE_DAYS_TXT= HexColor('#1A3A2A')
-
-# Row accent colours — left bar + eyebrow (dark enough for light bg)
-ROW_ACCENTS = [
-    HexColor('#B8860B'),   # dark gold  — Photographer's Advice
-    HexColor('#1A6A9A'),   # dark blue  — What You Controlled
-    HexColor('#1A6A3A'),   # dark green — What to Watch Next
-    HexColor('#8A3A6A'),   # dark rose  — Keep This in Mind
-]
-
-# Alt row background — slightly deeper pastel
-ROW_BG_ALT = HexColor('#BFD9EE')
-
-PW, PH = A4
-PAD = 12 * mm
-
-# ── Font helpers ──────────────────────────────────────────────────────────────
-def _font(bold=False):
-    return 'Helvetica-Bold' if bold else 'Helvetica'
-
-def _set(c, size, bold=False, color=None):
-    c.setFont(_font(bold), size)
-    if color:
-        c.setFillColor(color)
-
-# ── Text cleaning ─────────────────────────────────────────────────────────────
-def _clean(text):
-    """
-    Strip all audit JSON artifacts:
-    - Truncated preview (text before first '…') — drop it
-    - '■' bullet markers — replace with newline
-    - **bold** markdown
-    """
-    if not text:
-        return ''
-    # Drop truncated preview block (everything up to and including '…')
-    ell = text.find('…')
-    if 0 < ell < 250:
-        text = text[ell + 1:].lstrip('\n ')
-    # Strip remaining ■ bullets (some fields have no truncation prefix)
-    text = text.replace('■', ' ')
-    # Collapse whitespace runs
-    text = re.sub(r'[ \t]+', ' ', text)
-    text = re.sub(r'\n{2,}', '\n', text)
-    # Strip **bold** markdown
-    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
-    return text.strip()
-
-def _first_sentence(text):
-    text = _clean(text)
-    if not text:
-        return ''
-    for sep in ['. ', '.\n', '! ', '? ']:
-        idx = text.find(sep)
-        if 0 < idx < 120:
-            return text[:idx + 1]
-    return text[:100].rstrip() + ('…' if len(text) > 100 else '')
-
-def _wrap(text, width_pts, font_size, bold=False):
-    if not text:
-        return []
-    avg_char = font_size * 0.52
-    chars    = max(1, int(width_pts / avg_char))
-    lines    = []
-    for para in text.split('\n'):
-        para = para.strip()
-        if para:
-            lines.extend(textwrap.wrap(para, chars) or [])
-    return lines or []
-
-def _draw_text_block(c, text, x, y, width, font_size, bold=False,
-                     color=None, line_height=None, max_lines=None):
-    if not text:
-        return y
-    if color:
-        c.setFillColor(color)
-    c.setFont(_font(bold), font_size)
-    lh    = line_height or (font_size * 1.55)
-    lines = _wrap(text, width, font_size, bold)
-    if max_lines and len(lines) > max_lines:
-        lines = lines[:max_lines]
-    for line in lines:
-        if y < 8 * mm:
-            break
-        c.drawString(x, y, line)
-        y -= lh
-    return y
-
-def _block_height(text, width, font_size, bold=False,
-                  line_height=None, max_lines=None):
-    if not text:
-        return 0
-    lh    = line_height or (font_size * 1.55)
-    lines = _wrap(text, width, font_size, bold)
-    if max_lines:
-        lines = lines[:max_lines]
-    return len(lines) * lh
-
-# ── Header / Footer ───────────────────────────────────────────────────────────
-def _draw_header(c, left, right, y_top, h=8*mm):
-    c.setFillColor(NAVY)
-    c.rect(0, y_top - h, PW, h, fill=1, stroke=0)
-    _set(c, 8, bold=True, color=GOLD)
-    c.drawString(PAD, y_top - h + 2.5*mm, left)
-    _set(c, 7, bold=False, color=HexColor('#AAAAAA'))
-    c.drawRightString(PW - PAD, y_top - h + 2.5*mm, right)
-
-def _draw_footer(c, stamp):
-    h = 7 * mm
-    c.setFillColor(NAVY_DK)
-    c.rect(0, 0, PW, h, fill=1, stroke=0)
-    _set(c, 6, bold=False, color=HexColor('#CCCCCC'))
-    c.drawString(PAD, 2.5*mm,
-                 'BETTER LIGHT.  MORE CLARITY.  STRONGER STORY.  YOU, ONE FRAME AT A TIME.')
-    _set(c, 7, bold=True, color=GOLD)
-    c.drawRightString(PW - PAD, 2.5*mm, stamp)
-
-# ── Tier dots ─────────────────────────────────────────────────────────────────
 TIER_ORDER = ['Rookie','Shooter','Contender','Craftsman',
               'Maverick','Master','Grandmaster','Legend']
 
-def _draw_tier_dots(c, tier, x, y, dot_w=9, dot_h=3.5, gap=3):
-    idx = TIER_ORDER.index(tier) if tier in TIER_ORDER else 0
-    for i in range(8):
-        c.setFillColor(GOLD if i <= idx else BAND_BD)
-        c.rect(x + i*(dot_w+gap), y, dot_w, dot_h, fill=1, stroke=0)
+ROW_ACCENTS = [GOLD, BLUE_DK, GREEN_DK, ROSE_DK]
+
+# ── Text cleaning ─────────────────────────────────────────────────────────────
+def _clean(text):
+    """Strip audit JSON artifacts. Bullets → paragraph breaks (not spaces)."""
+    if not text:
+        return ''
+    # Drop truncated preview (everything up to first '…' when near start)
+    ell = text.find('…')
+    if 0 < ell < 250:
+        text = text[ell + 1:].lstrip('\n ')
+    # ■ / ▪ / • bullets → paragraph separator
+    text = re.sub(r'\s*[■▪•]\s*', '\n', text)
+    # Strip **bold** markdown (PDF renders Paragraph XML — use <b> instead)
+    text = re.sub(r'\*\*([^*]+)\*\*', r'<b>\1</b>', text)
+    # Collapse blank lines
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    # Collapse horizontal whitespace
+    text = re.sub(r'[ \t]+', ' ', text)
+    return text.strip()
+
+def _paras(text, style):
+    """Split cleaned text on newlines → list of Paragraphs."""
+    if not text:
+        return []
+    out = []
+    for blk in text.split('\n'):
+        blk = blk.strip()
+        if blk:
+            try:
+                out.append(Paragraph(blk, style))
+            except Exception:
+                out.append(Paragraph(re.sub(r'<[^>]+>', '', blk), style))
+    return out
+
+# ── Style factory ─────────────────────────────────────────────────────────────
+def _sty(name, font='Helvetica', size=10, leading=None,
+         colour=DARK, align=TA_LEFT, bold=False,
+         space_before=0, space_after=4,
+         left_indent=0, first_indent=0):
+    return ParagraphStyle(
+        name,
+        fontName='Helvetica-Bold' if bold else font,
+        fontSize=size,
+        leading=leading or round(size * 1.5),
+        textColor=colour,
+        alignment=align,
+        spaceBefore=space_before,
+        spaceAfter=space_after,
+        leftIndent=left_indent,
+        firstLineIndent=first_indent,
+    )
+
+# ── Tinted box flowable ───────────────────────────────────────────────────────
+class _TintBox(Flowable):
+    """Draws a tinted rounded-rect card around child flowables."""
+    def __init__(self, contents, bg, border_color, pad=8):
+        super().__init__()
+        self._contents = contents
+        self._bg       = bg
+        self._bd       = border_color
+        self._pad      = pad
+
+    def wrap(self, avail_w, avail_h):
+        self._avail_w = avail_w
+        inner_w = avail_w - 2 * self._pad
+        self._inner_h = sum(
+            f.wrap(inner_w, avail_h)[1] + (f.style.spaceAfter if hasattr(f, 'style') else 0)
+            for f in self._contents
+        )
+        self._h = self._inner_h + 2 * self._pad
+        return avail_w, self._h
+
+    def draw(self):
+        c = self.canv
+        c.setFillColor(self._bg)
+        c.setStrokeColor(self._bd)
+        c.setLineWidth(0.5)
+        c.roundRect(0, 0, self._avail_w, self._h, 4, fill=1, stroke=1)
+        inner_w = self._avail_w - 2 * self._pad
+        y = self._h - self._pad
+        for f in self._contents:
+            fw, fh = f.wrap(inner_w, y)
+            sa = f.style.spaceAfter if hasattr(f, 'style') else 0
+            y -= fh
+            f.drawOn(c, self._pad, y)
+            y -= sa
+        c.setFillColor(DARK)  # reset
+
+class _AccentBar(Flowable):
+    """Left accent bar for section headers — matches web scorecard style."""
+    def __init__(self, label, accent_color, width):
+        super().__init__()
+        self._label  = label
+        self._accent = accent_color
+        self._width  = width
+        self._h      = 6 * mm
+
+    def wrap(self, avail_w, avail_h):
+        return avail_w, self._h
+
+    def draw(self):
+        c = self.canv
+        c.setFillColor(self._accent)
+        c.rect(0, 1*mm, 2.5, self._h - 2*mm, fill=1, stroke=0)
+        c.setFont('Helvetica-Bold', 8)
+        c.setFillColor(self._accent)
+        c.drawString(5*mm, 2*mm, self._label.upper())
 
 # ── Photo fetch ───────────────────────────────────────────────────────────────
 def _fetch_photo(url):
     if not url:
         return None
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=10, headers={'User-Agent': 'ShutterLeague-PDF/2.0'})
         r.raise_for_status()
-        return ImageReader(io.BytesIO(r.content))
+        return io.BytesIO(r.content)
     except Exception as e:
         print(f'[reportlab_card] photo fetch: {e}')
         return None
 
-# ════════════════════════════════════════════════════════════════════════
-#  PAGE 1
-# ════════════════════════════════════════════════════════════════════════
-def _draw_gradient_bg(c, x, y, w, h, color_top, color_bot, steps=60):
-    """Simulate a vertical linear gradient with stacked thin rects."""
-    step_h = h / steps
-    r0, g0, b0 = color_top.red, color_top.green, color_top.blue
-    r1, g1, b1 = color_bot.red, color_bot.green, color_bot.blue
-    for i in range(steps):
-        t  = i / (steps - 1)
-        rc = r0 + (r1 - r0) * t
-        gc = g0 + (g1 - g0) * t
-        bc = b0 + (b1 - b0) * t
-        c.setFillColor(Color(rc, gc, bc))
-        c.rect(x, y + i * step_h, w, step_h + 0.5, fill=1, stroke=0)
-
-
-def _draw_page1(c, data):
-    HEADER_H = 8  * mm
-    FOOTER_H = 7  * mm
-    PHOTO_H  = PH * 0.32
-
-    photo_bot = PH - HEADER_H - PHOTO_H
-    band_top  = photo_bot
-
-    _draw_header(c, 'SHUTTER LEAGUE',
-                 'APEX DDI ENGINE  ·  FULL EVALUATION', PH)
-
-    # ── Photo ──
-    c.setFillColor(HexColor('#111111'))
-    c.rect(0, photo_bot, PW, PHOTO_H, fill=1, stroke=0)
-    img = _fetch_photo(data.get('photo_url'))
-    if img:
-        try:
-            iw, ih = img.getSize()
-            scale  = min(PW/iw, PHOTO_H/ih)   # contain — full image, no crop
-            nw, nh = iw*scale, ih*scale
-            ox = (PW-nw)/2
-            oy = photo_bot + (PHOTO_H-nh)/2
-            c.drawImage(img, ox, oy, nw, nh, mask='auto')
-        except Exception:
-            pass
-
-    credit = data.get('credit','')
-    if credit:
-        parts   = credit.strip().split()
-        display = f"\u00a9 {parts[0]} {parts[-1][0]}" if len(parts)>=2 else f"\u00a9 {credit}"
-        _set(c, 7, bold=False, color=HexColor('#AAAAAA'))
-        c.drawRightString(PW - 4*mm, photo_bot + 3*mm, display)
-
-    # ── Cream background below photo (matches page 2) ──
-    c.setFillColor(CREAM)
-    c.rect(0, FOOTER_H, PW, band_top - FOOTER_H, fill=1, stroke=0)
-
-    score_str = f"{float(data.get('score',0)):.2f}"
-    tier_str  = (data.get('tier') or '').upper()
-
-    # ── Score block ──
-    sx = PAD
-    sy = band_top - 22*mm
-
-    _set(c, 56, bold=True, color=DARK)
-    score_w = c.stringWidth(score_str, _font(True), 56)
-    c.drawString(sx, sy, score_str)
-
-    _set(c, 11, bold=True, color=GOLD)
-    c.drawString(sx, sy - 8*mm, tier_str)
-    _draw_tier_dots(c, data.get('tier',''), sx, sy - 13*mm)
-
-    # ── Meta block ──
-    mx = sx + score_w + 10*mm
-    my = sy + 4*mm
-
-    credit = data.get('credit','')
-    if credit:
-        _set(c, 9, bold=True, color=GOLD_DK)
-        c.drawString(mx, my, f"PHOTOGRAPHY BY :  {credit.upper()}")
-        my -= 5*mm
-        c.setStrokeColor(GOLD_DK)
-        c.setLineWidth(0.4)
-        c.line(mx, my + 0.5*mm, mx + 80*mm, my + 0.5*mm)
-        my -= 5*mm
-
-    # S162.2 — evaluated_on appended: "WILDLIFE  ·  JPEG  ·  Bengaluru  ·  Evaluated 26 Jul 2026"
-    meta = '  ·  '.join(filter(None, [data.get('genre',''),
-                                       data.get('format',''),
-                                       data.get('location',''),
-                                       data.get('evaluated_on','')]))
-    if meta:
-        _set(c, 8, bold=False, color=DARK2)
-        c.drawString(mx, my, meta)
-        my -= 6*mm
-
-    aff = data.get('affective_state','')
-    if aff:
-        _set(c, 8, bold=False, color=GOLD_DK)
-        c.drawString(mx, my, f"Affective State: {aff}")
-
-    # ── Dimensions ──
-    sep_y = sy - 19*mm
-    c.setStrokeColor(BORDER)
-    c.setLineWidth(0.5)
-    c.line(PAD, sep_y, PW-PAD, sep_y)
-
-    dims = data.get('dim_breakdown', [])
-    if dims:
-        n      = len(dims)
-        dw     = (PW - 2*PAD) / n
-        max_sc = max(d['score'] for d in dims)
-        dy     = sep_y - 3*mm
-        for i, dim in enumerate(dims):
-            cx = PAD + i*dw
-            if i > 0:
-                c.setStrokeColor(BORDER)
-                c.setLineWidth(0.5)
-                c.line(cx, dy, cx, dy - 16*mm)
-            for j, lbl in enumerate([dim['l1'], dim['l2']]):
-                _set(c, 7.5, bold=False, color=MUTED)
-                lx = cx + dw/2 - c.stringWidth(lbl, _font(False), 7.5)/2
-                c.drawString(lx, dy - j*4.5*mm, lbl)
-            sc   = f"{dim['score']:.1f}"
-            scol = GOLD_DK if dim['score']==max_sc else DARK
-            _set(c, 20, bold=True, color=scol)
-            sw = c.stringWidth(sc, _font(True), 20)
-            c.drawString(cx + dw/2 - sw/2, dy - 11.5*mm, sc)
-
-    # ── Opening bold ──
-    wso   = _clean(data.get('wso',''))
-    wso_y = sep_y - 22*mm
-    wso_end = wso_y - 3*mm
-    if wso:
-        c.setStrokeColor(BORDER)
-        c.setLineWidth(0.5)
-        c.line(PAD, wso_y + 2*mm, PW-PAD, wso_y + 2*mm)
-        wso_end = _draw_text_block(
-            c, wso, PAD, wso_y - 3*mm, PW - 2*PAD,
-            12, bold=True, color=DARK, line_height=7*mm)
-
-    # ── The Photographer's Advice — row 1 on page 1 ──
-    c1_body = _clean(data.get('c1_body',''))
-    if c1_body:
-        accent  = ROW_ACCENTS[0]
-        BODY_FS = 11
-        BODY_LH = 6*mm
-        LABEL_H = 5.5*mm
-        ROW_PAD = 5*mm
-        LABEL_GAP = 4*mm
-        bh    = _block_height(c1_body, PW-2*PAD-8*mm, BODY_FS, line_height=BODY_LH)
-        row_h = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
-        ry    = wso_end - 4*mm
-
-        c.setStrokeColor(BORDER); c.setLineWidth(0.5)
-        c.line(PAD, ry + 1*mm, PW-PAD, ry + 1*mm)
-
-        c.setFillColor(accent)
-        c.rect(PAD, ry - row_h + 3*mm, 3, row_h - 6*mm, fill=1, stroke=0)
-
-        _set(c, 9, bold=True, color=accent)
-        c.drawString(PAD + 6*mm, ry - ROW_PAD - LABEL_H + 1.5*mm,
-                     "THE PHOTOGRAPHER'S ADVICE")
-
-        _draw_text_block(
-            c, c1_body, PAD + 6*mm, ry - ROW_PAD - LABEL_H - LABEL_GAP,
-            PW - 2*PAD - 10*mm,
-            BODY_FS, bold=False, color=DARK, line_height=BODY_LH)
-
-    _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
-
-
-# ════════════════════════════════════════════════════════════════════════
-#  PAGE 2
-# ════════════════════════════════════════════════════════════════════════
-def _draw_page2(c, data):
-    HEADER_H = 8 * mm
-    FOOTER_H = 7 * mm
-    PAGE_TOP  = PH - HEADER_H
-
-    score_str = f"{float(data.get('score',0)):.2f}"
-    tier_str  = (data.get('tier') or '').upper()
-    asset     = data.get('asset','Untitled')
-
-    _draw_header(c, f"FULL EVALUATION  ·  {asset}",
-                 'APEX DDI ENGINE  ·  RATED BY SCIENCE', PH)
-
-    c.setFillColor(CREAM)
-    c.rect(0, FOOTER_H, PW, PH-HEADER_H-FOOTER_H, fill=1, stroke=0)
-
-    ey = PAGE_TOP - 5*mm
-
-    # ── Evaluation rows 2–4 ──────────────────────────────────────────────────
-    row_data = [
-        ("What You Controlled",  data.get('c2_body','')),
-        ("What to Watch Next",   data.get('c3_body','')),
-        ("Keep This in Mind",    data.get('c4_body','')),
+# ── Tier dots table ───────────────────────────────────────────────────────────
+def _tier_table(tier, avail_w):
+    idx  = TIER_ORDER.index(tier) if tier in TIER_ORDER else -1
+    cells = []
+    styles = [
+        ('FONTSIZE',    (0,0), (-1,-1), 6.5),
+        ('ALIGN',       (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING',  (0,0), (-1,-1), 3),
+        ('BOTTOMPADDING',(0,0), (-1,-1), 3),
+        ('BOX',         (0,0), (-1,-1), 0.3, BORDER),
+        ('INNERGRID',   (0,0), (-1,-1), 0.3, BORDER),
+        ('TEXTCOLOR',   (0,0), (-1,-1), MUTED),
+        ('BACKGROUND',  (0,0), (-1,-1), CREAM),
     ]
+    for i, t in enumerate(TIER_ORDER):
+        cells.append(t)
+        if i == idx:
+            styles += [
+                ('BACKGROUND', (i,0), (i,0), GOLD),
+                ('TEXTCOLOR',  (i,0), (i,0), WHITE),
+                ('FONTNAME',   (i,0), (i,0), 'Helvetica-Bold'),
+            ]
+        elif i < idx:
+            styles.append(('TEXTCOLOR', (i,0), (i,0), GOLD_DK))
+    col_w = avail_w / len(TIER_ORDER)
+    tbl = Table([cells], colWidths=[col_w]*len(TIER_ORDER))
+    tbl.setStyle(TableStyle(styles))
+    return tbl
 
-    BODY_FS   = 11
-    LABEL_FS  = 9
-    BODY_LH   = 6*mm
-    LABEL_H   = 5.5*mm
-    ROW_PAD   = 5*mm
-    LABEL_GAP = 4*mm
+# ── Dimension strip table ─────────────────────────────────────────────────────
+def _dim_table(dim_breakdown, avail_w):
+    if not dim_breakdown:
+        return None
+    n     = len(dim_breakdown)
+    col_w = avail_w / n
+    max_sc = max(d['score'] for d in dim_breakdown)
 
-    for i, (label, raw) in enumerate(row_data):
-        body = _clean(raw)
-        if not body:
-            continue
-        accent = ROW_ACCENTS[i]
-        bh     = _block_height(body, PW-2*PAD-8*mm, BODY_FS, line_height=BODY_LH)
-        row_h  = ROW_PAD + LABEL_H + LABEL_GAP + bh + ROW_PAD
+    label_row = []
+    score_row = []
+    for d in dim_breakdown:
+        is_top = (d['score'] == max_sc)
+        lbl_sty = _sty('dl', size=7, leading=9, colour=DARK2, align=TA_CENTER, bold=False)
+        sc_sty  = _sty('ds', size=18, leading=22, colour=GOLD_DK if is_top else DARK,
+                        align=TA_CENTER, bold=True)
+        label_row.append(Paragraph(f"{d['l1']}<br/>{d['l2']}", lbl_sty))
+        score_row.append(Paragraph(f"{d['score']:.1f}", sc_sty))
 
-        if i % 2 == 1:
-            c.setFillColor(HexColor('#EEEAE0'))
-            c.rect(0, ey - row_h, PW, row_h, fill=1, stroke=0)
-
-        c.setFillColor(accent)
-        c.rect(PAD, ey - row_h + 3*mm, 3, row_h - 6*mm, fill=1, stroke=0)
-
-        _set(c, LABEL_FS, bold=True, color=accent)
-        c.drawString(PAD + 6*mm, ey - ROW_PAD - LABEL_H + 1.5*mm, label.upper())
-
-        _draw_text_block(
-            c, body, PAD + 6*mm, ey - ROW_PAD - LABEL_H - LABEL_GAP,
-            PW - 2*PAD - 10*mm,
-            BODY_FS, bold=False, color=DARK, line_height=BODY_LH)
-
-        ey -= row_h
-        if i < 3:
-            c.setStrokeColor(BORDER); c.setLineWidth(0.4)
-            c.line(PAD + 6*mm, ey, PW - PAD, ey)
-
-    ey -= 6*mm
-
-    _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
-
-
-# ════════════════════════════════════════════════════════════════════════
-#  PAGE 3
-# ════════════════════════════════════════════════════════════════════════
-def _draw_page3(c, data):
-    HEADER_H = 8 * mm
-    FOOTER_H = 7 * mm
-    PAGE_TOP  = PH - HEADER_H
-
-    score_str = f"{float(data.get('score',0)):.2f}"
-    tier_str  = (data.get('tier') or '').upper()
-    asset     = data.get('asset','Untitled')
-
-    _draw_header(c, f"EDIT GUIDE  ·  {asset}",
-                 'APEX DDI ENGINE  ·  RATED BY SCIENCE', PH)
-
-    c.setFillColor(CREAM)
-    c.rect(0, FOOTER_H, PW, PH-HEADER_H-FOOTER_H, fill=1, stroke=0)
-
-    ey = PAGE_TOP - 5*mm
-
-    # ── Edit Guide ───────────────────────────────────────────────────────────
-    edit_base     = _clean(data.get('edit_base',''))
-    edit_creative = _clean(data.get('edit_creative',''))
-
-    if edit_base or edit_creative:
-        _set(c, 8, bold=True, color=MUTED)
-        c.drawString(PAD, ey, 'EDIT GUIDE')
-        ey -= 5*mm
-        c.setStrokeColor(BORDER); c.setLineWidth(0.5)
-        c.line(PAD, ey+1*mm, PW-PAD, ey+1*mm)
-        ey -= 4*mm
-
-        half_w = (PW - 2*PAD - 10*mm) / 2
-        ey_l = ey_r = ey
-
-        if edit_base:
-            _set(c, 9, bold=True, color=GOLD_DK)
-            c.drawString(PAD, ey_l, 'STANDARD EDIT')
-            _set(c, 8, bold=False, color=MUTED)
-            sx = PAD + c.stringWidth('STANDARD EDIT', _font(True), 9) + 3*mm
-            c.drawString(sx, ey_l, '· Balanced. Light editing.')
-            ey_l -= 6*mm
-            ey_l = _draw_text_block(c, edit_base, PAD+2*mm, ey_l, half_w,
-                                    11, bold=False, color=DARK2, line_height=6*mm)
-
-        if edit_creative:
-            rx = PAD + half_w + 10*mm
-            _set(c, 9, bold=True, color=HexColor('#2A6A3A'))
-            c.drawString(rx, ey_r, 'CREATIVE EDIT')
-            _set(c, 8, bold=False, color=MUTED)
-            sx = rx + c.stringWidth('CREATIVE EDIT', _font(True), 9) + 3*mm
-            c.drawString(sx, ey_r, '· Artistic. Heavy editing.')
-            ey_r -= 6*mm
-            ey_r = _draw_text_block(c, edit_creative, rx+2*mm, ey_r, half_w,
-                                    11, bold=False, color=DARK2, line_height=6*mm)
-
-        ey = min(ey_l, ey_r) - 6*mm
-        c.setStrokeColor(BORDER); c.setLineWidth(0.4)
-        c.line(PAD, ey+1*mm, PW-PAD, ey+1*mm)
-
-    # ── Where to Shoot Next ───────────────────────────────────────────────────
-    loc1 = _clean(data.get('mentor_location_1',''))
-    loc2 = _clean(data.get('mentor_location_2',''))
-
-    if loc1:
-        half_w = (PW - 2*PAD - 10*mm) / 2
-        l1_h   = _block_height(loc1, PW-2*PAD-10*mm if not loc2 else half_w,
-                               11, line_height=6*mm)
-        l2_h   = _block_height(loc2, half_w, 11, line_height=6*mm) if loc2 else 0
-        box_h  = 10*mm + max(l1_h, l2_h) + 10*mm
-
-        box_top = ey - 3*mm
-        box_bot = box_top - box_h
-
-        c.setFillColor(WHERE_BG)
-        c.rect(PAD, box_bot, PW-2*PAD, box_h, fill=1, stroke=0)
-        c.setStrokeColor(HexColor('#A8CEB0')); c.setLineWidth(0.5)
-        c.rect(PAD, box_bot, PW-2*PAD, box_h, fill=0, stroke=1)
-
-        iy = box_top - 6*mm
-        _set(c, 8, bold=True, color=WHERE_LBL)
-        c.drawString(PAD+5*mm, iy, 'WHERE TO SHOOT NEXT')
-        iy -= 6*mm
-
-        if loc2:
-            _set(c, 9, bold=True, color=WHERE_LBL)
-            c.drawString(PAD+5*mm, iy, 'NOW OPEN')
-            c.drawString(PAD+5*mm+half_w+10*mm, iy, 'COMING UP')
-            iy -= 5*mm
-            _draw_text_block(c, loc1, PAD+5*mm, iy, half_w,
-                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
-            _draw_text_block(c, loc2, PAD+5*mm+half_w+10*mm, iy, half_w,
-                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
-        else:
-            _draw_text_block(c, loc1, PAD+5*mm, iy, PW-2*PAD-10*mm,
-                             11, bold=False, color=WHERE_TXT, line_height=6*mm)
-
-        ey = box_bot - 6*mm
-
-    # ── HCB Quote ─────────────────────────────────────────────────────────────
-    if ey > FOOTER_H + 16*mm:
-        quote = ('\u201cTo photograph is to hold one\u2019s breath when all '
-                 'faculties converge to capture fleeting reality.\u201d')
-        attr  = '\u2014 Henri Cartier-Bresson'
-        c.setFillColor(GOLD)
-        c.rect(PAD, ey - 14*mm, 2.5*mm, 12*mm, fill=1, stroke=0)
-        _draw_text_block(c, quote, PAD+6*mm, ey-3*mm, PW-2*PAD-6*mm,
-                         11, bold=False, color=MUTED, line_height=6*mm)
-        _set(c, 9, bold=False, color=HexColor('#AAAAAA'))
-        c.drawString(PAD+6*mm, ey-13*mm, attr)
-
-    _draw_footer(c, f"SL  ·  {score_str}  ·  {tier_str}")
-
+    tbl = Table([label_row, score_row], colWidths=[col_w]*n)
+    styles = [
+        ('ALIGN',         (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING',    (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('BOX',           (0,0), (-1,-1), 0.4, BORDER),
+        ('INNERGRID',     (0,0), (-1,-1), 0.4, BORDER),
+        ('BACKGROUND',    (0,0), (-1,-1), SKY_LT),
+    ]
+    # Highlight strongest
+    for i, d in enumerate(dim_breakdown):
+        if d['score'] == max_sc:
+            styles.append(('BACKGROUND', (i,0), (i,1), GOLD_LT))
+    tbl.setStyle(TableStyle(styles))
+    return tbl
 
 # ════════════════════════════════════════════════════════════════════════
 #  PUBLIC ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════
 def build_scorecard_pdf(data: dict) -> bytes:
-    """Three-page A4 portrait PDF. Pure Python, no system deps."""
-    buf = io.BytesIO()
-    c   = rl_canvas.Canvas(buf, pagesize=A4)
-    c.setTitle(f"Shutter League Evaluation — {data.get('asset','')}")
-    c.setAuthor('Shutter League')
-    _draw_page1(c, data)
-    c.showPage()
-    _draw_page2(c, data)
-    c.showPage()
-    _draw_page3(c, data)
-    c.showPage()
-    c.save()
+    """
+    Multi-page A4 Platypus PDF. Auto-paginates — no truncation possible.
+    data keys (all optional, gracefully absent):
+      score, tier, asset, credit, genre, format, location, evaluated_on
+      photo_url
+      affective_state, wso
+      impression, what_next
+      c1_body (transferable_advice), c2_body (wso/hard_truth),
+      c3_body (background_check), c4_body (byline_2)
+      body_of_work
+      edit_base, edit_creative
+      mentor_location_1, mentor_location_2
+      master_name, master_why
+      dim_breakdown  [{'score':float,'l1':str,'l2':str}, ...]
+      dim_obs_dod, dim_obs_vd, dim_obs_dm, dim_obs_wf, dim_obs_aq
+      tech_read, visual_flow, imagine, species_note
+    """
+
+    buf   = io.BytesIO()
+    W, H  = A4
+    M     = 14 * mm
+    avail = W - 2 * M
+
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=M, rightMargin=M,
+        topMargin=M,  bottomMargin=M,
+        title=f"Shutter League Evaluation — {data.get('asset','')}",
+        author='Shutter League',
+    )
+
+    # ── Styles ──────────────────────────────────────────────────────────────
+    S = {
+        'page_title': _sty('ptitle', size=9,  leading=11, colour=GOLD_DK,    bold=True,  space_after=1),
+        'page_sub':   _sty('psub',   size=7,  leading=9,  colour=MUTED,       bold=False, space_after=6, align=TA_RIGHT),
+        'score':      _sty('score',  size=52, leading=58, colour=DARK,        bold=True,  space_after=0),
+        'denom':      _sty('denom',  size=18, leading=22, colour=MUTED,       bold=False, space_after=0),
+        'tier':       _sty('tier',   size=11, leading=14, colour=GOLD_DK,     bold=True,  space_after=4),
+        'meta':       _sty('meta',   size=8,  leading=11, colour=DARK2,       bold=False, space_after=2),
+        'credit':     _sty('credit', size=9,  leading=12, colour=GOLD_DK,     bold=True,  space_after=2),
+        'sec_label':  _sty('slbl',   size=8,  leading=10, colour=MUTED,       bold=True,  space_after=4, space_before=10),
+        'body':       _sty('body',   size=11, leading=17, colour=DARK,        bold=False, space_after=5),
+        'body_indent':_sty('bindi',  size=11, leading=17, colour=DARK,        bold=False, space_after=5, left_indent=8*mm),
+        'body_it':    _sty('bodyi',  size=11, leading=17, colour=DARK2,       bold=False, space_after=5),
+        'opening':    _sty('open',   size=13, leading=20, colour=DARK,        bold=True,  space_after=8),
+        'impression': _sty('impr',   size=12, leading=18, colour=DARK,        bold=False, space_after=6),
+        'master_name':_sty('mname',  size=14, leading=18, colour=GOLD_DK,     bold=True,  space_after=3),
+        'master_why': _sty('mwhy',   size=11, leading=17, colour=DARK,        bold=False, space_after=6),
+        'dim_obs_lbl':_sty('dolbl',  size=9,  leading=12, colour=GOLD_DK,     bold=True,  space_after=2, space_before=6),
+        'dim_obs':    _sty('dobs',   size=11, leading=17, colour=DARK,        bold=False, space_after=4),
+        'spec':       _sty('spec',   size=10, leading=15, colour=PISTA_TXT,   bold=False, space_after=4),
+        'tech_lbl':   _sty('tlbl',   size=8,  leading=10, colour=BLUE_LBL,    bold=True,  space_after=3, space_before=8),
+        'tech':       _sty('tech',   size=11, leading=17, colour=DARK,        bold=False, space_after=5),
+        'vf_lbl':     _sty('vflbl',  size=8,  leading=10, colour=PURPLE_LBL,  bold=True,  space_after=3, space_before=8),
+        'vf':         _sty('vf',     size=11, leading=17, colour=DARK,        bold=False, space_after=5),
+        'imagine_lbl':_sty('imlbl',  size=8,  leading=10, colour=PURPLE_LBL,  bold=True,  space_after=3, space_before=8),
+        'imagine':    _sty('imag',   size=11, leading=17, colour=PURPLE_TXT,  bold=False, space_after=5),
+        'path9_lbl':  _sty('p9lbl',  size=8,  leading=10, colour=PINK_LBL,    bold=True,  space_after=3, space_before=8),
+        'path9':      _sty('p9',     size=11, leading=17, colour=colors.HexColor('#3a1020'), bold=False, space_after=5),
+        'edit_lbl':   _sty('elbl',   size=9,  leading=11, colour=GOLD_DK,     bold=True,  space_after=3, space_before=8),
+        'edit':       _sty('edit',   size=11, leading=17, colour=DARK2,       bold=False, space_after=5),
+        'loc_lbl':    _sty('lloc',   size=8,  leading=10, colour=GREEN_LBL,   bold=True,  space_after=3, space_before=8),
+        'loc':        _sty('loc',    size=11, leading=17, colour=GREEN_TXT,   bold=False, space_after=5),
+        'foot':       _sty('foot',   size=7,  leading=9,  colour=MUTED,       bold=False, space_after=0, align=TA_CENTER),
+        'quote':      _sty('quote',  size=10, leading=15, colour=MUTED,       bold=False, space_after=3),
+        'quote_attr': _sty('qattr',  size=8,  leading=10, colour=colors.HexColor('#AAAAAA'), bold=False, space_after=0),
+    }
+
+    def HR(space_before=4, space_after=6):
+        return HRFlowable(width='100%', thickness=0.4, color=BORDER,
+                          spaceBefore=space_before, spaceAfter=space_after)
+
+    story = []
+
+    score_str = f"{float(data.get('score', 0)):.2f}"
+    tier_str  = data.get('tier', '')
+    asset     = data.get('asset', 'Untitled')
+    credit    = (data.get('credit') or '').strip()
+
+    # ════════════════════════════════
+    # PAGE 1 — Photo · Score · Dims · Opening · Content rows
+    # ════════════════════════════════
+
+    # Header line
+    hdr_tbl = Table(
+        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+          Paragraph('APEX DDI ENGINE  ·  FULL EVALUATION', S['page_sub'])]],
+        colWidths=[avail * 0.5, avail * 0.5],
+    )
+    hdr_tbl.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(hdr_tbl)
+    story.append(HR(space_before=2, space_after=8))
+
+    # Photograph
+    photo_bytes = _fetch_photo(data.get('photo_url'))
+    if photo_bytes:
+        try:
+            img = RLImage(photo_bytes, width=avail, height=72*mm, kind='proportional')
+            story.append(img)
+            story.append(Spacer(1, 4))
+        except Exception as e:
+            print(f'[reportlab_card] photo embed: {e}')
+
+    # Score + tier + meta — two-column
+    score_block = [
+        Paragraph(f'{score_str}<font size="16" color="#888888">/10</font>', S['score']),
+        Paragraph(tier_str.upper(), S['tier']),
+        _tier_table(tier_str, avail * 0.44),
+    ]
+    meta_lines = []
+    if credit:
+        meta_lines.append(Paragraph(f'Photography by: {credit}', S['credit']))
+    meta_str = '  ·  '.join(filter(None, [
+        data.get('genre',''), data.get('format',''),
+        data.get('location',''), data.get('evaluated_on','')
+    ]))
+    if meta_str:
+        meta_lines.append(Paragraph(meta_str, S['meta']))
+    aff = _clean(data.get('affective_state', ''))
+    if aff:
+        meta_lines.append(Paragraph(aff, S['body_it']))
+
+    lft = score_block
+    rgt = meta_lines or [Spacer(1, 1)]
+
+    score_meta = Table(
+        [[lft, rgt]],
+        colWidths=[avail * 0.46, avail * 0.54],
+    )
+    score_meta.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(score_meta)
+    story.append(Spacer(1, 8))
+
+    # Dimensions
+    dim_tbl = _dim_table(data.get('dim_breakdown', []), avail)
+    if dim_tbl:
+        story.append(dim_tbl)
+        story.append(Spacer(1, 8))
+
+    # Opening bold sentence (wso)
+    wso = _clean(data.get('wso', ''))
+    if wso:
+        story.append(HR())
+        for p in _paras(wso, S['opening']):
+            story.append(p)
+
+    # Impression
+    impression = _clean(data.get('impression', ''))
+    if impression:
+        story.append(HR())
+        for p in _paras(impression, S['impression']):
+            story.append(p)
+
+    # Section rows — use KeepTogether so label+body stay on same page
+    def _section(label, raw, accent, body_style=None):
+        body = _clean(raw)
+        if not body:
+            return
+        bs = body_style or S['body']
+        block = [_AccentBar(label, accent, avail)] + _paras(body, bs)
+        story.append(KeepTogether(block[:4]))  # first 4 flowables together
+        # remaining paragraphs flow freely (no truncation)
+        for p in block[4:]:
+            story.append(p)
+        story.append(HR(space_before=2, space_after=4))
+
+    _section("The photographer's advice",  data.get('c1_body',''), ROW_ACCENTS[0])
+    _section("What you controlled",        data.get('c2_body',''), ROW_ACCENTS[1])
+    _section("What to watch next",         data.get('c3_body',''), ROW_ACCENTS[2])
+    _section("Keep this in mind",          data.get('c4_body',''), ROW_ACCENTS[3])
+
+    # Body of work
+    bow = _clean(data.get('body_of_work', ''))
+    if bow:
+        _section("Your next body of work", bow, GOLD_DK)
+
+    # What next / path to 9
+    what_next = _clean(data.get('what_next', ''))
+    if what_next:
+        story.append(Paragraph('Path to 9', S['path9_lbl']))
+        for p in _paras(what_next, S['path9']):
+            story.append(p)
+        story.append(HR())
+
+    # ────────────────────────────────
+    # PAGE 2 — Deep analysis
+    # ────────────────────────────────
+    story.append(PageBreak())
+
+    hdr2 = Table(
+        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+          Paragraph(f'FULL EVALUATION  ·  {asset}', S['page_sub'])]],
+        colWidths=[avail * 0.5, avail * 0.5],
+    )
+    hdr2.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(hdr2)
+    story.append(HR(space_before=2, space_after=8))
+
+    # Master reference
+    master_name = (data.get('master_name') or '').strip()
+    master_why  = _clean(data.get('master_why', ''))
+    if master_name:
+        box_contents = [
+            Paragraph('Master reference', S['dim_obs_lbl']),
+            Paragraph(master_name, S['master_name']),
+        ]
+        if master_why:
+            box_contents += _paras(master_why, S['master_why'])
+        story.append(KeepTogether(box_contents))
+        story.append(HR())
+
+    # Dimension observations
+    dim_obs_map = [
+        ('dim_obs_dod', 'Depth of Difficulty'),
+        ('dim_obs_vd',  'Visual Disruption'),
+        ('dim_obs_dm',  'Decisive Moment'),
+        ('dim_obs_wf',  'Wonder Factor'),
+        ('dim_obs_aq',  'Authentic Quality'),
+    ]
+    has_dim_obs = any(_clean(data.get(k,'')) for k, _ in dim_obs_map)
+    if has_dim_obs:
+        story.append(Paragraph('Dimension observations', S['sec_label']))
+        for key, label in dim_obs_map:
+            obs = _clean(data.get(key, ''))
+            if obs:
+                block = [Paragraph(label, S['dim_obs_lbl'])] + _paras(obs, S['dim_obs'])
+                story.append(KeepTogether(block[:3]))
+                for p in block[3:]:
+                    story.append(p)
+        story.append(HR())
+
+    # Technical read
+    tech_read = _clean(data.get('tech_read', ''))
+    if tech_read:
+        story.append(Paragraph('Technical read', S['tech_lbl']))
+        for p in _paras(tech_read, S['tech']):
+            story.append(p)
+        story.append(HR())
+
+    # Visual flow
+    visual_flow = _clean(data.get('visual_flow', ''))
+    if visual_flow:
+        story.append(Paragraph('Visual flow', S['vf_lbl']))
+        for p in _paras(visual_flow, S['vf']):
+            story.append(p)
+        story.append(HR())
+
+    # Imagine
+    imagine = _clean(data.get('imagine', ''))
+    if imagine:
+        story.append(Paragraph('Imagine', S['imagine_lbl']))
+        for p in _paras(imagine, S['imagine']):
+            story.append(p)
+        story.append(HR())
+
+    # Species note (wildlife only)
+    species_note = _clean(data.get('species_note', ''))
+    if species_note:
+        story.append(Paragraph('Species', S['tech_lbl']))
+        for p in _paras(species_note, S['spec']):
+            story.append(p)
+        story.append(HR())
+
+    # ────────────────────────────────
+    # PAGE 3 — Edit Guide + Location
+    # ────────────────────────────────
+    story.append(PageBreak())
+
+    hdr3 = Table(
+        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+          Paragraph(f'EDIT GUIDE  ·  {asset}', S['page_sub'])]],
+        colWidths=[avail * 0.5, avail * 0.5],
+    )
+    hdr3.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+    ]))
+    story.append(hdr3)
+    story.append(HR(space_before=2, space_after=8))
+
+    edit_base     = _clean(data.get('edit_base', ''))
+    edit_creative = _clean(data.get('edit_creative', ''))
+
+    if edit_base or edit_creative:
+        story.append(Paragraph('Edit guide', S['sec_label']))
+
+        # Two-column edit if both present, single column if only one
+        if edit_base and edit_creative:
+            hw = (avail - 8*mm) / 2
+            lft_edit = [Paragraph('Standard edit  ·  Balanced. Light editing.', S['edit_lbl'])] + \
+                       _paras(edit_base, S['edit'])
+            rgt_edit = [Paragraph('Creative edit  ·  Artistic. Heavy editing.', _sty('ce', size=9, leading=11, colour=GREEN_DK, bold=True, space_after=3, space_before=8))] + \
+                       _paras(edit_creative, S['edit'])
+            edit_tbl = Table([[lft_edit, rgt_edit]], colWidths=[hw, hw])
+            edit_tbl.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                ('TOPPADDING', (0,0), (-1,-1), 0),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+                ('LEFTPADDING', (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (-1,-1), 4),
+            ]))
+            story.append(edit_tbl)
+        elif edit_base:
+            story.append(Paragraph('Standard edit  ·  Balanced. Light editing.', S['edit_lbl']))
+            for p in _paras(edit_base, S['edit']):
+                story.append(p)
+        else:
+            story.append(Paragraph('Creative edit  ·  Artistic. Heavy editing.', S['edit_lbl']))
+            for p in _paras(edit_creative, S['edit']):
+                story.append(p)
+        story.append(HR())
+
+    # Where to shoot next
+    loc1 = _clean(data.get('mentor_location_1', ''))
+    loc2 = _clean(data.get('mentor_location_2', ''))
+
+    if loc1:
+        story.append(Paragraph('Where to shoot next', S['loc_lbl']))
+        if loc2:
+            hw = (avail - 8*mm) / 2
+            l1_block = [Paragraph('Now open', _sty('lnow', size=8, leading=10, colour=GREEN_LBL, bold=True, space_after=3))] + \
+                       _paras(loc1, S['loc'])
+            l2_block = [Paragraph('Coming up', _sty('lcup', size=8, leading=10, colour=GREEN_LBL, bold=True, space_after=3))] + \
+                       _paras(loc2, S['loc'])
+            loc_tbl = Table([[l1_block, l2_block]], colWidths=[hw, hw])
+            loc_tbl.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                ('TOPPADDING', (0,0), (-1,-1), 0),
+                ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+                ('LEFTPADDING', (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (-1,-1), 4),
+            ]))
+            story.append(loc_tbl)
+        else:
+            for p in _paras(loc1, S['loc']):
+                story.append(p)
+        story.append(HR())
+
+    # HCB quote
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(
+        '\u201cTo photograph is to hold one\u2019s breath when all faculties '
+        'converge to capture fleeting reality.\u201d',
+        S['quote']
+    ))
+    story.append(Paragraph('\u2014 Henri Cartier-Bresson', S['quote_attr']))
+    story.append(Spacer(1, 12))
+    story.append(HR(space_before=0, space_after=4))
+    story.append(Paragraph(
+        'BETTER LIGHT.  MORE CLARITY.  STRONGER STORY.  YOU, ONE FRAME AT A TIME.',
+        S['foot']
+    ))
+    story.append(Paragraph(
+        f'SL  ·  {score_str}  ·  {tier_str.upper()}  ·  shutter.league',
+        S['foot']
+    ))
+
+    doc.build(story)
     return buf.getvalue()
