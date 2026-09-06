@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.14 (Session 214, 2026-09-06 — Seven Haiku fields ported: impression, tech_read, visual_flow, imagine, master_name/why, dim_obs per dimension, species_note. Tier journey strip. Strength_obs + next_leap_obs in summary box always visible. Conclusion dark card before action bar. Award_context score-tier card. Contest launchpad dual threshold 8.5/9.0. Imagine moved to forward-looking position. Backfill enrichment banner: dark navy, gold progress bar, progressive messaging, auto-reload on completion. Fixes JS status check ok/scored. RETAINS 181.23-main.)
 {# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
 {# SL-VERSION: image_detail-181.23-main (Session 207, 2026-09-02 — NAV: sc-topnav (#111214 near-black) removed entirely. sl-top-nav from base.html now renders — correct navy colour, standard paid links. RETAINS 181.22.)
    Session 183 — 2026-08-14 (second pass)
@@ -214,14 +216,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
 .sc-back-lnk:hover{color:var(--sc-dark)}
 /* ── SESSION 214: BACKFILL ENRICHMENT BANNER ── */
-.sc-enrich-banner{display:flex;align-items:flex-start;gap:14px;background:#1A2744;border-radius:10px;padding:16px 20px;margin-bottom:14px}
-.sc-enrich-icon{font-size:22px;flex-shrink:0;margin-top:1px}
-.sc-enrich-body{flex:1}
-.sc-enrich-title{font-size:15px;font-weight:700;color:#C8A84B;margin-bottom:4px}
-.sc-enrich-msg{font-size:14px;color:rgba(245,243,239,.80);line-height:1.6}
-.sc-enrich-bar{height:3px;background:rgba(200,168,75,.25);border-radius:2px;margin-top:12px;overflow:hidden}
-.sc-enrich-bar-fill{height:100%;background:#C8A84B;border-radius:2px;width:0%;transition:width 1s linear}
-@keyframes sc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
 .sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
 /* ── SHARED CARD ── */
@@ -732,82 +727,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   <main class="sc-centre">
 
 
-    {# ── SESSION 214: ENRICHMENT BANNER — shown when backfill rescore is running ── #}
-    {% if backfill_triggered %}
-    <div class="sc-enrich-banner" id="sc-enrich-banner">
-      <span class="sc-enrich-icon">✦</span>
-      <div class="sc-enrich-body">
-        <div class="sc-enrich-title" id="sc-enrich-title">Enriching your scorecard</div>
-        <div class="sc-enrich-msg" id="sc-enrich-msg">Adding the latest analysis — impression, master reference, visual flow, dimension observations and more. Takes about 60 seconds. Page refreshes automatically.</div>
-        <div class="sc-enrich-bar"><div class="sc-enrich-bar-fill" id="sc-enrich-bar-fill"></div></div>
-      </div>
-    </div>
-    <div id="sc-enrich-image-id" data-id="{{ image.id }}" style="display:none"></div>
-    <script>
-    (function(){
-      var iid    = document.getElementById('sc-enrich-image-id').getAttribute('data-id');
-      var banner = document.getElementById('sc-enrich-banner');
-      var title  = document.getElementById('sc-enrich-title');
-      var msg    = document.getElementById('sc-enrich-msg');
-      var bar    = document.getElementById('sc-enrich-bar-fill');
-      var start  = Date.now();
-      var maxWait = 180000;  // 3 min hard stop
 
-      // Animate the progress bar to ~90% over 70 seconds
-      var pct = 0;
-      var barInterval = setInterval(function(){
-        pct = Math.min(pct + (90/70), 90);
-        if(bar) bar.style.width = pct.toFixed(1) + '%';
-      }, 1000);
-
-      function setMsg(t, m){ if(title) title.textContent = t; if(msg) msg.textContent = m; }
-
-      function poll(){
-        var elapsed = Date.now() - start;
-
-        if(elapsed > maxWait){
-          clearInterval(barInterval);
-          setMsg(
-            'Taking longer than expected',
-            'The update is still processing in the background. Refresh this page in a minute or two to see the enriched scorecard.'
-          );
-          if(bar) bar.style.background = '#8B6508';
-          return;
-        }
-
-        // Progressive messages based on elapsed time
-        if(elapsed > 90000){
-          setMsg('Still working…', 'This image is getting a detailed re-evaluation. Hang tight — the page will refresh when done.');
-        } else if(elapsed > 45000){
-          setMsg('Almost there…', 'Finalising the analysis. Refresh is coming.');
-        }
-
-        fetch('/score-status/'+iid)
-          .then(function(r){ return r.json(); })
-          .then(function(d){
-            if(d.status === 'scored'){
-              clearInterval(barInterval);
-              if(bar){ bar.style.width = '100%'; bar.style.transition = 'width 0.3s'; }
-              setMsg('Done — loading your enriched scorecard', '');
-              setTimeout(function(){ window.location.reload(); }, 600);
-            } else if(d.status === 'error'){
-              clearInterval(barInterval);
-              setMsg(
-                'Update encountered a problem',
-                'The re-evaluation did not complete. Your existing scorecard is intact — try refreshing the page or contact support if this persists.'
-              );
-              if(bar) bar.style.background = '#B3261E';
-            } else {
-              setTimeout(poll, 4000);
-            }
-          })
-          .catch(function(){ setTimeout(poll, 6000); });
-      }
-
-      setTimeout(poll, 5000);
-    })();
-    </script>
-    {% endif %}
 
     <div class="sc-back-row">
       <a href="{{ url_for('dashboard') }}" class="sc-back-lnk">← Back to Dashboard</a>
