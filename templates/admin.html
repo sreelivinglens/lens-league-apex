@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.6 (Session 212, 2026-09-05 — Fixed orphaned endif on line 1083: stray closing tag left when Rescore button was removed in 2.5, causing Jinja TemplateSyntaxError on admin page load.) #}
+{# SL-VERSION: admin-2.7 (Session 215, 2026-09-06 — Image grid: (1) pagination Previous/Next now anchor to #images so page lands at grid, not top. (2) Client-side search/filter row added above image grid: text search by photographer/title/genre/tier via data- attributes + genre dropdown + tier dropdown. No route changes. RETAINS admin-2.6.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -822,10 +822,30 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         </div>
       </div>
       <div class="img-filter-row">
-        <a class="img-filter active" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track) }}#images">All</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='flagged') }}#images">Flagged</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='pending') }}#images">Pending</a>
-        <a class="img-filter" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='error') }}#images">Failures</a>
+        <a class="img-filter {% if not admin_q or admin_q not in ['flagged','pending','error'] %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track) }}#images">All</a>
+        <a class="img-filter {% if admin_q == 'flagged' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='flagged') }}#images">Flagged</a>
+        <a class="img-filter {% if admin_q == 'pending' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='pending') }}#images">Pending</a>
+        <a class="img-filter {% if admin_q == 'error' %}active{% endif %}" href="{{ url_for('admin_dashboard', engine=admin_engine, track=admin_track, q='error') }}#images">Failures</a>
+      </div>
+      {# Image grid local search — client-side, no route change needed #}
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <input id="ig-search" type="text" placeholder="Photographer, title, genre, tier…" autocomplete="off"
+          oninput="igFilter()"
+          style="flex:1;min-width:180px;padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;outline:none;min-height:40px">
+        <select id="ig-genre" onchange="igFilter()" style="padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:40px">
+          <option value="">All genres</option>
+          <option>Wildlife</option><option>Street</option><option>Documentary</option>
+          <option>Landscape</option><option>People</option><option>Wedding</option>
+          <option>Nature</option><option>Creative</option><option>Drone</option>
+          <option>Macro</option><option>Fashion</option><option>Sports</option>
+          <option>Architecture</option><option>Astrophotography</option>
+        </select>
+        <select id="ig-tier" onchange="igFilter()" style="padding:8px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:14px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:40px">
+          <option value="">All tiers</option>
+          <option>Grandmaster</option><option>Master</option><option>Maverick</option>
+          <option>Craftsman</option><option>Contender</option><option>Shooter</option><option>Rookie</option>
+        </select>
+        <span id="ig-count" style="font-size:12px;color:#8A8A86;white-space:nowrap"></span>
       </div>
 
       {# The route already filters recent by engine (is_haiku_try IS TRUE/NOT TRUE).
@@ -835,7 +855,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         {% if recent %}
           {% for img in recent %}
           {% set detail_url = url_for('try_result', image_id=img.id) if admin_engine == 'haiku' else url_for('image_detail', image_id=img.id) %}
-          <div class="img-tile" data-image-id="{{ img.id }}">
+          <div class="img-tile" data-image-id="{{ img.id }}" data-user="{{ (recent_users.get(img.user_id, '')|lower) }}" data-genre="{{ (img.genre or '')|lower }}" data-tier="{{ (img.tier or '')|lower }}" data-title="{{ (img.title or '')|lower }}">
             <a href="{{ detail_url }}" style="display:block;text-decoration:none;position:relative">
               {% if img.thumb_url %}
               <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
@@ -885,8 +905,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div class="img-grid-footer">
         <span class="ig-note">Showing {{ recent|length }} of {{ total_images }} images · page {{ recent_pages.page }}/{{ recent_pages.pages }}</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          {% if recent_pages.has_prev %}<a class="ig-link" href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q, track=admin_track) }}">← Previous</a>{% endif %}
-          {% if recent_pages.has_next %}<a class="ig-link" href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q, track=admin_track) }}">Next →</a>{% endif %}
+          {% if recent_pages.has_prev %}<a class="ig-link" href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q, track=admin_track) }}#images">← Previous</a>{% endif %}
+          {% if recent_pages.has_next %}<a class="ig-link" href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q, track=admin_track) }}#images">Next →</a>{% endif %}
         </div>
       </div>
     </div>
@@ -1488,6 +1508,29 @@ function doSearch(q){
 document.getElementById('q').addEventListener('keydown',function(e){
   if(e.key==='Escape'){ this.value=''; doSearch(''); }
 });
+
+// ── Image grid local search/filter ──
+function igFilter(){
+  var q     = (document.getElementById('ig-search').value || '').toLowerCase().trim();
+  var genre = (document.getElementById('ig-genre').value  || '').toLowerCase();
+  var tier  = (document.getElementById('ig-tier').value   || '').toLowerCase();
+  var tiles = document.querySelectorAll('.image-grid .img-tile');
+  var shown = 0;
+  tiles.forEach(function(t){
+    var user  = (t.dataset.user  || '');
+    var tgenre= (t.dataset.genre || '');
+    var ttier = (t.dataset.tier  || '');
+    var title = (t.dataset.title || '');
+    var match = true;
+    if(q     && user.indexOf(q) === -1 && title.indexOf(q) === -1 && tgenre.indexOf(q) === -1 && ttier.indexOf(q) === -1) match = false;
+    if(genre && tgenre !== genre) match = false;
+    if(tier  && ttier  !== tier)  match = false;
+    t.style.display = match ? '' : 'none';
+    if(match) shown++;
+  });
+  var countEl = document.getElementById('ig-count');
+  if(countEl) countEl.textContent = (q || genre || tier) ? shown + ' shown' : '';
+}
 
 // ── Haiku nudge modal ──
 function openNudge(userId, nudgeType){
