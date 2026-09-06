@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.22 (Session 215, 2026-09-06 — Evaluation record footer: full EXIF (camera, lens, focal, exposure, software), evaluated-for name, date, file, genre, species (when confident), AI disclaimer. Species removed from mid-card. RETAINS 182.21.) #}
 {# SL-VERSION: image_detail-182.21 (Session 215, 2026-09-06 — Conclusion: split into visual paragraphs at sentence boundaries — platform closing sentence always breaks to its own paragraph. RETAINS 182.20.) #}
 {# SL-VERSION: image_detail-182.20 (Session 215, 2026-09-06 — Conclusion: text-align:justify. RETAINS 182.19.) #}
 {# SL-VERSION: image_detail-182.19 (Session 215, 2026-09-06 — Dim obs: score column widened 64px→80px to prevent STRONGEST label overflow into description text. Text column 5px left padding added. RETAINS 182.18.) #}
@@ -1242,13 +1243,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% endif %}
 
 
-    {# ── SESSION 214: SPECIES NOTE (wildlife only, confidence-gated) ── #}
-    {% if _species_note_s %}
-    <div class="sc-species-note">
-      <span style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#0F6E56;display:block;margin-bottom:5px">Species</span>
-      {{ _species_note_s | safe }}
-    </div>
-    {% endif %}
+{# Species note moved to evaluation record footer — Session 215 #}
 
     {# ⑨ CONTEST LAUNCHPAD — Session 203
          Shown to subscribed owners of scored images only.
@@ -1554,6 +1549,82 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% endif %}
     </div>
     {% endif %}
+
+    {# ── SESSION 215: EVALUATION RECORD FOOTER ── #}
+    <div style="background:#F0EDE6;border-radius:12px;padding:20px 22px;margin-bottom:10px;border:0.5px solid #E0DDD6">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8A8A86;margin-bottom:14px">Evaluation record</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:{% if image.exif_make or image.exif_camera or image.exif_lens %}14px{% else %}0{% endif %}">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Evaluated for</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _name or '—' }}</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Date</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _scored_date or '—' }}</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">File</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ (image.asset_name or image.title or '—') }}</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Genre</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ image.genre or '—' }}</div>
+        </div>
+      </div>
+      {% if image.exif_make or image.exif_camera or image.exif_lens or image.exif_aperture %}
+      <div style="border-top:0.5px solid #DEDAD2;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:{% if _species_note_s %}14px{% else %}0{% endif %}">
+        {% set _cam_str = (image.exif_camera or ((image.exif_make or '') + ' ' + (image.exif_model or ''))) | trim %}
+        {% if _cam_str %}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Camera</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _cam_str }}</div>
+        </div>
+        {% endif %}
+        {% if image.exif_lens %}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Lens</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ image.exif_lens }}</div>
+        </div>
+        {% endif %}
+        {% if image.exif_focal_length %}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Focal length</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ image.exif_focal_length }}</div>
+        </div>
+        {% endif %}
+        {% set _exp_parts = [] %}
+        {% if image.exif_aperture %}{% set _exp_parts = _exp_parts + [image.exif_aperture] %}{% endif %}
+        {% if image.exif_shutter %}{% set _exp_parts = _exp_parts + [image.exif_shutter] %}{% endif %}
+        {% if image.exif_iso %}{% set _exp_parts = _exp_parts + ['ISO ' + image.exif_iso|string] %}{% endif %}
+        {% if _exp_parts %}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Exposure</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _exp_parts | join(' · ') }}</div>
+        </div>
+        {% endif %}
+        {% if image.exif_software %}
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Processed with</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ image.exif_software }}</div>
+        </div>
+        {% endif %}
+        {% if _species_note_s %}
+        <div style="grid-column:1/-1">
+          <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Species</div>
+          <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _species_note_s | safe }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% elif _species_note_s %}
+      <div style="border-top:0.5px solid #DEDAD2;padding-top:12px">
+        <div style="font-size:13px;font-weight:600;color:#8A8A86;margin-bottom:2px">Species</div>
+        <div style="font-size:15px;color:#1A2744;font-weight:500">{{ _species_note_s | safe }}</div>
+      </div>
+      {% endif %}
+      <div style="border-top:0.5px solid #DEDAD2;margin-top:14px;padding-top:12px">
+        <p style="font-size:14px;color:#8A8A86;line-height:1.7">This evaluation was generated by the Apex DDI Engine — an AI system trained on calibrated photographic assessment. Evaluations are a creative and technical guide and may contain errors.</p>
+      </div>
+    </div>
 
     {# ⑩ ACTION BAR #}
     <div class="sc-act-bar">
