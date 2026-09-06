@@ -1,4 +1,4 @@
-# SL-VERSION: 182.14 (Session 216, 2026-09-06 — P1 complete: _build_dod_anchors() now includes STEP 3 DM peaks and STEP 4 WF anchors per group A-G. STEP 3 + STEP 4 removed from _TRY_HAIKU_PROMPT static block. Rule 36 satisfied. Haiku Wildlife scoring now receives group-specific DM and WF anchors via injection only — not broadcast to all images. Group G DM PEAKS added fresh. WONDER UNIVERSAL RULE retained as single append. ~35 lines removed from static prompt.)
+# SL-VERSION: 182.15 (Session 216, 2026-09-06 — Preflight false resolution error fixed: ingest_image() replaced with compute_phash() in upload_preflight(). ingest_image() runs a 1500px gate that always fails on the browser thumbnail (≤600px by design), showing users a false 'resolution too low' error even when their actual file is valid. compute_phash() has no resolution gate — safe for thumbnails. False ValueError catch removed. Similarity check remains non-fatal.)
 
 import os
 import re
@@ -9067,22 +9067,17 @@ def upload_preflight():
         return jsonify(result)
 
     # ── 1. Similar image check ────────────────────────────────────────────────
+    # Session 216 fix: use compute_phash() directly on the thumbnail bytes.
+    # ingest_image() was previously used here but it runs a 1500px resolution
+    # gate — which always fails on the browser thumbnail (≤600px by design).
+    # This caused a false "resolution too low" error shown to users with valid
+    # full-res files. compute_phash() has no resolution gate — safe for thumbnails.
     try:
-        from engine.processor import hash_similarity_pct, ingest_image
-        import tempfile, os as _os
-
-        _tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-        _tmp.write(img_bytes)
-        _tmp.close()
-        try:
-            _thumb_path, _w, _h, _fmt, _phash = ingest_image(
-                _tmp.name, app.config['UPLOAD_FOLDER']
-            )
-            if _thumb_path and _os.path.exists(_thumb_path):
-                _os.remove(_thumb_path)
-        finally:
-            if _os.path.exists(_tmp.name):
-                _os.remove(_tmp.name)
+        from engine.processor import hash_similarity_pct, compute_phash
+        from PIL import Image as _PIL_IMG
+        import io as _io
+        _pil_thumb = _PIL_IMG.open(_io.BytesIO(img_bytes)).convert('RGB')
+        _phash = compute_phash(_pil_thumb)
 
         if _phash:
             from datetime import timedelta as _td
@@ -9117,12 +9112,6 @@ def upload_preflight():
                     f'[preflight] similar: user={current_user.id} '
                     f'sim={_best_sim:.1f}% image={_best_match.id}'
                 )
-    except ValueError as _res_val_err:
-        # Resolution too low — this IS fatal, surface it to the user
-        app.logger.warning(f'[preflight] resolution gate: {_res_val_err}')
-        result['error'] = True
-        result['message'] = str(_res_val_err)
-        return jsonify(result)
     except Exception as _sim_err:
         app.logger.warning(f'[preflight] similarity check failed (non-fatal): {_sim_err}')
 
