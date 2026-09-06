@@ -34728,9 +34728,9 @@ def _pick_master_haiku(subject_group, environment, genre):
 def _build_dod_anchors(subject_group, behaviour):
     """
     Session 213 — Python dict. Returns correct DOD scale text for injection.
-    Replaces the 7-group taxonomy block in _TRY_HAIKU_PROMPT (~3,000 tokens)
-    once two-call is verified and taxonomy block is removed.
-    Currently used to inject a VERIFIED SUBJECT block into the prompt.
+    Session 216 — Now includes STEP 3 (DM peaks) and STEP 4 (WF anchors) per group.
+    STEP 3 + STEP 4 removed from _TRY_HAIKU_PROMPT static block (Rule 36 complete).
+    Taxonomy block in _TRY_HAIKU_PROMPT still present (STEP 0-2 + group definitions).
     """
     _g = (subject_group or '').strip().upper()
     _b = (behaviour or '').lower()
@@ -34744,7 +34744,15 @@ def _build_dod_anchors(subject_group, behaviour):
             "  8-8.5: Night or low-light, still dark water, perfect reflection\n"
             "  8.5-9: Rare behaviour (mid-air prey catch, pelican cooperative fishing, flamingo courtship peak)\n"
             "LANGUAGE RULE: NEVER use raptor/soaring/thermal soaring/stooping/predatory diving/"
-            "in-flight/stark white line for a water bird. Wings spread at water = displaying/drying/landing."
+            "in-flight/stark white line for a water bird. Wings spread at water = displaying/drying/landing.\n"
+            "DM PEAKS (Group A): wing symmetry at maximum spread, reflection perfectly mirrored, "
+            "catch moment with fish visible, the one frame where posture and geometry align. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group A): Rarely the species — usually the LIGHT, REFLECTION, and GEOMETRY. "
+            "A pelican on still dark water at night with perfect symmetry = WF 8+ because the image reveals "
+            "a relationship between the bird and its environment that 99% of viewers have never witnessed. "
+            "Colonial behaviour, coordinated feeding, or a water bird in conditions that reveal its "
+            "environment = WF 7-8."
         ),
         'B': (
             "GROUP B — AERIAL RAPTORS. DOD scale for this subject:\n"
@@ -34752,7 +34760,12 @@ def _build_dod_anchors(subject_group, behaviour):
             "  6-7: Bird in flight with good tracking, hunting scan from perch\n"
             "  7-8: Active hunt with prey visible, raptor at fire following insects\n"
             "  8-9: Stoop at prey contact, kill moment, raptor inside active wildfire\n"
-            "  9+: Fewer than 50 documented photographs of this specific behaviour globally"
+            "  9+: Fewer than 50 documented photographs of this specific behaviour globally\n"
+            "DM PEAKS (Group B): stoop at full extension before contact, prey visible in talon or beak, "
+            "the moment before territory display collapses. Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group B): Predatory behaviour most humans never witness. "
+            "Generic soaring = WF 5-6. Active hunt at fire line = WF 8-9. "
+            "The wonder is the danger, the intelligence, the behaviour."
         ),
         'C': (
             "GROUP C — GROUND MAMMALS. DOD scale for this subject:\n"
@@ -34760,37 +34773,74 @@ def _build_dod_anchors(subject_group, behaviour):
             "  6-7: Alert posture, herd interaction, social behaviour\n"
             "  7-8: Active stalk, courtship display\n"
             "  8-9: Kill moment or prey contact, birth, rare foraging in extreme conditions\n"
-            "  9+: Behaviour documented fewer than 50 times globally"
+            "  9+: Behaviour documented fewer than 50 times globally\n"
+            "DM PEAKS (Group C): the half-second before contact in a predatory charge, "
+            "maximum stalk crouch, kill moment, mother-calf peak interaction. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group C): Behaviour that reveals the animal's inner life — "
+            "stalking patience, kill precision, social bonds. Portrait of resting animal = WF 5. "
+            "Active predation with prey readable = WF 8-9."
         ),
         'D': (
             "GROUP D — PRIMATES. DOD scale for this subject:\n"
             "  5-6: Grooming, resting, common social interaction\n"
             "  6-7: Infant care, play behaviour, foraging\n"
             "  7-8: Territorial conflict, tool use, dominance display\n"
-            "  8-9: Rare behaviour — coalition formation, deceptive behaviour, wild unhabituated individual"
+            "  8-9: Rare behaviour — coalition formation, deceptive behaviour, wild unhabituated individual\n"
+            "DM PEAKS (Group D): the instant of expression that communicates intelligence — "
+            "tool use gesture, the exact moment of reconciliation, infant's first independent act. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group D): The degree to which the image reveals primate intelligence. "
+            "Grooming = WF 5. Tool use, deceptive behaviour, coalition = WF 8."
         ),
         'E': (
             "GROUP E — AQUATIC / MARINE. DOD scale for this subject:\n"
             "  6-7: Dolphin bow-riding, sea turtle swimming, fish school\n"
             "  7-8: Cetacean breach, hunting sequence, crocodilian ambush\n"
-            "  8-9: Prey contact underwater, whale cooperative hunting, rare species documentation"
+            "  8-9: Prey contact underwater, whale cooperative hunting, rare species documentation\n"
+            "DM PEAKS (Group E): breach at full airborne extension, prey contact underwater, "
+            "maximum density of a shoaling event with predator visible. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group E): The revelation of an underwater world inaccessible to 99% of viewers. "
+            "Any clear underwater frame = WF floor 7. Rare species or behaviour = WF 8-9."
         ),
         'F': (
             "GROUP F — MACRO / INVERTEBRATE. DOD scale for this subject:\n"
             "  5-6: Common insect or frog in standard conditions\n"
             "  6-7: Behavioural moment — feeding, mating, display\n"
             "  7-8: Rare species, handheld field macro of live behavioural moment\n"
-            "  8-9: Snake predation, spider at prey-contact, rare species in behaviour"
+            "  8-9: Snake predation, spider at prey-contact, rare species in behaviour\n"
+            "DM PEAKS (Group F): strike at prey contact, mating posture locked, "
+            "emergence from chrysalis, spider at precise web-tension moment. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group F): What the image reveals that the naked eye cannot see — "
+            "structure, behaviour complexity, the hidden world of small animals. "
+            "Common insect = WF 5. Rare species or behaviour rarely documented = WF 7-8."
         ),
         'G': (
             "GROUP G — URBAN WILDLIFE. DOD floor elevated by urban context:\n"
             "  Leopard or large predator in city = DOD 8.5+ baseline.\n"
             "  The contrast of wild creature in human environment IS the difficulty signal.\n"
-            "  Do not score urban wildlife on the same scale as reserve photography."
+            "  Do not score urban wildlife on the same scale as reserve photography.\n"
+            "DM PEAKS (Group G): the moment the wild animal and the human environment are both "
+            "legible in the same frame — animal mid-action, human context unmistakable. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group G): The contrast of wildness in a human space IS the wonder. "
+            "A leopard crossing a lit road is inherently WF 8 — viewers understand immediately "
+            "what they are seeing and why it is extraordinary."
         ),
     }
 
     anchor = _ANCHORS.get(_g, '')
+
+    # Universal WF rule — appended when a known group is matched
+    _wf_universal = ''
+    if anchor:
+        _wf_universal = (
+            "\nWONDER UNIVERSAL RULE: Rare behaviour that most viewers will not recognise as rare "
+            "is still rare — score WF on what is ACTUALLY HAPPENING, not on whether "
+            "the viewer will understand it immediately."
+        )
 
     # Silhouette / deliberate transformation note
     _sil_note = ''
@@ -34802,7 +34852,7 @@ def _build_dod_anchors(subject_group, behaviour):
             "visibility as the gap for a deliberate silhouette."
         )
 
-    return anchor + _sil_note
+    return anchor + _wf_universal + _sil_note
 
 
 # ── End Session 213 two-call helpers ─────────────────────────────────────────
@@ -35167,50 +35217,7 @@ _TRY_HAIKU_PROMPT = (
     "  The contrast of wild creature in human environment IS the difficulty signal. "
     "  Do not score urban wildlife on the same scale as reserve photography.\n\n"
 
-    "STEP 3 — DID THE PHOTOGRAPHER READ THE ANIMAL OR REACT TO IT?\n"
-    "A photographer who understood the behaviour before pressing the shutter — "
-    "who positioned for the animal\'s intention, not just its location — scores higher "
-    "on DM than one who reacted after the movement began.\n\n"
-    "GROUP A DM PEAKS: wing symmetry at maximum spread, reflection perfectly mirrored, "
-    "catch moment with fish visible, the one frame where posture and geometry align.\n"
-    "GROUP B DM PEAKS: stoop at full extension before contact, "
-    "prey visible in talon or beak, the moment before territory display collapses.\n"
-    "GROUP C DM PEAKS: the half-second before contact in a predatory charge, "
-    "maximum stalk crouch, kill moment, mother-calf peak interaction.\n"
-    "GROUP D DM PEAKS: the instant of expression that communicates intelligence — "
-    "tool use gesture, the exact moment of reconciliation, infant\'s first independent act.\n"
-    "GROUP E DM PEAKS: breach at full airborne extension, prey contact underwater, "
-    "maximum density of a shoaling event with predator visible.\n"
-    "GROUP F DM PEAKS: strike at prey contact, mating posture locked, "
-    "emergence from chrysalis, spider at precise web-tension moment.\n"
-    "Ask for every group: does the frame show the PEAK of the behaviour, "
-    "or the moment after? Pre-position = higher DM. Reaction = lower DM.\n\n"
-
-    "STEP 4 — WONDER FACTOR FOR WILDLIFE.\n"
-    "Wonder is not the beauty of the animal. It is whether this image shows the viewer "
-    "something about how this animal lives that they have never seen.\n\n"
-    "GROUP A WONDER: Rarely the species — usually the LIGHT, REFLECTION, and GEOMETRY. "
-    "A pelican on still dark water at night with perfect symmetry = WF 8+ because "
-    "the image reveals a relationship between the bird and its environment that "
-    "99% of viewers have never witnessed. Colonial behaviour, coordinated feeding, "
-    "or a water bird in conditions that reveal its environment = WF 7-8.\n"
-    "GROUP B WONDER: Predatory behaviour most humans never witness. "
-    "Generic soaring = WF 5-6. Active hunt at fire line = WF 8-9. "
-    "The wonder is the danger, the intelligence, the behaviour.\n"
-    "GROUP C WONDER: Behaviour that reveals the animal\'s inner life — "
-    "stalking patience, kill precision, social bonds. Portrait of resting animal = WF 5. "
-    "Active predation with prey readable = WF 8-9.\n"
-    "GROUP D WONDER: The degree to which the image reveals primate intelligence. "
-    "Grooming = WF 5. Tool use, deceptive behaviour, coalition = WF 8.\n"
-    "GROUP E WONDER: The revelation of an underwater world inaccessible to 99% of viewers. "
-    "Any clear underwater frame = WF floor 7. Rare species or behaviour = WF 8-9.\n"
-    "GROUP F WONDER: What the image reveals that the naked eye cannot see — "
-    "structure, behaviour complexity, the hidden world of small animals. "
-    "Common insect = WF 5. Rare species or behaviour rarely documented = WF 7-8.\n"
-    "GROUP G WONDER: The contrast of wildness in a human space IS the wonder. "
-    "A leopard crossing a lit road is inherently WF 8 — viewers understand "
-    "immediately what they are seeing and why it is extraordinary.\n"
-    "UNIVERSAL RULE: Rare behaviour that most viewers will not recognise as rare "
+    "WONDER UNIVERSAL RULE: Rare behaviour that most viewers will not recognise as rare "
     "is still rare — score WF on what is ACTUALLY HAPPENING, not on whether "
     "the viewer will understand it immediately.\n\n"
 
