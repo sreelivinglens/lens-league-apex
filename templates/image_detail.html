@@ -365,6 +365,30 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
 
 /* ── EVALUATED BY SL BADGE ── */
+
+/* ── SESSION 214: TIER JOURNEY STRIP ── */
+.sc-tier-journey{display:flex;align-items:center;flex-wrap:wrap;gap:3px;padding:9px 14px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:8px;margin-bottom:10px}
+.sc-tj-item{font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;color:rgba(26,24,20,.32);white-space:nowrap}
+.sc-tj-item.done{color:rgba(26,24,20,.52)}
+.sc-tj-item.active{color:var(--sc-dark);font-weight:700;border-bottom:2px solid var(--sc-gold)}
+/* ── SESSION 214: IMPRESSION ── */
+.sc-impression{font-size:16px;color:var(--sc-text);line-height:1.85;font-style:italic;border-left:3px solid var(--sc-gold);padding:12px 16px;margin-bottom:10px;background:#FFFBF2;border-radius:0 8px 8px 0}
+/* ── SESSION 214: TECH READ + VISUAL FLOW ── */
+.sc-tech-card{background:#F6F8FF;border-radius:12px;border:0.5px solid #C5D0EE;padding:14px 16px;margin-bottom:10px}
+.sc-tech-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#185FA5;margin-bottom:8px}
+.sc-vf-card{background:#F8F6FF;border-radius:12px;border:0.5px solid #C4B8EE;padding:14px 16px;margin-bottom:10px}
+.sc-vf-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#4a3280;margin-bottom:8px}
+/* ── SESSION 214: MASTER REFERENCE (light — no dark bg) ── */
+.sc-master-card{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;padding:16px 18px;margin-bottom:10px}
+.sc-master-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:6px}
+.sc-master-name{font-size:17px;font-weight:700;color:var(--sc-dark);margin-bottom:6px}
+.sc-master-why{font-size:14px;color:var(--sc-text);line-height:1.75}
+/* ── SESSION 214: IMAGINE ── */
+.sc-imagine-card{background:#F5F0FF;border-radius:12px;border:0.5px solid #C4B8EE;padding:16px 18px;margin-bottom:10px}
+.sc-imagine-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#4a3280;margin-bottom:8px}
+.sc-imagine-body{font-size:16px;color:#2a1060;line-height:1.85}
+/* ── SESSION 214: SPECIES NOTE ── */
+.sc-species-note{background:var(--sc-pista);border:0.5px solid var(--sc-pista-b);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:14px;color:#1a3a1a;line-height:1.65}
 .sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:13px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
 
 /* ── FOOTER ── */
@@ -617,6 +641,15 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
 {% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
 
+{# Session 214 — seven Haiku fields ported to Sonnet scorecard #}
+{% set _impression    = (_audit.get('impression')    or '') | trim %}
+{% set _tech_read_s   = (_audit.get('tech_read')     or '') | trim %}
+{% set _visual_flow_s = (_audit.get('visual_flow')   or '') | trim %}
+{% set _imagine_s     = (_audit.get('imagine')        or '') | trim %}
+{% set _master_name_s = (_audit.get('master_name')   or '') | trim %}
+{% set _master_why_s  = (_audit.get('master_why')    or '') | trim %}
+{% set _species_note_s= (_audit.get('species_note')  or '') | trim %}
+
 {# Percentile #}
 {% set _top_pct = percentile.top_pct if percentile else none %}
 {% set _pct_display = _top_pct %}
@@ -742,6 +775,20 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       {% if _is_pb %}<span class="sc-trust-badge" style="background:#fff8e6;color:var(--sc-gold-dk);border:0.5px solid var(--sc-gold)">↑ Personal best</span>{% endif %}
     </div>
 
+
+    {# ── SESSION 214: TIER JOURNEY STRIP ── #}
+    {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+    {% if image.tier and image.tier in _tiers %}
+    {% set _active_idx = _tiers.index(image.tier) %}
+    <div class="sc-tier-journey">
+      {% for t in _tiers %}
+        {% if loop.index0 < _active_idx %}<span class="sc-tj-item done">{{ t }}</span>
+        {% elif loop.index0 == _active_idx %}<span class="sc-tj-item active">{{ t }}</span>
+        {% else %}<span class="sc-tj-item">{{ t }}</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {# ── SL-181.11 SCORE BLOCK ── #}
     <div class="sc-eval-block">
       <div class="sc-eval-row">
@@ -770,6 +817,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         </div>
       </div>
     </div>
+
+
+    {# ── SESSION 214: IMPRESSION — engine's opening observation ── #}
+    {% if _impression %}
+    <div class="sc-impression">{{ _impression | safe }}</div>
+    {% endif %}
 
     {# ── SL-181.11 SUMMARY BOX — Strength + Next Leap above the fold ── #}
     {% if _strongest_nm or _weakest_nm %}
@@ -855,6 +908,28 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <span id="sc-ddi-text"></span>
         </div>
         <div class="sc-ddi-hint">Tap a dimension to see the engine's reasoning</div>
+        {# ── SESSION 214: DIMENSION OBSERVATIONS — always visible ── #}
+        {% set _dim_obs_map = {
+          'dod_score':         _audit.get('dim_obs_dod') or '',
+          'wonder_score':      _audit.get('dim_obs_wf')  or '',
+          'dm_score':          _audit.get('dim_obs_dm')  or '',
+          'disruption_score':  _audit.get('dim_obs_vd')  or '',
+          'aq_score':          _audit.get('dim_obs_aq')  or '',
+        } %}
+        {% set _has_dim_obs = _dim_obs_map.values() | select | list | length > 0 %}
+        {% if _has_dim_obs %}
+        <div style="margin-top:14px;border-top:0.5px solid var(--sc-border);padding-top:12px;display:flex;flex-direction:column;gap:10px">
+          {% for _attr, _nm, _em, _ar in _ddi_cols %}
+            {% set _obs = _dim_obs_map.get(_attr, '') %}
+            {% if _obs %}
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--sc-dark);margin-bottom:3px">{{ _nm }}</div>
+              <div style="font-size:14px;color:var(--sc-text);line-height:1.75">{{ _obs | safe }}</div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
 
         {# Mobile: all 5 dimensions as colour-coded bars — no tap required #}
         {# SL-181.11: removed "See all 5 dimensions" accordion. LENSIC shows all 5
@@ -995,6 +1070,36 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
       {% endif %}
 
+      {# ── SESSION 214: TECHNICAL READ ── #}
+      {% if _tech_read_s %}
+      <div class="sc-acc-row">
+        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
+          <div class="sc-acc-icon" style="background:#E6F1FB">🔬</div>
+          <div class="sc-acc-col">
+            <div class="sc-acc-title">Technical read</div>
+            <div class="sc-acc-teaser">{{ _tech_read_s | replace('■','') | replace('▪','') | replace('•','') | replace('  ',' ') | trim | truncate(90) }}</div>
+          </div>
+          <span class="sc-acc-chev">⌄</span>
+        </div>
+        <div class="sc-acc-body sc-render-text">{{ _tech_read_s | safe }}</div>
+      </div>
+      {% endif %}
+
+      {# ── SESSION 214: VISUAL FLOW ── #}
+      {% if _visual_flow_s %}
+      <div class="sc-acc-row">
+        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
+          <div class="sc-acc-icon" style="background:#F0EEFF">👁</div>
+          <div class="sc-acc-col">
+            <div class="sc-acc-title">Visual flow</div>
+            <div class="sc-acc-teaser">{{ _visual_flow_s | replace('■','') | replace('▪','') | replace('•','') | replace('  ',' ') | trim | truncate(90) }}</div>
+          </div>
+          <span class="sc-acc-chev">⌄</span>
+        </div>
+        <div class="sc-acc-body sc-render-text">{{ _visual_flow_s | safe }}</div>
+      </div>
+      {% endif %}
+
     </div>
     {% endif %}
 
@@ -1031,6 +1136,16 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
     {% endfor %}
+    {% endif %}
+
+
+    {# ── SESSION 214: MASTER REFERENCE ── #}
+    {% if _master_name_s %}
+    <div class="sc-master-card">
+      <div class="sc-master-label">Master reference</div>
+      <div class="sc-master-name">{{ _master_name_s }}</div>
+      {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | safe }}</div>{% endif %}
+    </div>
     {% endif %}
 
     {# ── SL-181.11 BODY OF WORK — promoted to named numbered section ── #}
@@ -1098,6 +1213,15 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
+
+    {# ── SESSION 214: IMAGINE ── #}
+    {% if _imagine_s %}
+    <div class="sc-imagine-card">
+      <div class="sc-imagine-label">Imagine</div>
+      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | safe }}</div>
+    </div>
+    {% endif %}
+
     {# ⑧ EDIT SUGGESTIONS #}
     {% if _edit_base or _edit_creative %}
     <div class="sc-acc-block">
@@ -1128,6 +1252,15 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <div class="sc-acc-body sc-render-text">{{ _edit_creative | replace('Convert to black and white','Develop a distinctive colour treatment') | replace('convert to black and white','develop a distinctive colour treatment') | safe }}</div>
       </div>
       {% endif %}
+    </div>
+    {% endif %}
+
+
+    {# ── SESSION 214: SPECIES NOTE (wildlife only, confidence-gated) ── #}
+    {% if _species_note_s %}
+    <div class="sc-species-note">
+      <span style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#0F6E56;display:block;margin-bottom:5px">Species</span>
+      {{ _species_note_s | safe }}
     </div>
     {% endif %}
 
@@ -1204,7 +1337,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <strong>{{ _weakest_dim }}</strong> is your lowest dimension right now. Fix that one ceiling and the rest of your evaluation follows.
         </p>
         {% endif %}
-        <a href="{{ url_for('league_haiku') }}?score_min=8.5{% if image.genre %}&genre={{ image.genre | urlencode }}{% endif %}"
+        <a href="{{ url_for('standings_public') }}?score_min=8.5{% if image.genre %}&genre={{ image.genre | urlencode }}{% endif %}"
            style="font-size:13px;font-weight:600;color:#A37B2C;text-decoration:none">
           See what 8.5 images look like →
         </a>
