@@ -9320,6 +9320,23 @@ def upload():
         except Exception as _mpo_err:
             app.logger.warning(f'[upload] MPO check failed (continuing): {_mpo_err}')
 
+        # ── Session 215: EXIF orientation auto-correction ───────────────────────
+        # Phone cameras save landscape shots with an EXIF orientation tag instead of
+        # rotating the pixel data. Without this fix, the engine sees a rotated image.
+        # ImageOps.exif_transpose() rotates pixels to match EXIF orientation and strips
+        # the tag — the corrected file then goes into ingest_image() correctly oriented.
+        try:
+            from PIL import Image as _PILOrient, ImageOps as _IOOrient
+            with _PILOrient.open(raw_path) as _po:
+                _po_corrected = _IOOrient.exif_transpose(_po)
+                if _po_corrected is not _po:
+                    # Orientation correction was applied — overwrite raw file
+                    _po_corrected = _po_corrected.convert('RGB')
+                    _po_corrected.save(raw_path, 'JPEG', quality=95)
+                    app.logger.info(f'[upload] EXIF orientation corrected: {raw_path}')
+        except Exception as _orient_err:
+            app.logger.warning(f'[upload] EXIF orientation check failed (continuing): {_orient_err}')
+
         try:
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
