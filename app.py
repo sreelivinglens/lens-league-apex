@@ -1,3 +1,5 @@
+# SL-VERSION: 182.15 (Session 214, 2026-09-06 — Removed on-view backfill (replaced by DB flag write via SQL). _sl214_backfill_done flag still written by _force_rescore_in_background. RETAINS 182.14.
+# SL-VERSION: 182.14 (Session 214, 2026-09-06 — On-view backfill: fires once per image, writes _sl214_backfill_done flag to audit_json on completion. Gate checks flag not field presence — eliminates re-trigger loop. Passes 14 new fields to build_scorecard_pdf: impression, what_next, body_of_work, master_name/why, dim_obs x5, tech_read, visual_flow, imagine, species_note. RETAINS 182.13.)
 # SL-VERSION: 182.13 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
@@ -13078,31 +13080,6 @@ def image_detail(image_id):
     except Exception as _hpe:
         app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
 
-    # ── Session 214: On-view backfill — populate new scorecard fields on older images ──
-    # Fires ONCE per image — guarded by _sl214_backfill_done flag in audit_json.
-    # Force rescore writes the flag on completion so this never re-triggers.
-    _backfill_triggered = False
-    try:
-        if (img.status == 'scored' and img.score and
-                current_user.is_authenticated and
-                (img.user_id == current_user.id or current_user.role == 'admin')):
-            import json as _bf_json
-            _bf_audit = _bf_json.loads(img._audit_json or '{}')
-            if (_bf_audit.get('source') != 'haiku_try' and
-                    not _bf_audit.get('_sl214_backfill_done')):
-                _bf_old_score = img.score
-                _bf_old_tier  = img.tier
-                img.status = 'processing'
-                db.session.commit()
-                threading.Thread(
-                    target=_force_rescore_in_background,
-                    args=(image_id, _bf_old_score, _bf_old_tier, 'scored'),
-                    daemon=True
-                ).start()
-                _backfill_triggered = True
-                app.logger.info(f'[image_detail] backfill rescore triggered image={image_id}')
-    except Exception as _bf_err:
-        app.logger.debug(f'[image_detail] backfill check non-fatal: {_bf_err}')
 
     # Strip [Species: X] prefix from subject for display — it is an internal
     # scoring tag written at upload time (Wildlife genre hint) and must not
