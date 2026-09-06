@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.19 (Session 215, 2026-09-06 — Dim obs: score column widened 64px→80px to prevent STRONGEST label overflow into description text. Text column 5px left padding added. RETAINS 182.18.) #}
 {# SL-VERSION: image_detail-182.18 (Session 215, 2026-09-06 — Dim obs redesign: (1) Desktop DDI tile strip hidden — redundant with detailed rows below. (2) Removed tap-detail panel and hint text. (3) Colour-coded dim obs rows: gold/green/slate/grey left border + tint + icon + coloured label per status. RETAINS 182.17.) #}
 {# SL-VERSION: image_detail-182.17 (Session 215, 2026-09-06 — (1) Dim obs: padding-top on text column for breathing space between score and analysis. (2) Removed 'What SL saw' accordion — duplicated impression/strength_obs/next_leap_obs already shown above. (3) Conclusion: dark background removed, replaced with Haiku-standard sage green open zone. RETAINS 182.16.) #}
 {# SL-VERSION: image_detail-182.16 (Session 215, 2026-09-06 — Three fixes: (1) Photographer name: use image.photographer_name not current_user — admin viewing any image was showing 'Admin'. (2) Dim observations: upgraded from 14px list to Haiku-level layout with 26px score left + obs text right, always visible. (3) Tech read + Visual flow: removed from hidden accordion, rendered as open warm-sand zone after master reference card. RETAINS 182.15 / 182.14.) #}
@@ -951,12 +952,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
             {% set _is_stg = (_val and _nm == _strongest_nm) %}
             {% set _is_lp  = (_val and _nm == _weakest_nm) %}
             {% set _is_str = (_val and not _is_stg and not _is_lp and _val >= 7.0) %}
-            <div style="display:grid;grid-template-columns:64px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {% if _is_stg %}#C8A84B{% elif _is_lp %}#94a3b8{% elif _is_str %}#4ade80{% else %}#e2e8f0{% endif %};background:{% if _is_stg %}linear-gradient(to right,#FEFBF0,transparent 50%){% elif _is_lp %}linear-gradient(to right,#F5F7FA,transparent 50%){% elif _is_str %}linear-gradient(to right,#F0FDF4,transparent 50%){% else %}transparent{% endif %}">
+            <div style="display:grid;grid-template-columns:80px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {% if _is_stg %}#C8A84B{% elif _is_lp %}#94a3b8{% elif _is_str %}#4ade80{% else %}#e2e8f0{% endif %};background:{% if _is_stg %}linear-gradient(to right,#FEFBF0,transparent 50%){% elif _is_lp %}linear-gradient(to right,#F5F7FA,transparent 50%){% elif _is_str %}linear-gradient(to right,#F0FDF4,transparent 50%){% else %}transparent{% endif %}">
               <div style="display:flex;flex-direction:column;align-items:center;padding-top:2px">
                 <span style="font-size:26px;font-weight:700;color:var(--sc-dark);line-height:1;font-variant-numeric:tabular-nums">{{ '%.1f'|format(_val) if _val else '—' }}</span>
                 <span style="font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:5px;text-align:center;{% if _is_stg %}color:#C8A84B{% elif _is_lp %}color:#64748b{% elif _is_str %}color:#16a34a{% else %}color:#94a3b8{% endif %}">{% if _is_stg %}Strongest{% elif _is_lp %}Next leap{% elif _is_str %}Strong{% else %}Good{% endif %}</span>
               </div>
-              <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px">
+              <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
                 <div style="display:flex;align-items:center;gap:6px">
                   <span style="font-size:15px">{{ _em }}</span>
                   <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;{% if _is_stg %}color:#A37B00{% elif _is_lp %}color:#475569{% elif _is_str %}color:#15803d{% else %}color:#94a3b8{% endif %}">{{ _nm }}</span>
