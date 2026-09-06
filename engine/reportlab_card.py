@@ -174,6 +174,28 @@ class _AccentBar(Flowable):
         c.setFillColor(self._accent)
         c.drawString(5*mm, 2*mm, self._label.upper())
 
+# ── Logo fetch ────────────────────────────────────────────────────────────────────────────────
+_LOGO_CACHE = None
+
+def _fetch_logo():
+    """Fetch SL logo once, cache in module scope. Falls back silently."""
+    global _LOGO_CACHE
+    if _LOGO_CACHE is not None:
+        return _LOGO_CACHE
+    import os as _os
+    _site = _os.getenv('SITE_URL', 'https://shutterleague.com')
+    _url  = f"{_site.rstrip('/')}/static/img/shutterleague-logo-cropped.png"
+    try:
+        r = requests.get(_url, timeout=6, headers={'User-Agent': 'ShutterLeague-PDF/2.0'})
+        r.raise_for_status()
+        _LOGO_CACHE = io.BytesIO(r.content)
+        return _LOGO_CACHE
+    except Exception as e:
+        print(f'[reportlab_card] logo fetch: {e}')
+        _LOGO_CACHE = False
+        return None
+
+
 # ── Photo fetch ───────────────────────────────────────────────────────────────
 def _fetch_photo(url):
     if not url:
@@ -339,12 +361,29 @@ def build_scorecard_pdf(data: dict) -> bytes:
     # PAGE 1 — Photo · Score · Dims · Opening · Content rows
     # ════════════════════════════════
 
-    # Header line
-    hdr_tbl = Table(
-        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
-          Paragraph('APEX DDI ENGINE  ·  FULL EVALUATION', S['page_sub'])]],
-        colWidths=[avail * 0.5, avail * 0.5],
-    )
+    # Header line — logo + brand text + right label
+    _logo_bytes = _fetch_logo()
+    _logo_buf   = io.BytesIO(_logo_bytes.getvalue()) if _logo_bytes else None
+    _logo_flowable = None
+    if _logo_buf:
+        try:
+            _logo_flowable = RLImage(_logo_buf, width=7*mm, height=7*mm, kind='proportional')
+        except Exception:
+            _logo_flowable = None
+
+    if _logo_flowable:
+        hdr_tbl = Table(
+            [[_logo_flowable,
+              Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph('APEX DDI ENGINE  ·  FULL EVALUATION', S['page_sub'])]],
+            colWidths=[9*mm, avail * 0.45, avail - 9*mm - avail * 0.45],
+        )
+    else:
+        hdr_tbl = Table(
+            [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph('APEX DDI ENGINE  ·  FULL EVALUATION', S['page_sub'])]],
+            colWidths=[avail * 0.5, avail * 0.5],
+        )
     hdr_tbl.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 0),
@@ -453,11 +492,26 @@ def build_scorecard_pdf(data: dict) -> bytes:
     # ────────────────────────────────
     story.append(PageBreak())
 
-    hdr2 = Table(
-        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
-          Paragraph(f'FULL EVALUATION  ·  {asset}', S['page_sub'])]],
-        colWidths=[avail * 0.5, avail * 0.5],
-    )
+    _logo_buf2 = io.BytesIO(_logo_bytes.getvalue()) if _logo_bytes else None
+    _logo2 = None
+    if _logo_buf2:
+        try:
+            _logo2 = RLImage(_logo_buf2, width=7*mm, height=7*mm, kind='proportional')
+        except Exception:
+            pass
+    if _logo2:
+        hdr2 = Table(
+            [[_logo2,
+              Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph(f'FULL EVALUATION  ·  {asset}', S['page_sub'])]],
+            colWidths=[9*mm, avail * 0.45, avail - 9*mm - avail * 0.45],
+        )
+    else:
+        hdr2 = Table(
+            [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph(f'FULL EVALUATION  ·  {asset}', S['page_sub'])]],
+            colWidths=[avail * 0.5, avail * 0.5],
+        )
     hdr2.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 0),
@@ -536,11 +590,26 @@ def build_scorecard_pdf(data: dict) -> bytes:
     # ────────────────────────────────
     story.append(PageBreak())
 
-    hdr3 = Table(
-        [[Paragraph('SHUTTER LEAGUE', S['page_title']),
-          Paragraph(f'EDIT GUIDE  ·  {asset}', S['page_sub'])]],
-        colWidths=[avail * 0.5, avail * 0.5],
-    )
+    _logo_buf3 = io.BytesIO(_logo_bytes.getvalue()) if _logo_bytes else None
+    _logo3 = None
+    if _logo_buf3:
+        try:
+            _logo3 = RLImage(_logo_buf3, width=7*mm, height=7*mm, kind='proportional')
+        except Exception:
+            pass
+    if _logo3:
+        hdr3 = Table(
+            [[_logo3,
+              Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph(f'EDIT GUIDE  ·  {asset}', S['page_sub'])]],
+            colWidths=[9*mm, avail * 0.45, avail - 9*mm - avail * 0.45],
+        )
+    else:
+        hdr3 = Table(
+            [[Paragraph('SHUTTER LEAGUE', S['page_title']),
+              Paragraph(f'EDIT GUIDE  ·  {asset}', S['page_sub'])]],
+            colWidths=[avail * 0.5, avail * 0.5],
+        )
     hdr3.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 0),
