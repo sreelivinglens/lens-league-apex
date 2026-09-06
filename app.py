@@ -1,4 +1,4 @@
-# SL-VERSION: 182.16 (Session 216, 2026-09-06 — DM shutter speed rules added to _TRY_HAIKU_PROMPT. Three rules: (1) fast shutter ≥1/500s = anticipation, do not score DM low on static appearance alone; (2) trust pre-call behaviour string over pixel posture; (3) when no EXIF and ambiguous, score on posture quality and note uncertainty in dim_obs_dm. Prevents false low DM on frozen-motion Wildlife frames.)
+# SL-VERSION: 182.17 (Session 216, 2026-09-07 — Rule 26 hard gate added to admin_force_rescore(). Haiku images now blocked from Sonnet force_rescore via raw SQL is_haiku_try check. Returns 400 JSON or flash error with clear message. Prevents irreversible destruction of Haiku _audit_json by accidental Sonnet rescore.)
 
 import os
 import re
@@ -11380,6 +11380,19 @@ def admin_force_rescore(image_id):
     famous-event calibration gate).
     """
     img = Image.query.get_or_404(image_id)
+
+    # Rule 26 — HARD GATE: force_rescore is Sonnet only. Never on Haiku images.
+    # Running Sonnet on a Haiku image overwrites _audit_json permanently — irreversible.
+    # Raw SQL per Rule 8 — is_haiku_try is not an ORM column.
+    _is_haiku = db.session.execute(
+        db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+        {'iid': image_id}
+    ).scalar()
+    if _is_haiku:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+            return jsonify({'status': 'error', 'message': 'This is a Haiku image. Use Haiku rescore instead — force_rescore would destroy the Haiku record.'}), 400
+        flash('This is a Haiku image. Use Haiku rescore — force_rescore on a Haiku image destroys its audit record.', 'error')
+        return redirect(request.referrer or url_for('admin_dashboard'))
 
     _log_admin_action('force_rescore', 'image', image_id, {
         'asset_name': img.asset_name, 'score_before': float(img.score or 0),
