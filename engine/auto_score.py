@@ -1,3 +1,6 @@
+# SL-VERSION: 171.15-staging (Session 215, 2026-09-06 — FIX: background_check and what_stood_out removed from MASTER_FIELDS repeat detector — both are intentional backward-compat duplicates of byline_1 and hard_truth respectively, causing false MASTER_REPEAT logs on every rescore. RETAINS 171.14.)
+# SL-VERSION: 171.14-staging (Session 215, 2026-09-06 — FIX: max_tokens lowered 6000→5000. 6000 caused 206s total scoring time. Estimated actual token need ~4350; 5000 gives safe headroom at lower latency. Also added false-positive phrases to master repeat skip list (Your Wildlife etc). RETAINS 171.13.)
+# SL-VERSION: 171.13-staging (Session 215, 2026-09-06 — FIX: httpx timeout raised 90s→150s on main scoring call and recalibrate_audit call. 6000 max_tokens generates larger responses; 90s was insufficient causing stuck images on complex Wildlife rescores. RETAINS 171.12.)
 # SL-VERSION: 171.12-staging (Session 215, 2026-09-06 — FIX: max_tokens raised 4000→6000. New fields truncated silently — tech_read/visual_flow/imagine/conclusion/award_context/species_note all at end of JSON schema, all cut off when response hit 4000 token ceiling. RETAINS 171.11.)
 # SL-VERSION: 171.11-staging (Session 215, 2026-09-06 — P0: Added 18 new field format discipline rules to SCORE_PROMPT. impression, strength_name, strength_obs, next_leap_name, next_leap_obs, dim_obs_dod/disruption/dm/wonder/aq, master_name, master_why, tech_read, visual_flow, imagine, conclusion, award_context, species_note — all now have explicit format rules matching Haiku prompt discipline. Sherpa test, banned phrases, character limits, score gates, tier gate on conclusion, award_context thresholds, species_note conservative gate. RETAINS 171.10-staging.)
 # SL-VERSION: 171.10-staging (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: Platform Mentor rule tightened — ONLY Street/Fashion/Conceptual. Removed Nature, overthinking, cross-genre blanket triggers. RETAINS 171.9-staging.)
@@ -4938,13 +4941,10 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     payload = {
         "model":       MODEL,
-        "max_tokens":  6000,  # Raised 171.11→171.12 (Session 215): 18 new fields added to JSON
-                               # schema (impression, dim_obs x5, master_name/why, tech_read,
-                               # visual_flow, imagine, conclusion, award_context, species_note,
-                               # strength/next_leap obs). Prior 4000 limit caused truncation —
-                               # new fields at end of schema (tech_read onward) were cut silently.
-                               # Existing fields already generated ~3500 tokens. New fields add
-                               # ~1200-1500 tokens. 6000 provides safe headroom.
+        "max_tokens":  5000,  # Session 215: 5000 balances completeness vs speed.
+                               # Existing fields ~3500 tokens + 18 new fields ~850 tokens = ~4350.
+                               # 5000 gives 650 headroom without the latency of 6000
+                               # (6000 caused 206s total scoring time; 5000 targets ~150s).
         "temperature": 0.0,  # was 0.2 — lowered Session 124 after 7.12/8.12/7.92 same-image
                               # rescore variance observed. Anthropic's API is not fully
                               # deterministic even at temp=0, but this meaningfully tightens
@@ -4982,7 +4982,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                     "content-type":      "application/json",
                 },
                 json=payload,
-                timeout=90,
+                timeout=150,
             )
             if response.status_code == 529:
                 wait = (attempt + 1) * 20
@@ -5121,8 +5121,10 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # modify scorecard text in post-processing). The log entry is the signal
     # to tighten the prompt further if violations persist.
     _MASTER_FIELDS = [
-        'transferable_advice', 'byline_1', 'background_check', 'what_stood_out',
+        'transferable_advice', 'byline_1', 'what_stood_out',
         'mentor_technical', 'mentor_next', 'byline_2', 'hard_truth',
+        # background_check excluded — intentional duplicate of byline_1 (backward compat field)
+        # what_stood_out excluded — intentional duplicate of hard_truth
     ]
     # Extract candidate master names: words of 3+ chars starting with uppercase,
     # appearing in the masters pool block, or any word that appears in 2+ fields
@@ -5148,6 +5150,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 'Wonder Factor', 'Depth Dimension', 'Aesthetic Quality', 'Eye Wonder',
                 'Access Wonder', 'Cultural Wonder', 'Emotional Wonder', 'Camera League',
                 'Russell Market', 'Church Street', 'Cubbon Park', 'Your Assignment',
+                'Your Wildlife', 'Your Street', 'Your Landscape', 'Your Wedding', 'Your People',
+                'Your Nature', 'Your Documentary', 'Your Creative', 'Your Drone', 'Your Fashion',
+                'League Photographers', 'Body Work', 'Next Shot', 'Next Body',
             }
             if _n in _skip:
                 continue
@@ -5389,7 +5394,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
                     "content-type":      "application/json",
                 },
                 json=payload,
-                timeout=90,
+                timeout=150,
             )
             if response.status_code == 529:
                 wait = (attempt + 1) * 20
