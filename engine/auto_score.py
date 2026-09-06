@@ -1,3 +1,4 @@
+# SL-VERSION: 171.12-staging (Session 215, 2026-09-06 — FIX: max_tokens raised 4000→6000. New fields truncated silently — tech_read/visual_flow/imagine/conclusion/award_context/species_note all at end of JSON schema, all cut off when response hit 4000 token ceiling. RETAINS 171.11.)
 # SL-VERSION: 171.11-staging (Session 215, 2026-09-06 — P0: Added 18 new field format discipline rules to SCORE_PROMPT. impression, strength_name, strength_obs, next_leap_name, next_leap_obs, dim_obs_dod/disruption/dm/wonder/aq, master_name, master_why, tech_read, visual_flow, imagine, conclusion, award_context, species_note — all now have explicit format rules matching Haiku prompt discipline. Sherpa test, banned phrases, character limits, score gates, tier gate on conclusion, award_context thresholds, species_note conservative gate. RETAINS 171.10-staging.)
 # SL-VERSION: 171.10-staging (Session 186, 2026-08-15 — FIX Ashok Kochhar genre: Platform Mentor rule tightened — ONLY Street/Fashion/Conceptual. Removed Nature, overthinking, cross-genre blanket triggers. RETAINS 171.9-staging.)
 # SL-VERSION: 171.9-staging (Session 184, 2026-08-14 — Prompt caching fix: switched SYSTEM_BRIEF cache TTL from 5min to 1hr on Calls 2/3/4. 5min TTL was expiring between infrequent scoring calls so cache was written but never read. 1hr TTL matches SL scoring cadence. VISION_SYSTEM cache_control removed — 165 tokens is below Sonnet 4.6 minimum of 1024, was silently skipped every call. RETAINS 171.8-staging.)
@@ -4937,9 +4938,13 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     payload = {
         "model":       MODEL,
-        "max_tokens":  4000,  # Increased 110.3→110.4: new mentor fields (transferable_advice,
-                               # byline_1, byline_2, mentor_location, calibration_line) generate
-                               # ~3500+ tokens. 2500 caused truncation mid-string on long responses.
+        "max_tokens":  6000,  # Raised 171.11→171.12 (Session 215): 18 new fields added to JSON
+                               # schema (impression, dim_obs x5, master_name/why, tech_read,
+                               # visual_flow, imagine, conclusion, award_context, species_note,
+                               # strength/next_leap obs). Prior 4000 limit caused truncation —
+                               # new fields at end of schema (tech_read onward) were cut silently.
+                               # Existing fields already generated ~3500 tokens. New fields add
+                               # ~1200-1500 tokens. 6000 provides safe headroom.
         "temperature": 0.0,  # was 0.2 — lowered Session 124 after 7.12/8.12/7.92 same-image
                               # rescore variance observed. Anthropic's API is not fully
                               # deterministic even at temp=0, but this meaningfully tightens
