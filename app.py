@@ -1,5 +1,3 @@
-# SL-VERSION: 182.15 (Session 214, 2026-09-06 — Removed on-view backfill (replaced by DB flag write via SQL). _sl214_backfill_done flag still written by _force_rescore_in_background. RETAINS 182.14.
-# SL-VERSION: 182.14 (Session 214, 2026-09-06 — On-view backfill: fires once per image, writes _sl214_backfill_done flag to audit_json on completion. Gate checks flag not field presence — eliminates re-trigger loop. Passes 14 new fields to build_scorecard_pdf: impression, what_next, body_of_work, master_name/why, dim_obs x5, tech_read, visual_flow, imagine, species_note. RETAINS 182.13.)
 # SL-VERSION: 182.13 (Session 213, 2026-09-05 — Wildlife master safety net: when pre-call returns no group on Wildlife genre (low confidence, heavily bokeh'd subject), fall back to Vincent Munier instead of DB library. Prevents non-wildlife photographers (Ashok Kochhar) being assigned to Wildlife images. _try_vision_analyse() pre-call identifies subject before scoring prompt is built. _pick_master_haiku() Python dict replaces all engine master reference selection for wildlife groups A-G. _build_dod_anchors() injects group-specific DOD scale. {verified_subject} block injected into prompt. Engine receives facts not questions. Master bans eliminated permanently.)
 
 import os
@@ -9119,6 +9117,12 @@ def upload_preflight():
                     f'[preflight] similar: user={current_user.id} '
                     f'sim={_best_sim:.1f}% image={_best_match.id}'
                 )
+    except ValueError as _res_val_err:
+        # Resolution too low — this IS fatal, surface it to the user
+        app.logger.warning(f'[preflight] resolution gate: {_res_val_err}')
+        result['error'] = True
+        result['message'] = str(_res_val_err)
+        return jsonify(result)
     except Exception as _sim_err:
         app.logger.warning(f'[preflight] similarity check failed (non-fatal): {_sim_err}')
 
@@ -11706,15 +11710,6 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                     except Exception as _gme:
                         app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
-            # Session 214 — mark backfill complete so image_detail doesn't re-trigger
-            try:
-                import json as _bf214j
-                _bf214_audit = _bf214j.loads(img._audit_json or '{}')
-                _bf214_audit['_sl214_backfill_done'] = True
-                img._audit_json = _bf214j.dumps(_bf214_audit)
-            except Exception:
-                pass
-
             if img.is_public and not img.is_flagged:
                 _ensure_share_token(img)
             db.session.commit()
@@ -13079,7 +13074,6 @@ def image_detail(image_id):
             ).first() is not None
     except Exception as _hpe:
         app.logger.warning(f'[image_detail] pending eval check: {_hpe}')
-
 
     # Strip [Species: X] prefix from subject for display — it is an internal
     # scoring tag written at upload time (Wildlife genre hint) and must not
