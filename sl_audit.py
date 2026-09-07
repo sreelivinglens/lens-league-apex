@@ -13,6 +13,12 @@ Usage:
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
+Session 217 (07 Sep 2026):
+  CSI CARD BACKGROUND CHECKS UPDATED (Rule 41 — Session 216 design change):
+    · CSI Card A: check changed from #2D1F00 (dark amber) → #FFF8E6 / #EDD89A (light amber)
+    · CSI Card B: check changed from #1A1A2E (dark navy) → #E8F0F8 / #C5D8EA (light blue)
+    · Clears 2 previously-parked failures on image_detail.html 182.23.
+
 Session 168 (31 Jul 2026): Added check 0b — Jinja {{ }} inside <script> blocks.
 Session 208 (02 Sep 2026):
   TWO-WORLDS SEPARATION — New check on all HTML templates:
@@ -2412,14 +2418,14 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         _csi_checks = [
             ('CSI Card A — csi_own_duplicate condition present',
              'csi_own_duplicate' in content),
-            ('CSI Card A — dark amber background (#2D1F00)',
-             '#2D1F00' in content),
+            ('CSI Card A — light amber background (#FFF8E6 / #EDD89A — Rule 41 Session 216)',
+             '#FFF8E6' in content or '#EDD89A' in content),
             ('CSI Card A — contact sheet copy present',
              'contact sheet' in content),
             ('CSI Card B — csi_threshold_hit condition present',
              'csi_threshold_hit' in content),
-            ('CSI Card B — dark navy background (#1A1A2E)',
-             '#1A1A2E' in content),
+            ('CSI Card B — light blue background (#E8F0F8 / #C5D8EA — Rule 41 Session 216)',
+             '#E8F0F8' in content or '#C5D8EA' in content),
             ('CSI Card B — Sherpa pool copy present',
              'seen in the Shutter League' in content or 'SHUTTER LEAGUE POOL' in content),
             ('CSI cards — no score-change language',
