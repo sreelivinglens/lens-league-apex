@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.7 (Session 215, 2026-09-06 — Image grid: (1) pagination Previous/Next anchor to #images. (2) Server-side search form: text input + genre dropdown both navigate via q param — searches all 330 images via existing route ILIKE on genre/username/title. Genre dropdown navigates immediately on change. Search button submits. Clear link resets. RETAINS admin-2.6.) #}
+{# SL-VERSION: admin-2.9 (Session 218, 2026-09-10 — Evolving Eye trigger panel added. Calibration drift link added to sidebar Platform group and Quick Actions. Bulk upload note (member-side only). RETAINS admin-2.7.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -466,6 +466,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <a class="mob-nav-item" onclick="navTo('needs-attention','b-na','cNA')"><i class="ti ti-alert-circle"></i> Attention</a>
   <a class="mob-nav-item" onclick="navTo('images','b-images-body','cIM')"><i class="ti ti-camera"></i> Images</a>
   <a class="mob-nav-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid</a>
+  <a class="mob-nav-item" onclick="navTo('evolving-eye','b-ee-body','cEE')"><i class="ti ti-eye"></i> Eye</a>
   <a class="mob-nav-item" onclick="navTo('haiku-members','b-haiku-body','cHM')"><i class="ti ti-users"></i> Haiku</a>
   <a class="mob-nav-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Audit</a>
   <a class="mob-nav-item" onclick="navTo('danger','b-dz-body','cDZ')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
@@ -512,6 +513,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Members</div>
     <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers{% if paid_users %}<span class="sb-badge ok">{{ paid_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('uat-members','b-uat-body','cUAT')"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning{% if uat_users %}<span class="sb-badge warn">{{ uat_users|length }}</span>{% endif %}</a>
+    <a class="sb-item" onclick="navTo('evolving-eye','b-ee-body','cEE')">
+      <i class="ti ti-eye"></i> Evolving Eye
+      {% set _sb_ee_pending = evolving_eye_users | selectattr('has_report','equalto',false) | list | length %}
+      {% if _sb_ee_pending > 0 %}<span class="sb-badge warn">{{ _sb_ee_pending }}</span>{% endif %}
+    </a>
     <a class="sb-item" onclick="navTo('haiku-members','b-haiku-body','cHM')">
       <i class="ti ti-users"></i> Haiku members
       {% if stats.free_users > 0 %}<span class="sb-badge haiku">{{ stats.free_users }}</span>{% endif %}
@@ -534,6 +540,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <i class="ti ti-eye"></i> CSI review
       {% if csi_unreviewed_count > 0 %}<span class="sb-badge warn">{{ csi_unreviewed_count }}</span>{% endif %}
     </a>
+    <a class="sb-item" href="{{ url_for('admin_calibration') }}" style="text-decoration:none"><i class="ti ti-adjustments"></i> Calibration drift</a>
     <a class="sb-item" href="{{ url_for('admin_mim_export') }}" style="text-decoration:none"><i class="ti ti-download"></i> MIM Export</a>
     <a class="sb-item" href="{{ url_for('admin_mim_users') }}" style="text-decoration:none"><i class="ti ti-users"></i> MIM Users</a>
     <a class="sb-item" href="{{ url_for('admin_international_waitlist') }}" style="text-decoration:none"><i class="ti ti-world"></i> Intl Waitlist</a>
@@ -717,8 +724,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <a class="qa-btn" href="{{ url_for('admin_mim_users') }}"><i class="ti ti-users"></i> Manage mentors</a>
         <a class="qa-btn" href="{{ url_for('admin_emailer') }}"><i class="ti ti-mail"></i> Send email</a>
         <a class="qa-btn" href="{{ url_for('admin_audit_log') }}"><i class="ti ti-file-search"></i> Full audit log →</a>
+        <a class="qa-btn" href="{{ url_for('admin_calibration') }}"><i class="ti ti-adjustments"></i> Calibration drift →</a>
       </div>
     </div>
+  </div>
+
+  {# ── BULK UPLOAD ── #}
+  <div class="guide" id="bulk-upload">
+    <strong>Bulk upload — member-side only.</strong> <code>/bulk-upload</code> (Sonnet, up to 10 images) and <code>/try/upload</code> (Haiku, single image) upload as the currently logged-in user — they are not admin tools. Members access these from their own dashboard. There is no admin-side bulk upload on behalf of a member.
   </div>
 
   {# ── SEARCH ── #}
@@ -1025,8 +1038,65 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     </div>
   </div>
 
+  {# ── EVOLVING EYE TRIGGERS ── #}
+  <div class="guide info" id="evolving-eye">
+    <strong>Evolving Eye — admin triggers.</strong> Users with 10+ scored images are ready for their advisory. Those without a report yet are shown first. Trigger fires the generation in a background thread and sends the advisory email. View opens the report without switching accounts.
+  </div>
+  <div class="section" style="margin-bottom:12px">
+    <div class="sec-hdr" onclick="tog('b-ee-body','cEE')">
+      <div class="sec-title"><i class="ti ti-eye"></i> Evolving Eye
+        {% set _ee_pending = evolving_eye_users | selectattr('has_report','equalto',false) | list | length %}
+        {% if _ee_pending > 0 %}<span class="sec-badge warn">{{ _ee_pending }} pending</span>{% else %}<span class="sec-badge ok">All generated</span>{% endif %}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">10+ images · Sonnet only</span><span class="chev closed" id="cEE">▼</span></div>
+    </div>
+    <div id="b-ee-body" class="sec-body" style="display:none">
+      <div id="ee-flash" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:8px;font-size:14px"></div>
+      {% if evolving_eye_users %}
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="font-size:12px;color:#8A8A86;font-weight:500;text-align:left;padding:0 8px 8px 0;border-bottom:1px solid #EEE">Name</th>
+            <th style="font-size:12px;color:#8A8A86;font-weight:500;text-align:left;padding:0 8px 8px 0;border-bottom:1px solid #EEE">Images</th>
+            <th style="font-size:12px;color:#8A8A86;font-weight:500;text-align:left;padding:0 8px 8px 0;border-bottom:1px solid #EEE">Status</th>
+            <th style="font-size:12px;color:#8A8A86;font-weight:500;text-align:right;padding:0 0 8px 0;border-bottom:1px solid #EEE">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for eu in evolving_eye_users %}
+          <tr id="ee-row-{{ eu.id }}">
+            <td style="font-size:14px;padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle">
+              <div style="font-weight:500">{{ eu.name }}</div>
+              <div style="font-size:12px;color:#8A8A86">ID {{ eu.id }}</div>
+            </td>
+            <td style="font-size:14px;padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle;font-weight:500">{{ eu.scored }}</td>
+            <td style="padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle">
+              {% if eu.has_report %}
+              <span class="spill s-active">Report ready · milestone {{ eu.milestone }}</span>
+              {% else %}
+              <span class="spill s-warn">No report yet</span>
+              {% endif %}
+            </td>
+            <td style="padding:10px 0 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle;text-align:right">
+              <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+                <button class="psa" id="ee-btn-{{ eu.id }}" onclick="triggerEye({{ eu.id }}, '{{ eu.name|replace("'","\\'") }}', this)">
+                  {{ 'Re-generate' if eu.has_report else 'Generate' }}
+                </button>
+                <a class="psa" href="{{ url_for('admin_view_evolving_eye', user_id=eu.id) }}" target="_blank">View →</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="font-size:14px;color:#8A8A86;padding:10px 0">No users with 10+ scored images yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
   {# ── HAIKU MEMBERS ── #}
-  <div class="guide info">
+  <div class="guide info" id="haiku-members-guide">
     <strong>Haiku members panel.</strong>
     <ul>
       <li><strong>Onboarding</strong> = registered, hasn't uploaded yet. Send a Sherpa-tone nudge email.</li>
@@ -2151,8 +2221,46 @@ function executeBulkDelete(delType){
       setTimeout(function(){ result.style.display = 'none'; }, 5000);
     });
 }
+// ── EVOLVING EYE TRIGGER ─────────────────────────────────────────────────────
+function triggerEye(uid, name, btn) {
+  if (!confirm('Generate Evolving Eye advisory for ' + name + '?\nThis fires the generation engine and sends the advisory email.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  var flash = document.getElementById('ee-flash');
+  fetch('/admin/generate-evolving-eye/' + uid, { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      flash.style.display = 'block';
+      if (d.status === 'generating') {
+        flash.style.background = '#F0FDF4'; flash.style.color = '#2E7D32'; flash.style.border = '1px solid #BBF7D0';
+        flash.textContent = '✓ Generating for ' + name + ' (' + d.advisory_type + ', ' + d.total_images + ' images, milestone ' + d.milestone + '). Email will go out on completion.';
+        btn.textContent = 'Re-generate';
+        // Update status badge in that row
+        var row = document.getElementById('ee-row-' + uid);
+        if (row) {
+          var spill = row.querySelector('.spill');
+          if (spill) { spill.className = 'spill s-warn'; spill.textContent = 'Generating…'; }
+        }
+      } else {
+        flash.style.background = '#FEF2F2'; flash.style.color = '#B91C1C'; flash.style.border = '1px solid #FECACA';
+        flash.textContent = '✗ ' + (d.error || 'Generation failed');
+        btn.textContent = 'Retry';
+      }
+      btn.disabled = false;
+      setTimeout(function(){ flash.style.display = 'none'; }, 8000);
+    })
+    .catch(function(){
+      flash.style.display = 'block';
+      flash.style.background = '#FEF2F2'; flash.style.color = '#B91C1C'; flash.style.border = '1px solid #FECACA';
+      flash.textContent = '✗ Network error — try again';
+      btn.textContent = 'Retry';
+      btn.disabled = false;
+      setTimeout(function(){ flash.style.display = 'none'; }, 5000);
+    });
+}
+
 (function(){
-  var sections=['stat-bar','search-block','needs-attention','images','paid-subs','uat-members','haiku-members','deleted-accounts','audit-log','master-refs','danger'];
+  var sections=['stat-bar','search-block','needs-attention','images','bulk-upload','evolving-eye','paid-subs','uat-members','haiku-members','deleted-accounts','audit-log','master-refs','danger'];
   var items=document.querySelectorAll('.mob-nav-item');
   function onScroll(){
     var cur='';
