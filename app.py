@@ -18171,7 +18171,7 @@ def admin_calibration():
                    COALESCE(is_haiku_try, FALSE) AS engine_haiku
             FROM images
             WHERE is_admin_curation = TRUE
-              AND is_calibration_drift = TRUE
+              AND COALESCE(is_calibration_drift, FALSE) = TRUE
               AND user_id = :uid
             ORDER BY created_at DESC
             LIMIT 200
@@ -18252,11 +18252,6 @@ def admin_calibration_upload():
                 {'iid': img.id}
             )
 
-        # Mark as calibration drift image
-        db.session.execute(db.text(
-            "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
-        ), {'iid': img.id})
-
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if engine == 'sonnet':
             from engine.auto_score import auto_score_ddi_fast
@@ -18272,6 +18267,10 @@ def admin_calibration_upload():
                 img.archetype        = scored.get('archetype', '')
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
+                # Commit everything including is_calibration_drift in one transaction
+                db.session.execute(db.text(
+                    "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
+                ), {'iid': img.id})
                 db.session.commit()
                 result = {
                     'filename': file.filename, 'engine': 'sonnet',
@@ -18297,6 +18296,9 @@ def admin_calibration_upload():
                 img.tier             = scored['tier']
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
+                db.session.execute(db.text(
+                    "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
+                ), {'iid': img.id})
                 db.session.commit()
                 result = {
                     'filename': file.filename, 'engine': 'haiku',
