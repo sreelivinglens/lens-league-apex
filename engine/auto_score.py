@@ -1,4 +1,4 @@
-# SL-VERSION: 171.19-staging (Session 215, 2026-09-06 — (1) Orientation check rule added to tech_read: when portrait orientation + horizontal scene content detected, engine adds one sentence advising re-upload if accidental. (2) EXIF orientation auto-correction added to upload route in app.py: ImageOps.exif_transpose() applied before ingest_image() so phone images with EXIF orientation tags are pixel-corrected on upload. RETAINS 171.18.)
+# SL-VERSION: 171.20 (Session 218, 2026-09-10 — (1) bird_perch sub-genre added. (2) Wildlife GENRE_CONTEXT: small bird group, DOD/DM/WF anchors, Technical Wonder Signal. (3) WF Emotional Wonder anti-cold-scoring rule. (4) Creative/ICM override in Wildlife GENRE_CONTEXT, bird_perch, and bird_in_flight: intentional panning/ICM/motion blur on wildlife is deliberate technique — score DoD on blur control precision, do NOT penalise sharpness absence, score VD 7.5–8.5 for rarity of treatment. RETAINS 171.19.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -231,6 +231,16 @@ WF (Wonder Factor):
   creates felt connection between viewer and subject.
   For Drone: perspectives impossible from ground = high Wonder.
   For Creative: revealing the invisible + lingering resonance = high Wonder.
+
+  EMOTIONAL WONDER — ANTI-COLD-SCORING RULE:
+  A technically excellent image of a genuinely moving subject — a father and infant,
+  a pride interaction, a peak athletic moment, a child's expression — where the
+  emotional response from a stranger is immediate and nameable scores WF 7.5–8.0.
+  Suppressing this score to avoid inflation is the opposite error. The anti-inflation
+  warning targets images that APPEAR emotional but deliver nothing specific. When the
+  emotion IS specific and a stranger would name it in one word (awe, tenderness, joy,
+  urgency, reverence), score it. The word test: if you cannot name the emotion in one
+  word, score below 7.0. If you can, score 7.5 minimum.
 
   ══════════════════════════════════════════════════════════════════════════
   FAMOUS EVENT CALIBRATION GATE — Documentary and Street, MANDATORY CHECK
@@ -1363,26 +1373,79 @@ GENRE_CONTEXT = {
     ),
     'Wildlife': (
         "This is Wildlife photography.\n\n"
+
+        "CREATIVE TECHNIQUE OVERRIDE — CHECK FIRST:\n"
+        "Before applying the sharpness rubric below, examine whether intentional "
+        "motion blur, ICM, or panning is the deliberate creative choice. "
+        "SIGNALS OF INTENTIONAL TECHNIQUE in a Wildlife image:\n"
+        "- Consistent directional blur across the subject with a clear sense of "
+        "  movement, speed, or energy — the blur has shape and intention\n"
+        "- Subject is identifiable despite blur — species, posture, direction readable\n"
+        "- Background treatment complements the blur rather than competing with it\n"
+        "- The blur creates an emotional register (power, grace, speed, fragility) "
+        "  that a sharp frame would not\n"
+        "IF INTENTIONAL TECHNIQUE IS DETECTED:\n"
+        "- Do NOT penalise absence of sharpness — technique IS the subject\n"
+        "- Score DoD on the difficulty of CONTROLLING the blur to this result: "
+        "  the right shutter speed for the subject speed, the tracking discipline "
+        "  to keep the subject centred through the pan, the compositional decision "
+        "  of where to place the subject within the motion field. "
+        "  A precisely controlled wildlife panning shot where the eye reads against "
+        "  a streaked background scores DoD 8.0–9.0 — it requires more skill than "
+        "  a standard sharp frame because the margin for error is narrower.\n"
+        "- Score DM on the timing of the technique execution — the exact moment "
+        "  when the blur is at its most expressive, not the peak of the behaviour\n"
+        "- Score VD on the rarity of seeing wildlife this way — most photographers "
+        "  always seek the sharp freeze; a deliberate blur treatment on a fast "
+        "  moving animal is uncommon and scores VD 7.5–8.5\n"
+        "- Score WF on what the technique reveals that sharpness cannot: the sense "
+        "  of speed, the energy of flight, the grace of motion as an abstraction "
+        "  of the animal's essential quality\n"
+        "- Do NOT suggest faster shutter speed as an improvement — this reverses "
+        "  the creative intent\n\n"
+
         "BEFORE SCORING — identify the behavioural act:\n"
         "Scan the full frame including shadow areas and periphery. Identify every subject "
         "present. For each subject, determine: what is it doing? Is prey visible? Is a second "
         "subject present? Is a behavioural act (predation, conflict, display, feeding, courtship) "
         "in progress? If the image title names a behaviour, actively search for evidence of it. "
         "Do not default to 'generic motion' without first scanning all areas of the frame.\n\n"
-        "DoD: Score sharpness, focus accuracy, and exposure in challenging conditions. "
-        "A dark subject against bright water or backlit sky is a known exposure challenge — "
-        "penalise if the subject is lost to silhouette when detail was the story. "
+
+        "SUBJECT GROUP — SMALL BIRDS (passerines, bee-eaters, swallows, sunbirds, kingfishers "
+        "on perch, weavers, bulbuls): Do NOT assign to Group B (Aerial Raptors). "
+        "Check: hooked beak + talons = raptor. Small straight bill + perch-adapted feet = "
+        "small bird. A swallow, bee-eater, or sunbird landing on a post with wings spread "
+        "is NOT soaring on thermals — score the landing/display moment. "
+        "Small fast birds at peak wing-spread with individual feather separation visible "
+        "score DoD 8–9 for timing precision — the window is under 50ms.\n\n"
+
+        "DoD (sharp frame path): Score sharpness, focus accuracy, and exposure in challenging "
+        "conditions. A dark subject against bright water or backlit sky is a known exposure "
+        "challenge — penalise if the subject is lost to silhouette when detail was the story. "
         "Rare behaviour, dangerous proximity, or extreme environmental conditions raise DoD. "
-        "Intentional panning blur on moving subjects is acceptable technique.\n\n"
+        "For small fast birds: individual feather separation at full resolution on a "
+        "landing/displaying passerine requires shutter speeds of 1/2000s+ and precise "
+        "tracking — score DoD 8+ when this is achieved.\n\n"
+
         "DM: Score relative to the behavioural act identified above — not relative to generic motion. "
         "A catch freeze with prey visible scores higher than a takeoff. "
         "Two subjects in contact scores higher than one subject in flight. "
         "The decisive moment is the peak completion of the identified act — "
-        "a half-second either side produces a lesser image.\n\n"
+        "a half-second either side produces a lesser image. "
+        "For small perching/landing birds: peak wing-spread with feather geometry "
+        "fully resolved scores DM 8.5–9.0 — the moment collapses within a fraction "
+        "of a second as the wings fold.\n\n"
+
         "WF: Score behavioural rarity explicitly. Common behaviour in ordinary conditions scores low. "
         "Rare species, rare behavioural interactions, prey visible, multiple subjects in conflict, "
         "or scientifically significant documentation scores high. "
-        "The wonder is in what the image shows that most humans will never witness in person."
+        "The wonder is in what the image shows that most humans will never witness in person. "
+        "TECHNICAL WONDER SIGNAL: When the photographic achievement itself is the wonder — "
+        "individual feather separation on a fast small bird, perfect wing geometry at peak "
+        "spread, or a controlled panning blur that captures speed and grace simultaneously — "
+        "score WF 7.5–8.0 even when the species is common. "
+        "Do not suppress this to avoid inflation. A technically exceptional capture that most "
+        "photographers could not achieve is wonder by definition."
     ),
     'Landscapes': (
         "This is Landscape photography — apply the full Landscape rubric including the "
@@ -1940,14 +2003,28 @@ WILDLIFE_SUBGENRE_CONTEXT = {
         "This is Wildlife photography — sub-type: BIRD IN FLIGHT.\n"
         "The primary challenge is freezing motion at the peak of the flight arc "
         "with accurate focus on the eye and primary feathers.\n\n"
+
+        "CREATIVE TECHNIQUE — CHECK BEFORE APPLYING SHARPNESS RUBRIC:\n"
+        "If the image shows intentional panning blur, ICM, or motion rendering "
+        "(consistent directional blur that gives the bird speed and energy, "
+        "subject still identifiable in shape and species, background streaked with "
+        "direction) — apply the Creative Technique Override. Do NOT penalise this "
+        "as a missed focus. A controlled panning shot where the bird's eye is the "
+        "sharpest element against a streaked background scores DoD 8.0–9.0 — "
+        "it requires more discipline than freezing the subject because the shutter "
+        "speed must match the subject speed precisely to hold the eye while blurring "
+        "the wings. Score VD 7.5–8.5 for the rarity of this treatment in wildlife.\n\n"
+
         "DoD: Score shutter speed precision, tracking accuracy at speed, and "
         "exposure management on a fast-moving subject against variable backgrounds. "
         "Wing extension at full spread, primary feather separation visible, and eye "
-        "sharp are the three DoD gold standards.\n\n"
+        "sharp are the three DoD gold standards for the sharp frame path.\n\n"
+
         "DM: Score the peak of the flight arc — the single frame where wing geometry "
         "is most resolved and body axis cleanest. IDENTIFY whether this is pure transit "
         "or a behavioural act (prey strike, territorial display, landing approach) — "
         "behavioural flight peaks score higher than generic transit.\n\n"
+
         "WF: Score species rarity, behaviour rarity, and light quality. Common birds "
         "in flat light score lower than rare species, unusual plumage states, or "
         "exceptional light. Migration formations and murmurations score higher than "
@@ -2021,6 +2098,73 @@ WILDLIFE_SUBGENRE_CONTEXT = {
         "of hundreds. Species in genuine decline make migration documentation "
         "scientifically significant. The wonder is in the collective intelligence "
         "of the movement — shapes that no individual bird planned."
+    ),
+
+    'bird_perch': (
+        "This is Wildlife photography — sub-type: SMALL BIRD / PERCH / LANDING.\n"
+        "Passerines, bee-eaters, kingfishers on perch, swallows, sunbirds, weavers, "
+        "bulbuls, and any small bird in a moment of landing, perching, display, "
+        "or wing-spread pose. These subjects are fast, small, and unpredictable — "
+        "the technical window is measured in milliseconds.\n\n"
+
+        "CREATIVE TECHNIQUE — CHECK BEFORE APPLYING SHARPNESS RUBRIC:\n"
+        "If the image shows intentional blur, ICM, or panning on the bird subject "
+        "(consistent directional blur, subject identifiable in motion, deliberate "
+        "rendering of speed or grace rather than accidental softness) — apply the "
+        "Creative Technique Override from the main Wildlife rubric. "
+        "A panned swallow with wing-arc blur and eye readable against a streaked "
+        "background is HARDER to execute than a sharp freeze and scores DoD 8.0–9.0. "
+        "Do NOT penalise blur as a failure — ask: is this controlled or accidental?\n\n"
+
+        "DoD: Score the combined difficulty of shutter speed precision on a fast "
+        "small subject, tracking accuracy, and the brevity of the behavioural window. "
+        "A small bird caught at peak wing-spread with individual primary feathers "
+        "separately visible and sharp at full resolution is a high-DoD achievement — "
+        "the timing window is under 50ms. Apply these anchors:\n"
+        "  5–6: Common bird perched in daylight, static, standard conditions\n"
+        "  6–7: Bird in flight or landing approach, good tracking, clean background\n"
+        "  7–8: Peak landing or settling moment, wings at notable spread or angle,\n"
+        "        subject sharp at full resolution against rendered background\n"
+        "  8–9: Exact peak wing-spread with individual feather separation visible,\n"
+        "        small fast species (swallow, bee-eater, sunbird) at close range,\n"
+        "        handheld, precise shutter execution under difficult light;\n"
+        "        OR controlled panning blur where motion is shaped and intentional\n"
+        "  9+:  Contact point — mid-air prey catch, mating display at peak posture,\n"
+        "        rare species in rare behavioural act\n"
+        "CRITICAL: Do NOT conflate this sub-type with bird_in_flight. A perching or "
+        "landing small bird requires higher shutter speed and more precise timing than "
+        "a large soaring bird, because the subject is smaller, faster, and the moment "
+        "is shorter. Score DoD accordingly — not by the size of the bird.\n\n"
+
+        "DM: Score the precision of the chosen moment within the landing or display "
+        "sequence. For landing: the peak of wing-spread before feet touch the perch is "
+        "almost always the strongest frame — a half-second later the wings fold and "
+        "the geometry collapses. For display: the peak posture, maximum crest erection, "
+        "or most open wing position. For panning/ICM: the moment of maximum expressiveness "
+        "in the blur — where the motion reads most clearly as intentional.\n"
+        "  9.0–9.5: The single unrepeatable instant — wings at full spread, primary "
+        "feathers individually separated and readable, body at peak angle\n"
+        "  8.0–8.9: Clear peak within the landing or display sequence\n"
+        "  7.0–7.9: Good timing, but the moment would tolerate a fraction either way\n"
+        "  6.0–6.9: Competent capture but not the peak of the action\n\n"
+
+        "WF: Score species rarity, plumage state, and the photographic rarity of "
+        "the moment achieved. Common garden birds in flat light score lower. "
+        "Rare species, exceptional plumage (breeding colours, juvenile moult), "
+        "or a technically exceptional capture that most photographers would fail "
+        "to achieve scores higher.\n"
+        "  TECHNICAL WONDER SIGNAL: When the photographic achievement itself is "
+        "the wonder — individual feather separation on a fast-moving small bird, "
+        "perfect wing geometry at peak spread, or a panning blur that renders "
+        "the bird's speed as a visual experience — score WF 7.5–8.0 even when "
+        "the species is common. Do not suppress this to avoid inflation.\n\n"
+
+        "NOTE — SUBJECT GROUP ASSIGNMENT: Small passerines and perching birds "
+        "should NOT be assigned to Group B (Aerial Raptors) even when wings are "
+        "spread. Check: hooked beak and talons = raptor. Small straight bill, "
+        "small body, perch-adapted feet = passerine/small bird. If the bird is "
+        "landing on a post, branch, or wire with wings spread — it is not soaring "
+        "on thermals. Score DM on the landing moment, not raptor flight behaviours."
     ),
 
     # ── MAMMALS ────────────────────────────────────────────────────────────────
