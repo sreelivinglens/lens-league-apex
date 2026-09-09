@@ -231,7 +231,7 @@ a.back:hover{text-decoration:underline}
     </div>
   </div>
 
-  <div class="results-wrap">
+  <div class="results-wrap" id="results-table">
     <div class="res-header">
       <div class="res-title"><i class="ti ti-table"></i>
         Results — {{ pairs|length }} image{{ 's' if pairs|length != 1 }}, {{ rows|length }} engine run{{ 's' if rows|length != 1 }}
@@ -569,8 +569,23 @@ async function startUpload() {
   if (ds) ds.textContent = 'JPEG / PNG / HEIC · 1–20 images';
 
   showFlash('Scoring complete — ' + scored + '/' + total + ' runs done. Reloading results table…', 'ok');
-  setTimeout(function(){ window.location.reload(); }, 2000);
+  setTimeout(function(){ window.location.href = window.location.pathname + '?scored=1#results-table'; }, 2000);
 }
+
+// Auto-scroll to results table if redirected here after scoring
+(function(){
+  if (window.location.search.indexOf('scored=1') !== -1) {
+    var tbl = document.getElementById('results-table');
+    if (tbl) {
+      setTimeout(function(){
+        tbl.scrollIntoView({behavior: 'smooth', block: 'start'});
+        tbl.style.transition = 'box-shadow .4s';
+        tbl.style.boxShadow = '0 0 0 3px #C8A84B';
+        setTimeout(function(){ tbl.style.boxShadow = ''; }, 2500);
+      }, 200);
+    }
+  }
+})();
 
 function clearResults(engine) {
   var label = engine ? engine + ' calibration images' : 'ALL calibration images';
