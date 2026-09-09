@@ -1,4 +1,4 @@
-# SL-VERSION: 182.17 (Session 216, 2026-09-07 — Rule 26 hard gate added to admin_force_rescore(). Haiku images now blocked from Sonnet force_rescore via raw SQL is_haiku_try check. Returns 400 JSON or flash error with clear message. Prevents irreversible destruction of Haiku _audit_json by accidental Sonnet rescore.)
+# SL-VERSION: 182.18 (Session 218, 2026-09-10 — (1) admin_dashboard() passes evolving_eye_users to template. (2) Admin calibration drift tool: GET /admin/calibration, POST /admin/calibration/upload, POST /admin/calibration/clear. Sonnet path uses auto_score_ddi_fast. Haiku path is bare 5-dimension direct API call — no history, no master refs, no species, no wiki, no location. Images saved is_admin_curation=TRUE + is_calibration_drift=TRUE. Column auto-migrated on first upload.)
 
 import os
 import re
@@ -16836,6 +16836,41 @@ def admin_dashboard():
     except Exception as _mr_err:
         app.logger.warning(f'[admin_dashboard] master_refs failed: {_mr_err}')
 
+    # SL-182.18 — Evolving Eye: users with 10+ scored images but no report yet.
+    # Powers the admin trigger panel in the dashboard.
+    _evolving_eye_users = []
+    try:
+        _ee_rows = db.session.execute(db.text("""
+            SELECT u.id, u.full_name, u.username, u.email,
+                   COUNT(i.id) AS scored_count,
+                   u.evolving_eye_json IS NOT NULL AS has_report,
+                   u.evolving_eye_milestone
+            FROM users u
+            JOIN images i ON i.user_id = u.id
+                AND i.status = 'scored'
+                AND (i.is_haiku_try IS NOT TRUE)
+            WHERE u.is_active = TRUE
+              AND u.role != 'admin'
+            GROUP BY u.id, u.full_name, u.username, u.email,
+                     u.evolving_eye_json, u.evolving_eye_milestone
+            HAVING COUNT(i.id) >= 10
+            ORDER BY has_report ASC, COUNT(i.id) DESC
+            LIMIT 30
+        """)).fetchall()
+        _evolving_eye_users = [
+            {
+                'id':         r.id,
+                'name':       r.full_name or r.username or f'User {r.id}',
+                'email':      r.email or '',
+                'scored':     r.scored_count,
+                'has_report': bool(r.has_report),
+                'milestone':  r.evolving_eye_milestone,
+            }
+            for r in _ee_rows
+        ]
+    except Exception as _ee_adm_err:
+        app.logger.warning(f'[admin_dashboard] evolving_eye_users query failed: {_ee_adm_err}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine, sonnet_new_today=sonnet_new_today, haiku_new_today=haiku_new_today,
@@ -16883,6 +16918,7 @@ def admin_dashboard():
                            master_refs_stale=_mr_stale,
                            master_refs_total=_mr_total,
                            master_refs_days=_mr_days,
+                           evolving_eye_users=_evolving_eye_users,
                            now=datetime.utcnow())
 
 
@@ -17901,6 +17937,320 @@ def admin_curation_upload():
                   'status': f'failed — {_cur_err}'}
 
     return jsonify(result), 200
+
+
+# ---------------------------------------------------------------------------
+# SL-182.18 — Admin Calibration Drift Tool
+# /admin/calibration          GET  — dashboard page
+# /admin/calibration/upload   POST — score one image (Sonnet or Haiku)
+# /admin/calibration/clear    POST — delete all calibration images
+#
+# Purpose: founder uploads 10–20 test images through Sonnet AND Haiku engines
+# to watch for score drift between the two. Completely isolated from member
+# accounts and League data.
+#
+# Sonnet path  — reuses auto_score_ddi_fast (same as Curator's Bench).
+# Haiku path   — bare direct API call: 5 DDI dimensions + calibration anchor
+#                only. No history, no master refs, no species research,
+#                no Wikipedia, no location advisory, no mentor, no email.
+#
+# Images saved with is_admin_curation=True (existing isolation flag).
+# A new column is_calibration_drift (BOOLEAN) further distinguishes them
+# from Curator's Bench images. Migration runs on first upload if needed.
+# ---------------------------------------------------------------------------
+
+def _ensure_calibration_drift_column():
+    """Add is_calibration_drift column if not present. Called once on first upload."""
+    try:
+        db.session.execute(db.text(
+            "ALTER TABLE images ADD COLUMN IF NOT EXISTS "
+            "is_calibration_drift BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _calibration_score_haiku(thumb_path, genre):
+    """
+    Bare Haiku calibration score — 5 DDI dimensions only.
+    No history, no master refs, no species research, no wiki, no location.
+    Returns dict {dod, vd, dm, wf, aq, score, tier} or None on failure.
+    """
+    import base64 as _b64
+    import json as _cj
+    import urllib.request as _ur
+    from engine.scoring import calculate_score, get_tier
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return None
+
+    with open(thumb_path, 'rb') as _f:
+        img_b64 = _b64.b64encode(_f.read()).decode()
+
+    cal_line = _try_calibration_line(genre or '')
+
+    prompt = f"""You are evaluating a photograph on the Shutter League DDI rubric.
+Genre: {genre or 'General'}
+
+CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
+{cal_line}
+
+Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
+- dod: Depth of Difficulty (how hard was this to achieve technically and artistically)
+- vd: Visual Drama (impact, contrast, light, colour, geometry)
+- dm: Decisive Moment (timing, peak action, unrepeatable instant)
+- wf: Wow Factor (immediate emotional response)
+- aq: Artisan Quality (technical craft: focus, exposure, noise, processing)
+
+Return ONLY valid JSON, no preamble, no markdown fences:
+{{"dod": 0.0, "vd": 0.0, "dm": 0.0, "wf": 0.0, "aq": 0.0}}"""
+
+    payload = _cj.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 120,
+        'temperature': 0,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': prompt}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=60) as resp:
+            raw = _cj.loads(resp.read().decode())
+    except Exception as _e:
+        app.logger.error(f'[cal_haiku] API call failed: {_e}')
+        return None
+
+    text = ''.join(
+        b.get('text', '') for b in (raw.get('content') or []) if b.get('type') == 'text'
+    ).strip()
+    if text.startswith('```'):
+        parts = text.split('```')
+        text = parts[1][4:] if len(parts) > 1 and parts[1].startswith('json') else (parts[1] if len(parts) > 1 else text)
+    text = text.strip()
+
+    try:
+        d = _cj.loads(text)
+    except Exception as _pe:
+        app.logger.error(f'[cal_haiku] JSON parse failed: {_pe} | raw: {text[:200]}')
+        return None
+
+    def _cl(v):
+        try: return min(10.0, max(0.0, round(float(v), 1)))
+        except Exception: return 5.0
+
+    dod = _cl(d.get('dod', 5.0))
+    vd  = _cl(d.get('vd',  5.0))
+    dm  = _cl(d.get('dm',  5.0))
+    wf  = _cl(d.get('wf',  5.0))
+    aq  = _cl(d.get('aq',  5.0))
+    score = calculate_score(dod, vd, dm, wf, aq, genre)
+    tier  = get_tier(score)
+    return {'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
+            'score': round(score, 2), 'tier': tier}
+
+
+@app.route('/admin/calibration')
+@login_required
+@admin_required
+def admin_calibration():
+    """GET /admin/calibration — drift comparison dashboard."""
+    _ensure_calibration_drift_column()
+    try:
+        rows = db.session.execute(db.text("""
+            SELECT id, original_filename, genre, score, tier,
+                   dod_score, disruption_score, dm_score, wonder_score, aq_score,
+                   scored_at, created_at,
+                   COALESCE(is_haiku_try, FALSE) AS engine_haiku
+            FROM images
+            WHERE is_admin_curation = TRUE
+              AND is_calibration_drift = TRUE
+              AND user_id = :uid
+            ORDER BY created_at DESC
+            LIMIT 200
+        """), {'uid': current_user.id}).fetchall()
+    except Exception as _re:
+        app.logger.warning(f'[admin_calibration] query failed: {_re}')
+        rows = []
+    return render_template('admin_calibration.html', rows=rows,
+                           genres=GENRE_IDS, now=datetime.utcnow())
+
+
+@app.route('/admin/calibration/upload', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_upload():
+    """
+    POST /admin/calibration/upload
+    Fields: image (file), genre (str), engine ('sonnet'|'haiku')
+    No watermark check, no duplicate check, no NSFW, no AI side-calls.
+    Returns JSON {filename, engine, score, tier, dod, vd, dm, wf, aq, status, image_id}.
+    """
+    _ensure_calibration_drift_column()
+
+    file   = request.files.get('image')
+    genre  = normalise_genre(request.form.get('genre', '').strip())
+    engine = (request.form.get('engine', 'sonnet') or 'sonnet').strip().lower()
+
+    if not file or not file.filename:
+        return jsonify({'status': 'error', 'message': 'No file received'}), 400
+    if not allowed_file(file.filename):
+        return jsonify({'filename': file.filename, 'status': 'skipped — unsupported type',
+                        'score': None, 'tier': None}), 200
+    if not genre:
+        return jsonify({'status': 'error', 'message': 'No genre provided'}), 400
+    if engine not in ('sonnet', 'haiku'):
+        engine = 'sonnet'
+
+    result = {'filename': file.filename, 'engine': engine,
+              'score': None, 'tier': None, 'status': 'failed'}
+    try:
+        uid      = str(uuid.uuid4())
+        filename = secure_filename(file.filename)
+        raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', uid + '_' + filename)
+        file.save(raw_path)
+
+        thumb_path, w, h, fmt, phash = ingest_image(
+            raw_path, app.config['UPLOAD_FOLDER'],
+            min_short_side=ADMIN_CURATION_MIN_DIMENSION
+        )
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+        from models import Image as _IM
+        img = _IM(
+            user_id               = current_user.id,
+            original_filename     = filename,
+            stored_filename       = os.path.basename(thumb_path),
+            thumb_path            = thumb_path,
+            thumb_url             = thumb_url,
+            file_size_kb          = int(os.path.getsize(thumb_path) / 1024),
+            width=w, height=h, format=fmt,
+            asset_name            = auto_title(filename, genre),
+            phash                 = phash,
+            genre                 = genre,
+            status                = 'pending',
+            is_public             = False,
+            is_admin_curation     = True,
+            is_haiku_try          = (engine == 'haiku'),
+        )
+        db.session.add(img)
+        db.session.flush()
+
+        # Mark as calibration drift image
+        db.session.execute(db.text(
+            "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
+        ), {'iid': img.id})
+
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if engine == 'sonnet':
+            from engine.auto_score import auto_score_ddi_fast
+            scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=None)
+            if scored:
+                img.dod_score        = scored.get('dod', 0)
+                img.disruption_score = scored.get('disruption', 0) or scored.get('vd', 0)
+                img.dm_score         = scored.get('dm', 0)
+                img.wonder_score     = scored.get('wonder', 0) or scored.get('wf', 0)
+                img.aq_score         = scored.get('aq', 0)
+                img.score            = scored.get('score', 0)
+                img.tier             = scored.get('tier', '')
+                img.archetype        = scored.get('archetype', '')
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'filename': file.filename, 'engine': 'sonnet',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': img.dod_score, 'vd': img.disruption_score,
+                    'dm': img.dm_score, 'wf': img.wonder_score, 'aq': img.aq_score,
+                    'status': 'scored', 'image_id': img.id,
+                }
+            else:
+                db.session.commit()
+                result = {'filename': file.filename, 'engine': 'sonnet',
+                          'status': 'upload OK — scoring failed', 'image_id': img.id}
+        else:
+            # Haiku — bare calibration score
+            scored = _calibration_score_haiku(img.thumb_path, genre)
+            if scored:
+                img.dod_score        = scored['dod']
+                img.disruption_score = scored['vd']
+                img.dm_score         = scored['dm']
+                img.wonder_score     = scored['wf']
+                img.aq_score         = scored['aq']
+                img.score            = scored['score']
+                img.tier             = scored['tier']
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'filename': file.filename, 'engine': 'haiku',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': scored['dod'], 'vd': scored['vd'],
+                    'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
+                    'status': 'scored', 'image_id': img.id,
+                }
+            else:
+                db.session.commit()
+                result = {'filename': file.filename, 'engine': 'haiku',
+                          'status': 'upload OK — Haiku scoring failed', 'image_id': img.id}
+
+        app.logger.info(
+            f'[admin_calibration] engine={engine} image={img.id} '
+            f'score={img.score} genre={genre} admin={current_user.id}'
+        )
+
+    except Exception as _err:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] upload failed: {_err}')
+        result = {'filename': file.filename, 'engine': engine,
+                  'score': None, 'tier': None, 'status': f'failed — {_err}'}
+
+    return jsonify(result), 200
+
+
+@app.route('/admin/calibration/clear', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_clear():
+    """
+    POST /admin/calibration/clear
+    Deletes all calibration drift images for the admin user.
+    Optionally scoped: ?engine=sonnet|haiku
+    """
+    engine = request.args.get('engine', '').strip().lower()
+    try:
+        q = "DELETE FROM images WHERE is_admin_curation = TRUE AND is_calibration_drift = TRUE AND user_id = :uid"
+        params = {'uid': current_user.id}
+        if engine in ('sonnet', 'haiku'):
+            q += " AND is_haiku_try = :hk"
+            params['hk'] = (engine == 'haiku')
+        deleted = db.session.execute(db.text(q + " RETURNING id"), params).fetchall()
+        db.session.commit()
+        app.logger.info(f'[admin_calibration] cleared {len(deleted)} images engine={engine or "all"} admin={current_user.id}')
+        return jsonify({'ok': True, 'deleted': len(deleted)}), 200
+    except Exception as _ce:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] clear failed: {_ce}')
+        return jsonify({'ok': False, 'message': str(_ce)}), 500
 
 
 @app.route('/admin/curation/delete/<int:image_id>', methods=['POST'])
