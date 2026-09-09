@@ -18235,10 +18235,16 @@ def admin_calibration_upload():
             status                = 'pending',
             is_public             = False,
             is_admin_curation     = True,
-            is_haiku_try          = (engine == 'haiku'),
         )
         db.session.add(img)
         db.session.flush()
+
+        # is_haiku_try is not a mapped ORM column — set via raw SQL (Rule 8)
+        if engine == 'haiku':
+            db.session.execute(
+                db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+                {'iid': img.id}
+            )
 
         # Mark as calibration drift image
         db.session.execute(db.text(
