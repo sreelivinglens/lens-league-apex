@@ -18227,6 +18227,47 @@ def admin_calibration_upload():
     return jsonify(result), 200
 
 
+@app.route('/admin/calibration/delete-selected', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_delete_selected():
+    """
+    POST /admin/calibration/delete-selected
+    Form field: image_ids — comma-separated image IDs.
+    Deletes only images owned by admin with is_calibration_drift=TRUE.
+    Returns JSON {ok, deleted}.
+    """
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({'ok': False, 'message': 'Invalid IDs'}), 400
+    if not ids:
+        return jsonify({'ok': False, 'message': 'No IDs provided'}), 400
+    try:
+        imgs = Image.query.filter(
+            Image.id.in_(ids),
+            Image.user_id == current_user.id,
+            Image.is_admin_curation == True,
+        ).all()
+        deleted = 0
+        for img in imgs:
+            try:
+                if img.thumb_path and os.path.exists(img.thumb_path):
+                    os.remove(img.thumb_path)
+            except Exception as _fe:
+                app.logger.warning(f'[admin_calibration] thumb delete warning id={img.id}: {_fe}')
+            db.session.delete(img)
+            deleted += 1
+        db.session.commit()
+        app.logger.info(f'[admin_calibration] delete-selected {deleted} images admin={current_user.id}')
+        return jsonify({'ok': True, 'deleted': deleted}), 200
+    except Exception as _de:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] delete-selected failed: {_de}')
+        return jsonify({'ok': False, 'message': str(_de)}), 500
+
+
 @app.route('/admin/calibration/clear', methods=['POST'])
 @login_required
 @admin_required
