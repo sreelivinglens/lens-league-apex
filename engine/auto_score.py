@@ -1,4 +1,4 @@
-# SL-VERSION: 171.20 (Session 218, 2026-09-10 — (1) bird_perch sub-genre added. (2) Wildlife GENRE_CONTEXT: small bird group, DOD/DM/WF anchors, Technical Wonder Signal. (3) WF Emotional Wonder anti-cold-scoring rule. (4) Creative/ICM override in Wildlife GENRE_CONTEXT, bird_perch, and bird_in_flight: intentional panning/ICM/motion blur on wildlife is deliberate technique — score DoD on blur control precision, do NOT penalise sharpness absence, score VD 7.5–8.5 for rarity of treatment. RETAINS 171.19.)
+# SL-VERSION: 171.20 (Session 218, 2026-09-10 — (1) bird_perch sub-genre added. (2) Wildlife GENRE_CONTEXT: small bird group, DOD/DM/WF anchors, Technical Wonder Signal. (3) WF Emotional Wonder anti-cold-scoring rule. (4) STEP 1 SYSTEM_BRIEF extended with Wildlife-specific ICM/panning/motion blur rule covering ALL wildlife subjects — birds, mammals, marine, reptiles, invertebrates, underwater. Includes DOD anchors for panning/ICM, VD 7.5–8.5 for rarity of treatment, WF on what blur reveals, underwater long exposure scoring. Wildlife GENRE_CONTEXT and sub-genres reference STEP 1 instead of repeating. RETAINS 171.19.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -118,6 +118,49 @@ IF INTENTIONAL BLUR detected in non-Creative genre:
 - "No sharp subject" is NOT a penalty — the technique IS the subject
 - Do NOT write criticism about missing fauna/people/subjects
 - Do NOT suggest faster shutter speed
+
+WILDLIFE-SPECIFIC ICM / PANNING / MOTION BLUR RULE (applies to ALL wildlife
+subjects — birds, mammals, marine, reptiles, invertebrates, underwater):
+Wildlife photographers who choose ICM, panning, or intentional motion blur
+are making a deliberate creative decision that is HARDER than a sharp freeze
+in most cases, not easier. The margin for error is narrower: the shutter speed
+must match the subject speed exactly, the tracking must be disciplined, and
+the result must look intentional rather than accidental. This applies equally
+to a panned swallow, an ICM cheetah at full sprint, a long-exposure shark
+in blue water, a blurred whale breach, or a motion-rendered murmuration.
+
+WILDLIFE ICM SIGNALS (in addition to general signals above):
+- Subject is identifiable despite blur — species, posture, or movement direction
+  can be read even though feather/fur/scale detail is not visible
+- Blur has directionality that reflects the animal's actual movement
+- The background treatment is consistent with a deliberate panning decision
+  (streaked in the direction of movement, not randomly blurred)
+- Underwater: long exposure rendering water creatures as motion trails or
+  colour fields is a valid ICM technique — score as deliberate transformation
+
+IF WILDLIFE ICM / PANNING DETECTED:
+- Do NOT penalise absence of sharpness
+- Do NOT suggest faster shutter speed anywhere in the scorecard
+- DoD: Score the blur control difficulty —
+    · Panning: matching shutter speed to subject speed to hold the subject
+      position while streaking the background scores DoD 7.5–9.0 depending
+      on subject speed and precision of the result. A fast small bird panned
+      cleanly scores higher than a slow large mammal.
+    · ICM on moving animal: controlling camera movement to render the animal
+      as an expressive form rather than random noise scores DoD 7.0–8.5.
+    · Underwater motion: long exposure on marine subjects in available light
+      scores DoD 8.0–9.0 — the combined challenges of underwater technique
+      AND motion control are multiplicative, not additive.
+- VD: Score 7.5–8.5 for the rarity of this treatment in wildlife photography.
+  Most wildlife photographers always seek the freeze. A deliberate blur
+  treatment on a fast moving animal is uncommon and visually distinctive.
+- WF: Score what the blur reveals that sharpness cannot —
+  the sense of speed, the energy of flight, the grace of motion as an
+  abstraction of the animal's essential quality, the mysterious presence
+  of a marine creature rendered as a luminous trail.
+- DM: Score the moment of maximum expressiveness in the blur —
+  when the motion reads most clearly as intentional and the emotional
+  register is strongest.
 
 MODULE DEFINITIONS:
 
@@ -1374,35 +1417,11 @@ GENRE_CONTEXT = {
     'Wildlife': (
         "This is Wildlife photography.\n\n"
 
-        "CREATIVE TECHNIQUE OVERRIDE — CHECK FIRST:\n"
-        "Before applying the sharpness rubric below, examine whether intentional "
-        "motion blur, ICM, or panning is the deliberate creative choice. "
-        "SIGNALS OF INTENTIONAL TECHNIQUE in a Wildlife image:\n"
-        "- Consistent directional blur across the subject with a clear sense of "
-        "  movement, speed, or energy — the blur has shape and intention\n"
-        "- Subject is identifiable despite blur — species, posture, direction readable\n"
-        "- Background treatment complements the blur rather than competing with it\n"
-        "- The blur creates an emotional register (power, grace, speed, fragility) "
-        "  that a sharp frame would not\n"
-        "IF INTENTIONAL TECHNIQUE IS DETECTED:\n"
-        "- Do NOT penalise absence of sharpness — technique IS the subject\n"
-        "- Score DoD on the difficulty of CONTROLLING the blur to this result: "
-        "  the right shutter speed for the subject speed, the tracking discipline "
-        "  to keep the subject centred through the pan, the compositional decision "
-        "  of where to place the subject within the motion field. "
-        "  A precisely controlled wildlife panning shot where the eye reads against "
-        "  a streaked background scores DoD 8.0–9.0 — it requires more skill than "
-        "  a standard sharp frame because the margin for error is narrower.\n"
-        "- Score DM on the timing of the technique execution — the exact moment "
-        "  when the blur is at its most expressive, not the peak of the behaviour\n"
-        "- Score VD on the rarity of seeing wildlife this way — most photographers "
-        "  always seek the sharp freeze; a deliberate blur treatment on a fast "
-        "  moving animal is uncommon and scores VD 7.5–8.5\n"
-        "- Score WF on what the technique reveals that sharpness cannot: the sense "
-        "  of speed, the energy of flight, the grace of motion as an abstraction "
-        "  of the animal's essential quality\n"
-        "- Do NOT suggest faster shutter speed as an improvement — this reverses "
-        "  the creative intent\n\n"
+        "CREATIVE TECHNIQUE — SEE STEP 1 IN SYSTEM BRIEF:\n"
+        "Before applying any sharpness rubric, check STEP 1 above for the "
+        "WILDLIFE ICM / PANNING / MOTION BLUR RULE. Applies to ALL wildlife subjects "
+        "— birds, mammals, marine, reptiles, invertebrates, underwater. "
+        "Intentional blur is never penalised. Do NOT suggest faster shutter speed.\n\n"
 
         "BEFORE SCORING — identify the behavioural act:\n"
         "Scan the full frame including shadow areas and periphery. Identify every subject "
@@ -1444,8 +1463,7 @@ GENRE_CONTEXT = {
         "individual feather separation on a fast small bird, perfect wing geometry at peak "
         "spread, or a controlled panning blur that captures speed and grace simultaneously — "
         "score WF 7.5–8.0 even when the species is common. "
-        "Do not suppress this to avoid inflation. A technically exceptional capture that most "
-        "photographers could not achieve is wonder by definition."
+        "Do not suppress this to avoid inflation."
     ),
     'Landscapes': (
         "This is Landscape photography — apply the full Landscape rubric including the "
@@ -2004,16 +2022,9 @@ WILDLIFE_SUBGENRE_CONTEXT = {
         "The primary challenge is freezing motion at the peak of the flight arc "
         "with accurate focus on the eye and primary feathers.\n\n"
 
-        "CREATIVE TECHNIQUE — CHECK BEFORE APPLYING SHARPNESS RUBRIC:\n"
-        "If the image shows intentional panning blur, ICM, or motion rendering "
-        "(consistent directional blur that gives the bird speed and energy, "
-        "subject still identifiable in shape and species, background streaked with "
-        "direction) — apply the Creative Technique Override. Do NOT penalise this "
-        "as a missed focus. A controlled panning shot where the bird's eye is the "
-        "sharpest element against a streaked background scores DoD 8.0–9.0 — "
-        "it requires more discipline than freezing the subject because the shutter "
-        "speed must match the subject speed precisely to hold the eye while blurring "
-        "the wings. Score VD 7.5–8.5 for the rarity of this treatment in wildlife.\n\n"
+        "CREATIVE TECHNIQUE: See STEP 1 Wildlife ICM rule in SYSTEM BRIEF. "
+        "Panning blur on birds in flight is a valid deliberate technique — "
+        "score on blur control precision, not sharpness. Do NOT suggest faster shutter speed.\n\n"
 
         "DoD: Score shutter speed precision, tracking accuracy at speed, and "
         "exposure management on a fast-moving subject against variable backgrounds. "
@@ -2107,14 +2118,10 @@ WILDLIFE_SUBGENRE_CONTEXT = {
         "or wing-spread pose. These subjects are fast, small, and unpredictable — "
         "the technical window is measured in milliseconds.\n\n"
 
-        "CREATIVE TECHNIQUE — CHECK BEFORE APPLYING SHARPNESS RUBRIC:\n"
-        "If the image shows intentional blur, ICM, or panning on the bird subject "
-        "(consistent directional blur, subject identifiable in motion, deliberate "
-        "rendering of speed or grace rather than accidental softness) — apply the "
-        "Creative Technique Override from the main Wildlife rubric. "
-        "A panned swallow with wing-arc blur and eye readable against a streaked "
-        "background is HARDER to execute than a sharp freeze and scores DoD 8.0–9.0. "
-        "Do NOT penalise blur as a failure — ask: is this controlled or accidental?\n\n"
+        "CREATIVE TECHNIQUE: See STEP 1 Wildlife ICM rule in SYSTEM BRIEF. "
+        "Panning or ICM on a landing/displaying small bird is valid deliberate technique — "
+        "score DoD on blur control precision, VD 7.5–8.5 for rarity of treatment. "
+        "Do NOT suggest faster shutter speed.\n\n"
 
         "DoD: Score the combined difficulty of shutter speed precision on a fast "
         "small subject, tracking accuracy, and the brevity of the behavioural window. "
