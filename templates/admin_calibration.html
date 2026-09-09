@@ -1,4 +1,4 @@
-{# SL-VERSION: cal-3.1 (Session 218, 2026-09-10 — Table fixed: filename on every row (Sonnet and Haiku). Delta column removed from table headers. Delta shown as a labelled separator row between each Sonnet/Haiku pair: "Δ Haiku − Sonnet  +1.05 Haiku higher". Unambiguous. RETAINS cal-3.0.) #}
+{# SL-VERSION: cal-3.2 (Session 218, 2026-09-10 — CSV export added: ↓ CSV button in results header. Exports File, Engine, Genre, Score, Tier, DOD, VD, DM, WF, AQ, Delta (H-S), Scored. Client-side, reads Jinja data, downloads timestamped file. RETAINS cal-3.1.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -217,6 +217,7 @@ a.back:hover{text-decoration:underline}
       <span class="res-count" id="res-count">{{ pairs|length }} image{{ 's' if pairs|length != 1 }} · {{ rows|length }} run{{ 's' if rows|length != 1 }}</span>
     </div>
     <div class="clear-btns">
+      <button class="clr-btn" onclick="exportCSV()" style="border-color:#1A2744;color:#1A2744">↓ CSV</button>
       <button class="clr-btn" onclick="clearEngine('sonnet')">Clear Sonnet</button>
       <button class="clr-btn" onclick="clearEngine('haiku')">Clear Haiku</button>
       <button class="clr-btn" onclick="clearEngine('')">Clear all</button>
@@ -603,6 +604,73 @@ function deleteSelected() {
     deselectAll();
     showFlash('Deleted ' + n + ' row' + (n!==1?'s':'') + '.', 'ok');
   });
+}
+
+function exportCSV() {
+  // Read data directly from DB rows passed via Jinja — more reliable than parsing DOM
+  var rows = [
+    ['File','Engine','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored']
+  ];
+  {% if rows %}
+  {% set pairs2 = {} %}
+  {% for r in rows %}
+    {% set fn = r.original_filename or ('image-' ~ r.id) %}
+    {% if fn not in pairs2 %}{% set _ = pairs2.update({fn: {}}) %}{% endif %}
+    {% if r.engine_haiku %}{% set _ = pairs2[fn].update({'h': r}) %}
+    {% else %}{% set _ = pairs2[fn].update({'s': r}) %}{% endif %}
+  {% endfor %}
+  {% for fn, p in pairs2.items() %}
+    {% set s = p.get('s') %}{% set h = p.get('h') %}
+    {% if s %}
+  rows.push([
+    {{ fn|tojson }},
+    'Sonnet',
+    {{ (s.genre or '')|tojson }},
+    {{ '%.2f'|format(s.score) if s.score else '' }},
+    {{ (s.tier or '')|tojson }},
+    {{ '%.1f'|format(s.dod_score) if s.dod_score else '' }},
+    {{ '%.1f'|format(s.disruption_score) if s.disruption_score else '' }},
+    {{ '%.1f'|format(s.dm_score) if s.dm_score else '' }},
+    {{ '%.1f'|format(s.wonder_score) if s.wonder_score else '' }},
+    {{ '%.1f'|format(s.aq_score) if s.aq_score else '' }},
+    {% if s and h and s.score and h.score %}{{ '%.2f'|format(h.score - s.score) }}{% else %}''{% endif %},
+    {{ s.scored_at.strftime('%Y-%m-%d %H:%M') if s.scored_at else '' }}
+  ]);
+    {% endif %}
+    {% if h %}
+  rows.push([
+    {{ fn|tojson }},
+    'Haiku',
+    {{ (h.genre or '')|tojson }},
+    {{ '%.2f'|format(h.score) if h.score else '' }},
+    {{ (h.tier or '')|tojson }},
+    {{ '%.1f'|format(h.dod_score) if h.dod_score else '' }},
+    {{ '%.1f'|format(h.disruption_score) if h.disruption_score else '' }},
+    {{ '%.1f'|format(h.dm_score) if h.dm_score else '' }},
+    {{ '%.1f'|format(h.wonder_score) if h.wonder_score else '' }},
+    {{ '%.1f'|format(h.aq_score) if h.aq_score else '' }},
+    '',
+    {{ h.scored_at.strftime('%Y-%m-%d %H:%M') if h.scored_at else '' }}
+  ]);
+    {% endif %}
+  {% endfor %}
+  {% endif %}
+
+  var csv = rows.map(function(r){
+    return r.map(function(v){
+      var s = String(v == null ? '' : v);
+      return s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0
+        ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',');
+  }).join('\r\n');
+
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var ts   = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.href = url; a.download = 'SL_calibration_' + ts + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function clearEngine(engine) {
