@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-2.9 (Session 218, 2026-09-10 — Evolving Eye trigger panel added. Calibration drift link added to sidebar Platform group and Quick Actions. Bulk upload note (member-side only). RETAINS admin-2.7.) #}
+{# SL-VERSION: admin-3.0 (Session 218, 2026-09-10 — Image grid: Delete button on every tile, checkbox select on hover, bulk delete bar. Single delete via POST /admin/image-grid/delete (JSON, no reload). Checkbox appears on hover or when any image selected; selected tiles get red border. RETAINS admin-2.9.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -211,8 +211,21 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
 /* ── IMAGE GRID ── */
 .image-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+/* ── IMAGE GRID DELETE ── */
 .img-tile{background:#FAFAF6;border:1px solid #E0DDD6;border-radius:10px;overflow:hidden;position:relative;cursor:pointer}
 .img-tile:hover{border-color:#C8A84B}
+.img-tile.selected{border-color:#B91C1C;box-shadow:0 0 0 2px #FECACA}
+.tile-cb-wrap{position:absolute;top:7px;right:7px;z-index:10;display:none}
+.tile-cb-wrap.show{display:block}
+.img-tile:hover .tile-cb-wrap{display:block}
+.tile-cb{width:18px;height:18px;cursor:pointer;accent-color:#B91C1C}
+.ig-bulk-bar{display:none;background:#1A1A18;color:#fff;padding:10px 16px;border-radius:10px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ig-bulk-bar.show{display:flex}
+.ig-bulk-label{font-size:15px;font-weight:500}
+.ig-del-btn{padding:7px 16px;border-radius:6px;border:none;background:#B91C1C;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;min-height:36px}
+.ig-cancel-btn{padding:7px 12px;border-radius:6px;border:1px solid #555;background:transparent;color:#fff;font-size:15px;cursor:pointer;font-family:inherit;min-height:36px}
+.ta.delete-btn{color:#B91C1C;border-color:#FECACA}
+.ta.delete-btn:hover{background:#FEF2F2}
 .img-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#0C1018}
 .img-thumb-ph{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#1A2744;font-size:22px;opacity:.4}
 .tile-badge{position:absolute;top:5px;left:5px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px}
@@ -862,11 +875,24 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       {# The route already filters recent by engine (is_haiku_try IS TRUE/NOT TRUE).
          So recent contains ONLY the images for the active engine tab.
          We show them all — no sub-filtering needed. #}
+      {# ── BULK DELETE BAR ── #}
+      <div class="ig-bulk-bar" id="ig-bulk-bar">
+        <span class="ig-bulk-label" id="ig-bulk-label">0 selected</span>
+        <div style="display:flex;gap:8px">
+          <button class="ig-del-btn" onclick="igDeleteSelected()">Delete selected</button>
+          <button class="ig-cancel-btn" onclick="igDeselectAll()">Cancel</button>
+        </div>
+      </div>
+
       <div class="image-grid">
         {% if recent %}
           {% for img in recent %}
           {% set detail_url = url_for('try_result', image_id=img.id) if admin_engine == 'haiku' else url_for('image_detail', image_id=img.id) %}
-          <div class="img-tile" data-image-id="{{ img.id }}">
+          <div class="img-tile" id="ig-tile-{{ img.id }}" data-image-id="{{ img.id }}">
+            {# Checkbox overlay — visible on hover or when any checkbox is checked #}
+            <div class="tile-cb-wrap" id="ig-cb-wrap-{{ img.id }}">
+              <input type="checkbox" class="tile-cb ig-cb" data-id="{{ img.id }}" onchange="igCbChange()" title="Select image">
+            </div>
             <a href="{{ detail_url }}" style="display:block;text-decoration:none;position:relative">
               {% if img.thumb_url %}
               <img class="img-thumb" src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" onerror="this.style.display='none'">
@@ -902,6 +928,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% if admin_engine == 'sonnet' %}
                 <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:inline"><button class="ta" type="submit">{% if img.is_public %}Hide{% else %}Show{% endif %}</button></form>
                 {% endif %}
+                <button class="ta delete-btn" type="button" onclick="igDeleteOne({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Delete</button>
               </div>
             </div>
           </div>
@@ -2108,6 +2135,74 @@ function haikuRescore(imageId, userName, btn) {
       btn.style.opacity = '1';
       showFlash('Network error.', 'error');
     });
+}
+
+// ── IMAGE GRID DELETE ────────────────────────────────────────────────────────
+function igGetChecked() {
+  return Array.from(document.querySelectorAll('.ig-cb:checked'));
+}
+
+function igCbChange() {
+  var checked = igGetChecked();
+  var bar     = document.getElementById('ig-bulk-bar');
+  var lbl     = document.getElementById('ig-bulk-label');
+  // Show checkboxes on all tiles whenever any is checked
+  document.querySelectorAll('.tile-cb-wrap').forEach(function(w){
+    w.classList.toggle('show', checked.length > 0);
+  });
+  // Highlight selected tiles
+  document.querySelectorAll('.ig-cb').forEach(function(cb){
+    var tile = document.getElementById('ig-tile-' + cb.dataset.id);
+    if (tile) tile.classList.toggle('selected', cb.checked);
+  });
+  if (checked.length > 0) {
+    bar.classList.add('show');
+    lbl.textContent = checked.length + ' image' + (checked.length > 1 ? 's' : '') + ' selected';
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function igDeselectAll() {
+  document.querySelectorAll('.ig-cb').forEach(function(cb){ cb.checked = false; });
+  document.querySelectorAll('.tile-cb-wrap').forEach(function(w){ w.classList.remove('show'); });
+  document.querySelectorAll('.img-tile').forEach(function(t){ t.classList.remove('selected'); });
+  document.getElementById('ig-bulk-bar').classList.remove('show');
+}
+
+function igDoDelete(ids, onSuccess) {
+  var fd = new FormData();
+  fd.append('image_ids', ids.join(','));
+  fetch('/admin/image-grid/delete', {method: 'POST', body: fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        ids.forEach(function(id){
+          var tile = document.getElementById('ig-tile-' + id);
+          if (tile) tile.remove();
+        });
+        showFlash('Deleted ' + d.deleted + ' image' + (d.deleted !== 1 ? 's' : '') + '.', 'success');
+        onSuccess && onSuccess();
+      } else {
+        showFlash('Delete failed: ' + (d.message || 'error'), 'error');
+      }
+    })
+    .catch(function(){ showFlash('Network error — delete failed.', 'error'); });
+}
+
+function igDeleteOne(id, label, btn) {
+  if (!confirm('Delete image #' + id + ' (' + label + ')?\nThis removes R2 files and all related records. Cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  igDoDelete([id], function(){ btn.textContent = 'Deleted'; });
+}
+
+function igDeleteSelected() {
+  var checked = igGetChecked();
+  if (!checked.length) return;
+  if (!confirm('Permanently delete ' + checked.length + ' image' + (checked.length > 1 ? 's' : '') + '?\nThis removes R2 files and all related records. Cannot be undone.')) return;
+  var ids = checked.map(function(cb){ return parseInt(cb.dataset.id); });
+  igDoDelete(ids, igDeselectAll);
 }
 
 // ── BULK DELETE ──────────────────────────────────────────────────────────────
