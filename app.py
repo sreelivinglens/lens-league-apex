@@ -17452,6 +17452,91 @@ def admin_bulk_delete():
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/admin/image-grid/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_image_grid_delete():
+    """
+    POST /admin/image-grid/delete
+    JSON endpoint for the image grid delete button and bulk delete.
+    Accepts: image_ids (comma-separated string in form data).
+    Returns JSON {ok, deleted, failed} — no page redirect, grid removes rows live.
+    Reuses the full FK-cascade delete logic from admin_bulk_delete().
+    """
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({'ok': False, 'message': 'Invalid IDs'}), 400
+    if not ids:
+        return jsonify({'ok': False, 'message': 'No IDs provided'}), 400
+
+    deleted = 0
+    failed  = []
+    for image_id in ids:
+        try:
+            img = Image.query.get(image_id)
+            if not img:
+                failed.append(image_id)
+                continue
+            _log_admin_action('delete_image', 'image', image_id, {
+                'asset_name': img.asset_name, 'score': float(img.score or 0),
+                'tier': img.tier, 'user_id': img.user_id,
+                'genre': img.genre, 'source': 'image_grid_delete',
+            })
+            # R2 cleanup
+            for _url in [img.thumb_url, img.card_url]:
+                if _url:
+                    try:
+                        r2.delete_file(_url.replace(r2.R2_PUBLIC_URL + '/', ''))
+                    except Exception:
+                        pass
+            # NULL parent refs
+            try:
+                db.session.execute(
+                    db.text("UPDATE images SET parent_image_id = NULL WHERE parent_image_id = :iid"),
+                    {'iid': image_id}
+                )
+            except Exception:
+                pass
+            # FK cascades — same 12-table set as admin_delete_image
+            for _sql in [
+                "DELETE FROM raw_submissions      WHERE image_id = :iid",
+                "DELETE FROM weekly_submissions   WHERE image_id = :iid",
+                "DELETE FROM contest_entries      WHERE image_id = :iid",
+                "DELETE FROM open_contest_entries WHERE image_id = :iid",
+                "DELETE FROM image_reports        WHERE image_id = :iid",
+                "DELETE FROM rating_assignments   WHERE image_id = :iid",
+                "DELETE FROM peer_ratings         WHERE image_id = :iid",
+                "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+                "DELETE FROM peer_recognitions    WHERE image_id = :iid",
+                "DELETE FROM brand_entries        WHERE image_id = :iid",
+                "DELETE FROM calibration_notes    WHERE image_id = :iid",
+                "DELETE FROM judge_assignments    WHERE image_id = :iid",
+                "DELETE FROM judge_scores         WHERE image_id = :iid",
+            ]:
+                try:
+                    db.session.execute(db.text(_sql), {'iid': image_id})
+                except Exception:
+                    pass
+            db.session.delete(img)
+            deleted += 1
+        except Exception as _de:
+            db.session.rollback()
+            app.logger.error(f'[image_grid_delete] image {image_id}: {_de}')
+            failed.append(image_id)
+
+    try:
+        db.session.commit()
+    except Exception as _ce:
+        db.session.rollback()
+        app.logger.error(f'[image_grid_delete] commit failed: {_ce}')
+        return jsonify({'ok': False, 'message': f'Commit failed: {_ce}'}), 500
+
+    app.logger.info(f'[image_grid_delete] deleted={deleted} failed={failed} admin={current_user.id}')
+    return jsonify({'ok': True, 'deleted': deleted, 'failed': failed}), 200
+
+
 @app.route('/admin/image/<int:image_id>/toggle-example', methods=['POST'])
 @login_required
 @admin_required
