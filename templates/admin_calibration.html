@@ -526,7 +526,7 @@ async function startUpload() {
   progBar.style.width = '0%';
 
   document.getElementById('live-section').style.display = 'block';
-  document.getElementById('live-results').innerHTML = '';
+  // Don't clear — append new cards above existing ones so all runs stay visible
 
   var engines = _engine === 'both' ? ['sonnet', 'haiku'] : [_engine];
   var total = _files.length * engines.length;
