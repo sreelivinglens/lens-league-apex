@@ -1,0 +1,354 @@
+{# SL-VERSION: cal-1.0 (Session 218, 2026-09-10 — Admin calibration drift tool. Upload 10–20 test images through Sonnet and Haiku engines. Compare DDI dimensions and scores side-by-side. No member data touched. Sonnet uses auto_score_ddi_fast. Haiku uses bare 5-dim direct call — no history, no master, no species, no wiki, no location.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="Calibration Drift — Shutter League Admin">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Admin calibration drift tool — compare Sonnet and Haiku engine scores.">
+<meta property="og:image" content="/static/img/og-default.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="/static/img/og-default.jpg">
+<link rel="canonical" href="/admin/calibration">
+<title>Calibration Drift — Shutter League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+.page-header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:500}
+.page-sub{font-size:13px;color:#6B6B68;margin-top:2px}
+a.back{font-size:14px;color:#1A2744;text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:16px}
+a.back:hover{text-decoration:underline}
+.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;font-size:14px;color:#1A1A18;line-height:1.6}
+.guide strong{font-weight:600;color:#92400E}
+.guide.info{background:#EFF6FF;border-color:#BFDBFE;border-left-color:#1A2744}
+.guide.info strong{color:#1A2744}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.up-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.up-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.up-field{display:flex;flex-direction:column;gap:4px}
+.up-label{font-size:13px;color:#6B6B68;font-weight:500}
+.up-select{padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:16px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:44px;min-width:160px}
+.engine-toggle{display:flex;border:1px solid #E0DDD6;border-radius:8px;overflow:hidden}
+.eng-btn{font-size:14px;font-weight:600;padding:10px 20px;background:#FAFAF6;color:#6B6B68;border:none;cursor:pointer;font-family:inherit;min-height:44px;transition:background .12s}
+.eng-btn.active.sonnet{background:#1A2744;color:#fff}
+.eng-btn.active.haiku{background:#6B21A8;color:#fff}
+.drop-zone{border:2px dashed #C8C5BE;border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:#FAFAF6;transition:border-color .15s,background .15s;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.drop-zone:hover,.drop-zone.drag{border-color:#1A2744;background:#EFF6FF}
+.drop-zone i{font-size:28px;color:#1A2744}
+.drop-zone-text{font-size:15px;color:#6B6B68}
+.drop-zone-sub{font-size:14px;color:#AEAEA8}
+#file-input{display:none}
+.upload-btn{padding:11px 22px;border-radius:8px;border:none;background:#C8A84B;color:#1A1A18;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;min-height:44px;min-width:140px}
+.upload-btn:disabled{opacity:.5;cursor:not-allowed}
+.upload-btn:hover:not(:disabled){background:#A88830;color:#fff}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin-top:12px;display:none}
+.progress-bar-bg{height:8px;background:#E0DDD6;border-radius:99px;overflow:hidden;margin-bottom:6px}
+.progress-bar-fill{height:100%;background:#C8A84B;border-radius:99px;transition:width .3s}
+.progress-label{font-size:13px;color:#6B6B68}
+.flash{padding:10px 14px;border-radius:8px;font-size:14px;margin-top:10px;display:none}
+.flash.ok{background:#F0FDF4;color:#2E7D32;border:1px solid #BBF7D0}
+.flash.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+
+/* ── RESULTS TABLE ── */
+.results-wrap{background:#fff;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.res-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #EEE;flex-wrap:wrap;gap:8px}
+.res-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;display:flex;align-items:center;gap:6px}
+.clear-btns{display:flex;gap:6px}
+.clr-btn{font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid #E0DDD6;background:#FAFAF6;color:#6B6B68;cursor:pointer;font-family:inherit;min-height:34px}
+.clr-btn:hover{border-color:#B91C1C;color:#B91C1C;background:#FEF2F2}
+.res-table{width:100%;border-collapse:collapse}
+.res-table th{font-size:12px;color:#8A8A86;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid #EEE;white-space:nowrap}
+.res-table th.num{text-align:right}
+.res-table td{font-size:13px;padding:9px 10px;border-bottom:1px solid #F5F3EF;vertical-align:middle}
+.res-table tr:last-child td{border-bottom:none}
+.res-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.engine-pill{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px}
+.ep-sonnet{background:#E8EEF8;color:#1A2744}
+.ep-haiku{background:#F3E8FF;color:#6B21A8}
+.score-val{font-size:15px;font-weight:500;color:#1A1A18}
+.tier-val{font-size:10px;color:#B45309;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:block;margin-top:1px}
+.dim-val{font-size:13px;color:#1A1A18;font-variant-numeric:tabular-nums}
+.dim-diff{font-size:11px;margin-left:4px;font-weight:600}
+.dim-diff.up{color:#2E7D32}
+.dim-diff.dn{color:#B91C1C}
+.empty-state{text-align:center;padding:40px;color:#8A8A86;font-size:14px}
+
+/* ── LIVE RESULTS (appended during upload) ── */
+.live-results{margin-top:12px}
+.live-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#FAFAF6;border:1px solid #E0DDD6;border-radius:8px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;gap:8px}
+.live-row.ok{border-left:3px solid #2E7D32}
+.live-row.err{border-left:3px solid #B91C1C}
+.live-fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1A1A18;font-weight:500}
+.live-engine{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;flex-shrink:0}
+.live-score{font-size:15px;font-weight:500;flex-shrink:0}
+.live-dims{font-size:12px;color:#6B6B68;flex-shrink:0}
+
+@media(max-width:480px){
+  .wrap{padding:16px 14px 60px}
+  .up-row{flex-direction:column}
+  .engine-toggle{width:100%}
+  .eng-btn{flex:1}
+  .up-select{width:100%;font-size:16px}
+  .res-table th:nth-child(n+5),.res-table td:nth-child(n+5){display:none}
+  .clear-btns{flex-wrap:wrap}
+}
+@media(max-width:768px){
+  .res-table th:nth-child(n+7),.res-table td:nth-child(n+7){display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="{{ url_for('admin_dashboard') }}"><i class="ti ti-arrow-left"></i> Back to admin</a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Calibration Drift</div>
+      <div class="page-sub">Compare Sonnet and Haiku scores on the same images</div>
+    </div>
+    <div style="font-size:12px;color:#AEAEA8">{{ now.strftime('%-d %b %Y %H:%M UTC') }}</div>
+  </div>
+
+  <div class="guide">
+    <strong>How this works.</strong>
+    Upload test images through <strong>Sonnet</strong> (Apex DDI, full engine) and <strong>Haiku</strong> (bare 5-dimension score, no mentor, no location, no master refs, no wiki). Compare scores to spot drift.
+    No member accounts or League data are touched. Images are saved as admin calibration records and can be cleared at any time.
+  </div>
+
+  {# ── UPLOAD PANEL ── #}
+  <div class="upload-panel">
+    <div class="up-title"><i class="ti ti-upload"></i> Upload test images</div>
+    <div class="up-row">
+      <div class="up-field">
+        <span class="up-label">Engine</span>
+        <div class="engine-toggle">
+          <button class="eng-btn active sonnet" id="eng-sonnet" onclick="setEngine('sonnet')">Sonnet</button>
+          <button class="eng-btn haiku"          id="eng-haiku"  onclick="setEngine('haiku')">Haiku</button>
+        </div>
+      </div>
+      <div class="up-field">
+        <span class="up-label">Genre</span>
+        <select class="up-select" id="genre-sel">
+          <option value="">— select —</option>
+          {% for g in genres %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="onDrop(event)">
+      <i class="ti ti-photo"></i>
+      <span class="drop-zone-text">Drop images here or click to browse</span>
+      <span class="drop-zone-sub">JPEG / PNG / HEIC · up to 20 images</span>
+    </div>
+    <input type="file" id="file-input" multiple accept="image/*" onchange="onFilePick(this.files)">
+
+    <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+      <button class="upload-btn" id="upload-btn" onclick="startUpload()" disabled>
+        <i class="ti ti-bolt"></i> Score images
+      </button>
+      <span id="file-count" style="font-size:13px;color:#6B6B68"></span>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">Uploading…</div>
+    </div>
+    <div class="flash" id="flash"></div>
+    <div class="live-results" id="live-results"></div>
+  </div>
+
+  {# ── RESULTS TABLE ── #}
+  <div class="results-wrap">
+    <div class="res-header">
+      <div class="res-title"><i class="ti ti-table"></i> Results — {{ rows|length }} images</div>
+      <div class="clear-btns">
+        <button class="clr-btn" onclick="clearResults('sonnet')">Clear Sonnet</button>
+        <button class="clr-btn" onclick="clearResults('haiku')">Clear Haiku</button>
+        <button class="clr-btn" onclick="clearResults('')">Clear all</button>
+      </div>
+    </div>
+    {% if rows %}
+    <table class="res-table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Engine</th>
+          <th>Genre</th>
+          <th class="num">Score</th>
+          <th class="num">DOD</th>
+          <th class="num">VD</th>
+          <th class="num">DM</th>
+          <th class="num">WF</th>
+          <th class="num">AQ</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ r.original_filename }}">{{ r.original_filename or '—' }}</td>
+          <td><span class="engine-pill {% if r.engine_haiku %}ep-haiku{% else %}ep-sonnet{% endif %}">{{ 'Haiku' if r.engine_haiku else 'Sonnet' }}</span></td>
+          <td>{{ r.genre or '—' }}</td>
+          <td class="num">
+            <span class="score-val">{% if r.score %}{{ '%.2f'|format(r.score) }}{% else %}—{% endif %}</span>
+            {% if r.tier %}<span class="tier-val">{{ r.tier }}</span>{% endif %}
+          </td>
+          <td class="num dim-val">{{ '%.1f'|format(r.dod_score) if r.dod_score else '—' }}</td>
+          <td class="num dim-val">{{ '%.1f'|format(r.disruption_score) if r.disruption_score else '—' }}</td>
+          <td class="num dim-val">{{ '%.1f'|format(r.dm_score) if r.dm_score else '—' }}</td>
+          <td class="num dim-val">{{ '%.1f'|format(r.wonder_score) if r.wonder_score else '—' }}</td>
+          <td class="num dim-val">{{ '%.1f'|format(r.aq_score) if r.aq_score else '—' }}</td>
+          <td style="font-size:12px;color:#8A8A86;white-space:nowrap">{{ r.scored_at.strftime('%-d %b %H:%M') if r.scored_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No calibration images yet. Upload a batch above.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+var _engine  = 'sonnet';
+var _files   = [];
+
+function setEngine(e) {
+  _engine = e;
+  document.getElementById('eng-sonnet').className = 'eng-btn' + (e === 'sonnet' ? ' active sonnet' : '');
+  document.getElementById('eng-haiku').className  = 'eng-btn' + (e === 'haiku'  ? ' active haiku'  : '');
+}
+
+function onFilePick(files) {
+  _files = Array.from(files);
+  updateFileCount();
+}
+
+function onDrop(evt) {
+  evt.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  _files = Array.from(evt.dataTransfer.files).filter(function(f){ return f.type.startsWith('image/'); });
+  updateFileCount();
+}
+
+function updateFileCount() {
+  var btn = document.getElementById('upload-btn');
+  var lbl = document.getElementById('file-count');
+  if (_files.length > 0) {
+    lbl.textContent = _files.length + ' image' + (_files.length > 1 ? 's' : '') + ' selected';
+    btn.disabled = false;
+  } else {
+    lbl.textContent = '';
+    btn.disabled = true;
+  }
+}
+
+function showFlash(msg, type) {
+  var el = document.getElementById('flash');
+  el.textContent = msg;
+  el.className = 'flash ' + type;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 7000);
+}
+
+function addLiveRow(fname, engine, d) {
+  var wrap = document.getElementById('live-results');
+  var row  = document.createElement('div');
+  var ok   = d.score != null;
+  row.className = 'live-row ' + (ok ? 'ok' : 'err');
+
+  var epClass = engine === 'haiku' ? 'ep-haiku' : 'ep-sonnet';
+  var epLabel = engine === 'haiku' ? 'Haiku' : 'Sonnet';
+
+  row.innerHTML =
+    '<span class="live-fname">' + fname + '</span>' +
+    '<span class="live-engine engine-pill ' + epClass + '">' + epLabel + '</span>' +
+    (ok
+      ? '<span class="live-score">' + d.score.toFixed(2) + '</span>' +
+        '<span class="live-dims">DOD ' + (d.dod||'—') + ' · VD ' + (d.vd||'—') + ' · DM ' + (d.dm||'—') + ' · WF ' + (d.wf||'—') + ' · AQ ' + (d.aq||'—') + '</span>'
+      : '<span style="color:#B91C1C;font-size:13px">' + (d.status || 'failed') + '</span>');
+
+  wrap.prepend(row);
+}
+
+async function startUpload() {
+  var genre = document.getElementById('genre-sel').value;
+  if (!genre) { showFlash('Select a genre first.', 'err'); return; }
+  if (!_files.length) { showFlash('No images selected.', 'err'); return; }
+
+  var btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.textContent = 'Scoring…';
+
+  var progWrap = document.getElementById('progress-wrap');
+  var progBar  = document.getElementById('progress-bar');
+  var progLbl  = document.getElementById('progress-label');
+  progWrap.style.display = 'block';
+  document.getElementById('live-results').innerHTML = '';
+
+  var done = 0; var failed = 0;
+  for (var i = 0; i < _files.length; i++) {
+    var f = _files[i];
+    progLbl.textContent = 'Scoring ' + (i+1) + ' of ' + _files.length + ': ' + f.name;
+    progBar.style.width = Math.round(((i) / _files.length) * 100) + '%';
+
+    var fd = new FormData();
+    fd.append('image', f);
+    fd.append('genre', genre);
+    fd.append('engine', _engine);
+
+    try {
+      var resp = await fetch('/admin/calibration/upload', { method: 'POST', body: fd });
+      var d = await resp.json();
+      addLiveRow(f.name, _engine, d);
+      if (d.score != null) done++;
+      else failed++;
+    } catch(e) {
+      addLiveRow(f.name, _engine, {status: 'network error'});
+      failed++;
+    }
+  }
+
+  progBar.style.width = '100%';
+  progLbl.textContent = 'Done — ' + done + ' scored' + (failed > 0 ? ', ' + failed + ' failed' : '') + '. Refresh to see full results table.';
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-bolt"></i> Score images';
+  _files = [];
+  document.getElementById('file-input').value = '';
+  document.getElementById('file-count').textContent = '';
+  showFlash('Batch complete — ' + done + ' scored. Refresh page to update results table.', 'ok');
+}
+
+function clearResults(engine) {
+  var label = engine ? engine + ' calibration images' : 'ALL calibration images';
+  if (!confirm('Delete ' + label + '? This cannot be undone.')) return;
+  var url = '/admin/calibration/clear' + (engine ? '?engine=' + engine : '');
+  fetch(url, {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) { showFlash('Cleared ' + d.deleted + ' image' + (d.deleted !== 1 ? 's' : '') + '.', 'ok'); setTimeout(function(){ location.reload(); }, 1200); }
+      else { showFlash('Clear failed: ' + (d.message || 'unknown error'), 'err'); }
+    })
+    .catch(function(){ showFlash('Network error on clear.', 'err'); });
+}
+</script>
+</body>
+</html>
