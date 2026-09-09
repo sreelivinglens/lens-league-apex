@@ -18145,10 +18145,16 @@ Return ONLY valid JSON, no preamble, no markdown fences:
     dm  = _cl(d.get('dm',  5.0))
     wf  = _cl(d.get('wf',  5.0))
     aq  = _cl(d.get('aq',  5.0))
-    score = calculate_score(dod, vd, dm, wf, aq, genre)
-    tier  = get_tier(score)
+
+    try:
+        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+    except Exception as _sce:
+        app.logger.warning(f'[cal_haiku] calculate_score failed ({_sce}), using mean fallback')
+        final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
+        tier = get_tier(final_score)
+
     return {'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
-            'score': round(score, 2), 'tier': tier}
+            'score': round(final_score, 2), 'tier': tier}
 
 
 @app.route('/admin/calibration')
