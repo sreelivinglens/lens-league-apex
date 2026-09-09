@@ -1,6 +1,6 @@
 """
 Apex DDI Engine — core scoring module
-Shutter League · May 2026
+Shutter League · May 2026 · Updated Session 218
 
 Genres (14 confirmed):
   1. Architecture    — Built environment: buildings, interiors, structures, urban geometry
@@ -17,6 +17,12 @@ Genres (14 confirmed):
  12. Street          — Human life in public spaces
  13. Wedding         — Ceremonies and celebrations
  14. Wildlife        — Animals in natural behaviour
+
+Session 218 changes:
+- bird_perch sub-genre added to SUBGENRE_MAP (both 'Creative' legacy key and new 'Wildlife' key)
+- Wildlife 'Wildlife' key added to SUBGENRE_MAP — fixes pre-existing copy-paste error
+  where Wildlife sub-genres were stored under 'Creative' key. Both keys kept for
+  backward compat with existing DB rows that reference 'Creative' key sub-genres.
 """
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
@@ -181,6 +187,39 @@ SUBGENRE_MAP = {
         ('bird_behaviour',         'Bird – Predation / Behaviour'),
         ('bird_family',            'Bird – Family / Juvenile'),
         ('bird_migration',         'Bird – Migration / Murmuration'),
+        ('bird_perch',             'Bird – Perch / Landing / Display'),
+        # ── Mammals ────────────────────────────────────────────────────────────
+        ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
+        ('mammal_family',          'Mammal – Family / Juvenile'),
+        ('mammal_migration',       'Mammal – Migration / Herd'),
+        ('primate_behaviour',      'Primate – Social / Behaviour'),
+        ('bat_behaviour',          'Bat – Behaviour / Emergence'),
+        # ── Aquatic / Marine ───────────────────────────────────────────────────
+        ('dolphin_behaviour',      'Dolphin / Cetacean – Behaviour'),
+        ('marine',                 'Marine / Underwater'),
+        ('marine_migration',       'Marine – Migration / Shoaling'),
+        # ── Reptiles & Amphibians ──────────────────────────────────────────────
+        ('reptile_amphibian',      'Reptile / Amphibian – Behaviour'),
+        # ── Invertebrates ──────────────────────────────────────────────────────
+        ('butterfly_behaviour',    'Butterfly / Insect – Behaviour'),
+        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
+        # ── Environmental / Contextual ─────────────────────────────────────────
+        ('animals_in_environment', 'Animal in Habitat / Environment'),
+        ('urban_wildlife',         'Urban Wildlife'),
+        ('animal_portrait',        'Animal Portrait'),
+        ('macro_wildlife',         'Macro Wildlife'),
+        ('wildlife_other',         'Other / Does not fit above'),
+    ],
+    # SL-Session 218: Wildlife key added — the block above is keyed 'Creative'
+    # due to a pre-existing copy-paste error; this corrects it going forward.
+    # Both keys kept for backward compatibility with existing DB rows.
+    'Wildlife': [
+        # ── Birds ──────────────────────────────────────────────────────────────
+        ('bird_in_flight',         'Bird – In Flight'),
+        ('bird_behaviour',         'Bird – Predation / Behaviour'),
+        ('bird_family',            'Bird – Family / Juvenile'),
+        ('bird_migration',         'Bird – Migration / Murmuration'),
+        ('bird_perch',             'Bird – Perch / Landing / Display'),
         # ── Mammals ────────────────────────────────────────────────────────────
         ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
         ('mammal_family',          'Mammal – Family / Juvenile'),
