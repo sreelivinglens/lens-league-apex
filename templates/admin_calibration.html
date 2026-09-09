@@ -1,4 +1,4 @@
-{# SL-VERSION: cal-2.0 (Session 218, 2026-09-10 — Single upload scores on both Sonnet and Haiku simultaneously. One row per image: Sonnet score, Haiku score, +/- delta column, all 5 dimensions for each engine. Engine toggle: Both (default), Sonnet only, Haiku only.) #}
+{# SL-VERSION: cal-2.1 (Session 218, 2026-09-10 — Thumbnail strip after drop: 72px previews with ✕ remove per image. Progress bar shows engine label (Sonnet/Haiku) + filename per step. Thumbnails get green border when done. On completion: auto-reloads page after 2s so results table updates without manual refresh. RETAINS cal-2.0.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,6 +43,13 @@ a.back:hover{text-decoration:underline}
 .drop-zone{border:2px dashed #C8C5BE;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#FAFAF6;transition:border-color .15s,background .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .drop-zone:hover,.drop-zone.drag{border-color:#1A2744;background:#EFF6FF}
 .drop-zone i{font-size:32px;color:#1A2744}
+.thumb-item{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid #E0DDD6;flex-shrink:0;background:#F5F3EF}
+.thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb-item .thumb-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(26,26,24,0.75);color:#fff;border:none;cursor:pointer;font-size:11px;line-height:18px;text-align:center;padding:0;display:flex;align-items:center;justify-content:center}
+.thumb-item .thumb-remove:hover{background:#B91C1C}
+.thumb-item.done-s{border-color:#1A2744}
+.thumb-item.done-h{border-color:#6B21A8}
+.thumb-item.done-b{border-color:#2E7D32}
 .drop-zone-text{font-size:15px;color:#6B6B68}
 .drop-zone-sub{font-size:14px;color:#AEAEA8}
 #file-input{display:none}
@@ -173,11 +180,17 @@ a.back:hover{text-decoration:underline}
          ondragover="event.preventDefault();this.classList.add('drag')"
          ondragleave="this.classList.remove('drag')"
          ondrop="onDrop(event)">
-      <i class="ti ti-photo"></i>
-      <span class="drop-zone-text">Drop images here or click to browse</span>
-      <span class="drop-zone-sub">JPEG / PNG / HEIC · 1–20 images</span>
+      <i class="ti ti-photo" id="drop-icon"></i>
+      <span class="drop-zone-text" id="drop-text">Drop images here or click to browse</span>
+      <span class="drop-zone-sub" id="drop-sub">JPEG / PNG / HEIC · 1–20 images</span>
     </div>
     <input type="file" id="file-input" multiple accept="image/*" onchange="onFilePick(this.files)">
+
+    {# Thumbnail strip — shown after files are picked #}
+    <div id="thumb-strip" style="display:none;margin-top:12px;display:none">
+      <div style="font-size:13px;font-weight:600;color:#6B6B68;margin-bottom:6px">Selected images</div>
+      <div id="thumb-list" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
 
     <div style="display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap">
       <button class="upload-btn" id="upload-btn" onclick="startUpload()" disabled>
@@ -186,7 +199,8 @@ a.back:hover{text-decoration:underline}
       <span id="file-count" style="font-size:14px;color:#6B6B68"></span>
     </div>
 
-    <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-wrap" id="progress-wrap" style="display:none;margin-top:14px">
+      <div style="font-size:13px;font-weight:600;color:#1A1A18;margin-bottom:6px" id="progress-engine-label"></div>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
       <div class="progress-label" id="progress-label">Starting…</div>
     </div>
@@ -319,20 +333,58 @@ function setEngine(e) {
   document.getElementById('eng-haiku').className  = 'eng-btn' + (e === 'haiku'  ? ' active-haiku'  : '');
 }
 
+function renderThumbs() {
+  var strip = document.getElementById('thumb-strip');
+  var list  = document.getElementById('thumb-list');
+  if (!_files.length) { strip.style.display = 'none'; return; }
+  strip.style.display = 'block';
+  list.innerHTML = '';
+  _files.forEach(function(f, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'thumb-item';
+    wrap.id = 'thumb-' + i;
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.onload = function(){ URL.revokeObjectURL(this.src); };
+    var rm = document.createElement('button');
+    rm.className = 'thumb-remove';
+    rm.innerHTML = '✕';
+    rm.title = 'Remove';
+    (function(idx){ rm.onclick = function(e){
+      e.stopPropagation();
+      _files.splice(idx, 1);
+      renderThumbs(); updateCount();
+    }; })(i);
+    wrap.appendChild(img);
+    wrap.appendChild(rm);
+    wrap.title = f.name;
+    list.appendChild(wrap);
+  });
+}
+
 function onFilePick(files) {
   _files = Array.from(files);
-  updateCount();
+  renderThumbs(); updateCount();
 }
 function onDrop(evt) {
   evt.preventDefault();
   document.getElementById('drop-zone').classList.remove('drag');
   _files = Array.from(evt.dataTransfer.files).filter(function(f){ return f.type.startsWith('image/'); });
-  updateCount();
+  renderThumbs(); updateCount();
 }
 function updateCount() {
   var n = _files.length;
-  document.getElementById('file-count').textContent = n > 0 ? n + ' image' + (n > 1 ? 's' : '') + ' selected' : '';
+  document.getElementById('file-count').textContent = n > 0 ? n + ' image' + (n > 1 ? 's' : '') + ' ready' : '';
   document.getElementById('upload-btn').disabled = (n === 0);
+  var dt = document.getElementById('drop-text');
+  var ds = document.getElementById('drop-sub');
+  if (dt) dt.textContent = n > 0 ? 'Click to add more images' : 'Drop images here or click to browse';
+  if (ds) ds.textContent = n > 0 ? n + ' selected — drop more to add' : 'JPEG / PNG / HEIC · 1–20 images';
+}
+
+function markThumbDone(idx) {
+  var wrap = document.getElementById('thumb-' + idx);
+  if (wrap) wrap.style.borderColor = '#2E7D32';
 }
 
 function showFlash(msg, type) {
@@ -464,12 +516,14 @@ async function startUpload() {
 
   var btn = document.getElementById('upload-btn');
   btn.disabled = true;
-  btn.textContent = 'Scoring…';
+  btn.innerHTML = '<i class="ti ti-loader"></i> Scoring…';
 
   var progWrap = document.getElementById('progress-wrap');
   var progBar  = document.getElementById('progress-bar');
   var progLbl  = document.getElementById('progress-label');
+  var progEng  = document.getElementById('progress-engine-label');
   progWrap.style.display = 'block';
+  progBar.style.width = '0%';
 
   document.getElementById('live-section').style.display = 'block';
   document.getElementById('live-results').innerHTML = '';
@@ -481,26 +535,41 @@ async function startUpload() {
   for (var i = 0; i < _files.length; i++) {
     var f = _files[i];
     var card = createLiveCard(f.name);
-    progLbl.textContent = 'Image ' + (i+1) + ' of ' + _files.length + ': ' + f.name;
 
-    // Run engines sequentially per image (Sonnet first, then Haiku)
     for (var j = 0; j < engines.length; j++) {
-      progLbl.textContent = 'Image ' + (i+1) + '/' + _files.length + ' — ' + engines[j] + ': ' + f.name;
-      var result = await scoreOne(f, genre, engines[j], card);
+      var eng = engines[j];
+      if (progEng) progEng.textContent = 'Image ' + (i+1) + ' / ' + _files.length + '  ·  ' + (eng === 'sonnet' ? 'Sonnet (Apex DDI)' : 'Haiku (bare 5-dim)');
+      progLbl.textContent = f.name;
+      progBar.style.width = Math.round((done / total) * 100) + '%';
+
+      var result = await scoreOne(f, genre, eng, card);
       scored += result;
       done++;
       progBar.style.width = Math.round((done / total) * 100) + '%';
     }
+    markThumbDone(i);
   }
 
   progBar.style.width = '100%';
-  progLbl.textContent = 'Done — ' + scored + ' of ' + total + ' runs scored successfully.';
+  if (progEng) progEng.textContent = 'Complete ✓';
+  progLbl.textContent = scored + ' of ' + total + ' engine runs scored successfully.';
+
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-bolt"></i> Score images';
+
+  // Reset
   _files = [];
   document.getElementById('file-input').value = '';
   document.getElementById('file-count').textContent = '';
-  showFlash('Complete — ' + scored + '/' + total + ' engine runs scored. Refresh to update the results table.', 'ok');
+  var strip = document.getElementById('thumb-strip');
+  if (strip) strip.style.display = 'none';
+  var dt = document.getElementById('drop-text');
+  var ds = document.getElementById('drop-sub');
+  if (dt) dt.textContent = 'Drop images here or click to browse';
+  if (ds) ds.textContent = 'JPEG / PNG / HEIC · 1–20 images';
+
+  showFlash('Scoring complete — ' + scored + '/' + total + ' runs done. Reloading results table…', 'ok');
+  setTimeout(function(){ window.location.reload(); }, 2000);
 }
 
 function clearResults(engine) {
