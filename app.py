@@ -18388,33 +18388,49 @@ def admin_calibration_upload():
 def admin_calibration_rescore(image_id):
     """
     POST /admin/calibration/rescore/<image_id>
-    Re-scores an existing calibration image using its stored thumb_path.
-    No file upload needed — uses the already-stored thumbnail.
+    Re-scores an existing calibration image.
+    Tries thumb_path first (local disk). Falls back to thumb_url (R2) when
+    the container has been redeployed and local files are gone.
     Frontend calls this per-row sequentially (not bulk) to avoid gunicorn timeout.
-    Returns same JSON shape as /admin/calibration/upload.
     """
+    import tempfile as _tf
+    import urllib.request as _ur2
+    _tmp_path = None
     try:
         img = Image.query.filter_by(
             id=image_id,
-            user_id=current_user.id,
             is_admin_curation=True
         ).first_or_404()
 
-        if not img.thumb_path or not os.path.exists(img.thumb_path):
-            return jsonify({'ok': False, 'message': 'Thumbnail not found — re-upload this image'}), 400
+        # ── Resolve image path: local disk first, R2 fallback ────────────────
+        score_path = None
+        if img.thumb_path and os.path.exists(img.thumb_path):
+            score_path = img.thumb_path
+        elif img.thumb_url:
+            # Download from R2 into a temp file for this request
+            try:
+                with _tf.NamedTemporaryFile(suffix='.jpg', delete=False) as _t:
+                    _tmp_path = _t.name
+                _ur2.urlretrieve(img.thumb_url, _tmp_path)
+                score_path = _tmp_path
+                app.logger.info(f'[calibration_rescore] R2 fallback OK image={image_id}')
+            except Exception as _dl_err:
+                app.logger.error(f'[calibration_rescore] R2 download failed image={image_id}: {_dl_err}')
 
-        # is_haiku_try is not an ORM column — must query via raw SQL (Rule 8)
+        if not score_path:
+            return jsonify({'ok': False,
+                'message': 'Thumbnail not found on disk or R2 — re-upload this image'}), 400
+
+        # ── Engine detection ─────────────────────────────────────────────────
         _row = db.session.execute(
             db.text('SELECT is_haiku_try FROM images WHERE id = :iid'), {'iid': image_id}
         ).fetchone()
         _is_haiku = bool(_row and _row[0])
 
-        # Allow engine override via form param
         _engine_override = request.form.get('engine', '').strip().lower()
-        if _engine_override in ('sonnet', 'haiku'):
-            engine = _engine_override
-        else:
-            engine = 'haiku' if _is_haiku else 'sonnet'
+        engine = _engine_override if _engine_override in ('sonnet', 'haiku') else (
+            'haiku' if _is_haiku else 'sonnet'
+        )
 
         genre  = img.genre or 'General'
         result = {'image_id': image_id, 'engine': engine, 'status': 'failed'}
@@ -18425,7 +18441,7 @@ def admin_calibration_rescore(image_id):
 
         if engine == 'sonnet':
             from engine.auto_score import auto_score_ddi_fast
-            scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=img.sub_genre)
+            scored = auto_score_ddi_fast(image_path=score_path, genre=genre, sub_genre=img.sub_genre)
             if scored:
                 img.dod_score        = scored.get('dod', 0)
                 img.disruption_score = scored.get('disruption', 0) or scored.get('vd', 0)
@@ -18448,7 +18464,7 @@ def admin_calibration_rescore(image_id):
                 img.status = 'error'; db.session.commit()
                 result['status'] = 'scoring failed'
         else:
-            scored = _calibration_score_haiku(img.thumb_path, genre)
+            scored = _calibration_score_haiku(score_path, genre)
             if scored:
                 img.dod_score        = scored['dod']
                 img.disruption_score = scored['vd']
@@ -18477,6 +18493,12 @@ def admin_calibration_rescore(image_id):
         db.session.rollback()
         app.logger.error(f'[calibration_rescore] image={image_id}: {_e}')
         return jsonify({'ok': False, 'message': str(_e)}), 500
+
+    finally:
+        # Clean up temp R2 download if used
+        if _tmp_path and os.path.exists(_tmp_path):
+            try: os.unlink(_tmp_path)
+            except: pass
 
 
 
