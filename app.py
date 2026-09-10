@@ -34327,12 +34327,11 @@ def _try_genre_context(genre):
             "(dramatic natural light — storm, golden shafts, burning sky; strong tonal "
             "contrast; extraordinary colour). Exceptional natural light scores VD 7.5–8.5 "
             "even without unconventional technique. Flat overcast = VD 5.0–6.0. "
-            "Apply LOCATION REMOVAL TEST — if the scene is available to any tourist, "
-            "cap Wonder at 6.5. UBIQUITY CEILING: golden hour at famous landmark = WF 5-6. "
-            "DM requires a transient element — light, weather, moment — not just composition. "
+            "DM CEILING: static scene with no moving/transient element = DM 5.5–6.5 max. "
+            "Beautiful light is VD, not DM. Transient element at peak = DM 7.5+. "
+            "Location Removal Test for Wonder above 8.0 only — do not apply below 8.0. "
             "DOD: remote access, extreme weather, pre-dawn commitment scores 7+. "
-            "Wonder 8+ requires: light under 3 minutes OR rare atmospheric condition "
-            "OR a viewpoint no other image of this location has used."
+            "Wonder 8.5+ requires compositional transformation beyond recording the scene."
         ),
         'Astrophotography': (
             "ASTRO: DOD anchored by dark site access, weather, technical execution. "
@@ -34378,25 +34377,28 @@ def _try_genre_context(genre):
             "Wonder = showing family truth most viewers recognise but rarely see documented."
         ),
         'People': (
-            "PEOPLE/PORTRAIT: VD = visual presence — strong eye contact with immediate magnetism; "
-            "dramatic or unusual light (rim, backlight, harsh shadow); graphic quality in framing; "
-            "colour/tonal contrast that makes subject pop. A compelling face under strong "
-            "directional light scores VD 7.5–8.0 even in conventional framing. "
-            "NEVER below 5.5 for a portrait with clear subject presence and competent light. "
-            "AQ dominant. Environmental portraits score DOD higher than studio. "
-            "DM = the moment of genuine expression — not the posed smile. "
+            "PEOPLE/PORTRAIT: VD HARD FLOOR: a portrait with direct engaged gaze scores "
+            "VD 6.5 minimum — a human face with eye contact always stops the eye. "
+            "Above floor: strong directional light adds 0.5–1.0; graphic framing adds 0.5. "
+            "A compelling face under rim light scores VD 7.5–8.0. "
+            "DOD: studio cooperative portrait = 5.5–6.5. Environmental/stranger = 6.5–7.5. "
+            "Do NOT penalise studio portraits on DOD. "
+            "DM: posed and holding still = 5.5–6.5. Genuine unguarded expression = 7.5–8.5. "
             "EMOTIONAL WONDER: if you can name the emotion in one word (dignity, grief, "
             "defiance, tenderness, joy), score WF 7.5 minimum. "
-            "Catchlight in the eye expected at 7+. Missing catchlight: penalise."
+            "AQ dominant. Catchlight in the eye expected at 7+."
         ),
         'Nature': (
             "NATURE: VD = visual drama of the natural scene — score the higher of: "
             "technique disruption OR visual impact (exceptional natural light, painterly "
             "colour relationships, graphic natural patterns). A child under cherry blossoms "
             "in soft pink light scores VD 7.0–7.5. NEVER below 5.0 for genuinely beautiful "
-            "natural light or colour. Wonder = revealing ecological truth most viewers have "
-            "never witnessed. DOD = access and conditions — remote, extreme, rare seasonal event. "
-            "Apply Location Removal Test from Landscape rules."
+            "natural light or colour. "
+            "DM CEILING: static natural scene (child under blossoms, flower in light, "
+            "tree in fog) = DM 5.0–6.5 max. Beautiful static subject = high VD, low DM. "
+            "Score DM on the natural process, not the visual beauty. "
+            "Wonder = revealing ecological truth most viewers have never witnessed. "
+            "DOD = access and conditions — remote, extreme, rare seasonal event."
         ),
         'Fashion': (
             "FASHION: VD dominant — the image must stop the viewer. "
@@ -34438,7 +34440,11 @@ def _try_genre_context(genre):
         ),
         'default': (
             "Score using genre-appropriate criteria. Reward artistic intent, "
-            "technical mastery relative to the genre, and emotional resonance."
+            "technical mastery relative to the genre, and emotional resonance. "
+            "CRITICAL — VD AND DM ARE INDEPENDENT: VD scores the initial visual impact "
+            "(what stops the eye in 2 seconds). DM scores the specific unrepeatable instant "
+            "(whether the photographer was at the right millisecond). A high VD does NOT "
+            "imply a high DM. Score them separately."
         ),
     }
 
