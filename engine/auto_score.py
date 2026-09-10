@@ -1,4 +1,4 @@
-# SL-VERSION: 171.25 (Session 218, 2026-09-10 — Production fixes from image inspection: (1) Wildlife VD named anchors: swallow peak wing-spread = VD 8.0 min, cubs alert = VD 7.5 min, two juveniles at camera = VD 7.5 min. (2) Wildlife DM: bird peak wing-spread = DM 8.5–9.0. Mammal DM split: active contact = 7.0–8.5, alert/aware not touching = 6.0–7.0 (NOT static scene). (3) Wildlife WF: feather separation = 8.0–8.5, two juveniles in golden light (tenderness) = 8.0–8.5, cultural/access wonder = 8.0–8.5. (4) Street WF: Tibetan monks in monastery = ACCESS WONDER 8.0–8.5 named anchor. (5) Nature: genre redirect — if human is PRIMARY subject, score as People/Family. (6) app.py: delete-selected route decorator was missing, added back. user_id filter removed from delete-selected. RETAINS 171.24.)
+# SL-VERSION: 171.26 (Session 218, 2026-09-10 — Final calibration fixes: (1) Wildlife VD anchor changed from hard minimum to guide — swallow peak wing-spread = VD 7.5–8.0 guide (not 8.0 min), only 8.5 if bokeh exceptional AND symmetry perfect. Prevents Sonnet overshooting to 8.5+. (2) Creative _HAIKU_GENRE_CONTEXT: floor removed. Dance/movement = VD 8.5+, 8.0–8.8 overall. Fine art competent = 7.5–8.0. Prevents Fineart Haiku jumping to 8.44. RETAINS 171.25.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -1521,14 +1521,14 @@ GENRE_CONTEXT = {
         "the animal (golden rim light, storm backlight); a colour relationship between "
         "subject and background that makes the image stop the eye; juvenile subjects with "
         "visual tenderness that has immediate emotional impact. "
-        "NAMED ANCHORS — these are minimums:\n"
-        "  Small bird at peak wing-spread with symmetric feather geometry against painterly "
-        "  bokeh background (swallow, bee-eater, sunbird) = VD 8.0–8.5 MINIMUM. "
-        "  The aircraft-wing symmetry and bokeh colour field is a genuine visual disruption.\n"
-        "  Lion or big cat cubs with alert expression in golden light = VD 7.5 MINIMUM.\n"
-        "  Two juvenile animals looking directly at camera simultaneously = VD 7.5 MINIMUM.\n"
-        "  Monks or robed figures in rich-coloured environment with graphic architecture "
-        "  and directional light = VD 7.5–8.0 MINIMUM.\n"
+        "NAMED ANCHORS (these are guides, not hard minimums — apply judgment):\n"
+        "  Small bird at peak wing-spread with symmetric feather geometry against a "
+        "  painterly multi-colour bokeh background (swallow, bee-eater, sunbird) "
+        "  = VD 7.5–8.5. The aircraft-wing symmetry and bokeh colour field IS visually "
+        "  disruptive — but do not inflate VD to 8.5+ unless the bokeh is exceptional "
+        "  AND the symmetry is perfect. A good execution scores 7.5–8.0.\n"
+        "  Lion or big cat cubs with alert expression in golden natural light = VD 7.0–7.5.\n"
+        "  Two juvenile animals simultaneously looking at camera = VD 7.0–7.5.\n"
         "NEVER give VD below 5.0 to a correctly exposed wildlife image with a clear "
         "subject and competent background separation.\n\n"
 
