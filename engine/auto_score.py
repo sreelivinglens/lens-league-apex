@@ -1,4 +1,4 @@
-# SL-VERSION: 171.21 (Session 218, 2026-09-10 — VD overhaul: (1) Global VD definition rewritten — two paths: DISRUPTION (unconventional technique) OR VISUAL IMPACT (stops-the-eye in 2 seconds, strong light/colour/geometry). NEVER give VD below 5 for image with genuine visual presence. Scale anchors added. (2) Street GENRE_CONTEXT: VD section added. (3) People GENRE_CONTEXT: full expansion with VD, DM, WF emotional wonder. (4) Nature GENRE_CONTEXT: VD section added — cherry blossom in soft light = VD 7.0–7.5. (5) Landscape GENRE_CONTEXT: VD section added. (6) Wildlife GENRE_CONTEXT: VD section added — cubs/family with visual tenderness. RETAINS 171.20.)
+# SL-VERSION: 171.21 (Session 218, 2026-09-10 — (1) VD overhaul: two paths — disruption OR visual impact. Scale anchors. Genre VD sections. (2) DM expanded: VD/DM independence rule — high VD does NOT imply high DM, score separately. Per-genre DM anchors. Landscape/Nature hard ceiling: static scene = DM 7.0 max. Portrait posed = DM 5.5–6.5. (3) People GENRE_CONTEXT: VD hard floor 6.5 for direct-gaze portrait. DOD studio = 5.5–6.5, no comparative penalty. DM posed vs genuine. (4) Landscape DM ceiling 7.0 for static scenes — beautiful light is VD not DM. (5) Nature DM ceiling 6.5 for static subjects. RETAINS 171.20.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -243,10 +243,49 @@ VD (Visual Disruption / Visual Drama):
   Below 5: Actively weak — muddy, flat, visually incoherent
 
 DM (Decisive Moment):
-  Multiple variables at peak simultaneously.
-  For Creative/technique images: the precise decision of when and how
-  to execute — right conditions, right timing, right duration.
+  Multiple variables at peak simultaneously — the single frame where the
+  image could not have been made a fraction of a second earlier or later.
+
+  CRITICAL — VD AND DM ARE INDEPENDENT DIMENSIONS:
+  VD scores the initial visual impact of the image — what stops the eye
+  in the first 2 seconds, regardless of when it was taken.
+  DM scores the specific unrepeatable instant within the image — whether
+  the photographer was at the right place at the right millisecond.
+  A high VD score does NOT imply a high DM. A beautiful landscape with
+  dramatic light but no moving element has high VD and low DM. Score them
+  separately. Do not let VD signals inflate DM.
+
+  PER-GENRE DM ANCHORS:
+
+  LANDSCAPE / NATURE (static scenes): DM requires a TRANSIENT element
+  that resolved at its geometric or expressive peak — a moving subject,
+  a weather event at its apex, a light shaft at its narrowest. A static
+  scene with beautiful light but no transient element cannot score DM
+  above 7.0 regardless of how visually striking it is.
+  A child standing still under cherry blossoms = DM 5.0–6.0.
+  Spores dispersing at the exact moment = DM 8.0+.
+
+  STREET / DOCUMENTARY: DM rewards layered variables peaking together —
+  expression + gesture + background alignment + light. The more variables
+  peak simultaneously, the higher the DM.
+
+  WILDLIFE: DM scores the peak of the behavioural act — the half-second
+  before prey contact, the exact wing-spread, the mother-calf touch.
+  Identify the behavioural act first, then score DM relative to that act.
+
+  PORTRAIT / PEOPLE: DM scores the moment of genuine unguarded expression —
+  the flicker of real feeling, not the held pose. A portrait where the
+  subject is posed and holding still scores DM 5.5–6.5.
+  The moment of genuine expression scores DM 7.5–8.5.
+
+  CREATIVE / TECHNIQUE: DM scores the precision of technique execution —
+  the exact exposure duration for ICM, the precise shutter timing for
+  panning. Right conditions + right timing + right duration.
   Selection ≠ Decision — reward active creative control.
+
+  SPORTS / ACTION: DM scores the geometric peak of the action — the highest
+  jump, the moment of contact, the peak extension. Pre-position scores
+  higher than reaction.
 
 WF (Wonder Factor):
   The Unseen Truth. Four distinct Wonder signals — any one at high intensity scores 7.5–9.5:
@@ -1536,15 +1575,17 @@ GENRE_CONTEXT = {
         "unconventional technique. Flat, overcast, evenly lit scenes with no "
         "drama score VD 5.0–6.0.\n\n"
 
-        "DM: A landscape DM requires a TRANSIENT element to resolve at its exact geometric "
-        "peak against a permanent one. Examples of genuine landscape DM: storm light "
-        "isolating a single peak while foreground stays dark (Adams, Tetons); moon "
-        "positioned precisely at the dune crest junction (minutes either side collapses "
-        "the relationship); a moving subject (animal, train, boat) reaching the exact "
-        "geometric resolution point in the frame; fog settling at exactly the right "
-        "valley level to isolate a foreground element. Static scenes without a transient "
-        "element cannot score DM above 7.5 regardless of compositional quality. "
-        "\"Good light on a mountain\" is not a decisive moment.\n\n"
+        "DM: A landscape DM requires a TRANSIENT element that resolved at its exact "
+        "geometric or expressive peak against a permanent element. "
+        "HARD CEILING: A static scene with no moving or transient element cannot score "
+        "DM above 7.0 regardless of how visually striking the light or composition is. "
+        "Beautiful light alone is NOT a decisive moment — it is VD. "
+        "Examples of genuine landscape DM: storm light isolating a single peak while "
+        "foreground stays dark (Adams, Tetons); moon positioned precisely at the dune "
+        "crest junction (minutes either side collapses the relationship); a moving "
+        "subject (animal, train, boat) reaching the exact geometric resolution point; "
+        "fog settling at exactly the right valley level to isolate a foreground element. "
+        "\"Good light on a mountain\" = DM 5.5–6.5. Transient element at peak = DM 7.5–8.5.\n\n"
 
         "Wonder: APPLY THE LOCATION REMOVAL TEST before scoring above 8.5. Ask: if this "
         "exact composition were photographed at an ordinary local location — a nearby "
@@ -1682,29 +1723,32 @@ GENRE_CONTEXT = {
     'People': (
         "This is People photography — portraits, faces, human expression, and the "
         "photographer's relationship with their subject.\n\n"
-        "DoD: Environmental portraits score higher than studio. Low light, restricted "
-        "access, or the challenge of gaining trust with a stranger or community raises DoD.\n\n"
-        "VD: Score the visual presence of the image. People VD rewards: "
-        "strong eye contact with immediate magnetism; dramatic or unusual light (rim, "
-        "backlight, harsh shadow play, single-source dramatic); graphic quality in "
-        "the composition — subject placement, negative space, framing device; "
-        "colour or tonal contrast between subject and background that makes the "
-        "subject pop immediately. A compelling face under strong directional light "
-        "scores VD 7.5–8.0 even in conventional framing. "
-        "Environmental context that adds visual layers — subject within a rich, "
-        "textured world — scores VD 7.0–7.5.\n\n"
-        "DM: Score the moment of genuine expression — not the posed smile, but the "
-        "unguarded instant that reveals something true about the subject. "
-        "The flicker of doubt, the moment of real laughter, the look that communicates "
-        "a world the subject didn't intend to share.\n\n"
+        "DoD: Score the technical and access challenge of the capture. "
+        "Studio portrait with controlled lighting and cooperative subject: DOD 5.5–6.5. "
+        "Environmental portrait in challenging light or with a stranger: DOD 6.5–7.5. "
+        "Portrait made in restricted or dangerous access (conflict zone, closed community): DOD 7.5+. "
+        "Do NOT penalise studio or cooperative portraits — score what was actually required.\n\n"
+        "VD: Score the visual presence of the image. "
+        "HARD FLOOR: A portrait where the subject's face is the primary element "
+        "and the gaze is direct and engaged scores VD 6.5 minimum — a human face "
+        "with direct eye contact always stops the eye. "
+        "Above the floor, score: strong directional light (rim, backlight, single-source "
+        "dramatic shadow) adds 0.5–1.0; graphic quality in the framing or negative space "
+        "adds 0.5; colour or tonal contrast between subject and background that isolates "
+        "the face adds 0.5. A compelling face under strong rim light scores VD 7.5–8.0.\n\n"
+        "DM: Score the moment of genuine unguarded expression — the flicker of real "
+        "feeling, not the held pose. A portrait where the subject is posed and holding "
+        "still scores DM 5.5–6.5. The moment of genuine expression — real laughter, "
+        "a flicker of doubt, the look that reveals something the subject didn't plan "
+        "to share — scores DM 7.5–8.5.\n\n"
         "Wonder: Score revealing the person's world, not just their face. "
         "EMOTIONAL WONDER: a portrait where the emotion is immediate and nameable — "
         "dignity, grief, defiance, tenderness, joy — scores WF 7.5 minimum. "
-        "The one-word test: if you can name what the stranger in the frame is feeling "
-        "in one word, that is emotional wonder. Score it.\n\n"
+        "The one-word test: if you can name what the subject is feeling in one word, "
+        "that is emotional wonder. Score it.\n\n"
         "AQ: Dominant dimension. Catchlight in the eye expected at 7+. "
         "Skin rendering that preserves texture without harsh processing. "
-        "Emotional and aesthetic tone the image creates — the precise feeling it produces."
+        "Emotional and aesthetic tone the image creates."
     ),
     'Nature': (
         "This is Nature photography. The subject is the living natural world beyond animals "
@@ -1725,7 +1769,11 @@ GENRE_CONTEXT = {
         "NEVER give VD below 5.0 to an image with genuinely beautiful natural light or colour.\n\n"
         "DM: Score the moment of natural peak — spore dispersal, lightning strike, fog "
         "rolling in, first light on dew. Nature DM rewards the photographer who understood "
-        "the natural process well enough to anticipate its peak.\n\n"
+        "the natural process well enough to anticipate its peak. "
+        "HARD CEILING: A static natural scene (child standing still under blossoms, "
+        "a flower in open light, a tree in fog) cannot score DM above 6.5 — "
+        "there is no peak moment to miss. Score DM on the natural process, not the "
+        "visual beauty. Beautiful static subject = low DM, potentially high VD.\n\n"
         "Wonder: PRIMARY dimension for Nature (30% weight). Score the degree to which the "
         "image reveals something scientifically or visually significant about the natural "
         "world. Bioluminescent fungi, rare botanical specimens, weather phenomena at their "
