@@ -101,6 +101,9 @@ a.back:hover{text-decoration:underline}
 .d-zero{color:#8A8A86;font-weight:700}
 .del-btn{background:none;border:none;color:#C8C5BE;font-size:15px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;min-height:26px;width:26px}
 .del-btn:hover{color:#B91C1C;background:#FEF2F2}
+.rescore-cal-btn{background:none;border:none;color:#C8C5BE;font-size:15px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;min-height:26px;width:26px}
+.rescore-cal-btn:hover{color:#B45309;background:#FFF3CD}
+.rescore-cal-btn:disabled{opacity:.4;cursor:not-allowed}
 .empty-state{text-align:center;padding:40px;color:#8A8A86;font-size:15px}
 
 /* col widths */
@@ -220,6 +223,8 @@ a.back:hover{text-decoration:underline}
     </div>
     <div class="clear-btns">
       <button class="clr-btn" onclick="exportCSV()" style="border-color:#1A2744;color:#1A2744">↓ CSV</button>
+      <button class="clr-btn" onclick="rescoreSelected()" style="border-color:#B45309;color:#B45309" id="bulk-rescore-btn">↺ Rescore selected</button>
+      <button class="clr-btn" onclick="rescoreAll()" style="border-color:#B45309;color:#B45309">↺ Rescore all</button>
       <button class="clr-btn" onclick="clearEngine('sonnet')">Clear Sonnet</button>
       <button class="clr-btn" onclick="clearEngine('haiku')">Clear Haiku</button>
       <button class="clr-btn" onclick="clearEngine('')">Clear all</button>
@@ -289,7 +294,10 @@ a.back:hover{text-decoration:underline}
             <td class="r dim-n">{{ '%.1f'|format(s.wonder_score) if s.wonder_score else '—' }}</td>
             <td class="r dim-n">{{ '%.1f'|format(s.aq_score) if s.aq_score else '—' }}</td>
             <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ s.scored_at.strftime('%-d %b %H:%M') if s.scored_at else '—' }}</td>
-            <td><button class="del-btn" onclick="deleteRow({{ s.id }}, {{ h.id if h else 'null' }}, this)" title="Delete">✕</button></td>
+            <td style="white-space:nowrap">
+              <button class="rescore-cal-btn" onclick="rescoreOne({{ s.id }}, 'sonnet', this)" title="Rescore">↺</button>
+              <button class="del-btn" onclick="deleteRow({{ s.id }}, {{ h.id if h else 'null' }}, this)" title="Delete">✕</button>
+            </td>
           </tr>
           {% endif %}
 
@@ -318,7 +326,10 @@ a.back:hover{text-decoration:underline}
             {{ dim(h.wonder_score, s.wonder_score if s else none) }}
             {{ dim(h.aq_score, s.aq_score if s else none) }}
             <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ h.scored_at.strftime('%-d %b %H:%M') if h.scored_at else '—' }}</td>
-            <td><button class="del-btn" onclick="deleteRow({{ h.id }}, {{ s.id if s else 'null' }}, this)" title="Delete">✕</button></td>
+            <td style="white-space:nowrap">
+              <button class="rescore-cal-btn" onclick="rescoreOne({{ h.id }}, 'haiku', this)" title="Rescore">↺</button>
+              <button class="del-btn" onclick="deleteRow({{ h.id }}, {{ s.id if s else 'null' }}, this)" title="Delete">✕</button>
+            </td>
           </tr>
           {% endif %}
 
@@ -448,7 +459,7 @@ function makeRow(id, fname, engine, d, pairedId, pairedDims) {
     dimCell(d && d.wf  != null ? d.wf  : null, dims.wf) +
     dimCell(d && d.aq  != null ? d.aq  : null, dims.aq) +
     '<td style="color:#8A8A86;font-size:12px;white-space:nowrap">'+mm+' '+hhmm+'</td>' +
-    '<td><button class="del-btn" onclick="deleteRow('+id+','+(pairedId||'null')+',this)" title="Delete">✕</button></td>';
+    '<td style="white-space:nowrap"><button class="rescore-cal-btn" onclick="rescoreOne('+id+',\''+engine+'\',this)" title="Rescore">↺</button><button class="del-btn" onclick="deleteRow('+id+','+(pairedId||'null')+',this)" title="Delete">✕</button></td>';
   return tr;
 }
 
@@ -691,6 +702,110 @@ function exportCSV() {
   a.href = url; a.download = 'SL_calibration_' + ts + '.csv';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── RESCORE ───────────────────────────────────────────────────────────────────
+function applyRescoreResult(imageId, d) {
+  var row = document.getElementById('cal-row-' + imageId);
+  if (!row) return;
+  // Update score cell
+  var scoreEl = row.querySelector('.score-n');
+  if (scoreEl && d.score != null) scoreEl.textContent = d.score.toFixed(2);
+  var tierEl = row.querySelector('.tier-n');
+  if (tierEl && d.tier) tierEl.textContent = d.tier;
+  // Update dim cells — cells 6-10 (0-indexed)
+  var dims = [d.dod, d.vd, d.dm, d.wf, d.aq];
+  for (var i = 0; i < dims.length; i++) {
+    var cell = row.cells[6 + i];
+    if (cell && dims[i] != null) cell.textContent = parseFloat(dims[i]).toFixed(1);
+  }
+  // Re-compute delta on Sonnet row if paired
+  var engine = row.querySelector('.ep-s') ? 'sonnet' : 'haiku';
+  if (engine === 'sonnet' && d.score != null) {
+    // Find paired Haiku row to recalc delta
+    var pairedId = row.dataset.pairId;
+    if (pairedId) {
+      var hRow = document.getElementById('cal-row-' + pairedId);
+      if (hRow) {
+        var hScoreEl = hRow.querySelector('.score-n');
+        if (hScoreEl) updateSonnetDelta(row, parseFloat(hScoreEl.textContent));
+      }
+    }
+  }
+  if (engine === 'haiku' && d.score != null) {
+    // Update delta on paired Sonnet row
+    var pairedId = row.dataset.pairId;
+    if (pairedId) {
+      var sRow = document.getElementById('cal-row-' + pairedId);
+      if (sRow) updateSonnetDelta(sRow, d.score);
+    }
+  }
+}
+
+function rescoreOne(imageId, engine, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  var fd = new FormData();
+  fd.append('engine', engine);
+  fetch('/admin/calibration/rescore/' + imageId, {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      btn.textContent = '↺';
+      if (d.status === 'scored') {
+        applyRescoreResult(imageId, d);
+        showFlash('Rescored — ' + (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' ' + d.score.toFixed(2) + ' ' + d.tier, 'ok');
+      } else {
+        showFlash('Rescore failed: ' + (d.message || d.status || 'error'), 'err');
+      }
+    })
+    .catch(function(){ btn.disabled=false; btn.textContent='↺'; showFlash('Network error.', 'err'); });
+}
+
+function rescoreSelected() {
+  var checked = getChecked();
+  if (!checked.length) { showFlash('Select rows first.', 'err'); return; }
+  var ids = checked.map(function(cb){ return parseInt(cb.dataset.id); });
+  doBulkRescore(ids);
+}
+
+function rescoreAll() {
+  var allCbs = Array.from(document.querySelectorAll('.cal-cb'));
+  if (!allCbs.length) { showFlash('No images to rescore.', 'err'); return; }
+  var ids = allCbs.map(function(cb){ return parseInt(cb.dataset.id); });
+  if (!confirm('Rescore all ' + ids.length + ' engine runs? This will take a moment.')) return;
+  doBulkRescore(ids);
+}
+
+function doBulkRescore(ids) {
+  // Disable all rescore buttons
+  ids.forEach(function(id){
+    var row = document.getElementById('cal-row-' + id);
+    if (!row) return;
+    var btn = row.querySelector('.rescore-cal-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  });
+
+  var fd = new FormData();
+  fd.append('image_ids', ids.join(','));
+  fetch('/admin/calibration/rescore-bulk', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) { showFlash('Bulk rescore failed: ' + (d.message||'error'), 'err'); return; }
+      var ok = 0;
+      d.results.forEach(function(r){
+        var row = document.getElementById('cal-row-' + r.image_id);
+        var btn = row && row.querySelector('.rescore-cal-btn');
+        if (btn) { btn.disabled=false; btn.textContent='↺'; }
+        if (r.status === 'scored') {
+          applyRescoreResult(r.image_id, r);
+          ok++;
+        }
+      });
+      showFlash('Rescored ' + ok + ' of ' + d.results.length + ' runs.', 'ok');
+      deselectAll();
+    })
+    .catch(function(){ showFlash('Network error during bulk rescore.', 'err'); });
 }
 
 function clearEngine(engine) {
