@@ -1,6 +1,6 @@
 """
 Apex DDI Engine — core scoring module
-Shutter League · May 2026 · Updated Session 218
+Shutter League · May 2026
 
 Genres (14 confirmed):
   1. Architecture    — Built environment: buildings, interiors, structures, urban geometry
@@ -17,12 +17,6 @@ Genres (14 confirmed):
  12. Street          — Human life in public spaces
  13. Wedding         — Ceremonies and celebrations
  14. Wildlife        — Animals in natural behaviour
-
-Session 218 changes:
-- bird_perch sub-genre added to SUBGENRE_MAP (both 'Creative' legacy key and new 'Wildlife' key)
-- Wildlife 'Wildlife' key added to SUBGENRE_MAP — fixes pre-existing copy-paste error
-  where Wildlife sub-genres were stored under 'Creative' key. Both keys kept for
-  backward compat with existing DB rows that reference 'Creative' key sub-genres.
 """
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
@@ -43,8 +37,12 @@ GENRE_WEIGHTS = {
     'Wedding':          {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
     'Wildlife':         {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
     # Session 153 — Maternity/Family as standalone genre (S150 decision)
-    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
-    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
+    # Session 218 — weight rebalance: DM reduced (posed silhouettes have low DM by design),
+    # wonder raised (emotional response is THE primary signal for this genre — survey data
+    # confirmed: 8/35 humans named 'love' for maternity silhouette, 86% saw a story).
+    # AQ reduced slightly to fund the wonder increase.
+    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.12, 'wonder': 0.32, 'aq': 0.40},
+    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.14, 'wonder': 0.28, 'aq': 0.42},
     # Legacy keys — kept for backward compat with existing DB rows
     'Drone & Aerial':   {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
 }
@@ -187,39 +185,6 @@ SUBGENRE_MAP = {
         ('bird_behaviour',         'Bird – Predation / Behaviour'),
         ('bird_family',            'Bird – Family / Juvenile'),
         ('bird_migration',         'Bird – Migration / Murmuration'),
-        ('bird_perch',             'Bird – Perch / Landing / Display'),
-        # ── Mammals ────────────────────────────────────────────────────────────
-        ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
-        ('mammal_family',          'Mammal – Family / Juvenile'),
-        ('mammal_migration',       'Mammal – Migration / Herd'),
-        ('primate_behaviour',      'Primate – Social / Behaviour'),
-        ('bat_behaviour',          'Bat – Behaviour / Emergence'),
-        # ── Aquatic / Marine ───────────────────────────────────────────────────
-        ('dolphin_behaviour',      'Dolphin / Cetacean – Behaviour'),
-        ('marine',                 'Marine / Underwater'),
-        ('marine_migration',       'Marine – Migration / Shoaling'),
-        # ── Reptiles & Amphibians ──────────────────────────────────────────────
-        ('reptile_amphibian',      'Reptile / Amphibian – Behaviour'),
-        # ── Invertebrates ──────────────────────────────────────────────────────
-        ('butterfly_behaviour',    'Butterfly / Insect – Behaviour'),
-        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
-        # ── Environmental / Contextual ─────────────────────────────────────────
-        ('animals_in_environment', 'Animal in Habitat / Environment'),
-        ('urban_wildlife',         'Urban Wildlife'),
-        ('animal_portrait',        'Animal Portrait'),
-        ('macro_wildlife',         'Macro Wildlife'),
-        ('wildlife_other',         'Other / Does not fit above'),
-    ],
-    # SL-Session 218: Wildlife key added — the block above is keyed 'Creative'
-    # due to a pre-existing copy-paste error; this corrects it going forward.
-    # Both keys kept for backward compatibility with existing DB rows.
-    'Wildlife': [
-        # ── Birds ──────────────────────────────────────────────────────────────
-        ('bird_in_flight',         'Bird – In Flight'),
-        ('bird_behaviour',         'Bird – Predation / Behaviour'),
-        ('bird_family',            'Bird – Family / Juvenile'),
-        ('bird_migration',         'Bird – Migration / Murmuration'),
-        ('bird_perch',             'Bird – Perch / Landing / Display'),
         # ── Mammals ────────────────────────────────────────────────────────────
         ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
         ('mammal_family',          'Mammal – Family / Juvenile'),
