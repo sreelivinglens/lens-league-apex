@@ -708,58 +708,70 @@ function exportCSV() {
 function applyRescoreResult(imageId, d) {
   var row = document.getElementById('cal-row-' + imageId);
   if (!row) return;
-  // Update score cell
+
+  // Flash the row amber while updating
+  row.style.transition = 'background .15s';
+  row.style.background = '#FFFBEB';
+
   var scoreEl = row.querySelector('.score-n');
+  var tierEl  = row.querySelector('.tier-n');
   if (scoreEl && d.score != null) scoreEl.textContent = d.score.toFixed(2);
-  var tierEl = row.querySelector('.tier-n');
-  if (tierEl && d.tier) tierEl.textContent = d.tier;
-  // Update dim cells — cells 6-10 (0-indexed)
+  if (d.tier) {
+    if (tierEl) { tierEl.textContent = d.tier; }
+    else if (scoreEl) {
+      var sp = document.createElement('span');
+      sp.className = 'tier-n'; sp.textContent = d.tier;
+      scoreEl.parentNode.appendChild(sp);
+    }
+  }
+
+  // Dims — cells 6-10
   var dims = [d.dod, d.vd, d.dm, d.wf, d.aq];
   for (var i = 0; i < dims.length; i++) {
     var cell = row.cells[6 + i];
     if (cell && dims[i] != null) cell.textContent = parseFloat(dims[i]).toFixed(1);
   }
-  // Re-compute delta on Sonnet row if paired
+
+  // Delta
   var engine = row.querySelector('.ep-s') ? 'sonnet' : 'haiku';
-  if (engine === 'sonnet' && d.score != null) {
-    // Find paired Haiku row to recalc delta
-    var pairedId = row.dataset.pairId;
-    if (pairedId) {
-      var hRow = document.getElementById('cal-row-' + pairedId);
-      if (hRow) {
-        var hScoreEl = hRow.querySelector('.score-n');
-        if (hScoreEl) updateSonnetDelta(row, parseFloat(hScoreEl.textContent));
-      }
-    }
+  var pairedId = row.dataset.pairId;
+  if (engine === 'sonnet' && pairedId) {
+    var hRow = document.getElementById('cal-row-' + pairedId);
+    if (hRow) { var hSc = hRow.querySelector('.score-n'); if (hSc) updateSonnetDelta(row, parseFloat(hSc.textContent)); }
   }
-  if (engine === 'haiku' && d.score != null) {
-    // Update delta on paired Sonnet row
-    var pairedId = row.dataset.pairId;
-    if (pairedId) {
-      var sRow = document.getElementById('cal-row-' + pairedId);
-      if (sRow) updateSonnetDelta(sRow, d.score);
-    }
+  if (engine === 'haiku' && pairedId && d.score != null) {
+    var sRow = document.getElementById('cal-row-' + pairedId);
+    if (sRow) updateSonnetDelta(sRow, d.score);
   }
+
+  // Fade row back after 1.2s
+  setTimeout(function(){ row.style.background = ''; }, 1200);
 }
 
 function rescoreOne(imageId, engine, btn) {
   btn.disabled = true;
   btn.textContent = '…';
+  var row = document.getElementById('cal-row-' + imageId);
+  if (row) { row.style.transition = 'opacity .2s'; row.style.opacity = '0.55'; }
   var fd = new FormData();
   fd.append('engine', engine);
   fetch('/admin/calibration/rescore/' + imageId, {method:'POST', body:fd})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      btn.disabled = false;
-      btn.textContent = '↺';
+      btn.disabled = false; btn.textContent = '↺';
+      if (row) { row.style.opacity = '1'; }
       if (d.status === 'scored') {
         applyRescoreResult(imageId, d);
-        showFlash('Rescored — ' + (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' ' + d.score.toFixed(2) + ' ' + d.tier, 'ok');
+        showFlash((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescored → ' + d.score.toFixed(2) + ' ' + (d.tier||''), 'ok');
       } else {
         showFlash('Rescore failed: ' + (d.message || d.status || 'error'), 'err');
       }
     })
-    .catch(function(){ btn.disabled=false; btn.textContent='↺'; showFlash('Network error.', 'err'); });
+    .catch(function(){
+      btn.disabled=false; btn.textContent='↺';
+      if (row) row.style.opacity = '1';
+      showFlash('Network error.', 'err');
+    });
 }
 
 function rescoreSelected() {
@@ -773,39 +785,74 @@ function rescoreAll() {
   var allCbs = Array.from(document.querySelectorAll('.cal-cb'));
   if (!allCbs.length) { showFlash('No images to rescore.', 'err'); return; }
   var ids = allCbs.map(function(cb){ return parseInt(cb.dataset.id); });
-  if (!confirm('Rescore all ' + ids.length + ' engine runs? This will take a moment.')) return;
   doBulkRescore(ids);
 }
 
-function doBulkRescore(ids) {
-  // Disable all rescore buttons
-  ids.forEach(function(id){
-    var row = document.getElementById('cal-row-' + id);
-    if (!row) return;
-    var btn = row.querySelector('.rescore-cal-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '…'; }
-  });
+async function doBulkRescore(ids) {
+  var total  = ids.length;
+  if (!total) return;
 
-  var fd = new FormData();
-  fd.append('image_ids', ids.join(','));
-  fetch('/admin/calibration/rescore-bulk', {method:'POST', body:fd})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (!d.ok) { showFlash('Bulk rescore failed: ' + (d.message||'error'), 'err'); return; }
-      var ok = 0;
-      d.results.forEach(function(r){
-        var row = document.getElementById('cal-row-' + r.image_id);
-        var btn = row && row.querySelector('.rescore-cal-btn');
-        if (btn) { btn.disabled=false; btn.textContent='↺'; }
-        if (r.status === 'scored') {
-          applyRescoreResult(r.image_id, r);
-          ok++;
-        }
-      });
-      showFlash('Rescored ' + ok + ' of ' + d.results.length + ' runs.', 'ok');
-      deselectAll();
-    })
-    .catch(function(){ showFlash('Network error during bulk rescore.', 'err'); });
+  // Show rescore progress bar (reuse upload prog bar)
+  var progWrap = document.getElementById('prog-wrap');
+  var progBar  = document.getElementById('prog-bar');
+  var progEng  = document.getElementById('prog-eng');
+  var progLbl  = document.getElementById('prog-lbl');
+  if (progWrap) progWrap.style.display = 'block';
+  if (progBar)  progBar.style.width = '0%';
+
+  // Disable all rescore + bulk buttons
+  document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=true; b.textContent='…'; });
+  var bulkBtn = document.getElementById('bulk-rescore-btn');
+  if (bulkBtn) bulkBtn.disabled = true;
+
+  var ok = 0;
+  for (var i = 0; i < total; i++) {
+    var id  = ids[i];
+    var row = document.getElementById('cal-row-' + id);
+
+    // Show which image is running
+    var fname = row ? (row.querySelector('td:nth-child(2)')  || {}).title || ('image ' + id) : ('image ' + id);
+    var engine = row && row.querySelector('.ep-h') ? 'Haiku' : 'Sonnet';
+    if (progEng) progEng.textContent = engine + ' · ' + (i + 1) + ' / ' + total;
+    if (progLbl) progLbl.textContent = fname;
+    if (row) { row.style.transition = 'opacity .15s'; row.style.opacity = '0.5'; }
+
+    try {
+      var engineKey = (engine === 'Haiku') ? 'haiku' : 'sonnet';
+      var fd = new FormData();
+      fd.append('engine', engineKey);
+      var resp = await fetch('/admin/calibration/rescore/' + id, {method:'POST', body:fd});
+      var d    = await resp.json();
+      if (row) row.style.opacity = '1';
+      if (d.status === 'scored') {
+        applyRescoreResult(id, d);
+        ok++;
+      }
+    } catch(e) {
+      if (row) row.style.opacity = '1';
+    }
+
+    // Re-enable this row's button
+    if (row) {
+      var btn = row.querySelector('.rescore-cal-btn');
+      if (btn) { btn.disabled=false; btn.textContent='↺'; }
+    }
+
+    if (progBar) progBar.style.width = Math.round(((i+1)/total)*100) + '%';
+  }
+
+  // Done
+  if (progEng) progEng.textContent = 'Complete ✓';
+  if (progLbl) progLbl.textContent = ok + ' of ' + total + ' rescored';
+  setTimeout(function(){
+    if (progWrap) progWrap.style.display = 'none';
+    if (progBar)  progBar.style.width = '0%';
+  }, 2500);
+
+  document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=false; b.textContent='↺'; });
+  if (bulkBtn) bulkBtn.disabled = false;
+  deselectAll();
+  showFlash('Rescored ' + ok + ' of ' + total + ' rows.', 'ok');
 }
 
 function clearEngine(engine) {
