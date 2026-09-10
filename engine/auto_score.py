@@ -1,4 +1,4 @@
-# SL-VERSION: 171.20 (Session 218, 2026-09-10 — (1) bird_perch sub-genre added. (2) Wildlife GENRE_CONTEXT: small bird group, DOD/DM/WF anchors, Technical Wonder Signal. (3) WF Emotional Wonder anti-cold-scoring rule. (4) STEP 1 SYSTEM_BRIEF extended with Wildlife-specific ICM/panning/motion blur rule covering ALL wildlife subjects — birds, mammals, marine, reptiles, invertebrates, underwater. Includes DOD anchors for panning/ICM, VD 7.5–8.5 for rarity of treatment, WF on what blur reveals, underwater long exposure scoring. Wildlife GENRE_CONTEXT and sub-genres reference STEP 1 instead of repeating. RETAINS 171.19.)
+# SL-VERSION: 171.21 (Session 218, 2026-09-10 — VD overhaul: (1) Global VD definition rewritten — two paths: DISRUPTION (unconventional technique) OR VISUAL IMPACT (stops-the-eye in 2 seconds, strong light/colour/geometry). NEVER give VD below 5 for image with genuine visual presence. Scale anchors added. (2) Street GENRE_CONTEXT: VD section added. (3) People GENRE_CONTEXT: full expansion with VD, DM, WF emotional wonder. (4) Nature GENRE_CONTEXT: VD section added — cherry blossom in soft light = VD 7.0–7.5. (5) Landscape GENRE_CONTEXT: VD section added. (6) Wildlife GENRE_CONTEXT: VD section added — cubs/family with visual tenderness. RETAINS 171.20.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -197,22 +197,50 @@ DoD (Depth of Difficulty):
     in low light, capturing unrepeatable moments under time pressure.
   Creative: See STEP 0 above.
 
-VD (Visual Disruption):
-  Evaluate against global photographic database — how far does this image
-  depart from the conventional treatment of its subject?
+VD (Visual Disruption / Visual Drama):
+  TWO VALID PATHS TO A HIGH VD SCORE — score the higher of the two:
+
+  PATH 1 — DISRUPTION: How far does this image depart from the conventional
+  treatment of its subject? Evaluate against global photographic database.
   Intentional blur, painterly rendering, multiple reflections, layered
-  transparencies, drone geometry, unconventional framing = HIGH Disruption.
+  transparencies, drone geometry, unconventional framing, graphic reduction,
+  pure silhouette, ICM, radical cropping = HIGH Disruption.
   For Drone: patterns only visible from altitude score very high.
   For Creative: layered blur mosaics and atmospheric abstractions that
   create an entirely new visual language score HIGHEST.
   For Crisis/Documentary: smoke, chaos, physical danger as the visual
-  environment, unconventional framing from being inside the event rather
-  than observing it — these ARE high Disruption. An image made inside
-  active conflict, protest smoke, or disaster zone scores Disruption 8.0–9.0.
-  Being physically present in danger changes the visual language entirely.
-  DO NOT score crisis documentary Disruption against studio or street
-  photography standards. Score against what most photographers would
-  never attempt or be present for.
+  environment, unconventional framing from being inside the event — these
+  ARE high Disruption (8.0–9.0). Score against what most photographers
+  would never attempt or be present for, not against studio standards.
+
+  PATH 2 — VISUAL IMPACT: Even conventionally composed images score high
+  VD when the visual experience is striking, immediate, and unambiguous.
+  Ask: would a stranger stop scrolling on this image within 2 seconds?
+  If yes — that is visual impact and scores VD 7.5–8.5.
+  Signals of high visual impact (any one of these justifies 7.0+):
+  - Strong subject-to-background contrast or separation
+  - Compelling, unusual, or dramatic light (golden, rim, dramatic shadow)
+  - Graphic quality — strong geometry, leading lines, symmetry, pattern
+  - Rich colour relationship or tonal drama that commands attention
+  - Painterly bokeh that transforms the background into a colour field
+  - A face, expression, or gesture with immediate emotional magnetism
+  - Scale or perspective that makes the viewer feel the scene physically
+
+  COMMON ERROR TO AVOID: Do NOT give VD 5–6 to an image with strong visual
+  presence simply because it is not technically unconventional. A portrait
+  with dramatic rim light and a compelling expression scores VD 7.5–8.0.
+  A child in soft pink cherry blossom light with gentle bokeh scores VD
+  7.0–7.5. Monks silhouetted against dramatic light score VD 7.5–8.0.
+  These are not unconventional treatments — but they stop the eye. Score them.
+
+  VD SCALE ANCHORS:
+  9.0–10: Technique or composition that redefines how the subject can be seen
+  8.0–9.0: Strong disruption OR immediate visual impact that stops any viewer
+  7.0–8.0: Clear visual presence — confident light, composition, or colour
+            that makes the image recognisable and appealing at a glance
+  6.0–7.0: Competent visual treatment, some presence, no strong signal
+  5.0–6.0: Generic treatment — the eye passes through without stopping
+  Below 5: Actively weak — muddy, flat, visually incoherent
 
 DM (Decisive Moment):
   Multiple variables at peak simultaneously.
@@ -1446,6 +1474,19 @@ GENRE_CONTEXT = {
         "landing/displaying passerine requires shutter speeds of 1/2000s+ and precise "
         "tracking — score DoD 8+ when this is achieved.\n\n"
 
+        "VD: Score the visual presence of the wildlife image. Two paths: "
+        "(1) COMPOSITION DISRUPTION — unconventional framing, graphic reduction of the "
+        "animal to form and light, silhouette, ICM/panning; "
+        "(2) VISUAL IMPACT — a subject with immediate visual magnetism: exceptional fur/feather "
+        "detail that makes the image look painted; dramatic natural light that transforms "
+        "the animal (golden rim light, storm backlight); a colour relationship between "
+        "subject and background that makes the image stop the eye (swallow against pastel "
+        "bokeh, leopard against green); juvenile/family interactions with visual tenderness "
+        "that has immediate emotional impact. "
+        "A lion cub pair with soft warm light and clear visual tenderness scores VD 7.0–7.5. "
+        "NEVER give VD below 5.0 to a correctly exposed wildlife image with a clear "
+        "subject and competent background separation.\n\n"
+
         "DM: Score relative to the behavioural act identified above — not relative to generic motion. "
         "A catch freeze with prey visible scores higher than a takeoff. "
         "Two subjects in contact scores higher than one subject in flight. "
@@ -1482,6 +1523,18 @@ GENRE_CONTEXT = {
         "atmospheric conditions also raises DoD. Accessible tourist locations — however "
         "visually spectacular — do not score above 8.0 on DoD regardless of technical "
         "execution quality.\n\n"
+
+        "VD: Score the visual drama of the scene as rendered. Two paths to a high VD: "
+        "(1) TECHNIQUE DISRUPTION — long exposure that turns water to silk or clouds to "
+        "light trails, radical viewpoint, graphic reduction of a complex scene, night sky "
+        "rendering that transforms familiar land; "
+        "(2) VISUAL IMPACT — dramatic natural light (storm light, golden shafts, "
+        "fog layers, burning sky) that gives the image immediate emotional force; "
+        "strong tonal contrast between elements; a colour relationship that feels "
+        "extraordinary (deep purple storm against golden land). "
+        "A landscape with exceptional natural light scores VD 7.5–8.5 even without "
+        "unconventional technique. Flat, overcast, evenly lit scenes with no "
+        "drama score VD 5.0–6.0.\n\n"
 
         "DM: A landscape DM requires a TRANSIENT element to resolve at its exact geometric "
         "peak against a permanent one. Examples of genuine landscape DM: storm light "
@@ -1538,6 +1591,14 @@ GENRE_CONTEXT = {
         "photographing in restricted or culturally specific environments, and the "
         "physical act of being present in a demanding situation. Motion blur on moving "
         "subjects is acceptable and often enhances energy.\n\n"
+        "VD: Score the visual presence of the image — would a stranger stop on this? "
+        "Street VD rewards two things equally: (1) compositional disruption — shadows, "
+        "reflections, unexpected juxtapositions, graphic reduction, silhouette against "
+        "dramatic light; (2) visual magnetism — a face, gesture, or scene with immediate "
+        "impact that compels attention even in conventional framing. "
+        "A monks silhouette against dramatic light scores VD 7.5–8.0. "
+        "A street portrait with strong eye contact and graphic quality scores VD 7.0–7.5. "
+        "OVER-PROCESSED penalty: heavy HDR, crushed shadows, unnatural saturation — cap VD at 6.0.\n\n"
         "DM: Score the unrepeatable instant — the precise frame where multiple visual "
         "variables (expression, gesture, light, background alignment) peak simultaneously. "
         "Reward layered compositions, reflections, shadows, and unexpected juxtapositions.\n\n"
@@ -1553,17 +1614,14 @@ GENRE_CONTEXT = {
         "corner are not rare. The photographer's eye IS the wonder in street photography.\n\n"
         "AQ: Reward images where technical choices serve the truth of the moment. "
         "Grain, available light, and imperfect focus are not penalties when they serve the image. "
-        "OVER-EDITING PENALTY (Street and all genres except Creative): Heavy tone-mapping, "
-        "over-saturated colour, unnatural contrast, crushed shadows, or HDR halos are AQ penalties. "
-        "The moment is the truth — the edit must serve it, not replace it. Restraint is rewarded. "
+        "OVER-EDITING PENALTY: Heavy tone-mapping, over-saturated colour, unnatural contrast, "
+        "crushed shadows, or HDR halos are AQ penalties. "
         "CLUTTER PENALTY — DISORGANISED vs ORGANISED: "
         "When the frame has multiple elements of roughly equal visual weight with no clear subject "
-        "hierarchy — the eye moves between them without resolution — cap AQ at 7.0 and Wonder at 7.0 "
-        "regardless of other qualities. This is disorganised clutter. "
-        "Organised clutter is different: a busy frame where a clear primary subject dominates and "
-        "surrounding elements support rather than compete (Vineet Vohra, GMB Akash, Steve McCurry) "
-        "carries no penalty — the hierarchy IS the skill. The test: can a stranger identify the "
-        "primary subject within 2 seconds without explanation? If not, it is disorganised clutter."
+        "hierarchy — the eye moves between them without resolution — cap AQ at 7.0 and Wonder at 7.0. "
+        "Organised clutter: a busy frame where a clear primary subject dominates (Vineet Vohra, "
+        "GMB Akash, Steve McCurry) carries no penalty. Test: can a stranger identify the "
+        "primary subject within 2 seconds? If not, it is disorganised clutter."
     ),
     'Macro': (
         "This is Macro photography. The subject fills the frame at extreme magnification — "
@@ -1622,8 +1680,31 @@ GENRE_CONTEXT = {
         "in their natural environment, and the moments that define family. Use Maternity weights."
     ),
     'People': (
-        "This is People photography. AQ and emotional connection are the primary signals. "
-        "Reward authentic expression, connection between subject and viewer, and strong narrative."
+        "This is People photography — portraits, faces, human expression, and the "
+        "photographer's relationship with their subject.\n\n"
+        "DoD: Environmental portraits score higher than studio. Low light, restricted "
+        "access, or the challenge of gaining trust with a stranger or community raises DoD.\n\n"
+        "VD: Score the visual presence of the image. People VD rewards: "
+        "strong eye contact with immediate magnetism; dramatic or unusual light (rim, "
+        "backlight, harsh shadow play, single-source dramatic); graphic quality in "
+        "the composition — subject placement, negative space, framing device; "
+        "colour or tonal contrast between subject and background that makes the "
+        "subject pop immediately. A compelling face under strong directional light "
+        "scores VD 7.5–8.0 even in conventional framing. "
+        "Environmental context that adds visual layers — subject within a rich, "
+        "textured world — scores VD 7.0–7.5.\n\n"
+        "DM: Score the moment of genuine expression — not the posed smile, but the "
+        "unguarded instant that reveals something true about the subject. "
+        "The flicker of doubt, the moment of real laughter, the look that communicates "
+        "a world the subject didn't intend to share.\n\n"
+        "Wonder: Score revealing the person's world, not just their face. "
+        "EMOTIONAL WONDER: a portrait where the emotion is immediate and nameable — "
+        "dignity, grief, defiance, tenderness, joy — scores WF 7.5 minimum. "
+        "The one-word test: if you can name what the stranger in the frame is feeling "
+        "in one word, that is emotional wonder. Score it.\n\n"
+        "AQ: Dominant dimension. Catchlight in the eye expected at 7+. "
+        "Skin rendering that preserves texture without harsh processing. "
+        "Emotional and aesthetic tone the image creates — the precise feeling it produces."
     ),
     'Nature': (
         "This is Nature photography. The subject is the living natural world beyond animals "
@@ -1633,6 +1714,15 @@ GENRE_CONTEXT = {
         "DoD: Score access to remote or hostile environments, patience for the right natural "
         "moment, technical precision on delicate or ephemeral subjects, and physical challenge "
         "of the environment (extreme cold, heat, rain, depth, darkness).\n\n"
+        "VD: Score the visual presence of the natural scene. Nature VD rewards: "
+        "exceptional natural light — golden hour, blue hour, storm light, dappled forest light "
+        "that transforms the subject; colour relationships that feel painterly or otherworldly; "
+        "graphic patterns in the natural world — symmetry, repetition, texture at macro scale; "
+        "atmospheric conditions that change how the scene reads — mist, rain, fog, frost. "
+        "A child under cherry blossoms in soft pink light with painterly bokeh scores VD 7.0–7.5 "
+        "— the light and colour have visual beauty that stops the eye even without disruption. "
+        "A storm-lit landscape with dramatic tonal range scores VD 8.0+. "
+        "NEVER give VD below 5.0 to an image with genuinely beautiful natural light or colour.\n\n"
         "DM: Score the moment of natural peak — spore dispersal, lightning strike, fog "
         "rolling in, first light on dew. Nature DM rewards the photographer who understood "
         "the natural process well enough to anticipate its peak.\n\n"
