@@ -903,19 +903,8 @@ function clearEngine(engine) {
 })();
 </script>
 
-{# ── CSV export data — Jinja rendered into JSON, read by exportCSV() JS ── #}
-{# Rule 0b: no Jinja {{ }} inside <script> — data passed via application/json block #}
-{% set _pairs2 = {} %}
-{% for _r in rows %}
-  {% set _fn = _r.original_filename or ('image-' ~ _r.id) %}
-  {% if _fn not in _pairs2 %}{% set _ = _pairs2.update({_fn: {}}) %}{% endif %}
-  {% if _r.engine_haiku %}{% set _ = _pairs2[_fn].update({'h': _r}) %}
-  {% else %}{% set _ = _pairs2[_fn].update({'s': _r}) %}{% endif %}
-{% endfor %}
-<script type="application/json" id="cal-export-data">[{% for _fn, _p in _pairs2.items() %}{% set _s = _p.get('s') %}{% set _h = _p.get('h') %}{% if _s %}
-[{{ _fn|tojson }},"Sonnet",{{ (_s.genre or '')|tojson }},{{ '%.2f'|format(_s.score) if _s.score else '""' }},{{ (_s.tier or '')|tojson }},{{ '%.1f'|format(_s.dod_score) if _s.dod_score else '""' }},{{ '%.1f'|format(_s.disruption_score) if _s.disruption_score else '""' }},{{ '%.1f'|format(_s.dm_score) if _s.dm_score else '""' }},{{ '%.1f'|format(_s.wonder_score) if _s.wonder_score else '""' }},{{ '%.1f'|format(_s.aq_score) if _s.aq_score else '""' }},{% if _s and _h and _s.score and _h.score %}"{{ '%.2f'|format(_h.score - _s.score) }}"{% else %}""{% endif %},{{ _s.scored_at.strftime('"%Y-%m-%d %H:%M"') if _s.scored_at else '""' }}]{% if _h %},{% elif not loop.last %},{% endif %}{% endif %}{% if _h %}
-[{{ _fn|tojson }},"Haiku",{{ (_h.genre or '')|tojson }},{{ '%.2f'|format(_h.score) if _h.score else '""' }},{{ (_h.tier or '')|tojson }},{{ '%.1f'|format(_h.dod_score) if _h.dod_score else '""' }},{{ '%.1f'|format(_h.disruption_score) if _h.disruption_score else '""' }},{{ '%.1f'|format(_h.dm_score) if _h.dm_score else '""' }},{{ '%.1f'|format(_h.wonder_score) if _h.wonder_score else '""' }},{{ '%.1f'|format(_h.aq_score) if _h.aq_score else '""' }},"",{{ _h.scored_at.strftime('"%Y-%m-%d %H:%M"') if _h.scored_at else '""' }}]{% if not loop.last %},{% endif %}{% endif %}{% endfor %}]</script>
-
+{# ── CSV export data — built in Python in admin_calibration() route, passed as JSON string ── #}
+<script type="application/json" id="cal-export-data">{{ export_data|safe }}</script>
 <script type="application/json" id="cal-meta">{"row_count":{{ rows|length }}}</script>
 
 </body>
