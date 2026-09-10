@@ -231,6 +231,18 @@ a.back:hover{text-decoration:underline}
     </div>
   </div>
 
+  {# ── Rescore progress bar — shown during single and bulk rescore ── #}
+  <div id="rescore-status" style="display:none;padding:10px 16px;background:#FFFBEB;border-bottom:1px solid #FDE68A;font-size:13px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <span id="rescore-status-eng" style="font-weight:600;color:#92400E;min-width:120px"></span>
+      <span id="rescore-status-lbl" style="color:#78350F;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <span id="rescore-status-count" style="color:#92400E;font-weight:600;white-space:nowrap"></span>
+    </div>
+    <div style="background:#FEF3C7;border-radius:4px;height:6px;overflow:hidden">
+      <div id="rescore-progress-bar" style="height:100%;background:#D97706;border-radius:4px;width:0%;transition:width .3s ease"></div>
+    </div>
+  </div>
+
   <div style="overflow-x:auto">
   <table class="res-table" id="res-tbody-wrap">
     <colgroup>
@@ -311,20 +323,11 @@ a.back:hover{text-decoration:underline}
             <td class="r"><span class="score-n">{{ '%.2f'|format(h.score) if h.score else '—' }}</span>{% if h.tier %}<span class="tier-n">{{ h.tier }}</span>{% endif %}</td>
             <td class="r" style="background:#F0FDF4;color:#8A8A86;font-size:13px">—</td>
             {# Per-dim: colour if Haiku differs from Sonnet by ≥0.5 — green=higher red=lower #}
-            {% macro dim(hv, sv) %}
-              {% if hv and sv %}
-                {% set dd = hv - sv %}
-                {% if dd >= 0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(hv) }}</td>
-                {% elif dd <= -0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(hv) }}</td>
-                {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) }}</td>{% endif %}
-              {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) if hv else '—' }}</td>
-              {% endif %}
-            {% endmacro %}
-            {{ dim(h.dod_score, s.dod_score if s else none) }}
-            {{ dim(h.disruption_score, s.disruption_score if s else none) }}
-            {{ dim(h.dm_score, s.dm_score if s else none) }}
-            {{ dim(h.wonder_score, s.wonder_score if s else none) }}
-            {{ dim(h.aq_score, s.aq_score if s else none) }}
+            {% if h.dod_score and s and s.dod_score %}{% set dd=h.dod_score-s.dod_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.dod_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.dod_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dod_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dod_score) if h.dod_score else '—' }}</td>{% endif %}
+            {% if h.disruption_score and s and s.disruption_score %}{% set dd=h.disruption_score-s.disruption_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.disruption_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.disruption_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.disruption_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.disruption_score) if h.disruption_score else '—' }}</td>{% endif %}
+            {% if h.dm_score and s and s.dm_score %}{% set dd=h.dm_score-s.dm_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.dm_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.dm_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dm_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dm_score) if h.dm_score else '—' }}</td>{% endif %}
+            {% if h.wonder_score and s and s.wonder_score %}{% set dd=h.wonder_score-s.wonder_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.wonder_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.wonder_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.wonder_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.wonder_score) if h.wonder_score else '—' }}</td>{% endif %}
+            {% if h.aq_score and s and s.aq_score %}{% set dd=h.aq_score-s.aq_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.aq_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.aq_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.aq_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.aq_score) if h.aq_score else '—' }}</td>{% endif %}
             <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ h.scored_at.strftime('%-d %b %H:%M') if h.scored_at else '—' }}</td>
             <td style="white-space:nowrap">
               <button class="rescore-cal-btn" onclick="rescoreOne({{ h.id }}, 'haiku', this)" title="Rescore">↺</button>
@@ -704,20 +707,48 @@ function exportCSV() {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
+// ── RESCORE PROGRESS HELPERS ─────────────────────────────────────────────────
+function rescoreStatusShow(eng, lbl, pct, count) {
+  var wrap  = document.getElementById('rescore-status');
+  var eEl   = document.getElementById('rescore-status-eng');
+  var lEl   = document.getElementById('rescore-status-lbl');
+  var cEl   = document.getElementById('rescore-status-count');
+  var bar   = document.getElementById('rescore-progress-bar');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  if (eEl) eEl.textContent = eng || '';
+  if (lEl) lEl.textContent = lbl || '';
+  if (cEl) cEl.textContent = count || '';
+  if (bar) bar.style.width = (pct || 0) + '%';
+}
+function rescoreStatusDone(msg) {
+  var eEl = document.getElementById('rescore-status-eng');
+  var lEl = document.getElementById('rescore-status-lbl');
+  var bar = document.getElementById('rescore-progress-bar');
+  if (eEl) eEl.textContent = 'Complete ✓';
+  if (lEl) lEl.textContent = msg || '';
+  if (bar) bar.style.width = '100%';
+  setTimeout(function(){
+    var wrap = document.getElementById('rescore-status');
+    if (wrap) wrap.style.display = 'none';
+    if (bar)  bar.style.width = '0%';
+  }, 3000);
+}
+
 // ── RESCORE ───────────────────────────────────────────────────────────────────
 function applyRescoreResult(imageId, d) {
   var row = document.getElementById('cal-row-' + imageId);
   if (!row) return;
 
-  // Flash the row amber while updating
+  // Amber flash
   row.style.transition = 'background .15s';
   row.style.background = '#FFFBEB';
 
   var scoreEl = row.querySelector('.score-n');
   var tierEl  = row.querySelector('.tier-n');
-  if (scoreEl && d.score != null) scoreEl.textContent = d.score.toFixed(2);
+  if (scoreEl && d.score != null) scoreEl.textContent = parseFloat(d.score).toFixed(2);
   if (d.tier) {
-    if (tierEl) { tierEl.textContent = d.tier; }
+    if (tierEl) tierEl.textContent = d.tier;
     else if (scoreEl) {
       var sp = document.createElement('span');
       sp.className = 'tier-n'; sp.textContent = d.tier;
@@ -725,7 +756,7 @@ function applyRescoreResult(imageId, d) {
     }
   }
 
-  // Dims — cells 6-10
+  // Dims — col index 6-10
   var dims = [d.dod, d.vd, d.dm, d.wf, d.aq];
   for (var i = 0; i < dims.length; i++) {
     var cell = row.cells[6 + i];
@@ -733,74 +764,72 @@ function applyRescoreResult(imageId, d) {
   }
 
   // Delta
-  var engine = row.querySelector('.ep-s') ? 'sonnet' : 'haiku';
+  var isSonnet = !!row.querySelector('.ep-s');
   var pairedId = row.dataset.pairId;
-  if (engine === 'sonnet' && pairedId) {
+  if (isSonnet && pairedId) {
     var hRow = document.getElementById('cal-row-' + pairedId);
     if (hRow) { var hSc = hRow.querySelector('.score-n'); if (hSc) updateSonnetDelta(row, parseFloat(hSc.textContent)); }
   }
-  if (engine === 'haiku' && pairedId && d.score != null) {
+  if (!isSonnet && pairedId && d.score != null) {
     var sRow = document.getElementById('cal-row-' + pairedId);
-    if (sRow) updateSonnetDelta(sRow, d.score);
+    if (sRow) updateSonnetDelta(sRow, parseFloat(d.score));
   }
 
-  // Fade row back after 1.2s
-  setTimeout(function(){ row.style.background = ''; }, 1200);
+  setTimeout(function(){ row.style.background = ''; }, 1500);
 }
 
 function rescoreOne(imageId, engine, btn) {
   btn.disabled = true;
   btn.textContent = '…';
   var row = document.getElementById('cal-row-' + imageId);
-  if (row) { row.style.transition = 'opacity .2s'; row.style.opacity = '0.55'; }
+  var fname = row ? (row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + imageId) : ('image ' + imageId);
+
+  rescoreStatusShow(
+    (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescoring…',
+    fname.trim(),
+    50, ''
+  );
+
   var fd = new FormData();
   fd.append('engine', engine);
   fetch('/admin/calibration/rescore/' + imageId, {method:'POST', body:fd})
     .then(function(r){ return r.json(); })
     .then(function(d){
       btn.disabled = false; btn.textContent = '↺';
-      if (row) { row.style.opacity = '1'; }
       if (d.status === 'scored') {
         applyRescoreResult(imageId, d);
-        showFlash((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescored → ' + d.score.toFixed(2) + ' ' + (d.tier||''), 'ok');
+        rescoreStatusDone((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' → ' + parseFloat(d.score).toFixed(2) + ' ' + (d.tier || ''));
+        showFlash((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescored → ' + parseFloat(d.score).toFixed(2) + ' ' + (d.tier || ''), 'ok');
       } else {
+        var wrap = document.getElementById('rescore-status');
+        if (wrap) wrap.style.display = 'none';
         showFlash('Rescore failed: ' + (d.message || d.status || 'error'), 'err');
       }
     })
     .catch(function(){
-      btn.disabled=false; btn.textContent='↺';
-      if (row) row.style.opacity = '1';
-      showFlash('Network error.', 'err');
+      btn.disabled = false; btn.textContent = '↺';
+      var wrap = document.getElementById('rescore-status');
+      if (wrap) wrap.style.display = 'none';
+      showFlash('Network error — check Railway logs.', 'err');
     });
 }
 
 function rescoreSelected() {
   var checked = getChecked();
   if (!checked.length) { showFlash('Select rows first.', 'err'); return; }
-  var ids = checked.map(function(cb){ return parseInt(cb.dataset.id); });
-  doBulkRescore(ids);
+  doBulkRescore(checked.map(function(cb){ return parseInt(cb.dataset.id); }));
 }
 
 function rescoreAll() {
   var allCbs = Array.from(document.querySelectorAll('.cal-cb'));
   if (!allCbs.length) { showFlash('No images to rescore.', 'err'); return; }
-  var ids = allCbs.map(function(cb){ return parseInt(cb.dataset.id); });
-  doBulkRescore(ids);
+  doBulkRescore(allCbs.map(function(cb){ return parseInt(cb.dataset.id); }));
 }
 
 async function doBulkRescore(ids) {
-  var total  = ids.length;
+  var total = ids.length;
   if (!total) return;
 
-  // Show rescore progress bar (reuse upload prog bar)
-  var progWrap = document.getElementById('prog-wrap');
-  var progBar  = document.getElementById('prog-bar');
-  var progEng  = document.getElementById('prog-eng');
-  var progLbl  = document.getElementById('prog-lbl');
-  if (progWrap) progWrap.style.display = 'block';
-  if (progBar)  progBar.style.width = '0%';
-
-  // Disable all rescore + bulk buttons
   document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=true; b.textContent='…'; });
   var bulkBtn = document.getElementById('bulk-rescore-btn');
   if (bulkBtn) bulkBtn.disabled = true;
@@ -809,49 +838,38 @@ async function doBulkRescore(ids) {
   for (var i = 0; i < total; i++) {
     var id  = ids[i];
     var row = document.getElementById('cal-row-' + id);
+    var engine = (row && row.querySelector('.ep-h')) ? 'haiku' : 'sonnet';
+    var engLabel = engine === 'haiku' ? 'Haiku' : 'Sonnet';
+    var fname = row
+      ? ((row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + id)).trim()
+      : ('image ' + id);
 
-    // Show which image is running
-    var fname = row ? (row.querySelector('td:nth-child(2)')  || {}).title || ('image ' + id) : ('image ' + id);
-    var engine = row && row.querySelector('.ep-h') ? 'Haiku' : 'Sonnet';
-    if (progEng) progEng.textContent = engine + ' · ' + (i + 1) + ' / ' + total;
-    if (progLbl) progLbl.textContent = fname;
+    rescoreStatusShow(
+      engLabel + ' · ' + (i + 1) + ' / ' + total,
+      fname,
+      Math.round((i / total) * 100),
+      (i + 1) + ' of ' + total
+    );
     if (row) { row.style.transition = 'opacity .15s'; row.style.opacity = '0.5'; }
 
     try {
-      var engineKey = (engine === 'Haiku') ? 'haiku' : 'sonnet';
       var fd = new FormData();
-      fd.append('engine', engineKey);
+      fd.append('engine', engine);
       var resp = await fetch('/admin/calibration/rescore/' + id, {method:'POST', body:fd});
       var d    = await resp.json();
       if (row) row.style.opacity = '1';
-      if (d.status === 'scored') {
-        applyRescoreResult(id, d);
-        ok++;
-      }
+      if (d.status === 'scored') { applyRescoreResult(id, d); ok++; }
     } catch(e) {
       if (row) row.style.opacity = '1';
     }
 
-    // Re-enable this row's button
-    if (row) {
-      var btn = row.querySelector('.rescore-cal-btn');
-      if (btn) { btn.disabled=false; btn.textContent='↺'; }
-    }
-
-    if (progBar) progBar.style.width = Math.round(((i+1)/total)*100) + '%';
+    if (row) { var btn = row.querySelector('.rescore-cal-btn'); if (btn) { btn.disabled=false; btn.textContent='↺'; } }
   }
-
-  // Done
-  if (progEng) progEng.textContent = 'Complete ✓';
-  if (progLbl) progLbl.textContent = ok + ' of ' + total + ' rescored';
-  setTimeout(function(){
-    if (progWrap) progWrap.style.display = 'none';
-    if (progBar)  progBar.style.width = '0%';
-  }, 2500);
 
   document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=false; b.textContent='↺'; });
   if (bulkBtn) bulkBtn.disabled = false;
   deselectAll();
+  rescoreStatusDone(ok + ' of ' + total + ' rows rescored');
   showFlash('Rescored ' + ok + ' of ' + total + ' rows.', 'ok');
 }
 
