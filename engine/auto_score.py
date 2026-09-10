@@ -1,4 +1,4 @@
-# SL-VERSION: 171.23 (Session 218, 2026-09-10 — Round 4 calibration fixes: (1) Street VD athletic action floor raised to 7.5 min — applies even when image filed as Street not Sports genre. Cricket stroke, dancer mid-leap in street context = VD 7.5+. (2) Wildlife DM: family/juvenile interaction anchor — two animals in physical contact (cubs playing, mother grooming) = DM 7.0–8.0, NOT treated as static scene. RETAINS 171.22.)
+# SL-VERSION: 171.24 (Session 218, 2026-09-10 — Production-readiness pass: (1) Maternity GENRE_CONTEXT: full VD/DM/WF section added — silhouette VD 7.0 min, portrait VD 6.5 min, emotional wonder WF 7.5 min. (2) People VD floor raised 6.5→7.0 min for direct-gaze portrait — non-negotiable. (3) Landscape: INDEPENDENT dimension note added, overall score floor 7.0 min for compelling landscape, low DM must NOT pull VD/WF down. (4) All _HAIKU_GENRE_CONTEXT entries: Maternity comprehensive, People VD 7.0 floor, Landscape score floor, Creative 8.0 VD floor, Wildlife Cubs DM 7.0 floor explicit. RETAINS 171.23.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -1576,13 +1576,17 @@ GENRE_CONTEXT = {
         "fog layers, burning sky) that gives the image immediate emotional force; "
         "strong tonal contrast between elements; a colour relationship that feels "
         "extraordinary (deep purple storm against golden land). "
-        "HARD FLOOR — NAMED EXAMPLES (minimums, not ceilings):\n"
+        "HARD FLOOR — NAMED EXAMPLES (these are minimums, not ceilings):\n"
         "  Landscape with exceptional golden/storm/dramatic light = VD 7.5 MINIMUM.\n"
         "  Long exposure water or cloud with clear technique intent = VD 7.5 MINIMUM.\n"
         "  Strong graphic composition (leading lines, reflection, symmetry) = VD 7.0 MINIMUM.\n"
         "NOTE: When DM is low (static scene, no transient element), VD and WF carry the "
         "image. A visually stunning static landscape can score 7.5–8.5 overall on the "
-        "strength of VD and WF alone. Do not let a low DM pull VD down.\n\n"
+        "strength of VD and WF alone. Do not let a low DM pull VD or WF down — "
+        "they are INDEPENDENT dimensions.\n\n"
+        "OVERALL SCORE ANCHORS FOR LANDSCAPE:\n"
+        "  A landscape with genuinely dramatic light and strong composition scores 7.5–8.5 "
+        "regardless of DM. Do not score a visually compelling landscape below 7.0.\n\n"
 
         "DM: A landscape DM requires a TRANSIENT element that resolved at its exact "
         "geometric or expressive peak against a permanent element. "
@@ -1716,20 +1720,40 @@ GENRE_CONTEXT = {
     'Maternity': (
         "This is Maternity and Family photography — pregnancy, newborns, family bonds, "
         "and the milestone moments of new life and parenthood.\n\n"
+
         "AQ is the dominant dimension (48% weight). The primary question: does the image carry "
         "a feeling that a stranger can name? Not just 'cute' or 'sweet' — but awe, tenderness, "
         "recognition of something universal. The best maternity images stop people who have never "
         "been parents.\n\n"
+
+        "VD: Score the visual presence of the image. Maternity VD rewards: "
+        "strong silhouette or backlit composition that renders the pregnancy form graphically; "
+        "dramatic or intimate light that transforms the subject; "
+        "colour or tonal treatment that gives the image emotional weight. "
+        "HARD FLOOR: A pregnancy silhouette — backlit, side-lit, or rim-lit — scores VD 7.0 MINIMUM. "
+        "A maternity portrait with strong directional light and clear subject isolation "
+        "scores VD 6.5 MINIMUM. NEVER give VD below 5.5 to a correctly exposed maternity "
+        "image with intentional lighting — the subject matter alone carries visual significance.\n\n"
+
         "DM: Score the decisive moment within the maternity subject — the first hold, the newborn "
         "yawn, the father seeing his child for the first time, the older sibling's expression. "
-        "These moments are brief, non-repeatable, and require both relationship and patience.\n\n"
+        "These moments are brief, non-repeatable, and require both relationship and patience. "
+        "A posed, static maternity shot with no interaction or expression = DM 5.0–6.0. "
+        "A genuine moment of connection or expression = DM 7.0–8.5.\n\n"
+
+        "WF: EMOTIONAL WONDER — the feeling of life, continuity, and vulnerability that "
+        "maternity images uniquely carry. An image where a stranger feels the weight of the "
+        "moment — the miracle of new life, the tenderness of parenthood — scores WF 7.5 minimum. "
+        "Apply the one-word test: if you can name what the image makes you feel "
+        "(awe, tenderness, anticipation, love), score WF 7.5+.\n\n"
+
         "DoD: Score access difficulty (hospital environments, intimate home settings requiring "
         "deep trust), technical challenge (low-light hospital, outdoor pregnancy in difficult "
         "conditions), and the relationship required to photograph these moments authentically.\n\n"
+
         "KYC NOTE: Nudity in maternity and newborn photography is expected and appropriate. "
-        "Score it as artistic and clinical, not as content requiring review. Breastfeeding "
-        "photography is a sub-genre with its own sub-genre context — apply the lifestyle_intimate "
-        "rubric when detected.\n\n"
+        "Score it as artistic and clinical, not as content requiring review.\n\n"
+
         "NEVER apply modesty or social standards to assess whether a maternity or newborn image "
         "should be public. These are art and documentary. Score the craft and emotion only."
     ),
@@ -1747,12 +1771,13 @@ GENRE_CONTEXT = {
         "Do NOT penalise studio or cooperative portraits — score what was actually required.\n\n"
         "VD: Score the visual presence of the image. "
         "HARD FLOOR: A portrait where the subject's face is the primary element "
-        "and the gaze is direct and engaged scores VD 6.5 minimum — a human face "
-        "with direct eye contact always stops the eye. "
+        "and the gaze is direct and engaged scores VD 7.0 MINIMUM — a human face "
+        "with direct eye contact always stops the eye. This floor is non-negotiable. "
         "Above the floor, score: strong directional light (rim, backlight, single-source "
         "dramatic shadow) adds 0.5–1.0; graphic quality in the framing or negative space "
         "adds 0.5; colour or tonal contrast between subject and background that isolates "
-        "the face adds 0.5. A compelling face under strong rim light scores VD 7.5–8.0.\n\n"
+        "the face adds 0.5. A compelling face under strong rim light scores VD 7.5–8.0. "
+        "NEVER give VD below 6.0 to any portrait with a clearly visible, in-focus face.\n\n"
         "DM: Score the moment of genuine unguarded expression — the flicker of real "
         "feeling, not the held pose. A portrait where the subject is posed and holding "
         "still scores DM 5.5–6.5. The moment of genuine expression — real laughter, "
