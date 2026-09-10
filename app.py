@@ -18075,9 +18075,13 @@ def _calibration_score_haiku(thumb_path, genre):
         img_b64 = _b64.b64encode(_f.read()).decode()
 
     cal_line = _try_calibration_line(genre or '')
+    genre_ctx = _try_genre_context(genre or 'default')
 
     prompt = f"""You are evaluating a photograph on the Shutter League DDI rubric.
 Genre: {genre or 'General'}
+
+GENRE GUIDANCE:
+{genre_ctx}
 
 CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
 {cal_line}
@@ -34212,13 +34216,17 @@ def _try_genre_context(genre):
     """
     _HAIKU_GENRE_CONTEXT = {
         'Wildlife': (
-            "WILDLIFE: DOD = difficulty of being present for rare animal behaviour. "
-            "DM = the unrepeatable instant of behaviour, not just movement. "
+            "WILDLIFE: DOD = difficulty of being present for rare animal behaviour, "
+            "plus technical execution. DM = the unrepeatable instant of behaviour, not just movement. "
             "Wonder = rarity of what is shown — behaviour most viewers have NEVER seen scores 8+. "
-            "AQ = emotional register without human presence. "
-            "VD = rarity of subject/behaviour is disruption — blue apple rule applies. "
-            "A sleeping animal is DOD 5. An active hunt at a fire is DOD 8+. "
-            "Captive or hide-shot animals: penalise DOD and Wonder significantly."
+            "A sleeping animal is DOD 5. An active hunt scores DOD 8+. "
+            "Captive or hide-shot animals: penalise DOD and Wonder significantly. "
+            "SMALL BIRDS (swallows, bee-eaters, sunbirds, kingfishers): do NOT treat as raptors. "
+            "Peak wing-spread with individual feather separation scores DOD 8-9 — timing window under 50ms. "
+            "TECHNICAL WONDER SIGNAL: feather-level detail on a fast small bird = WF 7.5-8.0 even for common species. "
+            "ICM/PANNING: intentional motion blur on any wildlife subject is deliberate technique — "
+            "do NOT penalise sharpness absence. Score DOD on blur control difficulty. "
+            "Underwater ICM/long exposure scores DOD 8+ for combined technique difficulty."
         ),
         'Street': (
             "STREET: Three Wonder signals — score whichever is strongest: "
@@ -34287,6 +34295,9 @@ def _try_genre_context(genre):
             "Environmental portraits score DOD higher than studio. "
             "DM = the moment of genuine expression — not the posed smile. "
             "Wonder = revealing the person's world, not just their face. "
+            "EMOTIONAL WONDER: a genuinely moving image — father and infant, grief, joy, tenderness — "
+            "where the emotion is immediate and nameable in one word scores WF 7.5 minimum. "
+            "Suppressing this to avoid inflation is the opposite error. "
             "Catchlight in the eye is expected at 7+. Missing catchlight: penalise."
         ),
         'Nature': (
@@ -34320,6 +34331,8 @@ def _try_genre_context(genre):
             "SPORTS: DM dominant — the decisive peak of action. "
             "DOD = access to restricted venues, physical positioning at risk. "
             "Wonder = capturing the peak that even spectators missed. "
+            "EMOTIONAL WONDER: peak athletic moment with immediate emotional response "
+            "(awe, urgency, triumph) — if you can name the emotion in one word, WF 7.5 minimum. "
             "Motion blur on moving subject acceptable if intentional. "
             "Clean background separation expected at 7+."
         ),
