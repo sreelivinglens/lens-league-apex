@@ -34296,18 +34296,18 @@ def _try_genre_context(genre):
         'Wildlife': (
             "WILDLIFE: DOD = difficulty of being present for rare animal behaviour, "
             "plus technical execution. DM = the unrepeatable instant of behaviour, not just movement. "
-            "FAMILY/JUVENILE INTERACTION DM: two animals in physical contact — cubs playing, "
-            "mother grooming juvenile, siblings interacting — is a behavioural act with a "
-            "decisive moment. Peak of interaction (mid-play, moment of contact, peak expression) "
-            "= DM 7.0–8.0. Do NOT treat family interaction as a static scene. "
+            "FAMILY/JUVENILE DM (critical): two animals in physical contact — cubs playing, "
+            "mother grooming juvenile, siblings interacting — IS a behavioural act with a "
+            "decisive moment. Peak of interaction = DM 7.0–8.0. DO NOT treat family "
+            "interaction as a static scene. Lion cubs wrestling or touching = DM 7.0 MINIMUM. "
             "Wonder = rarity of what is shown — behaviour most viewers have NEVER seen scores 8+. "
             "A sleeping animal is DOD 5. An active hunt scores DOD 8+. "
             "Captive or hide-shot animals: penalise DOD and Wonder significantly. "
-            "SMALL BIRDS (swallows, bee-eaters, sunbirds, kingfishers): do NOT treat as raptors. "
-            "Peak wing-spread with individual feather separation scores DOD 8-9. "
-            "TECHNICAL WONDER SIGNAL: feather-level detail on a fast small bird = WF 7.5-8.0. "
-            "ICM/PANNING: intentional motion blur is deliberate technique — do NOT penalise. "
-            "Score DOD on blur control difficulty."
+            "SMALL BIRDS: do NOT treat as raptors. Peak wing-spread with feather separation "
+            "= DOD 8-9. Technical Wonder: feather-level detail on fast small bird = WF 7.5-8.0. "
+            "ICM/PANNING: intentional blur is deliberate technique — do NOT penalise. "
+            "Score DOD on blur control difficulty. VD: family interaction with visual "
+            "tenderness = VD 7.0 MINIMUM. Subject with exceptional detail or light = VD 7.5+."
         ),
         'Street': (
             "STREET: VD HARD FLOORS (minimums): monks/figures silhouetted against dramatic "
@@ -34329,13 +34329,13 @@ def _try_genre_context(genre):
             "LANDSCAPE: VD HARD FLOORS (minimums): landscape with exceptional golden/storm/"
             "dramatic light = VD 7.5 MINIMUM. Long exposure water or cloud = VD 7.5 MINIMUM. "
             "Strong graphic composition (leading lines, reflection, symmetry) = VD 7.0 MINIMUM. "
-            "NOTE: when DM is low (static scene, no transient element), VD and WF carry the "
-            "image — do NOT let low DM pull VD down. "
+            "OVERALL: a visually compelling landscape with dramatic light scores 7.5–8.5 "
+            "regardless of DM. Do NOT score a compelling landscape below 7.0. "
+            "When DM is low, VD and WF carry the image — they are INDEPENDENT from DM. "
             "DM CEILING: static scene with no moving/transient element = DM 5.5–6.5 max. "
             "Beautiful light is VD, not DM. Transient element at peak = DM 7.5+. "
             "Location Removal Test for Wonder above 8.0 only. "
-            "DOD: remote access, extreme weather, pre-dawn scores 7+. "
-            "Wonder 8.5+ requires compositional transformation beyond recording the scene."
+            "DOD: remote access, extreme weather, pre-dawn scores 7+."
         ),
         'Astrophotography': (
             "ASTRO: DOD anchored by dark site access, weather, technical execution. "
@@ -34369,10 +34369,13 @@ def _try_genre_context(genre):
             "Staged or posed shots: DM 4-5. Genuine candid peak: DM 8+."
         ),
         'Maternity': (
-            "MATERNITY: AQ carries 40%+ of the score. "
-            "Wonder = the intimacy and truth of the moment — not beauty for its own sake. "
-            "DOD: hospital or birth setting access scores higher than studio. "
-            "Technical softness acceptable if emotional truth is present."
+            "MATERNITY: VD HARD FLOORS (minimums): pregnancy silhouette backlit or rim-lit "
+            "= VD 7.0 MINIMUM. Portrait with strong directional light = VD 6.5 MINIMUM. "
+            "NEVER below 5.5 for correctly exposed maternity with intentional lighting. "
+            "WF EMOTIONAL WONDER: if the image makes a stranger feel awe, tenderness, "
+            "anticipation, or love in one word — score WF 7.5 minimum. "
+            "AQ dominant (40%+). DM: posed static = 5.0–6.0. Genuine connection/expression = 7.0–8.5. "
+            "DOD: hospital or intimate home access scores higher than controlled studio."
         ),
         'Family': (
             "FAMILY: AQ and DM dominant. "
@@ -34381,10 +34384,10 @@ def _try_genre_context(genre):
             "Wonder = showing family truth most viewers recognise but rarely see documented."
         ),
         'People': (
-            "PEOPLE/PORTRAIT: VD HARD FLOOR: a portrait with direct engaged gaze scores "
-            "VD 6.5 minimum — a human face with eye contact always stops the eye. "
-            "Above floor: strong directional light adds 0.5–1.0; graphic framing adds 0.5. "
-            "A compelling face under rim light scores VD 7.5–8.0. "
+            "PEOPLE/PORTRAIT: VD HARD FLOOR (non-negotiable): portrait with direct engaged "
+            "gaze = VD 7.0 MINIMUM. NEVER below 6.0 for any portrait with clearly visible "
+            "in-focus face. Above floor: strong directional light adds 0.5–1.0; graphic "
+            "framing adds 0.5. A compelling face under rim light = VD 7.5–8.0. "
             "DOD: studio cooperative portrait = 5.5–6.5. Environmental/stranger = 6.5–7.5. "
             "Do NOT penalise studio portraits on DOD. "
             "DM: posed and holding still = 5.5–6.5. Genuine unguarded expression = 7.5–8.5. "
@@ -34434,11 +34437,15 @@ def _try_genre_context(genre):
         ),
         'Creative': (
             "CREATIVE: VD dominant — intentional rule-breaking scores higher than accidental. "
-            "Assume compositional unconventionality is deliberate. "
-            "AQ = emotional or conceptual resonance. "
-            "Technical sharpness rewarded when present but not required. "
+            "Assume ALL compositional unconventionality is deliberate. "
+            "AQ = emotional or conceptual resonance, not technical sharpness. "
             "Over-processing that serves the concept: acceptable. "
-            "Over-processing that obscures: penalise."
+            "SCORE FLOOR: Creative image with clear conceptual intent, strong technique, "
+            "and immediate visual impact = VD 8.0 MINIMUM. "
+            "A technically excellent dance/movement image with graphic body geometry "
+            "and dramatic light = 8.5+ overall. "
+            "Under-scoring Creative because it looks 'different' is the most common error. "
+            "Do not score Creative images conservatively — the genre rewards ambition."
         ),
         'default': (
             "Score using genre-appropriate criteria. Reward artistic intent, "
