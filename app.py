@@ -18394,7 +18394,6 @@ def admin_calibration_rescore(image_id):
     Frontend calls this per-row sequentially (not bulk) to avoid gunicorn timeout.
     """
     import tempfile as _tf
-    import urllib.request as _ur2
     _tmp_path = None
     try:
         img = Image.query.filter_by(
@@ -18407,13 +18406,17 @@ def admin_calibration_rescore(image_id):
         if img.thumb_path and os.path.exists(img.thumb_path):
             score_path = img.thumb_path
         elif img.thumb_url:
-            # Download from R2 into a temp file for this request
+            # Download from R2 using boto3 client (thumb_url is private, not public HTTP)
             try:
-                with _tf.NamedTemporaryFile(suffix='.jpg', delete=False) as _t:
-                    _tmp_path = _t.name
-                _ur2.urlretrieve(img.thumb_url, _tmp_path)
+                from storage import get_client, BUCKET
+                import tempfile as _tf2
+                _key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+                _tf_obj = _tf2.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(BUCKET, _key, _tf_obj)
+                _tf_obj.close()
+                _tmp_path = _tf_obj.name
                 score_path = _tmp_path
-                app.logger.info(f'[calibration_rescore] R2 fallback OK image={image_id}')
+                app.logger.info(f'[calibration_rescore] R2 fallback OK image={image_id} key={_key}')
             except Exception as _dl_err:
                 app.logger.error(f'[calibration_rescore] R2 download failed image={image_id}: {_dl_err}')
 
