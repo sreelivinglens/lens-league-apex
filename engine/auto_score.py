@@ -1,4 +1,4 @@
-# SL-VERSION: 171.22 (Session 218, 2026-09-10 — Round 3 calibration fixes: (1) Nature VD hard floor 6.0 minimum with named examples — cherry blossom soft pink light = VD 7.0 min, autumn leaves golden = VD 6.5 min. (2) Street VD hard floors — monks/silhouette = 7.5 min, peak athletic action = 7.0 min, street portrait eye contact = 7.0 min. (3) Landscape VD hard floors — exceptional light = 7.5 min, long exposure = 7.5 min, graphic composition = 7.0 min. Note: low DM should not pull VD down. RETAINS 171.21.)
+# SL-VERSION: 171.23 (Session 218, 2026-09-10 — Round 4 calibration fixes: (1) Street VD athletic action floor raised to 7.5 min — applies even when image filed as Street not Sports genre. Cricket stroke, dancer mid-leap in street context = VD 7.5+. (2) Wildlife DM: family/juvenile interaction anchor — two animals in physical contact (cubs playing, mother grooming) = DM 7.0–8.0, NOT treated as static scene. RETAINS 171.22.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -1533,7 +1533,12 @@ GENRE_CONTEXT = {
         "a half-second either side produces a lesser image. "
         "For small perching/landing birds: peak wing-spread with feather geometry "
         "fully resolved scores DM 8.5–9.0 — the moment collapses within a fraction "
-        "of a second as the wings fold.\n\n"
+        "of a second as the wings fold.\n"
+        "FAMILY / JUVENILE INTERACTION DM: Two animals in physical contact — cubs "
+        "playing, mother grooming juvenile, siblings interacting — is a BEHAVIOURAL "
+        "ACT with a decisive moment. The peak of the interaction (mid-play, moment "
+        "of contact, peak expression) scores DM 7.0–8.0. Do NOT treat a family "
+        "interaction as a static scene — it has duration and a peak moment.\n\n"
 
         "WF: Score behavioural rarity explicitly. Common behaviour in ordinary conditions scores low. "
         "Rare species, rare behavioural interactions, prey visible, multiple subjects in conflict, "
@@ -1643,7 +1648,10 @@ GENRE_CONTEXT = {
         "impact that compels attention even in conventional framing. "
         "HARD FLOOR — NAMED EXAMPLES (minimums, not ceilings):\n"
         "  Monks/figures silhouetted against dramatic light = VD 7.5 MINIMUM.\n"
-        "  Peak athletic action (sport, dance, performance) in strong light = VD 7.0 MINIMUM.\n"
+        "  Athletic or physical action — sport, dance, performance, running, jumping — "
+        "captured at peak moment in strong or dramatic light = VD 7.5 MINIMUM. "
+        "This applies even when the image is filed as Street rather than Sports genre. "
+        "A cricket stroke, a basketball dunk, a dancer mid-leap in street context = VD 7.5+.\n"
         "  Street portrait with direct eye contact and graphic quality = VD 7.0 MINIMUM.\n"
         "  Rich cultural scene with layers and depth = VD 6.5 MINIMUM.\n"
         "NEVER give VD below 6.0 to a street image with clear visual impact and a "
