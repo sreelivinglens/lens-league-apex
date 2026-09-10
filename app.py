@@ -18505,6 +18505,7 @@ def admin_calibration_rescore(image_id):
 
 
 
+@app.route('/admin/calibration/delete-selected', methods=['POST'])
 @login_required
 @admin_required
 def admin_calibration_delete_selected():
@@ -18524,7 +18525,6 @@ def admin_calibration_delete_selected():
     try:
         imgs = Image.query.filter(
             Image.id.in_(ids),
-            Image.user_id == current_user.id,
             Image.is_admin_curation == True,
         ).all()
         deleted = 0
@@ -34294,35 +34294,39 @@ def _try_genre_context(genre):
     """
     _HAIKU_GENRE_CONTEXT = {
         'Wildlife': (
-            "WILDLIFE: DOD = difficulty of being present for rare animal behaviour, "
-            "plus technical execution. DM = the unrepeatable instant of behaviour, not just movement. "
-            "FAMILY/JUVENILE DM (critical): two animals in physical contact — cubs playing, "
-            "mother grooming juvenile, siblings interacting — IS a behavioural act with a "
-            "decisive moment. Peak of interaction = DM 7.0–8.0. DO NOT treat family "
-            "interaction as a static scene. Lion cubs wrestling or touching = DM 7.0 MINIMUM. "
-            "Wonder = rarity of what is shown — behaviour most viewers have NEVER seen scores 8+. "
-            "A sleeping animal is DOD 5. An active hunt scores DOD 8+. "
-            "Captive or hide-shot animals: penalise DOD and Wonder significantly. "
-            "SMALL BIRDS: do NOT treat as raptors. Peak wing-spread with feather separation "
-            "= DOD 8-9. Technical Wonder: feather-level detail on fast small bird = WF 7.5-8.0. "
-            "ICM/PANNING: intentional blur is deliberate technique — do NOT penalise. "
-            "Score DOD on blur control difficulty. VD: family interaction with visual "
-            "tenderness = VD 7.0 MINIMUM. Subject with exceptional detail or light = VD 7.5+."
+            "WILDLIFE: VD ANCHORS (minimums): small bird at peak wing-spread with symmetric "
+            "feather geometry against bokeh = VD 8.0 MINIMUM. Lion/big cat cubs alert in "
+            "golden light = VD 7.5 MINIMUM. Two juveniles simultaneously looking at camera "
+            "= VD 7.5 MINIMUM. Monks/robed figures in rich environment with graphic light "
+            "= VD 7.5 MINIMUM. "
+            "DM — BIRDS: peak wing-spread on small bird with feather separation = DM 8.5–9.0. "
+            "DM — MAMMALS ACTIVE CONTACT (playing, wrestling, grooming): DM 7.0–8.5. "
+            "DM — MAMMALS ALERT/AWARE (not in contact, both alert, looking at camera): "
+            "DM 6.0–7.0. NOT a static scene, but lower than active contact. "
+            "WF ANCHORS: individual feather separation on fast small bird = WF 8.0–8.5. "
+            "Two young animals in golden natural light (emotional response = tenderness) "
+            "= WF 8.0–8.5. Cultural/access wonder (inside closed community/monastery) "
+            "= WF 8.0–8.5. "
+            "FAMILY/JUVENILE INTERACTION DM: two animals physically touching = DM 7.0+. "
+            "Captive or hide-shot animals: penalise DOD and Wonder. "
+            "ICM/PANNING: intentional blur = deliberate technique, do NOT penalise."
         ),
         'Street': (
-            "STREET: VD HARD FLOORS (minimums): monks/figures silhouetted against dramatic "
-            "light = VD 7.5 min. Athletic/physical action (sport, dance, running, jumping) "
-            "at peak moment in strong light = VD 7.5 min — applies even when filed as "
-            "Street not Sports genre. A cricket stroke or dancer mid-leap in street "
-            "context = VD 7.5+. Street portrait with direct eye contact = VD 7.0 min. "
-            "Rich cultural scene with depth = VD 6.5 min. NEVER below 6.0 for a street "
-            "image with clear visual impact and recognisable primary subject. "
+            "STREET: VD HARD FLOORS (minimums): monks/figures silhouetted or in rich "
+            "coloured environment with graphic architecture and directional light = VD 7.5 MINIMUM. "
+            "Athletic/physical action at peak moment = VD 7.5 MINIMUM (even if filed as Street). "
+            "Street portrait with direct eye contact = VD 7.0 MINIMUM. "
+            "Rich cultural scene with depth = VD 6.5 MINIMUM. "
+            "NEVER below 6.0 for street image with clear visual impact. "
+            "WF ANCHORS: Tibetan monks, monks in monastery, spiritual figures in authentic "
+            "closed environment = WF 8.0–8.5 (ACCESS WONDER + CULTURAL WONDER). "
+            "Most viewers will never be inside a Tibetan monastery. Score it. "
             "Three Wonder signals — score whichever is strongest: "
             "EYE WONDER (compositional find): 8-9. "
-            "ACCESS WONDER (inside a community that resists cameras): 7.5-8.5. "
-            "CULTURAL WONDER (world most viewers cannot enter): 7-8.5. "
+            "ACCESS WONDER (inside community that resists cameras): 8.0-8.5. "
+            "CULTURAL WONDER (world most viewers cannot enter): 7.5-8.5. "
             "DM = layered variables peaking simultaneously. "
-            "DOD = working in chaos, hostile light, culturally restricted environments. "
+            "DOD = working in restricted, hostile, or culturally closed environments. "
             "Over-processed or HDR: penalise VD to 6.0 max."
         ),
         'Landscape': (
@@ -34396,12 +34400,14 @@ def _try_genre_context(genre):
             "AQ dominant. Catchlight in the eye expected at 7+."
         ),
         'Nature': (
-            "NATURE: VD HARD FLOORS (minimums, not ceilings): child under cherry blossoms "
-            "in soft pink light with bokeh = VD 7.0 MINIMUM. Autumn leaves with golden "
-            "light = VD 6.5 MINIMUM. NEVER below 6.0 for a Nature image with clearly "
-            "beautiful natural light, colour, or atmospheric quality. "
-            "DM CEILING: static natural scene (child under blossoms, flower in light, "
-            "tree in fog) = DM 5.0–6.5 max. Score DM on the natural process, not visual beauty. "
+            "NATURE: GENRE REDIRECT — if a human is the PRIMARY subject (child reaching "
+            "for blossoms, person in nature as the emotional centre), score as PEOPLE/FAMILY "
+            "not Nature. Nature = natural world is the subject, human presence is incidental. "
+            "VD HARD FLOORS (minimums): child under cherry blossoms in soft pink light "
+            "with bokeh = VD 7.0 MINIMUM. NEVER below 6.0 for genuinely beautiful "
+            "natural light or colour. "
+            "DM CEILING: static natural scene = DM 5.0–6.5 max. Score DM on the natural "
+            "process, not visual beauty. "
             "Wonder = revealing ecological truth most viewers have never witnessed. "
             "DOD = access and conditions — remote, extreme, rare seasonal event."
         ),
