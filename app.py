@@ -34458,7 +34458,15 @@ def _try_genre_context(genre):
             "CRITICAL — VD AND DM ARE INDEPENDENT: VD scores the initial visual impact "
             "(what stops the eye in 2 seconds). DM scores the specific unrepeatable instant "
             "(whether the photographer was at the right millisecond). A high VD does NOT "
-            "imply a high DM. Score them separately."
+            "imply a high DM. Score them separately. "
+            "STORY SIGNAL — WF LIFT: when the image contains a clear narrative arc a "
+            "stranger can read without explanation (two subjects in emotional relationship, "
+            "a figure within a cultural world, a human gesture implying before and after) "
+            "lift WF by 0.3–0.5 above the base emotional score. "
+            "Named triggers: maternity silhouette = WF 8.0+. Two young animals alert "
+            "together = WF 7.8+. Monks/devotional figures walking together = WF 8.0+. "
+            "Child reaching toward nature = WF 7.8+. Lone figure of courage above crowd "
+            "= WF 8.0+."
         ),
     }
 
