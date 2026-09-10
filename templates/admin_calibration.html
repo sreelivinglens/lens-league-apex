@@ -309,7 +309,7 @@ a.back:hover{text-decoration:underline}
 <script>
 var _engine = 'both';
 var _files  = [];
-var _rowCount = {{ rows|length }};
+var _rowCount = (function(){ try { return JSON.parse(document.getElementById('cal-meta').textContent).row_count; } catch(e){ return 0; } })();
 
 // ── ENGINE TOGGLE ─────────────────────────────────────────────────────────────
 function setEngine(e) {
@@ -585,12 +585,14 @@ function doDelete(ids, onDone) {
 }
 
 function deleteRow(id, pairedId, btn) {
-  // If there's a paired row, offer to delete both
-  var msg = pairedId
-    ? 'Delete this row only, or both Sonnet + Haiku rows for this image?\n\nOK = delete both\nCancel = delete this row only'
-    : 'Delete this row?';
-  var both = pairedId && confirm(msg);
-  var ids  = both ? [id, pairedId] : [id];
+  var ids;
+  if (pairedId) {
+    var choice = confirm('Delete both Sonnet + Haiku rows for this image?\n\nOK = delete both\nCancel = delete this row only');
+    ids = choice ? [id, pairedId] : [id];
+  } else {
+    if (!confirm('Delete this row?')) return;
+    ids = [id];
+  }
   btn.disabled = true;
   doDelete(ids, function(n){ showFlash('Deleted ' + n + ' row' + (n!==1?'s':'') + '.', 'ok'); });
 }
@@ -607,56 +609,14 @@ function deleteSelected() {
 }
 
 function exportCSV() {
-  // Read data directly from DB rows passed via Jinja — more reliable than parsing DOM
-  var rows = [
-    ['File','Engine','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored']
-  ];
-  {% if rows %}
-  {% set pairs2 = {} %}
-  {% for r in rows %}
-    {% set fn = r.original_filename or ('image-' ~ r.id) %}
-    {% if fn not in pairs2 %}{% set _ = pairs2.update({fn: {}}) %}{% endif %}
-    {% if r.engine_haiku %}{% set _ = pairs2[fn].update({'h': r}) %}
-    {% else %}{% set _ = pairs2[fn].update({'s': r}) %}{% endif %}
-  {% endfor %}
-  {% for fn, p in pairs2.items() %}
-    {% set s = p.get('s') %}{% set h = p.get('h') %}
-    {% if s %}
-  rows.push([
-    {{ fn|tojson }},
-    'Sonnet',
-    {{ (s.genre or '')|tojson }},
-    {{ '%.2f'|format(s.score) if s.score else '' }},
-    {{ (s.tier or '')|tojson }},
-    {{ '%.1f'|format(s.dod_score) if s.dod_score else '' }},
-    {{ '%.1f'|format(s.disruption_score) if s.disruption_score else '' }},
-    {{ '%.1f'|format(s.dm_score) if s.dm_score else '' }},
-    {{ '%.1f'|format(s.wonder_score) if s.wonder_score else '' }},
-    {{ '%.1f'|format(s.aq_score) if s.aq_score else '' }},
-    {% if s and h and s.score and h.score %}{{ '%.2f'|format(h.score - s.score) }}{% else %}''{% endif %},
-    {{ s.scored_at.strftime('%Y-%m-%d %H:%M') if s.scored_at else '' }}
-  ]);
-    {% endif %}
-    {% if h %}
-  rows.push([
-    {{ fn|tojson }},
-    'Haiku',
-    {{ (h.genre or '')|tojson }},
-    {{ '%.2f'|format(h.score) if h.score else '' }},
-    {{ (h.tier or '')|tojson }},
-    {{ '%.1f'|format(h.dod_score) if h.dod_score else '' }},
-    {{ '%.1f'|format(h.disruption_score) if h.disruption_score else '' }},
-    {{ '%.1f'|format(h.dm_score) if h.dm_score else '' }},
-    {{ '%.1f'|format(h.wonder_score) if h.wonder_score else '' }},
-    {{ '%.1f'|format(h.aq_score) if h.aq_score else '' }},
-    '',
-    {{ h.scored_at.strftime('%Y-%m-%d %H:%M') if h.scored_at else '' }}
-  ]);
-    {% endif %}
-  {% endfor %}
-  {% endif %}
+  var dataEl = document.getElementById('cal-export-data');
+  if (!dataEl) { showFlash('No data to export.', 'err'); return; }
+  var data;
+  try { data = JSON.parse(dataEl.textContent); } catch(e) { showFlash('Export error.', 'err'); return; }
 
-  var csv = rows.map(function(r){
+  var header = ['File','Engine','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored'];
+  var csvRows = [header].concat(data);
+  var csv = csvRows.map(function(r){
     return r.map(function(v){
       var s = String(v == null ? '' : v);
       return s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0
@@ -702,5 +662,21 @@ function clearEngine(engine) {
   }
 })();
 </script>
+
+{# ── CSV export data — Jinja rendered into JSON, read by exportCSV() JS ── #}
+{# Rule 0b: no Jinja {{ }} inside <script> — data passed via application/json block #}
+{% set _pairs2 = {} %}
+{% for _r in rows %}
+  {% set _fn = _r.original_filename or ('image-' ~ _r.id) %}
+  {% if _fn not in _pairs2 %}{% set _ = _pairs2.update({_fn: {}}) %}{% endif %}
+  {% if _r.engine_haiku %}{% set _ = _pairs2[_fn].update({'h': _r}) %}
+  {% else %}{% set _ = _pairs2[_fn].update({'s': _r}) %}{% endif %}
+{% endfor %}
+<script type="application/json" id="cal-export-data">[{% for _fn, _p in _pairs2.items() %}{% set _s = _p.get('s') %}{% set _h = _p.get('h') %}{% if _s %}
+[{{ _fn|tojson }},"Sonnet",{{ (_s.genre or '')|tojson }},{{ '%.2f'|format(_s.score) if _s.score else '""' }},{{ (_s.tier or '')|tojson }},{{ '%.1f'|format(_s.dod_score) if _s.dod_score else '""' }},{{ '%.1f'|format(_s.disruption_score) if _s.disruption_score else '""' }},{{ '%.1f'|format(_s.dm_score) if _s.dm_score else '""' }},{{ '%.1f'|format(_s.wonder_score) if _s.wonder_score else '""' }},{{ '%.1f'|format(_s.aq_score) if _s.aq_score else '""' }},{% if _s and _h and _s.score and _h.score %}"{{ '%.2f'|format(_h.score - _s.score) }}"{% else %}""{% endif %},{{ _s.scored_at.strftime('"%Y-%m-%d %H:%M"') if _s.scored_at else '""' }}]{% if _h %},{% elif not loop.last %},{% endif %}{% endif %}{% if _h %}
+[{{ _fn|tojson }},"Haiku",{{ (_h.genre or '')|tojson }},{{ '%.2f'|format(_h.score) if _h.score else '""' }},{{ (_h.tier or '')|tojson }},{{ '%.1f'|format(_h.dod_score) if _h.dod_score else '""' }},{{ '%.1f'|format(_h.disruption_score) if _h.disruption_score else '""' }},{{ '%.1f'|format(_h.dm_score) if _h.dm_score else '""' }},{{ '%.1f'|format(_h.wonder_score) if _h.wonder_score else '""' }},{{ '%.1f'|format(_h.aq_score) if _h.aq_score else '""' }},"",{{ _h.scored_at.strftime('"%Y-%m-%d %H:%M"') if _h.scored_at else '""' }}]{% if not loop.last %},{% endif %}{% endif %}{% endfor %}]</script>
+
+<script type="application/json" id="cal-meta">{"row_count":{{ rows|length }}}</script>
+
 </body>
 </html>
