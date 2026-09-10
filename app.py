@@ -34282,7 +34282,12 @@ def _try_genre_context(genre):
             "Underwater ICM/long exposure scores DOD 8+ for combined technique difficulty."
         ),
         'Street': (
-            "STREET: Three Wonder signals — score whichever is strongest: "
+            "STREET: VD = visual presence — score the higher of: compositional disruption "
+            "(shadows, reflections, silhouette, unexpected juxtaposition) OR visual magnetism "
+            "(a face/gesture/scene that stops the eye in 2 seconds even in conventional framing). "
+            "Monks silhouetted against dramatic light = VD 7.5–8.0. "
+            "Do NOT give VD below 6.0 to a street image with clear visual impact. "
+            "Three Wonder signals — score whichever is strongest: "
             "EYE WONDER (compositional find, invisible until camera saw it): 8-9. "
             "ACCESS WONDER (inside a community that resists cameras): 7.5-8.5. "
             "CULTURAL WONDER (world most viewers cannot enter): 7-8.5. "
@@ -34292,12 +34297,16 @@ def _try_genre_context(genre):
             "Centred safe composition with no surprise: VD 4-5."
         ),
         'Landscape': (
-            "LANDSCAPE: Apply LOCATION REMOVAL TEST — if the scene is available to any tourist "
-            "who searches the location, cap Wonder at 6.5. "
-            "UBIQUITY CEILING: golden hour at a famous landmark = WF 5-6 maximum. "
+            "LANDSCAPE: VD = visual drama — score the higher of: technique disruption "
+            "(long exposure, radical viewpoint, graphic reduction) OR visual impact "
+            "(dramatic natural light — storm, golden shafts, burning sky; strong tonal "
+            "contrast; extraordinary colour). Exceptional natural light scores VD 7.5–8.5 "
+            "even without unconventional technique. Flat overcast = VD 5.0–6.0. "
+            "Apply LOCATION REMOVAL TEST — if the scene is available to any tourist, "
+            "cap Wonder at 6.5. UBIQUITY CEILING: golden hour at famous landmark = WF 5-6. "
             "DM requires a transient element — light, weather, moment — not just composition. "
             "DOD: remote access, extreme weather, pre-dawn commitment scores 7+. "
-            "Wonder 8+ requires: light that lasted under 3 minutes, OR rare atmospheric condition, "
+            "Wonder 8+ requires: light under 3 minutes OR rare atmospheric condition "
             "OR a viewpoint no other image of this location has used."
         ),
         'Astrophotography': (
@@ -34344,19 +34353,24 @@ def _try_genre_context(genre):
             "Wonder = showing family truth most viewers recognise but rarely see documented."
         ),
         'People': (
-            "PEOPLE/PORTRAIT: AQ dominant. "
-            "Environmental portraits score DOD higher than studio. "
+            "PEOPLE/PORTRAIT: VD = visual presence — strong eye contact with immediate magnetism; "
+            "dramatic or unusual light (rim, backlight, harsh shadow); graphic quality in framing; "
+            "colour/tonal contrast that makes subject pop. A compelling face under strong "
+            "directional light scores VD 7.5–8.0 even in conventional framing. "
+            "NEVER below 5.5 for a portrait with clear subject presence and competent light. "
+            "AQ dominant. Environmental portraits score DOD higher than studio. "
             "DM = the moment of genuine expression — not the posed smile. "
-            "Wonder = revealing the person's world, not just their face. "
-            "EMOTIONAL WONDER: a genuinely moving image — father and infant, grief, joy, tenderness — "
-            "where the emotion is immediate and nameable in one word scores WF 7.5 minimum. "
-            "Suppressing this to avoid inflation is the opposite error. "
-            "Catchlight in the eye is expected at 7+. Missing catchlight: penalise."
+            "EMOTIONAL WONDER: if you can name the emotion in one word (dignity, grief, "
+            "defiance, tenderness, joy), score WF 7.5 minimum. "
+            "Catchlight in the eye expected at 7+. Missing catchlight: penalise."
         ),
         'Nature': (
-            "NATURE: Similar to Wildlife but subject may be flora, landscape, or ecosystem. "
-            "Wonder = revealing ecological truth most viewers have never witnessed. "
-            "DOD = access and conditions — remote, extreme, or rare seasonal event. "
+            "NATURE: VD = visual drama of the natural scene — score the higher of: "
+            "technique disruption OR visual impact (exceptional natural light, painterly "
+            "colour relationships, graphic natural patterns). A child under cherry blossoms "
+            "in soft pink light scores VD 7.0–7.5. NEVER below 5.0 for genuinely beautiful "
+            "natural light or colour. Wonder = revealing ecological truth most viewers have "
+            "never witnessed. DOD = access and conditions — remote, extreme, rare seasonal event. "
             "Apply Location Removal Test from Landscape rules."
         ),
         'Fashion': (
