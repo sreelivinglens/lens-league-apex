@@ -18166,6 +18166,7 @@ Return ONLY valid JSON, no preamble, no markdown fences:
 @admin_required
 def admin_calibration():
     """GET /admin/calibration — drift comparison dashboard."""
+    import json as _cj
     _ensure_calibration_drift_column()
     try:
         rows = db.session.execute(db.text("""
@@ -18183,7 +18184,58 @@ def admin_calibration():
     except Exception as _re:
         app.logger.warning(f'[admin_calibration] query failed: {_re}')
         rows = []
-    return render_template('admin_calibration.html', rows=rows,
+
+    # Build pairs dict and CSV export data in Python — avoids fragile Jinja JSON
+    pairs  = {}
+    s_by_fn = {}
+    h_by_fn = {}
+    for r in rows:
+        fn = r.original_filename or f'image-{r.id}'
+        if fn not in pairs:
+            pairs[fn] = {}
+        if r.engine_haiku:
+            pairs[fn]['haiku'] = r
+            h_by_fn[fn] = r
+        else:
+            pairs[fn]['sonnet'] = r
+            s_by_fn[fn] = r
+
+    # Build export rows as clean Python list — serialised to JSON by tojson filter
+    export_rows = []
+    for fn, p in pairs.items():
+        s = p.get('sonnet')
+        h = p.get('haiku')
+        delta = round(h.score - s.score, 2) if (s and h and s.score and h.score) else ''
+        if s:
+            export_rows.append([
+                fn, 'Sonnet', s.genre or '',
+                round(float(s.score), 2) if s.score else '',
+                s.tier or '',
+                round(float(s.dod_score), 1) if s.dod_score else '',
+                round(float(s.disruption_score), 1) if s.disruption_score else '',
+                round(float(s.dm_score), 1) if s.dm_score else '',
+                round(float(s.wonder_score), 1) if s.wonder_score else '',
+                round(float(s.aq_score), 1) if s.aq_score else '',
+                delta,
+                s.scored_at.strftime('%Y-%m-%d %H:%M') if s.scored_at else '',
+            ])
+        if h:
+            export_rows.append([
+                fn, 'Haiku', h.genre or '',
+                round(float(h.score), 2) if h.score else '',
+                h.tier or '',
+                round(float(h.dod_score), 1) if h.dod_score else '',
+                round(float(h.disruption_score), 1) if h.disruption_score else '',
+                round(float(h.dm_score), 1) if h.dm_score else '',
+                round(float(h.wonder_score), 1) if h.wonder_score else '',
+                round(float(h.aq_score), 1) if h.aq_score else '',
+                '',
+                h.scored_at.strftime('%Y-%m-%d %H:%M') if h.scored_at else '',
+            ])
+
+    return render_template('admin_calibration.html',
+                           rows=rows, pairs=pairs,
+                           export_data=_cj.dumps(export_rows),
                            genres=GENRE_IDS, now=datetime.utcnow())
 
 
@@ -18364,11 +18416,12 @@ def admin_calibration_rescore(image_id):
         else:
             engine = 'haiku' if _is_haiku else 'sonnet'
 
-        genre  = img.genre or 'Wildlife'
+        genre  = img.genre or 'General'
         result = {'image_id': image_id, 'engine': engine, 'status': 'failed'}
 
         img.status = 'pending'
         db.session.commit()
+        app.logger.info(f'[calibration_rescore] START image={image_id} engine={engine} genre={genre}')
 
         if engine == 'sonnet':
             from engine.auto_score import auto_score_ddi_fast
