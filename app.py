@@ -1,4 +1,4 @@
-# SL-VERSION: 182.18 (Session 218, 2026-09-10 — (1) admin_dashboard() passes evolving_eye_users to template. (2) Admin calibration drift tool: GET /admin/calibration, POST /admin/calibration/upload, POST /admin/calibration/clear. Sonnet path uses auto_score_ddi_fast. Haiku path is bare 5-dimension direct API call — no history, no master refs, no species, no wiki, no location. Images saved is_admin_curation=TRUE + is_calibration_drift=TRUE. Column auto-migrated on first upload.)
+# SL-VERSION: 182.19 (Session 218, 2026-09-10 — Calibration rescore: POST /admin/calibration/rescore/<id> (single row, uses stored thumb_path) and POST /admin/calibration/rescore-bulk (multi-row). Both Sonnet and Haiku paths. No file re-upload needed. Returns same JSON shape as upload route.)
 
 import os
 import re
@@ -18326,7 +18326,169 @@ def admin_calibration_upload():
     return jsonify(result), 200
 
 
-@app.route('/admin/calibration/delete-selected', methods=['POST'])
+@app.route('/admin/calibration/rescore/<int:image_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_rescore(image_id):
+    """
+    POST /admin/calibration/rescore/<image_id>
+    Re-scores an existing calibration image using its stored thumb_path.
+    No file upload needed — uses the already-stored thumbnail.
+    Returns same JSON shape as /admin/calibration/upload.
+    """
+    try:
+        img = Image.query.filter_by(
+            id=image_id,
+            user_id=current_user.id,
+            is_admin_curation=True
+        ).first_or_404()
+
+        if not img.thumb_path or not os.path.exists(img.thumb_path):
+            return jsonify({'ok': False, 'message': 'Thumbnail file not found — re-upload this image'}), 400
+
+        engine = img.is_haiku_try and 'haiku' or 'sonnet'
+        # Allow engine override via form param
+        _engine_override = request.form.get('engine', '').strip().lower()
+        if _engine_override in ('sonnet', 'haiku'):
+            engine = _engine_override
+
+        genre = img.genre or 'Wildlife'
+        result = {'image_id': image_id, 'engine': engine,
+                  'score': None, 'tier': None, 'status': 'failed'}
+
+        img.status = 'pending'
+        db.session.commit()
+
+        if engine == 'sonnet':
+            from engine.auto_score import auto_score_ddi_fast
+            scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=img.sub_genre)
+            if scored:
+                img.dod_score        = scored.get('dod', 0)
+                img.disruption_score = scored.get('disruption', 0) or scored.get('vd', 0)
+                img.dm_score         = scored.get('dm', 0)
+                img.wonder_score     = scored.get('wonder', 0) or scored.get('wf', 0)
+                img.aq_score         = scored.get('aq', 0)
+                img.score            = scored.get('score', 0)
+                img.tier             = scored.get('tier', '')
+                img.archetype        = scored.get('archetype', '')
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'image_id': image_id, 'engine': 'sonnet', 'status': 'scored',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': img.dod_score, 'vd': img.disruption_score,
+                    'dm': img.dm_score, 'wf': img.wonder_score, 'aq': img.aq_score,
+                }
+            else:
+                img.status = 'error'; db.session.commit()
+                result['status'] = 'scoring failed'
+        else:
+            scored = _calibration_score_haiku(img.thumb_path, genre)
+            if scored:
+                img.dod_score        = scored['dod']
+                img.disruption_score = scored['vd']
+                img.dm_score         = scored['dm']
+                img.wonder_score     = scored['wf']
+                img.aq_score         = scored['aq']
+                img.score            = scored['score']
+                img.tier             = scored['tier']
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'image_id': image_id, 'engine': 'haiku', 'status': 'scored',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': scored['dod'], 'vd': scored['vd'],
+                    'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
+                }
+            else:
+                img.status = 'error'; db.session.commit()
+                result['status'] = 'haiku scoring failed'
+
+        app.logger.info(f'[admin_calibration_rescore] image={image_id} engine={engine} score={img.score}')
+        return jsonify(result), 200
+
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration_rescore] image={image_id}: {_e}')
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+
+@app.route('/admin/calibration/rescore-bulk', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_rescore_bulk():
+    """
+    POST /admin/calibration/rescore-bulk
+    Form: image_ids (comma-separated), optional engine override.
+    Rescores all specified calibration images synchronously.
+    Returns JSON {ok, results: [{image_id, score, tier, ...}]}.
+    """
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({'ok': False, 'message': 'Invalid IDs'}), 400
+    if not ids:
+        return jsonify({'ok': False, 'message': 'No IDs provided'}), 400
+
+    _engine_override = request.form.get('engine', '').strip().lower()
+    results = []
+    for image_id in ids:
+        try:
+            img = Image.query.filter_by(
+                id=image_id, user_id=current_user.id, is_admin_curation=True
+            ).first()
+            if not img or not img.thumb_path or not os.path.exists(img.thumb_path):
+                results.append({'image_id': image_id, 'status': 'skipped — file not found'})
+                continue
+
+            engine = _engine_override if _engine_override in ('sonnet', 'haiku') else (
+                'haiku' if img.is_haiku_try else 'sonnet'
+            )
+            genre = img.genre or 'Wildlife'
+            img.status = 'pending'; db.session.commit()
+
+            if engine == 'sonnet':
+                from engine.auto_score import auto_score_ddi_fast
+                scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=img.sub_genre)
+                if scored:
+                    img.dod_score=scored.get('dod',0); img.disruption_score=scored.get('disruption',0) or scored.get('vd',0)
+                    img.dm_score=scored.get('dm',0); img.wonder_score=scored.get('wonder',0) or scored.get('wf',0)
+                    img.aq_score=scored.get('aq',0); img.score=scored.get('score',0)
+                    img.tier=scored.get('tier',''); img.status='scored'; img.scored_at=datetime.utcnow()
+                    db.session.commit()
+                    results.append({'image_id':image_id,'engine':'sonnet','status':'scored',
+                        'score':img.score,'tier':img.tier,'dod':img.dod_score,'vd':img.disruption_score,
+                        'dm':img.dm_score,'wf':img.wonder_score,'aq':img.aq_score})
+                else:
+                    img.status='error'; db.session.commit()
+                    results.append({'image_id':image_id,'status':'scoring failed'})
+            else:
+                scored = _calibration_score_haiku(img.thumb_path, genre)
+                if scored:
+                    img.dod_score=scored['dod']; img.disruption_score=scored['vd']
+                    img.dm_score=scored['dm']; img.wonder_score=scored['wf']
+                    img.aq_score=scored['aq']; img.score=scored['score']
+                    img.tier=scored['tier']; img.status='scored'; img.scored_at=datetime.utcnow()
+                    db.session.commit()
+                    results.append({'image_id':image_id,'engine':'haiku','status':'scored',
+                        'score':img.score,'tier':img.tier,'dod':scored['dod'],'vd':scored['vd'],
+                        'dm':scored['dm'],'wf':scored['wf'],'aq':scored['aq']})
+                else:
+                    img.status='error'; db.session.commit()
+                    results.append({'image_id':image_id,'status':'haiku scoring failed'})
+
+        except Exception as _re:
+            db.session.rollback()
+            app.logger.error(f'[calibration_rescore_bulk] image={image_id}: {_re}')
+            results.append({'image_id':image_id,'status':f'error: {_re}'})
+
+    app.logger.info(f'[calibration_rescore_bulk] {len(results)} images admin={current_user.id}')
+    return jsonify({'ok': True, 'results': results}), 200
+
+
 @login_required
 @admin_required
 def admin_calibration_delete_selected():
