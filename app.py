@@ -18059,16 +18059,19 @@ def _ensure_calibration_drift_column():
         db.session.rollback()
 
 
-def _calibration_score_haiku(thumb_path, genre):
+def _calibration_score_haiku(thumb_path, genre, camera_track=None):
     """
     Bare Haiku calibration score — 5 DDI dimensions only.
     No history, no master refs, no species research, no wiki, no location.
+    camera_track: 'mobile' | 'camera' | None — controls whether Mobile League
+    weights and genre capability block are injected into the prompt.
     Returns dict {dod, vd, dm, wf, aq, score, tier} or None on failure.
     """
     import base64 as _b64
     import json as _cj
     import urllib.request as _ur
     from engine.scoring import calculate_score, get_tier
+    from engine.auto_score import compute_mobile_weights, MOBILE_EXCLUDED_GENRES
 
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
@@ -18077,15 +18080,114 @@ def _calibration_score_haiku(thumb_path, genre):
     with open(thumb_path, 'rb') as _f:
         img_b64 = _b64.b64encode(_f.read()).decode()
 
-    cal_line = _try_calibration_line(genre or '')
+    cal_line  = _try_calibration_line(genre or '')
     genre_ctx = _try_genre_context(genre or 'default')
+
+    # ── Mobile League block (mirrors auto_score build_exif_context logic) ─────
+    _mobile_block = ''
+    _is_mobile = (camera_track == 'mobile')
+    _mobile_weights = None
+    if _is_mobile and genre and genre not in MOBILE_EXCLUDED_GENRES:
+        _mobile_weights = compute_mobile_weights(genre)
+
+    if _is_mobile and _mobile_weights and genre not in MOBILE_EXCLUDED_GENRES:
+        _mw = _mobile_weights
+        # Genre capability tier
+        _MOBILE_CAP = {
+            'Street': 'FULL', 'Documentary': 'FULL', 'Family': 'FULL',
+            'Wedding': 'FULL', 'People': 'FULL', 'Landscape': 'FULL',
+            'Nature': 'FULL', 'Macro': 'FULL', 'Architecture': 'FULL',
+            'Sports': 'PARTIAL', 'Creative': 'PARTIAL',
+            'Fashion': 'PARTIAL', 'Maternity': 'PARTIAL',
+            'Wildlife': 'CONSTRAINED', 'Astrophotography': 'CONSTRAINED',
+        }
+        _cap = _MOBILE_CAP.get(genre, 'FULL')
+
+        _cap_notes = {
+            'FULL': (
+                "This genre is FULLY achievable on a phone — it is a legitimate or often "
+                "superior instrument here. Score DoD without penalty for lack of telephoto "
+                "or optical bokeh. Those tools are not required in this genre."
+            ),
+            'PARTIAL': (
+                "This genre is PARTIALLY achievable on a phone. Wide and portrait mode "
+                "cover most work. Note specific limits: no optical telephoto compression "
+                "beyond 5x; no natural optical bokeh beyond 1.5m subject distance; "
+                "no studio strobe sync. Do NOT penalise what the phone cannot do. "
+                "Do NOT suggest equipment the phone does not have. "
+                "Score DoD on what was actually achieved within these constraints."
+            ),
+            'CONSTRAINED': (
+                "This genre has FUNDAMENTAL HARDWARE LIMITS on a phone. "
+                "Score honestly — do not inflate DoD to compensate. "
+                "Situational DoD (being in the habitat/location) scores FULL — same effort. "
+                "Technical DoD ceiling applies where hardware limits are the cause of gaps: "
+                + (
+                    "Wildlife: no optical telephoto beyond 5x (~120mm equiv on iPhone Pro). "
+                    "Subject filling frame at 5x with clean edges = score freely. "
+                    "Subject small in frame with digital-zoom softness = Technical DoD 5.0–5.5. "
+                    "Proximity as discipline: within 2m of wildlife = Technical DoD 7.0–8.0. "
+                    "No optical bokeh at wildlife distances — do NOT penalise its absence. "
+                    "Never suggest: longer lens, 300mm, telephoto. "
+                    if genre == 'Wildlife' else
+                    "Astrophotography: Night mode gives 3–10s auto exposures, not 25–30s manual. "
+                    "No tracking mount. Technical DoD ceiling 6.5 for Night mode Milky Way. "
+                    "7.0–7.5 only for time-lapse stacking or strong aurora. "
+                    "Situational DoD (dark site access) scores full. "
+                    if genre == 'Astrophotography' else ""
+                )
+            ),
+        }
+
+        _mobile_block = f"""
+═══════════════════════════════════════════════════════════════
+MOBILE LEAGUE SCORING — MANDATORY (read before scoring)
+═══════════════════════════════════════════════════════════════
+
+This image was uploaded by a Mobile League subscriber.
+Apply Mobile League criteria as written below.
+
+MOBILE DIMENSION WEIGHTS — USE THESE, NOT THE GENRE DEFAULTS:
+DoD={int(_mw['dod']*100)}%  Disruption={int(_mw['disruption']*100)}%  DM={int(_mw['dm']*100)}%  Wonder={int(_mw['wonder']*100)}%  AQ={int(_mw['aq']*100)}%
+(+15% Disruption and +10% DM vs Camera League; DoD/Wonder/AQ proportionally reduced.)
+
+DOD — SCORED AS TWO COMPONENTS, AVERAGED:
+  Situational DoD: physical presence, access, environmental conditions.
+    A phone shot at the Masai Mara scores identically to DSLR on situational DoD.
+  Technical DoD: scored against mobile ceiling only.
+    Lighting difficulty for a small sensor. Proximity required by lack of telephoto.
+    Spontaneity demand — cannot set up, pre-focus, or burst the same way.
+    Portrait mode bokeh: clean edge separation with no fringing = DoD 6.5–7.5.
+
+PORTRAIT MODE / COMPUTATIONAL BOKEH:
+Portrait mode (iPhone, Android) is the phone equivalent of wide-aperture optical bokeh.
+Clean portrait mode execution (no edge fringing, no subject-background artefacts) is a
+deliberate technical achievement — score as Technical DoD 6.5–7.5, not a penalty risk.
+Portrait mode IS the correct tool for this instrument. Do not expect optical bokeh.
+Only penalise when artefacts are clearly visible: fringing, halos, cut-through blur.
+
+LENSES AVAILABLE:
+  Ultrawide 0.5x (~13mm) · Wide 1x (~24mm) · 2x crop (~48mm, standard iPhone/Android)
+  3x optical (OnePlus/some Android flagships) · 5x optical (iPhone Pro/Pro Max only)
+  Beyond 5x = digital zoom = pixelated = Technical DoD penalty applies.
+  No zoom beyond 5x is optical. Never suggest or reference a focal length > 120mm equiv.
+
+WONDER and AQ — UNCHANGED. Universal. Instrument-agnostic.
+Emotional truth and visual arrest do not depend on the camera.
+
+GENRE CAPABILITY — {_cap}:
+{_cap_notes[_cap]}
+
+═══════════════════════════════════════════════════════════════
+"""
 
     prompt = f"""You are evaluating a photograph on the Shutter League DDI rubric.
 Genre: {genre or 'General'}
+{f'Track: Mobile League' if _is_mobile else 'Track: Camera League'}
 
 GENRE GUIDANCE:
 {genre_ctx}
-
+{_mobile_block}
 CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
 {cal_line}
 
@@ -18109,7 +18211,7 @@ If aq >= 7.5, wf must be >= 7.0. A gap > 2.0 between wf and aq is impossible —
 they measure the same emotional truth. Check before submitting.
 
 Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
-- dod: Depth of Difficulty (how hard was this to achieve technically and artistically)
+- dod: Depth of Difficulty (how hard was this to achieve — use mobile weights if mobile track)
 - vd: Visual Drama (impact, contrast, light, colour, geometry — what stops the eye)
 - dm: Decisive Moment (timing, peak action, unrepeatable instant)
 - wf: Wow Factor (see FIVE signals above — score the HIGHEST present)
@@ -18120,7 +18222,7 @@ Return ONLY valid JSON, no preamble, no markdown fences:
 
     payload = _cj.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 120,
+        'max_tokens': 200,
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -18173,14 +18275,29 @@ Return ONLY valid JSON, no preamble, no markdown fences:
     aq  = _cl(d.get('aq',  5.0))
 
     try:
-        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+        if _mobile_weights and _is_mobile:
+            # Mobile track: compute weighted score directly using mobile weights
+            # (calculate_score uses Camera League weights from GENRE_WEIGHTS)
+            _mw = _mobile_weights
+            final_score = round(
+                dod * _mw['dod'] +
+                vd  * _mw['disruption'] +
+                dm  * _mw['dm'] +
+                wf  * _mw['wonder'] +
+                aq  * _mw['aq'],
+                2
+            )
+            tier = get_tier(final_score)
+        else:
+            final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
     except Exception as _sce:
         app.logger.warning(f'[cal_haiku] calculate_score failed ({_sce}), using mean fallback')
         final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
         tier = get_tier(final_score)
 
     return {'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
-            'score': round(final_score, 2), 'tier': tier}
+            'score': round(final_score, 2), 'tier': tier,
+            'track': camera_track or 'camera'}
 
 
 @app.route('/admin/audit/low-emotion')
@@ -18420,9 +18537,12 @@ def admin_calibration_upload():
     """
     _ensure_calibration_drift_column()
 
-    file   = request.files.get('image')
-    genre  = normalise_genre(request.form.get('genre', '').strip())
-    engine = (request.form.get('engine', 'sonnet') or 'sonnet').strip().lower()
+    file         = request.files.get('image')
+    genre        = normalise_genre(request.form.get('genre', '').strip())
+    engine       = (request.form.get('engine', 'sonnet') or 'sonnet').strip().lower()
+    camera_track = (request.form.get('camera_track', '') or '').strip().lower()
+    if camera_track not in ('mobile', 'camera'):
+        camera_track = None  # default: camera-league scoring
 
     if not file or not file.filename:
         return jsonify({'status': 'error', 'message': 'No file received'}), 400
@@ -18509,8 +18629,8 @@ def admin_calibration_upload():
                 result = {'filename': file.filename, 'engine': 'sonnet',
                           'status': 'upload OK — scoring failed', 'image_id': img.id}
         else:
-            # Haiku — bare calibration score
-            scored = _calibration_score_haiku(img.thumb_path, genre)
+            # Haiku — bare calibration score (camera_track controls mobile weights)
+            scored = _calibration_score_haiku(img.thumb_path, genre, camera_track=camera_track)
             if scored:
                 img.dod_score        = scored['dod']
                 img.disruption_score = scored['vd']
@@ -18531,6 +18651,7 @@ def admin_calibration_upload():
                     'dod': scored['dod'], 'vd': scored['vd'],
                     'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
                     'status': 'scored', 'image_id': img.id,
+                    'track': camera_track or 'camera',
                 }
             else:
                 db.session.commit()
@@ -18604,6 +18725,9 @@ def admin_calibration_rescore(image_id):
             'haiku' if _is_haiku else 'sonnet'
         )
 
+        _track_override = (request.form.get('camera_track', '') or '').strip().lower()
+        camera_track = _track_override if _track_override in ('mobile', 'camera') else None
+
         genre  = img.genre or 'General'
         result = {'image_id': image_id, 'engine': engine, 'status': 'failed'}
 
@@ -18636,7 +18760,7 @@ def admin_calibration_rescore(image_id):
                 img.status = 'error'; db.session.commit()
                 result['status'] = 'scoring failed'
         else:
-            scored = _calibration_score_haiku(score_path, genre)
+            scored = _calibration_score_haiku(score_path, genre, camera_track=camera_track)
             if scored:
                 img.dod_score        = scored['dod']
                 img.disruption_score = scored['vd']
@@ -18650,6 +18774,7 @@ def admin_calibration_rescore(image_id):
                 db.session.commit()
                 result = {
                     'image_id': image_id, 'engine': 'haiku', 'status': 'scored',
+                    'track': camera_track or 'camera',
                     'score': img.score, 'tier': img.tier,
                     'dod': scored['dod'], 'vd': scored['vd'],
                     'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
