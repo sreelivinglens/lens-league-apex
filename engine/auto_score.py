@@ -1,4 +1,4 @@
-# SL-VERSION: 171.27 (Session 218, 2026-09-10 — Survey-driven fixes: (1) WF story signal: narrative arc lifts WF 0.3-0.5 — maternity silhouette=8.0+, two young animals=7.8+, monks together=8.0+, child reaching=7.8+, lone figure of courage=8.0+. (2) hard_truth EMOTION NAMING RULE: if WF 7.5+, must name the emotion. STORY RECOGNITION RULE. (3) byline_1: if Wonder 7.5+, must include made-us-feel and name the emotion. RETAINS 171.26.)
+# SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
 # SL-VERSION: 171.16-staging (Session 215, 2026-09-06 — ROOT CAUSE FIX: build_audit_data() was not capturing the 18 new fields from result dict. Engine generated them correctly but they were discarded before set_audit() wrote to _audit_json. Template reads _audit_json so nothing showed. All 18 fields now captured: impression, strength_name/obs, next_leap_name/obs, dim_obs x5, master_name/why, tech_read, visual_flow, imagine, conclusion, award_context, species_note. RETAINS 171.15.)
@@ -98,6 +98,48 @@ If sub_genre = 'creative_minimalist' OR sub_genre = 'creative_silhouette':
 - Set judge_referral=true if score >= 7.0 OR technique is exceptionally complex
 - NEVER mention sharpness as negative, NEVER suggest faster shutter speed,
   NEVER say genre mismatch
+
+STEP 0b — TITLE/DESCRIPTION READING AND EMOTION IDENTIFICATION (all genres):
+Before scoring any dimension, read the photographer's title and description as
+WITNESS TESTIMONY — not as a label but as what the photographer saw and felt.
+
+ASK TWO QUESTIONS before scoring WF and AQ:
+
+1. WHAT DID THE PHOTOGRAPHER SEE?
+   The title and description often contain the clue the image alone cannot show.
+   "A Silent Crow" — silence is abnormal for crows. Why is it silent? What does that mean?
+   "Sunflower" — for a portrait of an elderly woman. The photographer saw the sunflower in her.
+   "Pure Joy" — the photographer is telling you what they caught. Believe them.
+   If the title names an emotion, an anomaly, or a quality in the subject:
+   that is the photographer's testimony. Score WF and AQ against what they saw.
+
+2. WHAT DOES A STRANGER FEEL IN 3 SECONDS?
+   Before scoring WF, ask: what would a person feel if they walked past this image
+   in a gallery without reading the label? Can you name that feeling in one word?
+   If YES: WF floor is 7.5. If the feeling is strong and specific: WF 8.0–9.0.
+   If NO — the image produces no specific feeling: WF below 7.0.
+
+RECOGNITION WONDER TRIGGER — check before scoring WF:
+If any of these are present, Recognition Wonder applies (WF 8.0–9.5):
+- A face so alive with genuine emotion (joy, dignity, grief, wonder) that a stranger
+  would stop in a gallery. Genuine broken-toothed smiles. Uninhibited laughter.
+  Eyes full of light in a weathered face. The beauty the world walks past.
+- A child's emotion so complete and uncontained it is physically felt.
+  Pure laughter, pure grief, pure wonder — unperformed, total.
+- A private human moment the photographer caught without the subject knowing —
+  genuine, unguarded, true.
+- Any image that a major gallery, award jury, or curator has recognised —
+  confirmation that strangers outside the photographer's circle felt it.
+  Score WF at the level that recognition implies.
+
+ANOMALY DETECTION TRIGGER — check before scoring WF and AQ for Street/Wildlife/Documentary:
+If something in the image is WRONG relative to normal behaviour for the subject:
+- An animal that should be moving is completely still (crow, pigeon, bird in traffic)
+- A person in a public place who is alone when they should not be
+- Something absent where it should be present, or present where it should not be
+That wrongness IS the story. It should lift WF and AQ — not lower them.
+A dying crow sitting still on a busy pavement while joggers run past:
+the stillness is the image. The city's indifference is the emotion. WF 7.5+.
 
 STEP 1 — TECHNIQUE DETECTION (for non-Creative genres):
 Before scoring any non-Creative image, examine for intentional motion blur:
@@ -259,10 +301,21 @@ DM (Decisive Moment):
 
   LANDSCAPE / NATURE (static scenes): DM requires a TRANSIENT element
   that resolved at its geometric or expressive peak — a moving subject,
-  a weather event at its apex, a light shaft at its narrowest. A static
-  scene with beautiful light but no transient element cannot score DM
-  above 7.0 regardless of how visually striking it is.
-  A child standing still under cherry blossoms = DM 5.0–6.0.
+  a weather event at its apex, a light shaft at its narrowest.
+  WHAT COUNTS AS A TRANSIENT ELEMENT IN LANDSCAPE:
+  - Storm light, burning sky, shaft of golden light that lasted minutes = TRANSIENT.
+    Score DM 7.0–8.0 for the precise moment that light peaked.
+  - Fog at exactly the right level to isolate a peak = TRANSIENT. DM 7.5+.
+  - Moon or sun at a specific geometric position = TRANSIENT. DM 7.5+.
+  - A moving subject (animal, person, boat, train) at geometric peak = TRANSIENT.
+  WHAT DOES NOT COUNT AS TRANSIENT (DM ceiling 6.5):
+  - "Good light on a mountain" — overcast, even, available all morning.
+  - A generic golden hour that lasted 45 minutes without a peak moment.
+  - A static subject with no weather, movement, or light event.
+  The Sergey Pesterev Landscape — dramatic storm light with golden shafts
+  and layered mountain silhouettes under a burning sky = TRANSIENT light
+  event, DM 7.0–7.5, not a static scene.
+  A child standing still under cherry blossoms = DM 5.0–6.0 (no transient).
   Spores dispersing at the exact moment = DM 8.0+.
 
   STREET / DOCUMENTARY: DM rewards layered variables peaking together —
@@ -288,7 +341,8 @@ DM (Decisive Moment):
   higher than reaction.
 
 WF (Wonder Factor):
-  The Unseen Truth. Four distinct Wonder signals — any one at high intensity scores 7.5–9.5:
+  The Unseen Truth. FOUR distinct Wonder signals — any one at high intensity scores 7.5–9.5.
+  PLUS two additional signals added from human calibration data (Session 218):
 
   EYE WONDER: The photographer found something in the ordinary that transforms it.
   A compositional find, an accidental frame, a juxtaposition that could not have been
@@ -335,6 +389,59 @@ WF (Wonder Factor):
   level emotional truth. Defiance as a physical gesture at its absolute peak.
   CRITICAL: Name the specific emotion. "Powerful" is not an emotion. "Lonely" is.
   "Defiant" is. "Tender" is. Score accordingly.
+
+  RECOGNITION WONDER (Session 218 — from human calibration data):
+  The image shows a human truth so universal and genuine that a stranger immediately
+  recognises it as true — not because the subject is rare, but because the SEEING is
+  rare. Most photographers would have walked past. This photographer stopped, saw, and
+  made the image that confirms what the world has always known but rarely photographs.
+  NAMED TRIGGERS — these are Recognition Wonder at 8.5–9.5:
+  - Pure, uncontained joy on a human face — real laughter, genuine delight, the smile
+    that cannot be faked. A child's open-mouthed laugh. An elderly person's uninhibited
+    joy. The upside-down face of pure happiness. Score WF 8.5–9.0.
+  - The beauty of what the world overlooks: weathered skin, broken teeth, aged hands,
+    wrinkled faces in full light — when the photographer saw the dignity rather than the
+    deficit and the image confirms it. A woman with dark wrinkled skin and broken teeth
+    smiling genuinely in front of blazing yellow sunflowers against a cloudy sky — that
+    is Recognition Wonder 9.0. The Louvre confirmed it. Score accordingly.
+  - A child in a state of pure wonder — reaching, discovering, encountering the world
+    for the first time with the body fully committed to the experience.
+  - Two people in a moment of genuine human connection that the camera captured without
+    them knowing — the unguarded instant of love, recognition, or shared joy.
+  Recognition Wonder is NOT about the subject being rare. It is about the photographer's
+  ACT OF SEEING being rare — stopping for someone the world walks past, finding the
+  light in a face most cameras would overlook, confirming a human truth.
+  CRITICAL: Do NOT suppress Recognition Wonder because the subject is "ordinary" or
+  "accessible." The accessibility IS the point. Anyone could have photographed this
+  woman. Almost no one would have. That gap is the wonder.
+
+  DIGNITY WONDER (Session 218 — from human calibration data):
+  A specific form of Recognition Wonder. When the image shows a subject that the world
+  systematically undervalues — the elderly, the poor, the weathered, the overlooked —
+  and the photographer's framing gives that subject full presence, dignity, and light,
+  the image corrects something. It says: this person is worth stopping for.
+  Dignity Wonder scores 8.0–9.0 when the dignity is complete — the subject is fully
+  seen, the light is generous, the framing is respectful and specific.
+  Dignity Wonder scores 9.0+ when the image was recognised by a third party (gallery,
+  award, publication, curator) as doing this work — confirmation that strangers outside
+  the photographer's circle felt the correction.
+  TITLE/DESCRIPTION CORROBORATION: When the photographer names an image after the
+  beauty they saw rather than what the world would call the subject — "Sunflower"
+  for a portrait of an elderly woman with broken teeth — that title is testimony.
+  The photographer saw the sunflower in her. Score that act of seeing as WF 9.0.
+
+  WF / AQ CORRELATION RULE (Session 218 — from 75-image audit data):
+  WF and AQ are measuring the same event from different angles — one asks what wonder
+  the image creates, the other asks what feeling it creates. They MUST correlate.
+  A gap of more than 2.0 points between WF and AQ on the same image is a scoring error.
+  MANDATORY FLOORS:
+  If AQ >= 8.5: WF floor is 8.0 minimum.
+  If AQ >= 8.0: WF floor is 7.5 minimum.
+  If AQ >= 7.5: WF floor is 7.0 minimum.
+  If WF >= 8.0: AQ floor is 7.5 minimum.
+  If WF is scored below these floors when AQ is high, rescore WF upward.
+  The converse is also true: WF cannot be 9.0 if AQ is 5.0.
+  They are the same truth measured twice. Score them as such.
 
   FOR WILDLIFE AND NATURE: Rare behaviour, scientific significance, and perspectives
   the viewer will never witness score highest. Add Emotional Wonder when the image
@@ -1539,9 +1646,10 @@ GENRE_CONTEXT = {
         "NAMED ANCHORS (these are guides, not hard minimums — apply judgment):\n"
         "  Small bird at peak wing-spread with symmetric feather geometry against a "
         "  painterly multi-colour bokeh background (swallow, bee-eater, sunbird) "
-        "  = VD 7.5–8.5. The aircraft-wing symmetry and bokeh colour field IS visually "
-        "  disruptive — but do not inflate VD to 8.5+ unless the bokeh is exceptional "
-        "  AND the symmetry is perfect. A good execution scores 7.5–8.0.\n"
+        "  = VD 7.0–7.5. The aircraft-wing symmetry and bokeh colour field is visually "
+        "  striking — but do not inflate VD above 7.5 unless the bokeh is truly exceptional "
+        "  AND the symmetry is perfect AND the colour field is extraordinary. "
+        "  A good execution scores 7.0–7.5, an exceptional execution scores 7.5–8.0.\n"
         "  Lion or big cat cubs with alert expression in golden natural light = VD 7.0–7.5.\n"
         "  Two juvenile animals simultaneously looking at camera = VD 7.0–7.5.\n"
         "NEVER give VD below 5.0 to a correctly exposed wildlife image with a clear "
