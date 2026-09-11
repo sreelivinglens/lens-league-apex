@@ -14413,10 +14413,13 @@ def admin_csi_page():
         _log_rows = db.session.execute(db.text("""
             SELECT l.id, l.image_id, l.similar_image_id, l.similarity_pct,
                    l.genre, l.threshold_hit, l.logged_at,
-                   i1.asset_name AS img_name, i2.asset_name AS sim_name
+                   i1.asset_name AS img_name, i2.asset_name AS sim_name,
+                   u1.username AS img_user, u2.username AS sim_user
             FROM csi_admin_log l
             LEFT JOIN images i1 ON i1.id = l.image_id
             LEFT JOIN images i2 ON i2.id = l.similar_image_id
+            LEFT JOIN users u1 ON u1.id = i1.user_id
+            LEFT JOIN users u2 ON u2.id = i2.user_id
             ORDER BY l.logged_at DESC LIMIT 100
         """)).fetchall()
     except Exception:
