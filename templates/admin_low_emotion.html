@@ -1,120 +1,150 @@
-{# SL-VERSION: loe-1.0 (Session 218, 2026-09-11 — Low WF/AQ audit: all Sonnet-scored member images where WF or AQ below threshold. Groups by genre, shows dimensions + narrative. Purpose: identify systematic emotional dimension failures.) #}
-{% extends "admin_base.html" %}
-{% block title %}Low Emotion Audit — Admin{% endblock %}
-{% block content %}
+{# SL-VERSION: loe-1.1 (Session 218, 2026-09-11 — Fixed: standalone HTML (no admin_base extends), subscription_plan column. Low WF/AQ audit for all Sonnet-scored member images.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Low Emotion Audit — SL Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <style>
-.loe-header{padding:24px 28px 16px;border-bottom:1px solid #E0DDD6}
-.loe-header h1{font-size:22px;font-weight:700;color:#1A2744;margin:0 0 4px}
-.loe-header p{color:#6B6B68;font-size:14px;margin:0}
-.loe-stats{display:flex;gap:16px;padding:16px 28px;border-bottom:1px solid #E0DDD6;flex-wrap:wrap}
-.loe-stat{background:#F7F5F0;border-radius:8px;padding:12px 18px;min-width:120px}
-.loe-stat .n{font-size:26px;font-weight:700;color:#1A2744}
-.loe-stat .l{font-size:12px;color:#6B6B68;margin-top:2px}
-.loe-stat.warn .n{color:#B45309}
-.loe-stat.danger .n{color:#B91C1C}
-.loe-controls{padding:12px 28px;border-bottom:1px solid #E0DDD6;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.loe-controls select,.loe-controls input{border:1px solid #D0CEC8;border-radius:6px;padding:6px 10px;font-size:13px;color:#1A2744}
-.loe-controls label{font-size:13px;color:#6B6B68;font-weight:500}
-.genre-pills{display:flex;gap:8px;flex-wrap:wrap;padding:12px 28px;border-bottom:1px solid #E0DDD6}
-.gpill{font-size:12px;padding:4px 10px;border-radius:20px;background:#F0EDE8;color:#4A4A46;cursor:pointer;text-decoration:none;border:1px solid transparent}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F5F0;color:#1A2744;min-height:100vh}
+.top-bar{background:#1A2744;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px}
+.top-bar a{color:#C8A84B;text-decoration:none;font-size:13px}
+.top-bar h1{font-size:16px;font-weight:700;color:#fff}
+.wrap{max-width:1400px;margin:0 auto;padding:24px}
+.card{background:#fff;border-radius:10px;border:1px solid #E0DDD6;margin-bottom:20px;overflow:hidden}
+.card-header{padding:18px 24px;border-bottom:1px solid #E0DDD6}
+.card-header h2{font-size:17px;font-weight:700;color:#1A2744}
+.card-header p{font-size:13px;color:#6B6B68;margin-top:4px}
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;padding:16px 24px;background:#F7F5F0;border-bottom:1px solid #E0DDD6}
+.stat{background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #E0DDD6;min-width:110px}
+.stat .n{font-size:24px;font-weight:700;color:#1A2744}
+.stat .l{font-size:11px;color:#6B6B68;margin-top:2px;text-transform:uppercase;letter-spacing:.3px}
+.stat.warn .n{color:#B45309}
+.stat.danger .n{color:#B91C1C}
+.controls{padding:12px 24px;border-bottom:1px solid #E0DDD6;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#FAFAF8}
+.controls label{font-size:13px;color:#6B6B68;font-weight:500}
+.controls select{border:1px solid #D0CEC8;border-radius:6px;padding:6px 10px;font-size:13px;color:#1A2744;background:#fff}
+.genre-pills{display:flex;gap:8px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid #E0DDD6}
+.gpill{font-size:12px;padding:4px 10px;border-radius:20px;background:#F0EDE8;color:#4A4A46;text-decoration:none;border:1px solid transparent;white-space:nowrap}
 .gpill:hover,.gpill.active{background:#1A2744;color:#fff}
-.loe-table{width:100%;border-collapse:collapse}
-.loe-table th{font-size:11px;font-weight:600;color:#8A8A86;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:2px solid #E0DDD6;white-space:nowrap}
-.loe-table th.r{text-align:right}
-.loe-table td{padding:10px 12px;border-bottom:1px solid #F0EDE8;vertical-align:top;font-size:13px}
-.loe-table tr:hover td{background:#FAFAF8}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;color:#8A8A86;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:2px solid #E0DDD6;white-space:nowrap;background:#FAFAF8}
+th.r{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid #F0EDE8;vertical-align:top;font-size:13px}
+tr:hover td{background:#FAFAF8}
 .dim-low{color:#B91C1C;font-weight:700}
 .dim-mid{color:#B45309;font-weight:600}
-.dim-ok{color:#1A2744}
-.narrative-text{font-size:12px;color:#6B6B68;max-width:320px;line-height:1.5;white-space:pre-wrap}
-.hard-truth{font-size:12px;color:#1A2744;font-style:italic;margin-bottom:4px;max-width:320px}
-.tier-badge{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:#F0EDE8;color:#4A4A46}
-.genre-tag{font-size:11px;color:#8A8A86}
-.score-n{font-size:15px;font-weight:700;color:#1A2744}
-.wf-col{background:#FFF8F0}
-.aq-col{background:#FFF0F0}
+.dim-ok{color:#2E7D32;font-weight:500}
+.wf-bg{background:#FFF8F0}
+.aq-bg{background:#FFF0F0}
+.score-n{font-size:15px;font-weight:700}
+.tier-b{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:#F0EDE8;color:#4A4A46;display:inline-block;margin-top:2px}
+.ht{font-size:12px;color:#1A2744;font-style:italic;margin-bottom:4px;max-width:300px;line-height:1.4}
+.narr{font-size:11px;color:#6B6B68;max-width:300px;line-height:1.5}
+.empty{text-align:center;color:#8A8A86;padding:48px;font-size:14px}
 </style>
-
-<div class="loe-header">
+</head>
+<body>
+<div class="top-bar">
+  <a href="/admin">← Admin</a>
   <h1>⚠ Low Emotion Audit — WF / AQ below {{ threshold }}</h1>
-  <p>Sonnet-scored member images where Wonder (WF) or Affective Quotient (AQ) scored below {{ threshold }}. These are the images where the engine may have missed the emotional signal. Excludes calibration and Haiku images.</p>
+  <span style="margin-left:auto;font-size:12px;color:#8A8A86">{{ total }} images · Sonnet only · excl. calibration</span>
 </div>
 
-<div class="loe-stats">
-  <div class="loe-stat"><div class="n">{{ total }}</div><div class="l">Total images</div></div>
-  <div class="loe-stat warn"><div class="n">{{ only_wf }}</div><div class="l">WF only low</div></div>
-  <div class="loe-stat warn"><div class="n">{{ only_aq }}</div><div class="l">AQ only low</div></div>
-  <div class="loe-stat danger"><div class="n">{{ both_below }}</div><div class="l">Both WF + AQ low</div></div>
-  <div class="loe-stat danger"><div class="n">{{ wf_below_6 }}</div><div class="l">WF below 6.0</div></div>
-  <div class="loe-stat danger"><div class="n">{{ aq_below_6 }}</div><div class="l">AQ below 6.0</div></div>
-</div>
+<div class="wrap">
+  <div class="card">
+    <div class="card-header">
+      <h2>Sonnet images where Wonder (WF) or Affective Quotient (AQ) &lt; {{ threshold }}</h2>
+      <p>These are images where the engine may have missed the emotional signal. Review the narrative the engine wrote vs what it scored. Human survey confirms: WF and AQ are what members care about most.</p>
+    </div>
 
-<div class="loe-controls">
-  <label>Threshold:
-    <select onchange="window.location='/admin/audit/low-emotion?threshold='+this.value+'&genre={{ genre_filter }}&sort={{ sort_by }}'">
-      <option value="6.0" {% if threshold==6.0 %}selected{% endif %}>Below 6.0</option>
-      <option value="6.5" {% if threshold==6.5 %}selected{% endif %}>Below 6.5</option>
-      <option value="7.0" {% if threshold==7.0 %}selected{% endif %}>Below 7.0</option>
-      <option value="7.5" {% if threshold==7.5 %}selected{% endif %}>Below 7.5</option>
-    </select>
-  </label>
-  <label>Sort by:
-    <select onchange="window.location='/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre_filter }}&sort='+this.value">
-      <option value="wf" {% if sort_by=='wf' %}selected{% endif %}>WF (lowest first)</option>
-      <option value="aq" {% if sort_by=='aq' %}selected{% endif %}>AQ (lowest first)</option>
-      <option value="score" {% if sort_by=='score' %}selected{% endif %}>Score (lowest first)</option>
-      <option value="date" {% if sort_by=='date' %}selected{% endif %}>Date (newest first)</option>
-    </select>
-  </label>
-</div>
+    <div class="stats-row">
+      <div class="stat"><div class="n">{{ total }}</div><div class="l">Total images</div></div>
+      <div class="stat warn"><div class="n">{{ only_wf }}</div><div class="l">WF only low</div></div>
+      <div class="stat warn"><div class="n">{{ only_aq }}</div><div class="l">AQ only low</div></div>
+      <div class="stat danger"><div class="n">{{ both_below }}</div><div class="l">Both WF + AQ low</div></div>
+      <div class="stat danger"><div class="n">{{ wf_below_6 }}</div><div class="l">WF below 6.0</div></div>
+      <div class="stat danger"><div class="n">{{ aq_below_6 }}</div><div class="l">AQ below 6.0</div></div>
+    </div>
 
-<div class="genre-pills">
-  <a href="/admin/audit/low-emotion?threshold={{ threshold }}&sort={{ sort_by }}" class="gpill {% if not genre_filter %}active{% endif %}">All genres</a>
-  {% for genre, count in genre_counts %}
-  <a href="/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre }}&sort={{ sort_by }}" class="gpill {% if genre_filter==genre %}active{% endif %}">{{ genre }} ({{ count }})</a>
-  {% endfor %}
-</div>
+    <div class="controls">
+      <label>Threshold:
+        <select onchange="window.location='/admin/audit/low-emotion?threshold='+this.value+'&genre={{ genre_filter }}&sort={{ sort_by }}'">
+          <option value="6.0" {% if threshold==6.0 %}selected{% endif %}>Below 6.0</option>
+          <option value="6.5" {% if threshold==6.5 %}selected{% endif %}>Below 6.5</option>
+          <option value="7.0" {% if threshold==7.0 %}selected{% endif %}>Below 7.0</option>
+          <option value="7.5" {% if threshold==7.5 %}selected{% endif %}>Below 7.5</option>
+        </select>
+      </label>
+      <label>Sort by:
+        <select onchange="window.location='/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre_filter }}&sort='+this.value">
+          <option value="wf"    {% if sort_by=='wf' %}selected{% endif %}>WF (lowest first)</option>
+          <option value="aq"    {% if sort_by=='aq' %}selected{% endif %}>AQ (lowest first)</option>
+          <option value="score" {% if sort_by=='score' %}selected{% endif %}>Score (lowest first)</option>
+          <option value="date"  {% if sort_by=='date' %}selected{% endif %}>Date (newest first)</option>
+        </select>
+      </label>
+    </div>
 
-<div style="overflow-x:auto;padding:0 0 40px">
-<table class="loe-table">
-  <thead>
-    <tr>
-      <th>Image / Member</th>
-      <th>Genre</th>
-      <th class="r">Score</th>
-      <th class="r">DOD</th>
-      <th class="r">VD</th>
-      <th class="r">DM</th>
-      <th class="r wf-col">WF ⚠</th>
-      <th class="r aq-col">AQ ⚠</th>
-      <th>Engine wrote…</th>
-      <th>Scored</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in results %}
-    <tr>
-      <td>
-        <a href="/admin/image/{{ r.id }}" style="color:#1A2744;font-weight:600;font-size:13px;text-decoration:none" target="_blank">{{ r.filename[:40] }}{% if r.filename|length > 40 %}…{% endif %}</a><br>
-        <span style="font-size:11px;color:#8A8A86">{{ r.full_name }} · {{ r.plan }}</span>
-      </td>
-      <td><span class="genre-tag">{{ r.genre }}</span></td>
-      <td class="r"><span class="score-n">{{ '%.2f'|format(r.score) }}</span><br><span class="tier-badge">{{ r.tier }}</span></td>
-      <td class="r dim-ok">{{ r.dod }}</td>
-      <td class="r dim-ok">{{ r.vd }}</td>
-      <td class="r dim-ok">{{ r.dm }}</td>
-      <td class="r wf-col {% if r.wf < 6.0 %}dim-low{% elif r.wf < 7.0 %}dim-mid{% else %}dim-ok{% endif %}">{{ r.wf }}</td>
-      <td class="r aq-col {% if r.aq < 6.0 %}dim-low{% elif r.aq < 7.0 %}dim-mid{% else %}dim-ok{% endif %}">{{ r.aq }}</td>
-      <td>
-        {% if r.hard_truth %}<div class="hard-truth">"{{ r.hard_truth[:120] }}{% if r.hard_truth|length > 120 %}…{% endif %}"</div>{% endif %}
-        {% if r.narrative %}<div class="narrative-text">{{ r.narrative[:200] }}{% if r.narrative|length > 200 %}…{% endif %}</div>{% endif %}
-      </td>
-      <td style="white-space:nowrap;color:#8A8A86;font-size:11px">{{ r.scored_at.strftime('%-d %b %Y') if r.scored_at else '—' }}</td>
-    </tr>
-    {% else %}
-    <tr><td colspan="10" style="text-align:center;color:#8A8A86;padding:40px">No images found below threshold {{ threshold }}{% if genre_filter %} in {{ genre_filter }}{% endif %}.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <div class="genre-pills">
+      <a href="/admin/audit/low-emotion?threshold={{ threshold }}&sort={{ sort_by }}" class="gpill {% if not genre_filter %}active{% endif %}">All genres ({{ total }})</a>
+      {% for genre, count in genre_counts %}
+      <a href="/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre }}&sort={{ sort_by }}" class="gpill {% if genre_filter==genre %}active{% endif %}">{{ genre }} ({{ count }})</a>
+      {% endfor %}
+    </div>
+
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Image / Member</th>
+          <th>Genre</th>
+          <th class="r">Score</th>
+          <th class="r">DOD</th>
+          <th class="r">VD</th>
+          <th class="r">DM</th>
+          <th class="r wf-bg">WF</th>
+          <th class="r aq-bg">AQ</th>
+          <th>What the engine wrote</th>
+          <th>Scored</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td>
+            <a href="/admin/image/{{ r.id }}" style="color:#1A2744;font-weight:600;text-decoration:none" target="_blank">
+              {{ r.filename[:38] }}{% if r.filename|length > 38 %}…{% endif %}
+            </a><br>
+            <span style="font-size:11px;color:#8A8A86">{{ r.full_name }} · {{ r.plan }}</span>
+          </td>
+          <td style="color:#6B6B68;font-size:12px">{{ r.genre }}</td>
+          <td class="r">
+            <div class="score-n">{{ '%.2f'|format(r.score) }}</div>
+            <div class="tier-b">{{ r.tier }}</div>
+          </td>
+          <td class="r dim-ok">{{ r.dod }}</td>
+          <td class="r dim-ok">{{ r.vd }}</td>
+          <td class="r dim-ok">{{ r.dm }}</td>
+          <td class="r wf-bg {% if r.wf < 6.0 %}dim-low{% elif r.wf < 7.0 %}dim-mid{% else %}dim-ok{% endif %}">{{ r.wf }}</td>
+          <td class="r aq-bg {% if r.aq < 6.0 %}dim-low{% elif r.aq < 7.0 %}dim-mid{% else %}dim-ok{% endif %}">{{ r.aq }}</td>
+          <td>
+            {% if r.hard_truth %}<div class="ht">"{{ r.hard_truth[:120] }}{% if r.hard_truth|length > 120 %}…{% endif %}"</div>{% endif %}
+            {% if r.narrative %}<div class="narr">{{ r.narrative[:180] }}{% if r.narrative|length > 180 %}…{% endif %}</div>{% endif %}
+          </td>
+          <td style="white-space:nowrap;color:#8A8A86;font-size:11px">
+            {{ r.scored_at.strftime('%-d %b %Y') if r.scored_at else '—' }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10" class="empty">No images found below WF/AQ {{ threshold }}{% if genre_filter %} in {{ genre_filter }}{% endif %}. The engine is performing well on emotional dimensions at this threshold.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>
