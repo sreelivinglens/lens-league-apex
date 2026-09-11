@@ -18273,6 +18273,7 @@ def admin_audit_low_emotion():
     )
 
 
+@app.route('/admin/calibration')
 @login_required
 @admin_required
 def admin_calibration():
