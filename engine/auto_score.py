@@ -4808,48 +4808,163 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
             lines.append('  Coaching note belongs in mentor_technical only.')
             lines.append('')
 
-            # Genre-specific ceiling notes
-            if _effective_genre in ('Wildlife', 'Nature'):
-                lines.append('WILDLIFE / NATURE — MOBILE NOTE:')
-                lines.append('Situational DoD scores full — being in the habitat is the')
-                lines.append('same physical achievement regardless of instrument.')
-                lines.append('Technical DoD: no optical telephoto means proximity IS the')
-                lines.append('technical achievement. A sharp bird in flight on a phone')
-                lines.append('required extreme proximity — score Technical DoD higher.')
-                lines.append('Note the constraint as coaching, not penalty:')
-                lines.append('"Without a telephoto, proximity was the discipline —')
-                lines.append('that closeness is itself a skill worth building."')
+            # ── Mobile genre capability map (Session 219) ────────────────────
+            # Three tiers: FULL (mobile is a legitimate or superior instrument),
+            # PARTIAL (capable but limited vs camera — note what changes),
+            # CONSTRAINED (fundamental hardware limits — ceiling applies to DOD).
+            # The map governs DOD ceiling, advice scope, and coaching language.
+            lines.append('MOBILE GENRE CAPABILITY — MANDATORY (read before scoring DOD):')
+            lines.append('')
+
+            _MOBILE_CAPABILITY = {
+                # FULL capability genres — phone is a legitimate or often superior tool
+                'Street':       'FULL',
+                'Documentary':  'FULL',
+                'Family':       'FULL',
+                'Wedding':      'FULL',
+                'People':       'FULL',     # wide + portrait mode covers most people work
+                'Landscape':    'FULL',     # wide and ultrawide ARE the landscape lenses
+                'Nature':       'FULL',     # plants, fungi, ecosystems at close range
+                'Macro':        'FULL',     # close focus at 30–50cm is a phone strength
+                'Architecture': 'FULL',     # ultrawide is the architecture lens
+                # PARTIAL capability genres — viable but with real hardware limits
+                'Sports':       'PARTIAL',  # burst mode exists; telephoto limited; tracking slower
+                'Creative':     'PARTIAL',  # ICM/blur/minimalist fine; bokeh limited to portrait mode
+                'Fashion':      'PARTIAL',  # wide editorial fine; any soft-focus/compression work limited
+                'Maternity':    'PARTIAL',  # portrait mode silhouettes valid; compression needs camera
+                # CONSTRAINED genres — fundamental hardware limits define the ceiling
+                'Wildlife':     'CONSTRAINED',  # no telephoto reach; proximity ceiling hard
+                'Astrophotography': 'CONSTRAINED',  # no manual multi-second, small sensor, no tracking mount
+                'Drone':        'CONSTRAINED',  # excluded from mobile track entirely — camera scoring always
+            }
+
+            _cap = _MOBILE_CAPABILITY.get(_effective_genre, 'FULL')
+
+            if _cap == 'FULL':
+                lines.append(f'Genre: {_effective_genre} — FULL MOBILE CAPABILITY.')
+                if _effective_genre in ('Street', 'Documentary'):
+                    lines.append('The phone is often SUPERIOR to a camera in this genre:')
+                    lines.append('  — Socially invisible: subjects behave naturally; no lens to alarm them.')
+                    lines.append('  — No viewfinder ritual: faster reaction, less telegraphed intent.')
+                    lines.append('  — Admitted where cameras are barred: press events, private spaces.')
+                    lines.append('The proximity required to frame on a wide phone lens is itself the')
+                    lines.append('physical and social achievement. Name it explicitly in DoD reasoning.')
+                    lines.append('Mobile over-editing qualifier: apply penalty only when processing')
+                    lines.append('clearly works against the image, not merely because it is visible.')
+                elif _effective_genre in ('Family', 'Wedding'):
+                    lines.append('Phone is the natural instrument for family and wedding candids.')
+                    lines.append('Wide angle captures context; portrait mode handles close moments.')
+                    lines.append('Score DoD on the candidness of the catch, not the equipment.')
+                    lines.append('DM carries this genre — the unrepeatable emotional instant is')
+                    lines.append('equally achievable on a phone as on a camera.')
+                elif _effective_genre == 'Landscape':
+                    lines.append('Ultrawide (0.5x) is a legitimate landscape lens — the wide-angle')
+                    lines.append('perspective that defines modern landscape photography.')
+                    lines.append('The phone cannot do long telephoto compression or wide-aperture')
+                    lines.append('foreground blur, but those are optional tools, not landscape requirements.')
+                    lines.append('Score DoD on compositional commitment, access conditions, and light.')
+                    lines.append('Long exposure via Night mode on iPhone/Android is valid.')
+                elif _effective_genre in ('Macro', 'Nature'):
+                    lines.append('Close focus at 30–50cm is a native phone strength.')
+                    lines.append('A sharp macro on a phone (no tripod, no macro lens) requires')
+                    lines.append('extreme hand-steadiness, manual focus discipline, and a cooperative')
+                    lines.append('subject. Score Technical DoD high when execution is clean.')
+                elif _effective_genre == 'People':
+                    lines.append('Wide (1x) and portrait mode cover the full range of people work.')
+                    lines.append('Portrait mode (computational bokeh) on iPhone Pro/Android Ultra')
+                    lines.append('is a valid creative tool — clean edge separation with no fringing')
+                    lines.append('= Technical DoD 6.5–7.5. Score it as deliberate craft, not a cheat.')
+                    lines.append('Do NOT penalise absence of natural optical bokeh — that requires')
+                    lines.append('a dedicated camera. Portrait mode IS the phone equivalent.')
+                    lines.append('Score DoD: environmental stranger portrait on phone = 6.5–7.5')
+                    lines.append('(social proximity + wide lens = real difficulty).')
+                elif _effective_genre == 'Architecture':
+                    lines.append('Ultrawide (0.5x) is the correct architecture lens.')
+                    lines.append('Mobile architecture is fully capable — score DoD on access,')
+                    lines.append('light conditions, and geometric precision of the composition.')
                 lines.append('')
-            elif _effective_genre in ('Street', 'Documentary'):
-                lines.append('STREET / DOCUMENTARY — MOBILE NOTE:')
-                lines.append('Name the physical and social difficulty explicitly in DoD reasoning.')
-                lines.append('A phone in a candid street situation is visible to every subject.')
-                lines.append('There is no viewfinder to hide behind. No half-press focus ritual.')
-                lines.append('Getting close enough to make a frame — with a phone — in a real')
-                lines.append('street or documentary situation requires nerve, timing, and social')
-                lines.append('awareness that a camera photographer with a telephoto does not need.')
-                lines.append('When the image shows proximity, candidness, or access to a situation')
-                lines.append('that would have been harder with a camera — name it in DoD reasoning:')
-                lines.append('"Shot on a phone — no telephoto distance to hide behind, no viewfinder')
-                lines.append('to conceal intent. The proximity required to make this frame is itself')
-                lines.append('the physical achievement."')
-                lines.append('The phone\'s social invisibility in some contexts IS the access.')
-                lines.append('A phone documentary frame inside an event that would have barred a camera')
-                lines.append('scores Access Wonder at the top of its range.')
-                lines.append('Score Disruption and DM at the elevated mobile weights.')
-                lines.append('MOBILE OVER-EDITING QUALIFIER: Mobile photographers work in Lightroom')
-                lines.append('Mobile, Snapseed, VSCO — tools with different control granularity than')
-                lines.append('desktop RAW processing. What reads as heavy processing on a mobile image')
-                lines.append('may be the only way to recover what the phone sensor could not hold.')
-                lines.append('Apply the over-editing penalty only when the processing is clearly working')
-                lines.append('against the image — not merely because the processing is visible.')
+
+            elif _cap == 'PARTIAL':
+                lines.append(f'Genre: {_effective_genre} — PARTIAL MOBILE CAPABILITY.')
+                lines.append('This genre is achievable on a phone but specific limitations apply.')
                 lines.append('')
-            elif _effective_genre == 'Macro':
-                lines.append('MACRO — MOBILE NOTE:')
-                lines.append('A sharp macro on a phone requires extreme proximity, manual')
-                lines.append('focus, and a cooperative subject. This is harder than macro')
-                lines.append('on a dedicated lens with a tripod. Score Technical DoD high')
-                lines.append('when execution is clean.')
+                if _effective_genre == 'Sports':
+                    lines.append('What works: burst mode captures action. Wide and 2x/3x focal')
+                    lines.append('lengths handle proximity sports (skateboard, basketball court).')
+                    lines.append('What is limited: optical telephoto reach (5x max on iPhone Pro)')
+                    lines.append('means distant subjects (field sports, racetracks) are out of range.')
+                    lines.append('AF tracking is slower than dedicated sports cameras.')
+                    lines.append('DOD CEILING (distant subject, digital zoom used): Technical DoD 6.5 max.')
+                    lines.append('DOD (proximity sport, optical zoom only): score fully — no ceiling.')
+                    lines.append('Inspect: if subject is small in frame and background is pixelated,')
+                    lines.append('digital zoom was used — apply Technical DoD ceiling.')
+                elif _effective_genre == 'Creative':
+                    lines.append('ICM, motion blur, minimalism, long exposure, abstract — fully capable.')
+                    lines.append('Portrait mode bokeh (computational) — valid for close subjects only.')
+                    lines.append('What is NOT available: natural optical bokeh from wide aperture.')
+                    lines.append('Shallow-DOF rendering of a subject 3m away = camera only.')
+                    lines.append('Never suggest or reference wide-aperture bokeh for mobile Creative.')
+                elif _effective_genre == 'Fashion':
+                    lines.append('Wide editorial fashion: fully capable. Environmental, reportage-style.')
+                    lines.append('Portrait mode on close subjects: valid computational depth.')
+                    lines.append('What is NOT available: telephoto compression, wide-aperture')
+                    lines.append('background blur on subjects beyond 1.5m, studio strobe sync.')
+                    lines.append('Score DoD on production access and location difficulty, not equipment.')
+                elif _effective_genre == 'Maternity':
+                    lines.append('Silhouette work: fully capable — backlit window or rim-lit subject,')
+                    lines.append('wide or ultrawide captures the shape cleanly.')
+                    lines.append('Portrait mode close shots: valid computational depth for intimacy.')
+                    lines.append('What is NOT available: natural optical background compression.')
+                    lines.append('Score DoD on intimacy, access (hospital, home), and light quality.')
+                lines.append('')
+
+            elif _cap == 'CONSTRAINED':
+                lines.append(f'Genre: {_effective_genre} — CONSTRAINED MOBILE CAPABILITY.')
+                lines.append('This genre has fundamental hardware limits on a phone.')
+                lines.append('Score honestly — do NOT artificially inflate DOD to compensate.')
+                lines.append('')
+                if _effective_genre == 'Wildlife':
+                    lines.append('HARD CONSTRAINT — NO TELEPHOTO REACH:')
+                    lines.append('iPhone Pro: 0.5x / 1x / 5x optical only. No 300mm, 500mm, 600mm.')
+                    lines.append('5x on iPhone Pro = approx 120mm full-frame equivalent.')
+                    lines.append('Beyond 5x = digital zoom = pixelated = Technical DoD penalty.')
+                    lines.append('')
+                    lines.append('What this means for scoring:')
+                    lines.append('  — Situational DoD scores FULL: being in the habitat is the')
+                    lines.append('    same physical achievement regardless of instrument.')
+                    lines.append('  — Technical DoD ceiling at 6.5 for any image requiring')
+                    lines.append('    telephoto reach that the phone cannot optically deliver.')
+                    lines.append('    If subject fills frame at 5x with no pixelation: score freely.')
+                    lines.append('    If subject is small and background is soft from digital zoom:')
+                    lines.append('    that is artificial — Technical DoD 5.0–5.5.')
+                    lines.append('  — Proximity as discipline: a sharp large mammal or bird')
+                    lines.append('    requiring the photographer to be within 2m = Technical')
+                    lines.append('    DoD 7.0–8.0. The closeness IS the achievement.')
+                    lines.append('  — Bokeh from Wildlife: no optical bokeh at wildlife distances.')
+                    lines.append('    Do NOT penalise the absence of background separation.')
+                    lines.append('    Do NOT suggest a longer lens — the phone has none.')
+                    lines.append('')
+                    lines.append('Coaching language: "Without a telephoto, proximity was the')
+                    lines.append('discipline — that closeness is a skill worth building."')
+                    lines.append('Never say: "use a longer lens", "use a 300mm", "telephoto would help".')
+                elif _effective_genre == 'Astrophotography':
+                    lines.append('HARD CONSTRAINT — SENSOR SIZE AND MANUAL CONTROL:')
+                    lines.append('Night mode gives 3–10 second automatic exposures. Not equivalent')
+                    lines.append('to 25–30 second manual exposures on a full-frame sensor.')
+                    lines.append('No tracking mount support. No RAW astrophotography stacking')
+                    lines.append('pipeline equivalent on most phones.')
+                    lines.append('')
+                    lines.append('What is achievable on a phone:')
+                    lines.append('  — Milky Way silhouette with Night mode: achievable but noisy.')
+                    lines.append('  — Star trails via time-lapse stacking apps: valid technique.')
+                    lines.append('  — Moon photography at 5x: genuinely achievable (iPhone Pro).')
+                    lines.append('  — Aurora with Night mode: achievable in strong displays.')
+                    lines.append('')
+                    lines.append('Technical DoD ceiling: 6.5 for Night mode Milky Way.')
+                    lines.append('Technical DoD 7.0–7.5 only for time-lapse stacking or aurora.')
+                    lines.append('Situational DoD scores full — dark site access is the same effort.')
+                    lines.append('Do NOT suggest: tracking mounts, long manual exposures,')
+                    lines.append('dedicated astro cameras, or RAW astrophotography stacking.')
                 lines.append('')
 
             lines.append('═' * 60)
