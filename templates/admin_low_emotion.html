@@ -1,4 +1,4 @@
-{# SL-VERSION: loe-1.2 (Session 218, 2026-09-11 — Added: rescore button per row (POST /admin/image/<id>/force-rescore), checkbox bulk select, JS rescore flow with score update in place. Fixed: standalone HTML, subscription_plan column.) #}
+{# SL-VERSION: loe-1.3 (Session 218, 2026-09-11 — Progress bar for bulk rescore, rescored rows float to top with amber highlight, rescore timestamp shown, before/after WF/AQ displayed.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .wrap{max-width:1500px;margin:0 auto;padding:24px}
 .card{background:#fff;border-radius:10px;border:1px solid #E0DDD6;margin-bottom:20px;overflow:hidden}
 .card-header{padding:18px 24px;border-bottom:1px solid #E0DDD6}
-.card-header h2{font-size:17px;font-weight:700;color:#1A2744}
+.card-header h2{font-size:17px;font-weight:700}
 .card-header p{font-size:13px;color:#6B6B68;margin-top:4px}
 .stats-row{display:flex;gap:12px;flex-wrap:wrap;padding:16px 24px;background:#F7F5F0;border-bottom:1px solid #E0DDD6}
 .stat{background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #E0DDD6;min-width:110px}
@@ -30,16 +30,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bulk-bar.show{display:flex}
 .bulk-btn{background:#C8A84B;color:#1A2744;border:none;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
 .bulk-btn:hover{background:#B8980B}
+.bulk-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Progress bar */
+#progress-wrap{display:none;padding:12px 24px;background:#FFFBEB;border-bottom:2px solid #FDE68A}
+#progress-top{display:flex;align-items:center;gap:12px;margin-bottom:8px;font-size:13px}
+#progress-eng{font-weight:700;color:#92400E;min-width:160px}
+#progress-lbl{color:#78350F;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#progress-count{color:#92400E;font-weight:700;white-space:nowrap}
+#progress-bar-bg{background:#FEF3C7;border-radius:4px;height:8px;overflow:hidden}
+#progress-bar{height:100%;background:#D97706;border-radius:4px;width:0%;transition:width .4s ease}
+
+/* Rescored section */
+#rescored-section{display:none;border-bottom:2px solid #6EE7B7;background:#F0FDF4}
+#rescored-header{padding:10px 24px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#065F46}
+
 .genre-pills{display:flex;gap:8px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid #E0DDD6}
 .gpill{font-size:12px;padding:4px 10px;border-radius:20px;background:#F0EDE8;color:#4A4A46;text-decoration:none;border:1px solid transparent;white-space:nowrap}
 .gpill:hover,.gpill.active{background:#1A2744;color:#fff}
+
 table{width:100%;border-collapse:collapse}
 th{font-size:11px;font-weight:600;color:#8A8A86;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:2px solid #E0DDD6;white-space:nowrap;background:#FAFAF8}
 th.r{text-align:right}
 td{padding:10px 12px;border-bottom:1px solid #F0EDE8;vertical-align:top;font-size:13px}
 tr:hover td{background:#FAFAF8}
-tr.rescoring td{opacity:.5;pointer-events:none}
-tr.rescored td{background:#F0FDF4;transition:background 1.5s}
+tr.rescoring td{opacity:.45;pointer-events:none;background:#FFFBEB}
+tr.rescored-row td{background:#F0FDF4;animation:fadeGreen 2s forwards}
+@keyframes fadeGreen{0%{background:#D1FAE5}100%{background:#F0FDF4}}
+
 .dim-low{color:#B91C1C;font-weight:700}
 .dim-mid{color:#B45309;font-weight:600}
 .dim-ok{color:#2E7D32;font-weight:500}
@@ -47,6 +65,8 @@ tr.rescored td{background:#F0FDF4;transition:background 1.5s}
 .aq-bg{background:#FFF0F0}
 .score-n{font-size:15px;font-weight:700}
 .tier-b{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:#F0EDE8;color:#4A4A46;display:inline-block;margin-top:2px}
+.delta-up{color:#2E7D32;font-size:11px;font-weight:700}
+.delta-dn{color:#B91C1C;font-size:11px;font-weight:700}
 .ht{font-size:12px;color:#1A2744;font-style:italic;margin-bottom:4px;max-width:300px;line-height:1.4}
 .narr{font-size:11px;color:#6B6B68;max-width:300px;line-height:1.5}
 .empty{text-align:center;color:#8A8A86;padding:48px;font-size:14px}
@@ -54,10 +74,9 @@ tr.rescored td{background:#F0FDF4;transition:background 1.5s}
 .rscore-btn:hover{border-color:#1A2744;color:#1A2744;background:#F0EDE8}
 .rscore-btn:disabled{opacity:.4;cursor:not-allowed}
 .cb{width:15px;height:15px;cursor:pointer}
-.flash{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;animation:fadeIn .2s}
+.flash{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .flash.ok{background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
 .flash.err{background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -68,115 +87,142 @@ tr.rescored td{background:#F0FDF4;transition:background 1.5s}
 </div>
 
 <div class="wrap">
-  <div class="card">
-    <div class="card-header">
-      <h2>Sonnet images where Wonder (WF) or Affective Quotient (AQ) &lt; {{ threshold }}</h2>
-      <p>These are images where the engine missed the emotional signal. Click ↺ to rescore any image with the updated engine. Scores update in place — no page reload.</p>
-    </div>
+<div class="card">
+  <div class="card-header">
+    <h2>Images where Wonder (WF) or Affective Quotient (AQ) &lt; {{ threshold }}</h2>
+    <p>Click ↺ to rescore any image with the updated engine. Rescored images float to the top with before/after comparison. Use checkboxes + Rescore selected for batch.</p>
+  </div>
 
-    <div class="stats-row">
-      <div class="stat"><div class="n">{{ total }}</div><div class="l">Total images</div></div>
-      <div class="stat warn"><div class="n">{{ only_wf }}</div><div class="l">WF only low</div></div>
-      <div class="stat warn"><div class="n">{{ only_aq }}</div><div class="l">AQ only low</div></div>
-      <div class="stat danger"><div class="n">{{ both_below }}</div><div class="l">Both WF + AQ low</div></div>
-      <div class="stat danger"><div class="n">{{ wf_below_6 }}</div><div class="l">WF below 6.0</div></div>
-      <div class="stat danger"><div class="n">{{ aq_below_6 }}</div><div class="l">AQ below 6.0</div></div>
-    </div>
+  <div class="stats-row">
+    <div class="stat"><div class="n">{{ total }}</div><div class="l">Total images</div></div>
+    <div class="stat warn"><div class="n">{{ only_wf }}</div><div class="l">WF only low</div></div>
+    <div class="stat warn"><div class="n">{{ only_aq }}</div><div class="l">AQ only low</div></div>
+    <div class="stat danger"><div class="n">{{ both_below }}</div><div class="l">Both WF+AQ low</div></div>
+    <div class="stat danger"><div class="n">{{ wf_below_6 }}</div><div class="l">WF below 6.0</div></div>
+    <div class="stat danger"><div class="n">{{ aq_below_6 }}</div><div class="l">AQ below 6.0</div></div>
+  </div>
 
-    <div class="controls">
-      <label>Threshold:
-        <select onchange="window.location='/admin/audit/low-emotion?threshold='+this.value+'&genre={{ genre_filter }}&sort={{ sort_by }}'">
-          <option value="6.0" {% if threshold==6.0 %}selected{% endif %}>Below 6.0</option>
-          <option value="6.5" {% if threshold==6.5 %}selected{% endif %}>Below 6.5</option>
-          <option value="7.0" {% if threshold==7.0 %}selected{% endif %}>Below 7.0</option>
-          <option value="7.5" {% if threshold==7.5 %}selected{% endif %}>Below 7.5</option>
-        </select>
-      </label>
-      <label>Sort by:
-        <select onchange="window.location='/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre_filter }}&sort='+this.value">
-          <option value="wf"    {% if sort_by=='wf' %}selected{% endif %}>WF (lowest first)</option>
-          <option value="aq"    {% if sort_by=='aq' %}selected{% endif %}>AQ (lowest first)</option>
-          <option value="score" {% if sort_by=='score' %}selected{% endif %}>Score (lowest first)</option>
-          <option value="date"  {% if sort_by=='date' %}selected{% endif %}>Date (newest first)</option>
-        </select>
-      </label>
-      <label style="margin-left:auto">
-        <input type="checkbox" id="sel-all" onchange="toggleAll(this)" class="cb"> Select all
-      </label>
+  <div class="controls">
+    <label>Threshold:
+      <select onchange="window.location='/admin/audit/low-emotion?threshold='+this.value+'&genre={{ genre_filter }}&sort={{ sort_by }}'">
+        <option value="6.0" {% if threshold==6.0 %}selected{% endif %}>Below 6.0</option>
+        <option value="6.5" {% if threshold==6.5 %}selected{% endif %}>Below 6.5</option>
+        <option value="7.0" {% if threshold==7.0 %}selected{% endif %}>Below 7.0</option>
+        <option value="7.5" {% if threshold==7.5 %}selected{% endif %}>Below 7.5</option>
+      </select>
+    </label>
+    <label>Sort:
+      <select onchange="window.location='/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre_filter }}&sort='+this.value">
+        <option value="wf"    {% if sort_by=='wf' %}selected{% endif %}>WF lowest first</option>
+        <option value="aq"    {% if sort_by=='aq' %}selected{% endif %}>AQ lowest first</option>
+        <option value="score" {% if sort_by=='score' %}selected{% endif %}>Score lowest first</option>
+        <option value="date"  {% if sort_by=='date' %}selected{% endif %}>Date newest first</option>
+      </select>
+    </label>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="sel-all" onchange="toggleAll(this)" class="cb">
+      <label for="sel-all" style="font-size:13px;color:#6B6B68;cursor:pointer">Select all</label>
     </div>
+  </div>
 
-    <div class="bulk-bar" id="bulk-bar">
-      <span id="sel-count">0 selected</span>
-      <button class="bulk-btn" onclick="rescoreSelected()">↺ Rescore selected</button>
-      <button class="bulk-btn" style="background:#E0DDD6;color:#4A4A46" onclick="clearSelection()">Clear</button>
+  <!-- Bulk rescore bar -->
+  <div class="bulk-bar" id="bulk-bar">
+    <span id="sel-count">0 selected</span>
+    <button class="bulk-btn" id="bulk-rescore-btn" onclick="rescoreSelected()">↺ Rescore selected</button>
+    <button class="bulk-btn" style="background:#E0DDD6;color:#4A4A46" onclick="clearSelection()">Clear</button>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="progress-wrap">
+    <div id="progress-top">
+      <span id="progress-eng">Starting…</span>
+      <span id="progress-lbl"></span>
+      <span id="progress-count"></span>
     </div>
+    <div id="progress-bar-bg"><div id="progress-bar"></div></div>
+  </div>
 
-    <div class="genre-pills">
-      <a href="/admin/audit/low-emotion?threshold={{ threshold }}&sort={{ sort_by }}" class="gpill {% if not genre_filter %}active{% endif %}">All ({{ total }})</a>
-      {% for genre, count in genre_counts %}
-      <a href="/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre }}&sort={{ sort_by }}" class="gpill {% if genre_filter==genre %}active{% endif %}">{{ genre }} ({{ count }})</a>
-      {% endfor %}
+  <!-- Rescored results section -->
+  <div id="rescored-section">
+    <div id="rescored-header">
+      <i class="ti ti-circle-check" style="color:#059669"></i>
+      <span id="rescored-title">Rescored images</span>
+      <span style="margin-left:auto;font-size:12px;color:#6B6B68">Sorted by WF improvement</span>
     </div>
-
     <div style="overflow-x:auto">
-    <table>
+    <table id="rescored-table">
       <thead>
         <tr>
-          <th style="width:32px"></th>
-          <th>Image / Member</th>
-          <th>Genre</th>
-          <th class="r">Score</th>
-          <th class="r">DOD</th>
-          <th class="r">VD</th>
-          <th class="r">DM</th>
-          <th class="r wf-bg">WF</th>
-          <th class="r aq-bg">AQ</th>
-          <th>What the engine wrote</th>
-          <th>Scored</th>
-          <th></th>
+          <th>Image</th><th>Genre</th>
+          <th class="r">Score</th><th class="r" style="background:#FFF3CD">WF before</th>
+          <th class="r" style="background:#D1FAE5">WF after</th><th class="r">Δ WF</th>
+          <th class="r" style="background:#FFF3CD">AQ before</th>
+          <th class="r" style="background:#D1FAE5">AQ after</th><th class="r">Δ AQ</th>
+          <th>Rescored</th>
         </tr>
       </thead>
-      <tbody id="audit-tbody">
-        {% for r in results %}
-        <tr id="row-{{ r.id }}">
-          <td><input type="checkbox" class="cb row-cb" data-id="{{ r.id }}" onchange="onCbChange()"></td>
-          <td>
-            <a href="/admin/image/{{ r.id }}" style="color:#1A2744;font-weight:600;text-decoration:none" target="_blank">
-              {{ r.filename[:36] }}{% if r.filename|length > 36 %}…{% endif %}
-            </a><br>
-            <span style="font-size:11px;color:#8A8A86">{{ r.full_name }} · {{ r.plan }}</span>
-          </td>
-          <td style="color:#6B6B68;font-size:12px">{{ r.genre }}</td>
-          <td class="r">
-            <div class="score-n" id="score-{{ r.id }}">{{ '%.2f'|format(r.score) }}</div>
-            <div class="tier-b" id="tier-{{ r.id }}">{{ r.tier }}</div>
-          </td>
-          <td class="r dim-ok" id="dod-{{ r.id }}">{{ r.dod }}</td>
-          <td class="r dim-ok" id="vd-{{ r.id }}">{{ r.vd }}</td>
-          <td class="r dim-ok" id="dm-{{ r.id }}">{{ r.dm }}</td>
-          <td class="r wf-bg {% if r.wf < 6.0 %}dim-low{% elif r.wf < 7.0 %}dim-mid{% else %}dim-ok{% endif %}" id="wf-{{ r.id }}">{{ r.wf }}</td>
-          <td class="r aq-bg {% if r.aq < 6.0 %}dim-low{% elif r.aq < 7.0 %}dim-mid{% else %}dim-ok{% endif %}" id="aq-{{ r.id }}">{{ r.aq }}</td>
-          <td>
-            {% if r.hard_truth %}<div class="ht">"{{ r.hard_truth[:120] }}{% if r.hard_truth|length > 120 %}…{% endif %}"</div>{% endif %}
-            {% if r.narrative %}<div class="narr">{{ r.narrative[:180] }}{% if r.narrative|length > 180 %}…{% endif %}</div>{% endif %}
-          </td>
-          <td style="white-space:nowrap;color:#8A8A86;font-size:11px">
-            {{ r.scored_at.strftime('%-d %b %Y') if r.scored_at else '—' }}
-          </td>
-          <td>
-            <button class="rscore-btn" id="btn-{{ r.id }}" onclick="rescoreOne({{ r.id }}, this)" title="Rescore with updated engine">↺</button>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="12" class="empty">No images below WF/AQ {{ threshold }}{% if genre_filter %} in {{ genre_filter }}{% endif %}. Engine performing well at this threshold.</td></tr>
-        {% endfor %}
-      </tbody>
+      <tbody id="rescored-tbody"></tbody>
     </table>
     </div>
   </div>
+
+  <div class="genre-pills">
+    <a href="/admin/audit/low-emotion?threshold={{ threshold }}&sort={{ sort_by }}" class="gpill {% if not genre_filter %}active{% endif %}">All ({{ total }})</a>
+    {% for genre, count in genre_counts %}
+    <a href="/admin/audit/low-emotion?threshold={{ threshold }}&genre={{ genre }}&sort={{ sort_by }}" class="gpill {% if genre_filter==genre %}active{% endif %}">{{ genre }} ({{ count }})</a>
+    {% endfor %}
+  </div>
+
+  <div style="overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:32px"></th>
+        <th>Image / Member</th><th>Genre</th>
+        <th class="r">Score</th><th class="r">DOD</th><th class="r">VD</th><th class="r">DM</th>
+        <th class="r wf-bg">WF</th><th class="r aq-bg">AQ</th>
+        <th>Engine wrote…</th><th>Scored</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="audit-tbody">
+      {% for r in results %}
+      <tr id="row-{{ r.id }}" data-wf="{{ r.wf }}" data-aq="{{ r.aq }}" data-score="{{ r.score }}" data-filename="{{ r.filename[:36] }}" data-genre="{{ r.genre }}">
+        <td><input type="checkbox" class="cb row-cb" data-id="{{ r.id }}" onchange="onCbChange()"></td>
+        <td>
+          <a href="/admin/image/{{ r.id }}" style="color:#1A2744;font-weight:600;text-decoration:none" target="_blank">
+            {{ r.filename[:36] }}{% if r.filename|length > 36 %}…{% endif %}
+          </a><br>
+          <span style="font-size:11px;color:#8A8A86">{{ r.full_name }} · {{ r.plan }}</span>
+        </td>
+        <td style="color:#6B6B68;font-size:12px">{{ r.genre }}</td>
+        <td class="r">
+          <div class="score-n" id="score-{{ r.id }}">{{ '%.2f'|format(r.score) }}</div>
+          <div class="tier-b" id="tier-{{ r.id }}">{{ r.tier }}</div>
+        </td>
+        <td class="r dim-ok" id="dod-{{ r.id }}">{{ r.dod }}</td>
+        <td class="r dim-ok" id="vd-{{ r.id }}">{{ r.vd }}</td>
+        <td class="r dim-ok" id="dm-{{ r.id }}">{{ r.dm }}</td>
+        <td class="r wf-bg {% if r.wf < 6.0 %}dim-low{% elif r.wf < 7.0 %}dim-mid{% else %}dim-ok{% endif %}" id="wf-{{ r.id }}">{{ r.wf }}</td>
+        <td class="r aq-bg {% if r.aq < 6.0 %}dim-low{% elif r.aq < 7.0 %}dim-mid{% else %}dim-ok{% endif %}" id="aq-{{ r.id }}">{{ r.aq }}</td>
+        <td>
+          {% if r.hard_truth %}<div class="ht">"{{ r.hard_truth[:100] }}{% if r.hard_truth|length > 100 %}…{% endif %}"</div>{% endif %}
+          {% if r.narrative %}<div class="narr">{{ r.narrative[:160] }}{% if r.narrative|length > 160 %}…{% endif %}</div>{% endif %}
+        </td>
+        <td style="white-space:nowrap;color:#8A8A86;font-size:11px">{{ r.scored_at.strftime('%-d %b %Y') if r.scored_at else '—' }}</td>
+        <td><button class="rscore-btn" id="btn-{{ r.id }}" onclick="rescoreOne({{ r.id }}, this)" title="Rescore">↺</button></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="12" class="empty">No images below WF/AQ {{ threshold }}{% if genre_filter %} in {{ genre_filter }}{% endif %}.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
 </div>
 
 <script>
+var rescoredLog = [];
+
 function showFlash(msg, type) {
   var f = document.createElement('div');
   f.className = 'flash ' + type;
@@ -189,14 +235,10 @@ function onCbChange() {
   var checked = document.querySelectorAll('.row-cb:checked');
   var bar = document.getElementById('bulk-bar');
   var cnt = document.getElementById('sel-count');
-  if (checked.length > 0) {
-    bar.classList.add('show');
-    cnt.textContent = checked.length + ' selected';
-  } else {
-    bar.classList.remove('show');
-  }
-  document.getElementById('sel-all').checked = 
-    checked.length === document.querySelectorAll('.row-cb').length;
+  bar.classList.toggle('show', checked.length > 0);
+  cnt.textContent = checked.length + ' selected';
+  document.getElementById('sel-all').checked =
+    checked.length > 0 && checked.length === document.querySelectorAll('.row-cb').length;
 }
 
 function toggleAll(cb) {
@@ -209,56 +251,171 @@ function clearSelection() {
   onCbChange();
 }
 
-function applyResult(id, d) {
-  var row = document.getElementById('row-' + id);
-  if (!row) return;
+function progressShow(eng, lbl, pct, count) {
+  var w = document.getElementById('progress-wrap');
+  w.style.display = 'block';
+  document.getElementById('progress-eng').textContent = eng || '';
+  document.getElementById('progress-lbl').textContent = lbl || '';
+  document.getElementById('progress-count').textContent = count || '';
+  document.getElementById('progress-bar').style.width = (pct||0) + '%';
+}
+
+function progressDone(msg) {
+  document.getElementById('progress-eng').textContent = '✓ Complete';
+  document.getElementById('progress-lbl').textContent = msg || '';
+  document.getElementById('progress-bar').style.width = '100%';
+  setTimeout(function(){
+    document.getElementById('progress-wrap').style.display = 'none';
+    document.getElementById('progress-bar').style.width = '0%';
+  }, 3000);
+}
+
+function addToRescoredSection(id, before, after, filename, genre) {
+  var sec = document.getElementById('rescored-section');
+  var tbody = document.getElementById('rescored-tbody');
+  sec.style.display = 'block';
+
+  var wfDelta = (parseFloat(after.wf||0) - parseFloat(before.wf||0)).toFixed(1);
+  var aqDelta = (parseFloat(after.aq||0) - parseFloat(before.aq||0)).toFixed(1);
+  var wfClass = parseFloat(wfDelta) > 0 ? 'delta-up' : (parseFloat(wfDelta) < 0 ? 'delta-dn' : '');
+  var aqClass = parseFloat(aqDelta) > 0 ? 'delta-up' : (parseFloat(aqDelta) < 0 ? 'delta-dn' : '');
+  var now = new Date();
+  var ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  var tr = document.createElement('tr');
+  tr.className = 'rescored-row';
+  tr.innerHTML =
+    '<td><a href="/admin/image/'+id+'" style="color:#1A2744;font-weight:600;text-decoration:none" target="_blank">'+filename+'</a></td>' +
+    '<td style="color:#6B6B68;font-size:12px">'+genre+'</td>' +
+    '<td class="r"><strong>'+parseFloat(after.score||0).toFixed(2)+'</strong> <span style="color:#8A8A86;font-size:11px">(was '+parseFloat(before.score||0).toFixed(2)+')</span></td>' +
+    '<td class="r" style="background:#FFF3CD">'+before.wf+'</td>' +
+    '<td class="r" style="background:#D1FAE5;font-weight:700">'+parseFloat(after.wf||0).toFixed(1)+'</td>' +
+    '<td class="r"><span class="'+wfClass+'">'+(parseFloat(wfDelta)>0?'+':'')+wfDelta+'</span></td>' +
+    '<td class="r" style="background:#FFF3CD">'+before.aq+'</td>' +
+    '<td class="r" style="background:#D1FAE5;font-weight:700">'+parseFloat(after.aq||0).toFixed(1)+'</td>' +
+    '<td class="r"><span class="'+aqClass+'">'+(parseFloat(aqDelta)>0?'+':'')+aqDelta+'</span></td>' +
+    '<td style="color:#8A8A86;font-size:11px;white-space:nowrap">'+ts+'</td>';
+
+  // Insert at top
+  tbody.insertBefore(tr, tbody.firstChild);
+
+  var title = document.getElementById('rescored-title');
+  title.textContent = (tbody.children.length) + ' rescored this session';
+}
+
+function applyResult(id, before, after) {
   var set = function(elId, val) {
     var el = document.getElementById(elId + '-' + id);
     if (el) el.textContent = val;
   };
-  set('score', parseFloat(d.score).toFixed(2));
-  set('tier',  d.tier || '');
-  set('dod',   d.dod  != null ? parseFloat(d.dod).toFixed(1)  : '—');
-  set('vd',    d.vd   != null ? parseFloat(d.vd).toFixed(1)   : '—');
-  set('dm',    d.dm   != null ? parseFloat(d.dm).toFixed(1)   : '—');
-  set('wf',    d.wf   != null ? parseFloat(d.wf).toFixed(1)   : '—');
-  set('aq',    d.aq   != null ? parseFloat(d.aq).toFixed(1)   : '—');
-  row.classList.remove('rescoring');
-  row.classList.add('rescored');
-  setTimeout(function(){ row.classList.remove('rescored'); }, 2000);
+  set('score', parseFloat(after.score||0).toFixed(2));
+  set('tier',  after.tier || '');
+  set('dod',   after.dod  != null ? parseFloat(after.dod).toFixed(1)  : '—');
+  set('vd',    after.vd   != null ? parseFloat(after.vd).toFixed(1)   : '—');
+  set('dm',    after.dm   != null ? parseFloat(after.dm).toFixed(1)   : '—');
+  set('wf',    after.wf   != null ? parseFloat(after.wf).toFixed(1)   : '—');
+  set('aq',    after.aq   != null ? parseFloat(after.aq).toFixed(1)   : '—');
+
+  var row = document.getElementById('row-' + id);
+  if (row) {
+    row.classList.remove('rescoring');
+    row.classList.add('rescored-row');
+    setTimeout(function(){ row.classList.remove('rescored-row'); }, 3000);
+  }
 }
 
-function rescoreOne(id, btn) {
+function pollUntilDone(id, maxAttempts) {
+  return new Promise(function(resolve, reject) {
+    var attempts = 0;
+    var interval = setInterval(function() {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(interval);
+        reject(new Error('Timeout'));
+        return;
+      }
+      fetch('/score-status/' + id)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.status === 'ok') {
+            clearInterval(interval);
+            // Now fetch full dimensions
+            fetch('/admin/image-scores-json/' + id)
+              .then(function(r2){ return r2.json(); })
+              .then(function(dims){
+                resolve({
+                  score: dims.score,
+                  tier:  dims.tier,
+                  dod:   dims.dod,
+                  vd:    dims.disruption,
+                  dm:    dims.dm,
+                  wf:    dims.wonder,
+                  aq:    dims.aq,
+                });
+              })
+              .catch(function(){ resolve({score: d.score, tier: d.tier}); });
+          } else if (d.status === 'error') {
+            clearInterval(interval);
+            reject(new Error(d.message || 'Scoring failed'));
+          }
+          // else still processing — keep polling
+        })
+        .catch(function(e){ /* network hiccup, keep polling */ });
+    }, 2500); // poll every 2.5s
+  });
+}
+
+function rescoreOne(id, btn, silent) {
+  var row = document.getElementById('row-' + id);
+  var before = {
+    score: row ? row.dataset.score : '?',
+    wf:    row ? row.dataset.wf    : '?',
+    aq:    row ? row.dataset.aq    : '?',
+  };
+  var filename = row ? row.dataset.filename : ('image-'+id);
+  var genre    = row ? row.dataset.genre    : '';
+
   btn.disabled = true;
   btn.textContent = '…';
-  var row = document.getElementById('row-' + id);
   if (row) row.classList.add('rescoring');
-  
-  fetch('/admin/image/' + id + '/force-rescore', {
+
+  // Fire the rescore (returns immediately with status:processing)
+  return fetch('/admin/image/' + id + '/force-rescore', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
     body: '_xhr=1'
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
-    btn.disabled = false; btn.textContent = '↺';
-    if (d.status === 'processing' || d.status === 'ok' || d.score != null) {
-      if (d.score != null) {
-        applyResult(id, d);
-        showFlash('Rescored → ' + parseFloat(d.score).toFixed(2) + ' ' + (d.tier||''), 'ok');
-      } else {
-        showFlash('Rescoring started — check back in 20–30s', 'ok');
-        if (row) row.classList.remove('rescoring');
-      }
-    } else {
+    if (d.status === 'error') {
+      btn.disabled = false; btn.textContent = '↺';
       if (row) row.classList.remove('rescoring');
-      showFlash('Error: ' + (d.message || 'rescore failed'), 'err');
+      if (!silent) showFlash(d.message || 'Rescore failed', 'err');
+      return null;
     }
+    // Poll until scoring thread completes (max 25 attempts = ~60s)
+    return pollUntilDone(id, 25);
+  })
+  .then(function(after){
+    btn.disabled = false; btn.textContent = '↺';
+    if (row) row.classList.remove('rescoring');
+    if (!after) return null;
+
+    applyResult(id, before, after);
+    addToRescoredSection(id, before, after, filename, genre);
+    if (row) {
+      row.dataset.score = after.score;
+      if (after.wf != null) row.dataset.wf = parseFloat(after.wf).toFixed(1);
+      if (after.aq != null) row.dataset.aq = parseFloat(after.aq).toFixed(1);
+    }
+    if (!silent) showFlash('Rescored → ' + parseFloat(after.score).toFixed(2) + ' ' + (after.tier||''), 'ok');
+    return after;
   })
   .catch(function(e){
     btn.disabled = false; btn.textContent = '↺';
     if (row) row.classList.remove('rescoring');
-    showFlash('Network error — try again', 'err');
+    if (!silent) showFlash('Error: ' + e.message, 'err');
+    return null;
   });
 }
 
@@ -266,14 +423,39 @@ async function rescoreSelected() {
   var checked = Array.from(document.querySelectorAll('.row-cb:checked'));
   if (!checked.length) return;
   var ids = checked.map(function(c){ return parseInt(c.dataset.id); });
-  showFlash('Rescoring ' + ids.length + ' images sequentially…', 'ok');
-  
-  for (var i = 0; i < ids.length; i++) {
+  var total = ids.length;
+
+  document.getElementById('bulk-rescore-btn').disabled = true;
+  document.querySelectorAll('.rscore-btn').forEach(function(b){ b.disabled=true; });
+
+  var ok = 0;
+  for (var i = 0; i < total; i++) {
     var id = ids[i];
+    var row = document.getElementById('row-' + id);
+    var fname = row ? row.dataset.filename : ('image-' + id);
+    var genre = row ? row.dataset.genre : '';
+
+    progressShow(
+      'Rescoring ' + (i+1) + ' / ' + total,
+      fname,
+      Math.round((i / total) * 100),
+      (i+1) + ' of ' + total
+    );
+
     var btn = document.getElementById('btn-' + id);
-    if (btn) rescoreOne(id, btn);
-    await new Promise(function(res){ setTimeout(res, 2000); }); // stagger requests
+    if (btn) {
+      var result = await rescoreOne(id, btn, true);
+      if (result && result.score != null) ok++;
+    }
+
+    document.getElementById('progress-bar').style.width = Math.round(((i+1)/total)*100) + '%';
   }
+
+  progressDone(ok + ' of ' + total + ' rescored successfully');
+  document.getElementById('bulk-rescore-btn').disabled = false;
+  document.querySelectorAll('.rscore-btn').forEach(function(b){ b.disabled=false; });
+  clearSelection();
+  showFlash('Rescored ' + ok + ' / ' + total + ' images', 'ok');
 }
 </script>
 </body>
