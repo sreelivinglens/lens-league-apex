@@ -1,4 +1,4 @@
-{# SL-VERSION: cal-3.2 (Session 218, 2026-09-10 — CSV export added: ↓ CSV button in results header. Exports File, Engine, Genre, Score, Tier, DOD, VD, DM, WF, AQ, Delta (H-S), Scored. Client-side, reads Jinja data, downloads timestamped file. RETAINS cal-3.1.) #}
+{# SL-VERSION: cal-4.0 (Session 219, 2026-09-11 — Track tier added: Camera / Mobile. Upload form gains Track selector. Engine toggle becomes 2D: engine × track = 4 paths. Table gains Track column and colour-coded tier pills. Rescore passes camera_track. CSV export gains Track column. pairs dict now has sonnet_camera/haiku_camera/sonnet_mobile/haiku_mobile slots. RETAINS cal-3.2.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +93,9 @@ a.back:hover{text-decoration:underline}
 .ep{font-size:11px;font-weight:700;padding:2px 6px;border-radius:99px;white-space:nowrap;display:inline-block}
 .ep-s{background:#E8EEF8;color:#1A2744}
 .ep-h{background:#F3E8FF;color:#6B21A8}
+.tp{font-size:10px;font-weight:600;padding:1px 5px;border-radius:99px;white-space:nowrap;display:inline-block;margin-left:2px}
+.tp-camera{background:#F0F4F0;color:#2E5C2E}
+.tp-mobile{background:#FFF3E0;color:#B45309}
 .score-n{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
 .tier-n{font-size:10px;color:#B45309;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:block}
 .dim-n{font-size:13px;font-variant-numeric:tabular-nums}
@@ -158,6 +161,13 @@ a.back:hover{text-decoration:underline}
       </div>
     </div>
     <div class="up-field">
+      <span class="up-label">Track (tier)</span>
+      <div class="engine-toggle">
+        <button class="eng-btn active-sonnet" id="trk-camera" onclick="setTrack('camera')">📷 Camera</button>
+        <button class="eng-btn"               id="trk-mobile" onclick="setTrack('mobile')">📱 Mobile</button>
+      </div>
+    </div>
+    <div class="up-field">
       <span class="up-label">Genre</span>
       <select class="up-select" id="genre-sel">
         <option value="">— select —</option>
@@ -207,14 +217,6 @@ a.back:hover{text-decoration:underline}
 </div>
 
 {# ── RESULTS TABLE ── #}
-{% set pairs = {} %}
-{% for r in rows %}
-  {% set fname = r.original_filename or ('image-' ~ r.id) %}
-  {% if fname not in pairs %}{% set _ = pairs.update({fname: {}}) %}{% endif %}
-  {% if r.engine_haiku %}{% set _ = pairs[fname].update({'haiku': r, 'haiku_id': r.id}) %}
-  {% else %}{% set _ = pairs[fname].update({'sonnet': r, 'sonnet_id': r.id}) %}{% endif %}
-{% endfor %}
-
 <div class="results-wrap" id="results-table">
   <div class="res-header">
     <div class="res-title">
@@ -247,17 +249,18 @@ a.back:hover{text-decoration:underline}
   <table class="res-table" id="res-tbody-wrap">
     <colgroup>
       <col style="width:32px">
-      <col style="width:160px">
+      <col style="width:148px">
       <col style="width:68px">
-      <col style="width:80px">
       <col style="width:72px">
-      <col style="width:64px">
-      <col style="width:46px">
-      <col style="width:46px">
-      <col style="width:46px">
-      <col style="width:46px">
-      <col style="width:46px">
-      <col style="width:86px">
+      <col style="width:76px">
+      <col style="width:68px">
+      <col style="width:60px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:82px">
       <col style="width:30px">
     </colgroup>
     <thead>
@@ -265,6 +268,7 @@ a.back:hover{text-decoration:underline}
         <th><input type="checkbox" id="sel-all" onchange="toggleAll(this)" style="width:15px;height:15px;cursor:pointer"></th>
         <th>File</th>
         <th>Engine</th>
+        <th>Track</th>
         <th>Genre</th>
         <th class="r">Score</th>
         <th class="r" style="color:#2E7D32;background:#F0FDF4">Δ H−S</th>
@@ -278,70 +282,73 @@ a.back:hover{text-decoration:underline}
       </tr>
     </thead>
     <tbody id="res-tbody">
-      {% if rows %}
+      {% if pairs %}
+        {# pairs is built in Python: fname → {sonnet_camera, haiku_camera, sonnet_mobile, haiku_mobile} #}
+        {# Each slot is the most-recent row for that engine×track combo, or None #}
         {% for fname, pair in pairs.items() %}
-          {% set s = pair.get('sonnet') %}
-          {% set h = pair.get('haiku') %}
-          {# Compute delta and per-dim differences for colouring #}
-          {% set dv = (h.score - s.score) if (s and h and s.score and h.score) else none %}
 
-          {# ── Sonnet row (always first) ── #}
-          {% if s %}
-          <tr class="row-s row-pair-top" id="cal-row-{{ s.id }}" data-pair-id="{{ h.id if h else '' }}">
-            <td><input type="checkbox" class="cal-cb" data-id="{{ s.id }}" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>
-            <td title="{{ fname }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ fname }}</td>
-            <td><span class="ep ep-s">Sonnet</span></td>
-            <td style="color:#6B6B68;font-size:13px">{{ s.genre or '—' }}</td>
-            <td class="r"><span class="score-n">{{ '%.2f'|format(s.score) if s.score else '—' }}</span>{% if s.tier %}<span class="tier-n">{{ s.tier }}</span>{% endif %}</td>
+          {# All four slots #}
+          {% set sc = pair.get('sonnet_camera') %}
+          {% set hc = pair.get('haiku_camera') %}
+          {% set sm = pair.get('sonnet_mobile') %}
+          {% set hm = pair.get('haiku_mobile') %}
+
+          {# Deltas: Haiku minus Sonnet per track #}
+          {% set dv_cam = (hc.score - sc.score) if (sc and hc and sc.score and hc.score) else none %}
+          {% set dv_mob = (hm.score - sm.score) if (sm and hm and sm.score and hm.score) else none %}
+
+          {# Helper macro: one data row #}
+          {% macro cal_row(r, engine, track, dv, paired_s) %}
+          {% if r %}
+          <tr class="row-{{ 's' if engine=='sonnet' else 'h' }} row-pair-top" id="cal-row-{{ r.id }}"
+              data-pair-id="" data-engine="{{ engine }}" data-track="{{ track }}">
+            <td><input type="checkbox" class="cal-cb" data-id="{{ r.id }}" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>
+            <td title="{{ fname }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">{{ fname }}</td>
+            <td><span class="ep {{ 'ep-s' if engine=='sonnet' else 'ep-h' }}">{{ 'Sonnet' if engine=='sonnet' else 'Haiku' }}</span></td>
+            <td><span class="tp {{ 'tp-camera' if track=='camera' else 'tp-mobile' }}">{{ '📷' if track=='camera' else '📱' }} {{ track|capitalize }}</span></td>
+            <td style="color:#6B6B68;font-size:13px">{{ r.genre or '—' }}</td>
+            <td class="r"><span class="score-n">{{ '%.2f'|format(r.score) if r.score else '—' }}</span>{% if r.tier %}<span class="tier-n">{{ r.tier }}</span>{% endif %}</td>
             <td class="r" style="background:#F0FDF4">
-              {% if dv is not none %}
+              {% if engine == 'sonnet' and dv is not none %}
                 {% if dv > 0.04 %}<span style="color:#2E7D32;font-weight:700;font-size:13px">+{{ '%.2f'|format(dv) }}</span>
                 {% elif dv < -0.04 %}<span style="color:#B91C1C;font-weight:700;font-size:13px">{{ '%.2f'|format(dv) }}</span>
                 {% else %}<span style="color:#8A8A86;font-weight:600;font-size:13px">≈0</span>{% endif %}
               {% else %}<span style="color:#8A8A86;font-size:13px">—</span>{% endif %}
             </td>
-            <td class="r dim-n">{{ '%.1f'|format(s.dod_score) if s.dod_score else '—' }}</td>
-            <td class="r dim-n">{{ '%.1f'|format(s.disruption_score) if s.disruption_score else '—' }}</td>
-            <td class="r dim-n">{{ '%.1f'|format(s.dm_score) if s.dm_score else '—' }}</td>
-            <td class="r dim-n">{{ '%.1f'|format(s.wonder_score) if s.wonder_score else '—' }}</td>
-            <td class="r dim-n">{{ '%.1f'|format(s.aq_score) if s.aq_score else '—' }}</td>
-            <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ s.scored_at.strftime('%-d %b %H:%M') if s.scored_at else '—' }}</td>
+            {# Per-dim with divergence colouring vs paired Sonnet row #}
+            {% for hv, sv in [(r.dod_score, paired_s.dod_score if paired_s else none),
+                              (r.disruption_score, paired_s.disruption_score if paired_s else none),
+                              (r.dm_score, paired_s.dm_score if paired_s else none),
+                              (r.wonder_score, paired_s.wonder_score if paired_s else none),
+                              (r.aq_score, paired_s.aq_score if paired_s else none)] %}
+              {% if engine == 'haiku' and hv and sv %}
+                {% set dd = hv - sv %}
+                {% if dd >= 0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(hv) }}</td>
+                {% elif dd <= -0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(hv) }}</td>
+                {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) }}</td>{% endif %}
+              {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) if hv else '—' }}</td>{% endif %}
+            {% endfor %}
+            <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ r.scored_at.strftime('%-d %b %H:%M') if r.scored_at else '—' }}</td>
             <td style="white-space:nowrap">
-              <button class="rescore-cal-btn" onclick="rescoreOne({{ s.id }}, 'sonnet', this)" title="Rescore">↺</button>
-              <button class="del-btn" onclick="deleteRow({{ s.id }}, {{ h.id if h else 'null' }}, this)" title="Delete">✕</button>
+              <button class="rescore-cal-btn" onclick="rescoreOne({{ r.id }}, '{{ engine }}', '{{ track }}', this)" title="Rescore {{ engine }} {{ track }}">↺</button>
+              <button class="del-btn" onclick="deleteRow({{ r.id }}, null, this)" title="Delete">✕</button>
             </td>
           </tr>
           {% endif %}
+          {% endmacro %}
 
-          {# ── Haiku row (always second) with per-dim divergence colouring ── #}
-          {% if h %}
-          <tr class="row-h row-pair-bot" id="cal-row-{{ h.id }}" data-pair-id="{{ s.id if s else '' }}">
-            <td><input type="checkbox" class="cal-cb" data-id="{{ h.id }}" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>
-            <td style="color:#8A8A86;font-size:13px" title="{{ fname }}">{{ fname if not s else '' }}</td>
-            <td><span class="ep ep-h">Haiku</span></td>
-            <td style="color:#6B6B68;font-size:13px">{{ h.genre or '—' }}</td>
-            <td class="r"><span class="score-n">{{ '%.2f'|format(h.score) if h.score else '—' }}</span>{% if h.tier %}<span class="tier-n">{{ h.tier }}</span>{% endif %}</td>
-            <td class="r" style="background:#F0FDF4;color:#8A8A86;font-size:13px">—</td>
-            {# Per-dim: colour if Haiku differs from Sonnet by ≥0.5 — green=higher red=lower #}
-            {% if h.dod_score and s and s.dod_score %}{% set dd=h.dod_score-s.dod_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.dod_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.dod_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dod_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dod_score) if h.dod_score else '—' }}</td>{% endif %}
-            {% if h.disruption_score and s and s.disruption_score %}{% set dd=h.disruption_score-s.disruption_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.disruption_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.disruption_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.disruption_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.disruption_score) if h.disruption_score else '—' }}</td>{% endif %}
-            {% if h.dm_score and s and s.dm_score %}{% set dd=h.dm_score-s.dm_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.dm_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.dm_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dm_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.dm_score) if h.dm_score else '—' }}</td>{% endif %}
-            {% if h.wonder_score and s and s.wonder_score %}{% set dd=h.wonder_score-s.wonder_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.wonder_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.wonder_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.wonder_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.wonder_score) if h.wonder_score else '—' }}</td>{% endif %}
-            {% if h.aq_score and s and s.aq_score %}{% set dd=h.aq_score-s.aq_score %}{% if dd>=0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(h.aq_score) }}</td>{% elif dd<=-0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(h.aq_score) }}</td>{% else %}<td class="r dim-n">{{ '%.1f'|format(h.aq_score) }}</td>{% endif %}{% else %}<td class="r dim-n">{{ '%.1f'|format(h.aq_score) if h.aq_score else '—' }}</td>{% endif %}
-            <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ h.scored_at.strftime('%-d %b %H:%M') if h.scored_at else '—' }}</td>
-            <td style="white-space:nowrap">
-              <button class="rescore-cal-btn" onclick="rescoreOne({{ h.id }}, 'haiku', this)" title="Rescore">↺</button>
-              <button class="del-btn" onclick="deleteRow({{ h.id }}, {{ s.id if s else 'null' }}, this)" title="Delete">✕</button>
-            </td>
-          </tr>
-          {% endif %}
+          {# Render all 4 slots — Camera pair first, Mobile pair second #}
+          {{ cal_row(sc, 'sonnet', 'camera', dv_cam, none) }}
+          {{ cal_row(hc, 'haiku',  'camera', none,    sc) }}
+          {{ cal_row(sm, 'sonnet', 'mobile', dv_mob,  none) }}
+          {{ cal_row(hm, 'haiku',  'mobile', none,    sm) }}
 
-          {# Pair separator #}
-          <tr class="row-sep"><td colspan="13"></td></tr>
+          {# Image-level separator #}
+          <tr class="row-sep"><td colspan="14"></td></tr>
 
         {% endfor %}
       {% else %}
-      <tr id="empty-row"><td colspan="13" class="empty-state">No calibration images yet — upload a batch above.</td></tr>
+      <tr id="empty-row"><td colspan="14" class="empty-state">No calibration images yet — upload a batch above.</td></tr>
       {% endif %}
     </tbody>
   </table>
@@ -351,6 +358,7 @@ a.back:hover{text-decoration:underline}
 </div>
 <script>
 var _engine = 'both';
+var _track  = 'camera';   // 'camera' | 'mobile'
 var _files  = [];
 var _rowCount = (function(){ try { return JSON.parse(document.getElementById('cal-meta').textContent).row_count; } catch(e){ return 0; } })();
 
@@ -360,6 +368,13 @@ function setEngine(e) {
   document.getElementById('eng-both').className   = 'eng-btn' + (e==='both'   ? ' active-both'   : '');
   document.getElementById('eng-sonnet').className = 'eng-btn' + (e==='sonnet' ? ' active-sonnet' : '');
   document.getElementById('eng-haiku').className  = 'eng-btn' + (e==='haiku'  ? ' active-haiku'  : '');
+}
+
+// ── TRACK TOGGLE ─────────────────────────────────────────────────────────────
+function setTrack(t) {
+  _track = t;
+  document.getElementById('trk-camera').className = 'eng-btn' + (t === 'camera' ? ' active-sonnet' : '');
+  document.getElementById('trk-mobile').className = 'eng-btn' + (t === 'mobile' ? ' active-haiku'  : '');
 }
 
 // ── FILE PICK / THUMBNAILS ────────────────────────────────────────────────────
@@ -414,26 +429,29 @@ function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function makeRow(id, fname, engine, d, pairedId, pairedDims) {
+function makeRow(id, fname, engine, track, d, pairedId, pairedDims) {
   var tr = document.createElement('tr');
   tr.id = 'cal-row-' + id;
   tr.className = engine === 'sonnet' ? 'row-s row-pair-top' : 'row-h row-pair-bot';
-  tr.dataset.pairId = pairedId || '';
+  tr.dataset.pairId  = pairedId || '';
+  tr.dataset.engine  = engine;
+  tr.dataset.track   = track || _track;
 
-  var score = d && d.score != null ? d.score.toFixed(2) : '—';
+  var score = d && d.score != null ? parseFloat(d.score).toFixed(2) : '—';
   var tier  = d && d.tier ? d.tier : '';
   var genre = d && d.genre ? d.genre : (document.getElementById('genre-sel').value || '—');
   var epCls = engine === 'sonnet' ? 'ep-s' : 'ep-h';
   var epLbl = engine === 'sonnet' ? 'Sonnet' : 'Haiku';
+  var trkVal = tr.dataset.track;
+  var trkPill = '<span class="tp ' + (trkVal === 'mobile' ? 'tp-mobile' : 'tp-camera') + '">'
+              + (trkVal === 'mobile' ? '📱 Mobile' : '📷 Camera') + '</span>';
   var now   = new Date();
   var mm    = now.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()];
   var hhmm  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
   var dims  = pairedDims || {};
 
-  // Delta cell placeholder on both rows — updated on Sonnet row after Haiku scores
   var deltaCell = '<td class="r" style="background:#F0FDF4;color:#8A8A86;font-size:13px" id="delta-' + id + '">—</td>';
 
-  // Per-dim cell with divergence colouring for Haiku row
   function dimCell(hv, sv) {
     if (hv == null) return '<td class="r dim-n">—</td>';
     var val = parseFloat(hv).toFixed(1);
@@ -445,14 +463,11 @@ function makeRow(id, fname, engine, d, pairedId, pairedDims) {
     return '<td class="r dim-n">' + val + '</td>';
   }
 
-  var fileTd = (engine === 'haiku' && pairedId)
-    ? '<td style="color:#8A8A86;font-size:13px" title="' + escHtml(fname) + '"></td>'
-    : '<td title="' + escHtml(fname) + '" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(fname) + '</td>';
-
   tr.innerHTML =
     '<td><input type="checkbox" class="cal-cb" data-id="'+id+'" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>' +
-    fileTd +
+    '<td title="'+escHtml(fname)+'" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">'+escHtml(fname)+'</td>' +
     '<td><span class="ep '+epCls+'">'+epLbl+'</span></td>' +
+    '<td>'+trkPill+'</td>' +
     '<td style="color:#6B6B68;font-size:13px">'+escHtml(genre)+'</td>' +
     '<td class="r"><span class="score-n">'+score+'</span>'+(tier?'<span class="tier-n">'+tier+'</span>':'')+'</td>' +
     deltaCell +
@@ -462,7 +477,8 @@ function makeRow(id, fname, engine, d, pairedId, pairedDims) {
     dimCell(d && d.wf  != null ? d.wf  : null, dims.wf) +
     dimCell(d && d.aq  != null ? d.aq  : null, dims.aq) +
     '<td style="color:#8A8A86;font-size:12px;white-space:nowrap">'+mm+' '+hhmm+'</td>' +
-    '<td style="white-space:nowrap"><button class="rescore-cal-btn" onclick="rescoreOne('+id+',\''+engine+'\',this)" title="Rescore">↺</button><button class="del-btn" onclick="deleteRow('+id+','+(pairedId||'null')+',this)" title="Delete">✕</button></td>';
+    '<td style="white-space:nowrap"><button class="rescore-cal-btn" onclick="rescoreOne('+id+',\''+engine+'\',\''+trkVal+'\',this)" title="Rescore">↺</button>'
+    +'<button class="del-btn" onclick="deleteRow('+id+','+(pairedId||'null')+',this)" title="Delete">✕</button></td>';
   return tr;
 }
 
@@ -473,7 +489,7 @@ function updateSonnetDelta(sonnetRow, haikuScore) {
   var sScore = parseFloat(scoreEl.textContent);
   if (isNaN(sScore)) return;
   var diff = haikuScore - sScore;
-  var deltaCell = sonnetRow.cells[5];
+  var deltaCell = sonnetRow.cells[6];  // col 0=cb 1=file 2=engine 3=track 4=genre 5=score 6=delta
   if (!deltaCell) return;
   var cls, txt;
   if (diff > 0.04)      { cls = 'color:#2E7D32;font-weight:700'; txt = '+' + diff.toFixed(2); }
@@ -485,7 +501,7 @@ function updateSonnetDelta(sonnetRow, haikuScore) {
 function makeSepRow() {
   var tr = document.createElement('tr');
   tr.className = 'row-sep';
-  tr.innerHTML = '<td colspan="13"></td>';
+  tr.innerHTML = '<td colspan="14"></td>';
   return tr;
 }
 
@@ -540,6 +556,7 @@ async function startUpload() {
       fd.append('image', f);
       fd.append('genre', genre);
       fd.append('engine', eng);
+      fd.append('camera_track', _track);
 
       var d = null;
       try {
@@ -557,22 +574,21 @@ async function startUpload() {
           var sep = makeSepRow();
           sep.id = 'sep-' + d.image_id;
           tbody.insertBefore(sep, tbody.firstChild);
-          var row = makeRow(d.image_id, f.name, 'sonnet', d, null, null);
+          var row = makeRow(d.image_id, f.name, 'sonnet', _track, d, null, null);
           tbody.insertBefore(row, sep);
           sonnetRowEl  = row;
           sonnetResult = d;
 
         } else if (eng === 'haiku') {
-          // Haiku goes above Sonnet row — insert before Sonnet row
+          // Haiku goes below Sonnet row for same track
           var pairedId = sonnetResult ? sonnetResult.image_id : null;
           var pairedDims = sonnetResult ? {
             dod: sonnetResult.dod, vd: sonnetResult.vd,
             dm:  sonnetResult.dm,  wf: sonnetResult.wf, aq: sonnetResult.aq
           } : null;
-          var row = makeRow(d.image_id, f.name, 'haiku', d, pairedId, pairedDims);
+          var row = makeRow(d.image_id, f.name, 'haiku', _track, d, pairedId, pairedDims);
           if (sonnetRowEl) {
-            tbody.insertBefore(row, sonnetRowEl);
-            // Update Sonnet row: pair-id and delta column
+            tbody.insertBefore(row, sonnetRowEl.nextSibling);
             sonnetRowEl.dataset.pairId = d.image_id;
             if (d.score != null && sonnetResult && sonnetResult.score != null) {
               updateSonnetDelta(sonnetRowEl, d.score);
@@ -688,7 +704,7 @@ function exportCSV() {
   var data;
   try { data = JSON.parse(dataEl.textContent); } catch(e) { showFlash('Export error.', 'err'); return; }
 
-  var header = ['File','Engine','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored'];
+  var header = ['File','Engine','Track','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored'];
   var csvRows = [header].concat(data);
   var csv = csvRows.map(function(r){
     return r.map(function(v){
@@ -756,10 +772,10 @@ function applyRescoreResult(imageId, d) {
     }
   }
 
-  // Dims — col index 6-10
+  // Dims — col index 7-11 (0=cb 1=file 2=engine 3=track 4=genre 5=score 6=delta 7-11=dims)
   var dims = [d.dod, d.vd, d.dm, d.wf, d.aq];
   for (var i = 0; i < dims.length; i++) {
-    var cell = row.cells[6 + i];
+    var cell = row.cells[7 + i];
     if (cell && dims[i] != null) cell.textContent = parseFloat(dims[i]).toFixed(1);
   }
 
@@ -778,20 +794,25 @@ function applyRescoreResult(imageId, d) {
   setTimeout(function(){ row.style.background = ''; }, 1500);
 }
 
-function rescoreOne(imageId, engine, btn) {
+function rescoreOne(imageId, engine, track, btn) {
+  // track may be omitted in old inline callers — default to row data or 'camera'
+  if (typeof track === 'object') { btn = track; track = null; }
+  var row = document.getElementById('cal-row-' + imageId);
+  track = track || (row && row.dataset.track) || 'camera';
+
   btn.disabled = true;
   btn.textContent = '…';
-  var row = document.getElementById('cal-row-' + imageId);
   var fname = row ? (row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + imageId) : ('image ' + imageId);
 
   rescoreStatusShow(
-    (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescoring…',
+    (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' · ' + track + ' rescoring…',
     fname.trim(),
     50, ''
   );
 
   var fd = new FormData();
   fd.append('engine', engine);
+  fd.append('camera_track', track);
   fetch('/admin/calibration/rescore/' + imageId, {method:'POST', body:fd})
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -838,8 +859,9 @@ async function doBulkRescore(ids) {
   for (var i = 0; i < total; i++) {
     var id  = ids[i];
     var row = document.getElementById('cal-row-' + id);
-    var engine = (row && row.querySelector('.ep-h')) ? 'haiku' : 'sonnet';
-    var engLabel = engine === 'haiku' ? 'Haiku' : 'Sonnet';
+    var engine = (row && row.dataset.engine) || ((row && row.querySelector('.ep-h')) ? 'haiku' : 'sonnet');
+    var track  = (row && row.dataset.track) || 'camera';
+    var engLabel = (engine === 'haiku' ? 'Haiku' : 'Sonnet') + ' · ' + track;
     var fname = row
       ? ((row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + id)).trim()
       : ('image ' + id);
@@ -855,6 +877,7 @@ async function doBulkRescore(ids) {
     try {
       var fd = new FormData();
       fd.append('engine', engine);
+      fd.append('camera_track', track);
       var resp = await fetch('/admin/calibration/rescore/' + id, {method:'POST', body:fd});
       var d    = await resp.json();
       if (row) row.style.opacity = '1';
