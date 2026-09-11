@@ -18161,7 +18161,118 @@ Return ONLY valid JSON, no preamble, no markdown fences:
             'score': round(final_score, 2), 'tier': tier}
 
 
-@app.route('/admin/calibration')
+@app.route('/admin/audit/low-emotion')
+@login_required
+@admin_required
+def admin_audit_low_emotion():
+    """
+    GET /admin/audit/low-emotion
+    Pulls all Sonnet-scored member images where WF < 7.0 OR AQ < 7.0.
+    Excludes calibration drift images and haiku images.
+    Groups by genre. Shows title, score, all dimensions, and narrative.
+    Purpose: identify systematic engine failures on emotional dimensions.
+    """
+    import json as _j
+    threshold = request.args.get('threshold', 7.0, type=float)
+    genre_filter = request.args.get('genre', '').strip()
+    sort_by = request.args.get('sort', 'wf').strip()  # wf, aq, score, date
+
+    try:
+        _rows = db.session.execute(db.text("""
+            SELECT
+                i.id, i.original_filename, i.asset_name, i.genre, i.score, i.tier,
+                i.dod_score, i.disruption_score, i.dm_score, i.wonder_score, i.aq_score,
+                i.scored_at, i.audit_json,
+                u.username, u.full_name, u.plan
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND COALESCE(i.is_haiku_try, FALSE) = FALSE
+              AND COALESCE(i.is_admin_curation, FALSE) = FALSE
+              AND (i.wonder_score < :thr OR i.aq_score < :thr)
+              AND i.wonder_score IS NOT NULL
+              AND i.aq_score IS NOT NULL
+            ORDER BY i.wonder_score ASC, i.aq_score ASC
+            LIMIT 500
+        """), {'thr': threshold}).fetchall()
+    except Exception as _e:
+        app.logger.error(f'[admin_audit_low_emotion] query failed: {_e}')
+        _rows = []
+
+    # Parse audit_json for narrative
+    results = []
+    for r in _rows:
+        narrative = ''
+        hard_truth = ''
+        try:
+            if r.audit_json:
+                _a = _j.loads(r.audit_json)
+                hard_truth = _a.get('hard_truth', '')
+                b1 = (_a.get('background_check') or _a.get('byline_1') or '').strip()
+                b2 = (_a.get('byline_2_body') or _a.get('byline_2') or '').strip()
+                narrative = '\n\n'.join(filter(None, [b1, b2]))[:300]
+        except: pass
+
+        results.append({
+            'id':         r.id,
+            'filename':   r.original_filename or r.asset_name or f'image-{r.id}',
+            'genre':      r.genre or '—',
+            'score':      round(float(r.score), 2) if r.score else 0,
+            'tier':       r.tier or '—',
+            'dod':        round(float(r.dod_score), 1) if r.dod_score else 0,
+            'vd':         round(float(r.disruption_score), 1) if r.disruption_score else 0,
+            'dm':         round(float(r.dm_score), 1) if r.dm_score else 0,
+            'wf':         round(float(r.wonder_score), 1) if r.wonder_score else 0,
+            'aq':         round(float(r.aq_score), 1) if r.aq_score else 0,
+            'scored_at':  r.scored_at,
+            'username':   r.username,
+            'full_name':  r.full_name or r.username,
+            'plan':       r.plan or '—',
+            'hard_truth': hard_truth,
+            'narrative':  narrative,
+            'thumb_url':  None,  # populated below
+        })
+
+    # Sort
+    if sort_by == 'aq':
+        results.sort(key=lambda x: x['aq'])
+    elif sort_by == 'score':
+        results.sort(key=lambda x: x['score'])
+    elif sort_by == 'date':
+        results.sort(key=lambda x: x['scored_at'] or '', reverse=True)
+    else:
+        results.sort(key=lambda x: x['wf'])
+
+    # Genre filter
+    if genre_filter:
+        results = [r for r in results if r['genre'].lower() == genre_filter.lower()]
+
+    # Genre breakdown
+    from collections import Counter as _Ctr
+    genre_counts = _Ctr(r['genre'] for r in results)
+    wf_below_6  = sum(1 for r in results if r['wf'] < 6.0)
+    aq_below_6  = sum(1 for r in results if r['aq'] < 6.0)
+    both_below  = sum(1 for r in results if r['wf'] < threshold and r['aq'] < threshold)
+    only_wf     = sum(1 for r in results if r['wf'] < threshold and r['aq'] >= threshold)
+    only_aq     = sum(1 for r in results if r['aq'] < threshold and r['wf'] >= threshold)
+
+    app.logger.info(f'[admin_audit_low_emotion] threshold={threshold} results={len(results)} genre={genre_filter or "all"}')
+
+    return render_template('admin_low_emotion.html',
+        results=results,
+        genre_counts=genre_counts.most_common(),
+        total=len(results),
+        threshold=threshold,
+        genre_filter=genre_filter,
+        sort_by=sort_by,
+        wf_below_6=wf_below_6,
+        aq_below_6=aq_below_6,
+        both_below=both_below,
+        only_wf=only_wf,
+        only_aq=only_aq,
+    )
+
+
 @login_required
 @admin_required
 def admin_calibration():
