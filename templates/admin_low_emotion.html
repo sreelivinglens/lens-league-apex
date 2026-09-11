@@ -88,6 +88,59 @@ tr.rescored-row td{background:#F0FDF4;animation:fadeGreen 2s forwards}
 
 <div class="wrap">
 <div class="card">
+  <!-- Recent rescores panel - always visible, shows last 15 rescored in 24h -->
+  {% if recent_rescores %}
+  <div style="border-bottom:2px solid #6EE7B7;background:#F0FDF4">
+    <div style="padding:10px 24px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#065F46;border-bottom:1px solid #A7F3D0">
+      <i class="ti ti-clock" style="color:#059669"></i>
+      Recent rescores (last 24h) — {{ recent_rescores|length }} images
+      <span style="margin-left:auto;font-size:11px;font-weight:400;color:#6B6B68">Reload page to refresh</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#D1FAE5">
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left;white-space:nowrap">Image / Member</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left">Genre</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right">Score</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right">DOD</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right">VD</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right">DM</th>
+          <th style="font-size:11px;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right;background:#BBF7D0">WF ✓</th>
+          <th style="font-size:11px;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right;background:#BBF7D0">AQ ✓</th>
+          <th style="font-size:11px;font-weight:600;color:#065F46;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left;white-space:nowrap">Rescored at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent_rescores %}
+        <tr style="border-bottom:1px solid #D1FAE5">
+          <td style="padding:9px 12px">
+            <a href="/admin/image/{{ r.id }}" style="color:#065F46;font-weight:600;text-decoration:none;font-size:13px" target="_blank">
+              {{ r.filename[:38] }}{% if r.filename|length > 38 %}…{% endif %}
+            </a><br>
+            <span style="font-size:11px;color:#6B6B68">{{ r.full_name }}</span>
+          </td>
+          <td style="padding:9px 12px;font-size:12px;color:#6B6B68">{{ r.genre }}</td>
+          <td style="padding:9px 12px;text-align:right">
+            <strong style="font-size:15px">{{ '%.2f'|format(r.score) }}</strong>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#4A4A46;text-transform:uppercase">{{ r.tier }}</div>
+          </td>
+          <td style="padding:9px 12px;text-align:right;font-size:13px;color:#1A2744">{{ r.dod }}</td>
+          <td style="padding:9px 12px;text-align:right;font-size:13px;color:#1A2744">{{ r.vd }}</td>
+          <td style="padding:9px 12px;text-align:right;font-size:13px;color:#1A2744">{{ r.dm }}</td>
+          <td style="padding:9px 12px;text-align:right;background:#D1FAE5;font-size:14px;font-weight:700;{% if r.wf >= 7.5 %}color:#065F46{% elif r.wf >= 7.0 %}color:#2E7D32{% else %}color:#B45309{% endif %}">{{ r.wf }}</td>
+          <td style="padding:9px 12px;text-align:right;background:#D1FAE5;font-size:14px;font-weight:700;{% if r.aq >= 8.0 %}color:#065F46{% elif r.aq >= 7.0 %}color:#2E7D32{% else %}color:#B45309{% endif %}">{{ r.aq }}</td>
+          <td style="padding:9px 12px;font-size:11px;color:#6B6B68;white-space:nowrap">
+            {{ r.scored_at.strftime('%d %b %H:%M') if r.scored_at else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="card-header">
     <h2>Images where Wonder (WF) or Affective Quotient (AQ) &lt; {{ threshold }}</h2>
     <p>Click ↺ to rescore any image with the updated engine. Rescored images float to the top with before/after comparison. Use checkboxes + Rescore selected for batch.</p>
