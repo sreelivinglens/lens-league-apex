@@ -18089,12 +18089,30 @@ GENRE GUIDANCE:
 CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
 {cal_line}
 
+BEFORE SCORING WF AND AQ — READ THIS:
+wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
+1. EYE WONDER: compositional find, juxtaposition, accidental frame = 8.0–9.5
+2. ACCESS WONDER: photographer inside a world most cannot enter = 7.5–9.5
+3. CULTURAL WONDER: shows a world viewers cannot otherwise enter = 7.0–9.0
+4. EMOTIONAL WONDER: specific nameable emotion — joy, grief, defiance, tenderness = 8.0–9.5
+5. RECOGNITION WONDER: a human truth so universal a stranger stops in a gallery.
+   A face so alive with genuine emotion — elderly person's infectious smile, broken-toothed
+   laughter, weathered skin full of dignity — WF 8.5–9.5.
+   A child's pure uninhibited joy, laughing so hard they lose themselves — WF 9.0.
+   The beauty the world overlooks. The photographer stopped. That is the wonder.
+   Do NOT require rarity of subject. The SEEING is rare, not the subject.
+   An elderly Indian woman with broken teeth laughing in a sunflower field = WF 9.0.
+   A child covering her eyes laughing completely = WF 9.0.
+
+WF/AQ COHERENCE: if aq >= 8.0, wf must be >= 7.0. A gap > 2.0 between wf and aq
+is impossible — they measure the same emotional truth. If your aq is 8.0+, check wf.
+
 Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
 - dod: Depth of Difficulty (how hard was this to achieve technically and artistically)
-- vd: Visual Drama (impact, contrast, light, colour, geometry)
+- vd: Visual Drama (impact, contrast, light, colour, geometry — what stops the eye)
 - dm: Decisive Moment (timing, peak action, unrepeatable instant)
-- wf: Wow Factor (immediate emotional response)
-- aq: Artisan Quality (technical craft: focus, exposure, noise, processing)
+- wf: Wow Factor (see FIVE signals above — score the HIGHEST present)
+- aq: Artisan Quality (specific feeling created in viewer — name it before scoring)
 
 Return ONLY valid JSON, no preamble, no markdown fences:
 {{"dod": 0.0, "vd": 0.0, "dm": 0.0, "wf": 0.0, "aq": 0.0}}"""
@@ -18261,6 +18279,40 @@ def admin_audit_low_emotion():
 
     app.logger.info(f'[admin_audit_low_emotion] threshold={threshold} results={len(results)} genre={genre_filter or "all"}')
 
+    # Recent rescores — last 10 Sonnet images rescored today, sorted by scored_at desc
+    try:
+        _recent = db.session.execute(db.text("""
+            SELECT i.id, i.original_filename, i.asset_name, i.genre, i.score, i.tier,
+                   i.wonder_score, i.aq_score, i.dod_score, i.disruption_score, i.dm_score,
+                   i.scored_at, u.username, u.full_name
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND COALESCE(i.is_haiku_try, FALSE) = FALSE
+              AND COALESCE(i.is_admin_curation, FALSE) = FALSE
+              AND i.scored_at >= NOW() - INTERVAL '24 hours'
+            ORDER BY i.scored_at DESC
+            LIMIT 15
+        """)).fetchall()
+    except Exception:
+        _recent = []
+
+    recent_rescores = [{
+        'id':       r.id,
+        'filename': r.original_filename or r.asset_name or f'image-{r.id}',
+        'genre':    r.genre or '—',
+        'score':    round(float(r.score), 2) if r.score else 0,
+        'tier':     r.tier or '—',
+        'wf':       round(float(r.wonder_score), 1) if r.wonder_score else 0,
+        'aq':       round(float(r.aq_score), 1) if r.aq_score else 0,
+        'dod':      round(float(r.dod_score), 1) if r.dod_score else 0,
+        'vd':       round(float(r.disruption_score), 1) if r.disruption_score else 0,
+        'dm':       round(float(r.dm_score), 1) if r.dm_score else 0,
+        'scored_at': r.scored_at,
+        'username': r.username,
+        'full_name': r.full_name or r.username,
+    } for r in _recent]
+
     return render_template('admin_low_emotion.html',
         results=results,
         genre_counts=genre_counts.most_common(),
@@ -18273,6 +18325,7 @@ def admin_audit_low_emotion():
         both_below=both_below,
         only_wf=only_wf,
         only_aq=only_aq,
+        recent_rescores=recent_rescores,
     )
 
 
@@ -34448,8 +34501,12 @@ def _try_genre_context(genre):
             "OVERALL: a visually compelling landscape with dramatic light scores 7.5–8.5 "
             "regardless of DM. Do NOT score a compelling landscape below 7.0. "
             "When DM is low, VD and WF carry the image — they are INDEPENDENT from DM. "
-            "DM CEILING: static scene with no moving/transient element = DM 5.5–6.5 max. "
-            "Beautiful light is VD, not DM. Transient element at peak = DM 7.5+. "
+            "DM — WHAT COUNTS AS TRANSIENT (score 7.0–8.0): storm light, burning sky, "
+            "golden shafts that lasted minutes, fog at precise level, moon/sun at geometric "
+            "position, moving subject at peak. "
+            "DM — WHAT IS STATIC (ceiling 6.5): good light on a mountain that lasted all "
+            "morning, even overcast, generic golden hour with no peak moment. "
+            "Dramatic storm light IS a transient event — score DM 7.0–7.5, not 5.5. "
             "Location Removal Test for Wonder above 8.0 only. "
             "DOD: remote access, extreme weather, pre-dawn scores 7+."
         ),
@@ -34501,15 +34558,20 @@ def _try_genre_context(genre):
         ),
         'People': (
             "PEOPLE/PORTRAIT: VD HARD FLOOR (non-negotiable): portrait with direct engaged "
-            "gaze = VD 7.0 MINIMUM. NEVER below 6.0 for any portrait with clearly visible "
-            "in-focus face. Above floor: strong directional light adds 0.5–1.0; graphic "
-            "framing adds 0.5. A compelling face under rim light = VD 7.5–8.0. "
+            "gaze = VD 7.0 MINIMUM. Looking-away or introspective portrait with strong "
+            "light and clear emotional register = VD 7.5 MINIMUM. "
+            "NEVER below 6.0 for any portrait with clearly visible in-focus face. "
+            "Above floor: strong directional light adds 0.5–1.0; graphic framing adds 0.5. "
             "DOD: studio cooperative portrait = 5.5–6.5. Environmental/stranger = 6.5–7.5. "
             "Do NOT penalise studio portraits on DOD. "
             "DM: posed and holding still = 5.5–6.5. Genuine unguarded expression = 7.5–8.5. "
-            "EMOTIONAL WONDER: if you can name the emotion in one word (dignity, grief, "
-            "defiance, tenderness, joy), score WF 7.5 minimum. "
-            "AQ dominant. Catchlight in the eye expected at 7+."
+            "Private introspective moment caught without subject's awareness = DM 7.0–7.5. "
+            "WF EMOTIONAL WONDER: if you can name the emotion in one word (dignity, grief, "
+            "defiance, tenderness, joy, melancholy, contemplation), score WF 7.5 minimum. "
+            "A portrait where the subject is looking away in private thought — melancholy, "
+            "contemplation, beauty — scores WF 7.5–8.0. "
+            "AQ dominant (48%). Catchlight in the eye expected at 7+. "
+            "WF/AQ coherence: if AQ >= 8.0, WF floor 7.0."
         ),
         'Nature': (
             "NATURE: GENRE REDIRECT — if a human is the PRIMARY subject (child reaching "
@@ -34573,15 +34635,23 @@ def _try_genre_context(genre):
             "CRITICAL — VD AND DM ARE INDEPENDENT: VD scores the initial visual impact "
             "(what stops the eye in 2 seconds). DM scores the specific unrepeatable instant "
             "(whether the photographer was at the right millisecond). A high VD does NOT "
-            "imply a high DM. Score them separately. "
-            "STORY SIGNAL — WF LIFT: when the image contains a clear narrative arc a "
-            "stranger can read without explanation (two subjects in emotional relationship, "
-            "a figure within a cultural world, a human gesture implying before and after) "
-            "lift WF by 0.3–0.5 above the base emotional score. "
-            "Named triggers: maternity silhouette = WF 8.0+. Two young animals alert "
-            "together = WF 7.8+. Monks/devotional figures walking together = WF 8.0+. "
-            "Child reaching toward nature = WF 7.8+. Lone figure of courage above crowd "
-            "= WF 8.0+."
+            "imply a high DM. Score them separately.\n"
+            "TITLE/DESCRIPTION READING: Before scoring WF and AQ, read the photographer's "
+            "title as witness testimony. 'Sunflower' for an elderly woman's portrait = the "
+            "photographer saw the sunflower in her. Score WF accordingly. 'A Silent Crow' "
+            "= something is wrong with the bird. That wrongness is the story.\n"
+            "RECOGNITION WONDER — WF 8.0–9.5: A face so alive with genuine emotion that a "
+            "stranger stops in a gallery. Uninhibited laughter. Weathered face full of joy. "
+            "A child's emotion so complete it is physically felt. The beauty the world walks "
+            "past — elderly, broken-toothed, wrinkled — when the photographer saw the dignity "
+            "and made it visible. Do NOT require rarity of subject. The seeing is rare, not "
+            "the subject. CONFIRMED BY LOUVRE: elderly Indian woman with broken teeth smiling "
+            "in sunflower field = WF 9.0. A child laughing so hard she covers her eyes = WF 9.0.\n"
+            "WF/AQ COHERENCE: if AQ >= 8.0, WF floor is 7.0. Gap > 2.0 is a scoring error.\n"
+            "STORY SIGNAL: narrative arc (two subjects in relationship, figure in cultural "
+            "world, gesture implying before/after) lifts WF 0.3–0.5. "
+            "Named triggers: maternity silhouette=8.0+, two young animals=7.8+, "
+            "monks together=8.0+, child reaching=7.8+, lone figure of courage=8.0+."
         ),
     }
 
@@ -35875,28 +35945,31 @@ _TRY_HAIKU_PROMPT = (
     "   Below 5  Moment missed.\n\n"
 
     "4. wf - Wonder Factor: does this image make you feel something? "
-    "Emotional resonance, awe, curiosity.\n"
-    "   9.5+     World Press Photo, IPA, Sony World Photography winner level. "
-    "Award this only for work of that standard.\n"
-    "   9.0-9.4  A singular find. The photograph could only exist because this "
-    "photographer was there and saw it.\n"
-    "   8.0-8.9  The discovery is complete and not easily repeated.\n"
-    "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
-    "   5.0-6.4  Pleasant. Does not linger.\n"
+    "Emotional resonance, awe, curiosity. TWO PATHS TO HIGH WF — score the HIGHEST:\n"
+    "   PATH 1 — DISCOVERY: the photograph reveals something the viewer could not have "
+    "found themselves. A compositional find, rare access, cultural world most cannot enter, "
+    "technical achievement that reveals the invisible.\n"
+    "   PATH 2 — RECOGNITION: the image shows a human truth so universal and genuine "
+    "that a stranger stops involuntarily. A face so alive with joy, dignity, grief, or "
+    "wonder that it is immediately and specifically felt. The beauty the world walks past "
+    "— weathered skin, broken teeth, uninhibited laughter — when the photographer stopped "
+    "and made it visible. RECOGNITION does not require rarity of subject. The SEEING is "
+    "rare. An elderly woman with broken teeth laughing in a sunflower field = WF 9.0 "
+    "(Louvre confirmed). A child laughing so hard she covers her eyes = WF 9.0. "
+    "A small child's pure wonder. A private human moment caught unguarded.\n"
+    "   9.5+     World Press Photo, IPA, Sony World Photography winner level.\n"
+    "   9.0-9.4  Singular find OR recognition wonder that stops any stranger.\n"
+    "   8.0-8.9  Discovery complete and not easily repeated, OR strong recognition wonder.\n"
+    "   7.0-7.9  Clear emotional signal — nameable in one word by a stranger.\n"
+    "   5.0-6.9  Pleasant but does not linger. Generic scene, no specific feeling.\n"
     "   Below 5  Nothing beyond the record.\n"
-    "   8.0-8.5  Deliberate technique that transforms a subject into something "
-    "the viewer could not have found without the photographer's intervention — "
-    "ICM that creates a colour field, long exposure that turns water to silk, "
-    "abstraction that reveals hidden structure. Test: could the viewer have "
-    "arrived at this vision themselves? If the answer is no, score 8.0-8.5.\n"
-    "   WONDER IS THE MOST OVER-SCORED DIMENSION BY A LARGE MARGIN. Measured "
-    "against the full engine it is where free evaluations drift highest, and it "
-    "carries the heaviest weight in most interest areas. A striking colour, a "
-    "dramatic sky, or a charismatic animal alone is NOT Wonder. "
-    "Wonder is whether the photograph reveals something the viewer could not "
-    "have found themselves. A well-made photograph of an ordinary scene scores "
-    "4-6 here. Before awarding 7 or above, name what is actually being revealed. "
-    "If you cannot name it in one clause, score below 6.\n\n"
+    "   ANTI-INFLATION (applies to Discovery path only, NOT Recognition path): "
+    "A striking colour, dramatic sky, or charismatic animal ALONE is not Wonder. "
+    "A well-made photograph of an ordinary scene with no specific emotional signal "
+    "scores 4-6. BUT: if the image produces a specific nameable feeling in a stranger "
+    "(joy, tenderness, awe, grief) — that IS Wonder regardless of subject rarity. "
+    "Before awarding 7+, either name what is being discovered OR name the emotion "
+    "a stranger would feel. If you can do either: score 7+.\n\n"
 
     "5. aq - Affective Quotient: is there soul in this frame? "
     "The intangible quality that makes it memorable.\n"
