@@ -18186,7 +18186,7 @@ def admin_audit_low_emotion():
                 i.id, i.original_filename, i.asset_name, i.genre, i.score, i.tier,
                 i.dod_score, i.disruption_score, i.dm_score, i.wonder_score, i.aq_score,
                 i.scored_at, i.audit_json,
-                u.username, u.full_name, u.plan
+                u.username, u.full_name, u.subscription_plan
             FROM images i
             JOIN users u ON u.id = i.user_id
             WHERE i.status = 'scored'
@@ -18230,7 +18230,7 @@ def admin_audit_low_emotion():
             'scored_at':  r.scored_at,
             'username':   r.username,
             'full_name':  r.full_name or r.username,
-            'plan':       r.plan or '—',
+            'plan':       r.subscription_plan or 'free',
             'hard_truth': hard_truth,
             'narrative':  narrative,
             'thumb_url':  None,  # populated below
