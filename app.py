@@ -18104,8 +18104,9 @@ wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
    An elderly Indian woman with broken teeth laughing in a sunflower field = WF 9.0.
    A child covering her eyes laughing completely = WF 9.0.
 
-WF/AQ COHERENCE: if aq >= 8.0, wf must be >= 7.0. A gap > 2.0 between wf and aq
-is impossible — they measure the same emotional truth. If your aq is 8.0+, check wf.
+WF/AQ COHERENCE: if aq >= 8.5, wf must be >= 8.0. If aq >= 8.0, wf must be >= 7.5.
+If aq >= 7.5, wf must be >= 7.0. A gap > 2.0 between wf and aq is impossible —
+they measure the same emotional truth. Check before submitting.
 
 Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
 - dod: Depth of Difficulty (how hard was this to achieve technically and artistically)
@@ -34462,12 +34463,13 @@ def _try_genre_context(genre):
     """
     _HAIKU_GENRE_CONTEXT = {
         'Wildlife': (
-            "WILDLIFE: VD MINIMUMS (hard floors for Haiku): small bird at peak wing-spread "
-            "with symmetric feather geometry against bokeh = VD 7.8 MINIMUM. "
+            "WILDLIFE: VD GUIDES (not hard floors): small bird at peak wing-spread "
+            "with symmetric feather geometry against bokeh = VD 7.0–7.5 "
+            "(only 7.5–8.0 if bokeh is truly exceptional AND symmetry perfect). "
             "Lion/big cat cubs alert in golden light = VD 7.2 MINIMUM. "
             "Two juvenile animals simultaneously alert/looking at camera = VD 7.2 MINIMUM. "
             "WF MINIMUMS: individual feather separation on fast small bird "
-            "= WF 8.0 MINIMUM. Two young animals in golden natural light (tenderness) "
+            "= WF 7.5–8.0. Two young animals in golden natural light (tenderness) "
             "= WF 7.8 MINIMUM. Cultural/access wonder = WF 8.0 MINIMUM. "
             "DM — BIRDS: peak wing-spread on small bird with feather separation = DM 8.5–9.0. "
             "DM — MAMMALS ACTIVE CONTACT (playing, wrestling, grooming): DM 7.0–8.5. "
@@ -34647,7 +34649,8 @@ def _try_genre_context(genre):
             "and made it visible. Do NOT require rarity of subject. The seeing is rare, not "
             "the subject. CONFIRMED BY LOUVRE: elderly Indian woman with broken teeth smiling "
             "in sunflower field = WF 9.0. A child laughing so hard she covers her eyes = WF 9.0.\n"
-            "WF/AQ COHERENCE: if AQ >= 8.0, WF floor is 7.0. Gap > 2.0 is a scoring error.\n"
+            "WF/AQ COHERENCE: if AQ >= 8.5, WF floor is 8.0. If AQ >= 8.0, WF floor 7.5. "
+            "If AQ >= 7.5, WF floor 7.0. Gap > 2.0 is a scoring error.\n"
             "STORY SIGNAL: narrative arc (two subjects in relationship, figure in cultural "
             "world, gesture implying before/after) lifts WF 0.3–0.5. "
             "Named triggers: maternity silhouette=8.0+, two young animals=7.8+, "
