@@ -18459,7 +18459,8 @@ def admin_calibration():
             SELECT id, original_filename, genre, score, tier,
                    dod_score, disruption_score, dm_score, wonder_score, aq_score,
                    scored_at, created_at,
-                   COALESCE(is_haiku_try, FALSE) AS engine_haiku
+                   COALESCE(is_haiku_try, FALSE) AS engine_haiku,
+                   COALESCE(camera_track, 'camera') AS camera_track
             FROM images
             WHERE is_admin_curation = TRUE
               AND COALESCE(is_calibration_drift, FALSE) = TRUE
@@ -18471,52 +18472,59 @@ def admin_calibration():
         app.logger.warning(f'[admin_calibration] query failed: {_re}')
         rows = []
 
-    # Build pairs dict and CSV export data in Python — avoids fragile Jinja JSON
-    pairs  = {}
-    s_by_fn = {}
-    h_by_fn = {}
+    # Build pairs dict keyed by filename → {sonnet_camera, haiku_camera, sonnet_mobile, haiku_mobile}
+    # Each slot holds the most-recent row for that combination.
+    pairs = {}
     for r in rows:
         fn = r.original_filename or f'image-{r.id}'
         if fn not in pairs:
-            pairs[fn] = {}
-        if r.engine_haiku:
-            pairs[fn]['haiku'] = r
-            h_by_fn[fn] = r
-        else:
-            pairs[fn]['sonnet'] = r
-            s_by_fn[fn] = r
+            pairs[fn] = {
+                'sonnet_camera': None, 'haiku_camera': None,
+                'sonnet_mobile': None, 'haiku_mobile': None,
+            }
+        engine = 'haiku' if r.engine_haiku else 'sonnet'
+        track  = (r.camera_track or 'camera').lower()
+        if track not in ('mobile', 'camera'):
+            track = 'camera'
+        slot = f'{engine}_{track}'
+        # Keep most recent per slot
+        existing = pairs[fn].get(slot)
+        if existing is None or (r.scored_at and existing.scored_at and r.scored_at > existing.scored_at):
+            pairs[fn][slot] = r
 
-    # Build export rows as clean Python list — serialised to JSON by tojson filter
+    # Build export rows — all four paths per image
     export_rows = []
+    _engine_labels = [
+        ('sonnet_camera', 'Sonnet', 'Camera'),
+        ('haiku_camera',  'Haiku',  'Camera'),
+        ('sonnet_mobile', 'Sonnet', 'Mobile'),
+        ('haiku_mobile',  'Haiku',  'Mobile'),
+    ]
     for fn, p in pairs.items():
-        s = p.get('sonnet')
-        h = p.get('haiku')
-        delta = round(h.score - s.score, 2) if (s and h and s.score and h.score) else ''
-        if s:
+        # delta = haiku_camera - sonnet_camera (primary comparison)
+        sc = p.get('sonnet_camera')
+        hc = p.get('haiku_camera')
+        delta_cam = round(hc.score - sc.score, 2) if (sc and hc and sc.score and hc.score) else ''
+        sm = p.get('sonnet_mobile')
+        hm = p.get('haiku_mobile')
+        delta_mob = round(hm.score - sm.score, 2) if (sm and hm and sm.score and hm.score) else ''
+        for slot, eng_label, track_label in _engine_labels:
+            r = p.get(slot)
+            if not r:
+                continue
+            delta = delta_cam if track_label == 'Camera' and eng_label == 'Haiku' else (
+                    delta_mob if track_label == 'Mobile' and eng_label == 'Haiku' else '')
             export_rows.append([
-                fn, 'Sonnet', s.genre or '',
-                round(float(s.score), 2) if s.score else '',
-                s.tier or '',
-                round(float(s.dod_score), 1) if s.dod_score else '',
-                round(float(s.disruption_score), 1) if s.disruption_score else '',
-                round(float(s.dm_score), 1) if s.dm_score else '',
-                round(float(s.wonder_score), 1) if s.wonder_score else '',
-                round(float(s.aq_score), 1) if s.aq_score else '',
+                fn, eng_label, track_label, r.genre or '',
+                round(float(r.score), 2) if r.score else '',
+                r.tier or '',
+                round(float(r.dod_score), 1) if r.dod_score else '',
+                round(float(r.disruption_score), 1) if r.disruption_score else '',
+                round(float(r.dm_score), 1) if r.dm_score else '',
+                round(float(r.wonder_score), 1) if r.wonder_score else '',
+                round(float(r.aq_score), 1) if r.aq_score else '',
                 delta,
-                s.scored_at.strftime('%Y-%m-%d %H:%M') if s.scored_at else '',
-            ])
-        if h:
-            export_rows.append([
-                fn, 'Haiku', h.genre or '',
-                round(float(h.score), 2) if h.score else '',
-                h.tier or '',
-                round(float(h.dod_score), 1) if h.dod_score else '',
-                round(float(h.disruption_score), 1) if h.disruption_score else '',
-                round(float(h.dm_score), 1) if h.dm_score else '',
-                round(float(h.wonder_score), 1) if h.wonder_score else '',
-                round(float(h.aq_score), 1) if h.aq_score else '',
-                '',
-                h.scored_at.strftime('%Y-%m-%d %H:%M') if h.scored_at else '',
+                r.scored_at.strftime('%Y-%m-%d %H:%M') if r.scored_at else '',
             ])
 
     return render_template('admin_calibration.html',
@@ -18595,6 +18603,12 @@ def admin_calibration_upload():
             db.session.execute(
                 db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
                 {'iid': img.id}
+            )
+        # Store camera_track on the image so the calibration dashboard can group by tier
+        if camera_track in ('mobile', 'camera'):
+            db.session.execute(
+                db.text('UPDATE images SET camera_track = :ct WHERE id = :iid'),
+                {'ct': camera_track, 'iid': img.id}
             )
 
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
@@ -18730,6 +18744,16 @@ def admin_calibration_rescore(image_id):
 
         genre  = img.genre or 'General'
         result = {'image_id': image_id, 'engine': engine, 'status': 'failed'}
+
+        # Persist camera_track so calibration dashboard can group by tier
+        if camera_track in ('mobile', 'camera'):
+            try:
+                db.session.execute(
+                    db.text('UPDATE images SET camera_track = :ct WHERE id = :iid'),
+                    {'ct': camera_track, 'iid': image_id}
+                )
+            except Exception:
+                pass
 
         img.status = 'pending'
         db.session.commit()
