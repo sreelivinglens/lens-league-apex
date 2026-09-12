@@ -18230,24 +18230,39 @@ GENRE GUIDANCE:
 CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
 {cal_line}
 
-BLOWN HIGHLIGHTS PENALTY — CHECK FIRST:
-If subject highlights are blown (clipped whites on face/skin/primary subject):
-  DoD penalty: -0.5 to -1.0 (technical execution failure)
-  VD penalty: -0.3 to -0.5 (tonal collapse weakens visual impact)
-  AQ penalty: -0.3 to -0.5 (emotional impact reduced)
-Creative intentional high-key: exempt. Action/sport with blown subject: penalise.
+BLOWN HIGHLIGHTS — CHECK FIRST:
+Blown subject highlights = DoD -0.5 to -1.0, VD -0.3 to -0.5, AQ -0.3 to -0.5.
+Creative high-key exempt. Action/sport with blown subject: penalise.
 
-AQ ANTI-INFLATION RULE — READ BEFORE SCORING AQ:
-Most images score AQ 6.5-7.5. AQ 8.0+ requires that a stranger
-stopping at this image in a gallery would feel something specific
-enough to name in one word — not 'nice' or 'interesting' but a
-real emotion: love, grief, awe, defiance, longing, unease.
-Technical excellence alone does NOT create AQ 8.0+.
-AQ ANCHORS: Maternity silhouette (Love, 91% story) = AQ 8.5.
-Child under blossoms (Innocence, warm ambient) = AQ 7.8.
-Swallow landing (craft pleasure, Freedom) = AQ 7.5-7.8.
-DO NOT score AQ 8.0+ for a well-executed image that creates
-pleasant feeling without specific emotional force.
+ABSOLUTE AQ REFERENCE: Raghu Rai Bhopal image (child's face in earth) = AQ 9.5.
+Every image on this platform scores below this. Use as ceiling.
+
+AQ NAMED ANCHORS — interpolate between these:
+  Nihang horseman on two galloping horses = AQ 8.1 (Defiance — specific, rare)
+  Maternity shadow on cracked wall = AQ 7.9 (Love — universal, 91% story, stays)
+  Kathak feet ICM in-camera BW Spider = AQ 7.9 (Rhythm — you almost hear bells)
+  Monks in monastery corridor = AQ 7.1 (Peace — real but passes gently)
+  Mountain landscape burning sky = AQ 7.4 (Awe — real but familiar genre)
+  Woman in white sari bowed = AQ 7.0 (Grace — quiet, culturally specific)
+  Two lion cubs alert on log = AQ 6.7 (Tenderness — warm, familiar, passes)
+  Child reaching for blossoms = AQ 6.6 (Joy — gentle, many images do this)
+  Studio portrait contemplative gaze = AQ 6.5 (Beauty/Nothing — 35% story)
+  Swallow landing wings spread = AQ 6.3 (Craft admiration — not an emotion)
+
+WF NAMED ANCHORS — interpolate between these:
+  Nihang horseman = WF 8.5 (Access+Cultural — disappearing world, danger real)
+  Maternity shadow on cracked wall = WF 8.0 (Eye Wonder — found the wall)
+  Kathak feet ICM = WF 8.0 (Eye Wonder — sound made visible, one frame)
+  Monks monastery = WF 7.9 (Cultural+Access — closed world, red-on-red find)
+  Mountain landscape burning sky = WF 7.2 (Eye Wonder — CSI applies, genre saturated)
+  Woman in sari = WF 7.0 (Cultural mild — beautiful, accessible world)
+  Lion cubs on log = WF 7.0 (Access moderate — CSI: every safari has this)
+  Child with blossoms = WF 6.7 (Emotional mild — familiar, gentle, not a find)
+  Studio portrait = WF 6.2 (None — no world shown, no find)
+  Swallow landing = WF 6.2 (None — exceptional craft, common subject)
+
+DO NOT compress scores into 7.5-8.5. Birds AQ is 6.3. Portrait WF is 6.2.
+The full range exists. Score what you see against these anchors.
 
 BEFORE SCORING WF AND AQ — READ THIS:
 wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
