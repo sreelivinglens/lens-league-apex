@@ -449,6 +449,10 @@ DM (Decisive Moment):
   The Sergey Pesterev Landscape — dramatic storm light with golden shafts
   and layered mountain silhouettes under a burning sky = TRANSIENT light
   event, DM 7.0–7.5, not a static scene.
+  ISOLATION RULE DOES NOT APPLY TO LANDSCAPE TRANSIENT DM: storm light,
+  burning sky, and fog events are the decisive moment IN LANDSCAPE — scoring
+  DM 7.0–7.5 for these is independent of any DoD photographic intelligence
+  assessment. The transient light IS the DM signal. Do not suppress it.
   A child standing still under cherry blossoms = DM 5.0–6.0 (no transient).
   Spores dispersing at the exact moment = DM 8.0+.
 
@@ -1810,6 +1814,10 @@ GENRE_CONTEXT = {
         "conditions. A dark subject against bright water or backlit sky is a known exposure "
         "challenge — penalise if the subject is lost to silhouette when detail was the story. "
         "Rare behaviour, dangerous proximity, or extreme environmental conditions raise DoD. "
+        "JUVENILE WILDLIFE PROXIMITY: being within close range of wild predator cubs "
+        "(lion, leopard, cheetah, bear) in natural habitat = Situational DoD 8.0–8.5. "
+        "This is not telephoto safari — genuine proximity that most photographers never achieve. "
+        "Score DoD 8.0+ when two wild juvenile subjects are at close range in golden light. "
         "For small fast birds: individual feather separation at full resolution on a "
         "landing/displaying passerine requires shutter speeds of 1/2000s+.\n"
 "MODERN AF TECHNOLOGY ADJUSTMENT — MANDATORY:\n"
@@ -1869,11 +1877,13 @@ GENRE_CONTEXT = {
         "  ACTIVE INTERACTION (in physical contact — playing, wrestling, grooming, nursing): "
         "  DM 7.0–8.5 — score the peak moment of contact or expression.\n"
         "  ALERT/AWARE (not in contact, but both subjects alert, looking in the same "
-        "  direction or at camera, aware of the world around them): "
-        "  DM 6.0–7.0 — the simultaneous alertness has a peak, but it is lower than "
-        "  active physical interaction. Two lion cubs simultaneously alert and looking "
-        "  forward = DM 6.5. Do NOT score this as a static scene (it is not) but do "
-        "  NOT apply the contact-interaction ceiling.\n"
+        "  direction or at camera): "
+        "  SINGLE SUBJECT alert/resting: DM 6.0–6.5. No simultaneous peak."
+        "  TWO SUBJECTS simultaneously alert, looking at camera at same instant:"
+        "  DM 7.0–7.5. Getting BOTH juvenile subjects at peak alertness simultaneously"
+        "  is genuinely unrepeatable — one looks away, the moment is gone."
+        "  Do NOT apply the single-subject 6.5 ceiling to two-subject simultaneous alert."
+        "  The dual-peak IS the decisive moment.\n"
         "GENERAL: A catch freeze with prey visible scores higher than a takeoff. "
         "Two subjects in contact scores higher than one subject in flight.\n\n"
 
@@ -1977,7 +1987,15 @@ GENRE_CONTEXT = {
         "not the photographer. Wonder above 8.5 requires the photographer to have "
         "TRANSFORMED the scene, not merely recorded it. "
         "Kenna's Chicago pier posts score 9.4 Wonder. Iceland glaciers without compositional "
-        "transformation score 8.0 Wonder. The location is not the image.\n\n"
+        "transformation score 8.0 Wonder. The location is not the image.\n"
+        "CULTURAL SATURATION INDEX (CSI) — WF CEILING FOR SATURATED GENRES:\n"
+        "Mountain landscape + dramatic light has been photographed by every serious "
+        "landscape photographer. The reference standard is the best in class: "
+        "Ansel Adams mountain work = WF 9.0. Exceptional contemporary masters = WF 9.2. "
+        "An excellent but non-transformative mountain landscape = WF 7.5–8.0 ceiling. "
+        "The audience's reference frame is their phone camera — the ENGINE's reference "
+        "frame is the history of great landscape photography. "
+        "WF 8.0 = excellent. WF 8.5+ = transforms the genre. Score accordingly.\n\n"
 
         "UBIQUITY CEILING: The following techniques and locations are so widely photographed "
         "that they carry a Wonder ceiling of 8.0 unless the photographer's specific "
