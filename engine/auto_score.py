@@ -1551,6 +1551,23 @@ GENRE_CONTEXT = {
         "demonstrates simultaneous technical and artistic control (highest DoD). "
         "Pure abstract/mosaic/atmospheric work can score equally high or higher on Disruption and Wonder. "
         "Refer to STEP 0 for full DoD scoring guide.\n\n"
+        "CREATIVE SUB-TYPE SCORING — IDENTIFY THE SUB-TYPE FIRST:\n"
+        "DANCE / MOVEMENT / PERFORMANCE: Body as visual form at peak geometric expression "
+        "in dramatic directional light. The subject, light, and motion must all peak together. "
+        "VD 8.0–8.5. Overall score 7.8–8.4. "
+        "Score 8.5+ VD only when geometric body form, dramatic light, AND peak motion "
+        "all three are simultaneously exceptional. Do not floor VD at 8.5 automatically.\n"
+        "FINE ART / ABSTRACT / CONCEPTUAL: Scored on concept strength AND technical execution. "
+        "Strong concept with excellent technique: 7.8–8.2. "
+        "Strong concept with competent technique: 7.5–7.8. "
+        "Competent execution without compelling concept: 7.2–7.5. "
+        "Do NOT apply the Dance VD floor to Fine Art — they are different sub-types.\n"
+        "ICM / PANNING / ZOOM BURST: Score technique difficulty on DOD. "
+        "The pattern and colour field carry VD. "
+        "Emotional register (what the blur makes the viewer feel) carries AQ.\n"
+        "MINIMALIST / GRAPHIC: Reduction is the statement. "
+        "Fewer elements executed with precision scores higher than complexity. "
+        "VD 7.5–8.5 when the reduction is complete and the geometry is exact.\n\n"
         "CRITICAL FOR CREATIVE GENRE — ABSTRACTION FIRST:\n"
         "When the primary subject is geometric pattern, texture, colour field, or aerial abstraction, "
         "DO NOT attempt to identify incidental small objects in the frame as wildlife or animals unless "
@@ -1700,15 +1717,27 @@ GENRE_CONTEXT = {
         "appears under 'typical behaviour' in any field guide — WF is 5.5–6.5.\n"
         "If it would appear under 'rarely observed' — WF is 7.5+.\n"
         "GEOMETRY IS NOT WONDER: perfect wing symmetry, aircraft-form spread, painterly bokeh\n"
-        "— these are VD signals, not WF signals. A swallow landing with perfect geometric\n"
-        "symmetry scores VD 7.0–7.5 and WF 5.5–6.0. The frame is beautiful. Any swallow\n"
-        "landing on the same perch tomorrow gives the same shot. That is WF 5.5–6.0.\n"
-        "TECHNICAL WONDER: adds at most +0.5 to WF, and only when the behaviour is also\n"
-        "at least UNCOMMON. Feather separation alone does not move WF above 6.5.\n"
-        "EMOTIONAL WONDER — JUVENILE/FAMILY: Two young animals simultaneously alert\n"
-        "and looking at camera in golden light — lion cubs, elephant calves, primate infants\n"
-        "— immediate emotional response nameable in one word. Score WF 7.0–7.5.\n"
-        "Most humans will never be this close to wild lion cubs in golden light. That is wonder.\n"
+        "— these are VD signals, not WF signals. A swallow landing with perfect\n"
+        "geometric symmetry is a beautiful frame. Any swallow landing on the same\n"
+        "perch tomorrow could give the same shot.\n"
+        "COMMON BEHAVIOUR + EXCELLENT EXECUTION: when technical and compositional\n"
+        "execution is exceptional (perfect feather separation, extraordinary bokeh,\n"
+        "aircraft-wing symmetry at precise peak) the WF floor rises to 6.5–7.0.\n"
+        "Common behaviour with average execution: WF 5.5–6.0.\n"
+        "Common behaviour with exceptional execution: WF 6.5–7.0.\n"
+        "Exceptional execution alone does not move WF above 7.0 — the act itself\n"
+        "must be at least uncommon to reach 7.5+.\n"
+        "EMOTIONAL WONDER — JUVENILE/FAMILY: This is a SEPARATE signal from behavioural\n"
+        "rarity. Two or more juvenile animals (cubs, calves, pups, chicks) in natural\n"
+        "light with mutual awareness — the emotional response of tenderness is\n"
+        "immediate, universal, and nameable in one word.\n"
+        "WF HARD FLOOR for juvenile family Wildlife: 7.5 MINIMUM.\n"
+        "This applies regardless of behavioural rarity — the tenderness IS the wonder.\n"
+        "Most humans will never be within 5 metres of wild lion cubs in golden grass.\n"
+        "Alert expression in both subjects: WF 7.5–8.0.\n"
+        "Physical contact (playing, grooming): WF 8.0–8.5.\n"
+        "DO NOT apply the common-behaviour ceiling to juvenile family images.\n"
+        "The behavioural rarity ladder is for adult single-subject images.\n"
         "CULTURAL WONDER — ACCESS: Monks, spiritual figures, or closed communities in\n"
         "their authentic environment, photographed from inside, score WF 8.0–8.5.\n"
         "Most viewers will never enter a Tibetan monastery. That is wonder."
@@ -4894,13 +4923,20 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
                     lines.append('subject. Score Technical DoD high when execution is clean.')
                 elif _effective_genre == 'People':
                     lines.append('Wide (1x) and portrait mode cover the full range of people work.')
-                    lines.append('Portrait mode (computational bokeh) on iPhone Pro/Android Ultra')
-                    lines.append('is a valid creative tool — clean edge separation with no fringing')
-                    lines.append('= Technical DoD 6.5–7.5. Score it as deliberate craft, not a cheat.')
-                    lines.append('Do NOT penalise absence of natural optical bokeh — that requires')
-                    lines.append('a dedicated camera. Portrait mode IS the phone equivalent.')
-                    lines.append('Score DoD: environmental stranger portrait on phone = 6.5–7.5')
+                    lines.append('Portrait mode on iPhone Pro/Android Ultra: valid creative tool.')
+                    lines.append('Clean edge separation, no fringing = Technical DoD 6.5–7.5.')
+                    lines.append('Do NOT penalise absence of natural optical bokeh.')
+                    lines.append('Environmental stranger portrait on phone = DoD 6.5–7.5')
                     lines.append('(social proximity + wide lens = real difficulty).')
+                    lines.append('')
+                    lines.append('WF/AQ COHERENCE — TWO TIERS:')
+                    lines.append('  QUIET / INTIMATE (child, contemplative, soft natural light,')
+                    lines.append('  no strong emotional peak): AQ >= 8.0 → WF floor 7.0. Gap max 1.5.')
+                    lines.append('  These score high on craft but wonder is gentle, not arresting.')
+                    lines.append('  RECOGNITION WONDER (uninhibited laughter, raw grief, elderly')
+                    lines.append('  dignity, a stranger stops in a gallery): AQ >= 8.0 → WF floor 7.5.')
+                    lines.append('  Identify which tier first. Child under cherry blossoms = quiet.')
+                    lines.append('  Elderly woman laughing with broken teeth = recognition wonder.')
                 elif _effective_genre == 'Architecture':
                     lines.append('Ultrawide (0.5x) is the correct architecture lens.')
                     lines.append('Mobile architecture is fully capable — score DoD on access,')
@@ -4924,9 +4960,22 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
                 elif _effective_genre == 'Creative':
                     lines.append('ICM, motion blur, minimalism, long exposure, abstract — fully capable.')
                     lines.append('Portrait mode bokeh (computational) — valid for close subjects only.')
-                    lines.append('What is NOT available: natural optical bokeh from wide aperture.')
-                    lines.append('Shallow-DOF rendering of a subject 3m away = camera only.')
-                    lines.append('Never suggest or reference wide-aperture bokeh for mobile Creative.')
+                    lines.append('Wide-aperture optical bokeh is NOT available — never suggest it.')
+                    lines.append('')
+                    lines.append('CREATIVE SUB-TYPE — IDENTIFY BEFORE SCORING:')
+                    lines.append('  DANCE / MOVEMENT / PERFORMANCE:')
+                    lines.append('  Body at peak geometric expression in directional light.')
+                    lines.append('  Form + light + motion must all peak together.')
+                    lines.append('  VD 8.0–8.5. Score 8.5 only when all three are exceptional.')
+                    lines.append('  Do NOT floor VD at 8.5 automatically.')
+                    lines.append('  FINE ART / ABSTRACT / CONCEPTUAL:')
+                    lines.append('  Concept strength + technical execution quality.')
+                    lines.append('  Strong concept + excellent technique: 7.8–8.2.')
+                    lines.append('  Strong concept + competent technique: 7.5–7.8.')
+                    lines.append('  Competent execution, weak concept: 7.2–7.5.')
+                    lines.append('  Do NOT apply Dance VD floor to Fine Art.')
+                    lines.append('  ICM / PANNING / BLUR / MINIMALIST:')
+                    lines.append('  Technique on DOD. Pattern/colour on VD. Emotional register on AQ.')
                 elif _effective_genre == 'Fashion':
                     lines.append('Wide editorial fashion: fully capable. Environmental, reportage-style.')
                     lines.append('Portrait mode on close subjects: valid computational depth.')
@@ -4952,24 +5001,33 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
                     lines.append('5x on iPhone Pro = approx 120mm full-frame equivalent.')
                     lines.append('Beyond 5x = digital zoom = pixelated = Technical DoD penalty.')
                     lines.append('')
-                    lines.append('What this means for scoring:')
-                    lines.append('  — Situational DoD scores FULL: being in the habitat is the')
-                    lines.append('    same physical achievement regardless of instrument.')
-                    lines.append('  — Technical DoD ceiling at 6.5 for any image requiring')
-                    lines.append('    telephoto reach that the phone cannot optically deliver.')
-                    lines.append('    If subject fills frame at 5x with no pixelation: score freely.')
-                    lines.append('    If subject is small and background is soft from digital zoom:')
-                    lines.append('    that is artificial — Technical DoD 5.0–5.5.')
-                    lines.append('  — Proximity as discipline: a sharp large mammal or bird')
-                    lines.append('    requiring the photographer to be within 2m = Technical')
-                    lines.append('    DoD 7.0–8.0. The closeness IS the achievement.')
-                    lines.append('  — Bokeh from Wildlife: no optical bokeh at wildlife distances.')
-                    lines.append('    Do NOT penalise the absence of background separation.')
-                    lines.append('    Do NOT suggest a longer lens — the phone has none.')
+                    lines.append('DOD: Situational DoD scores FULL — habitat access same effort.')
+                    lines.append('Technical DoD ceiling 6.5 where telephoto reach is the gap.')
+                    lines.append('Subject fills frame at 5x with clean edges: score freely.')
+                    lines.append('Digital zoom softness visible: Technical DoD 5.0–5.5.')
+                    lines.append('Proximity within 2m of animal = Technical DoD 7.0–8.0.')
+                    lines.append('No optical bokeh at wildlife distances — do NOT penalise absence.')
+                    lines.append('Never suggest a longer lens.')
                     lines.append('')
-                    lines.append('Coaching language: "Without a telephoto, proximity was the')
-                    lines.append('discipline — that closeness is a skill worth building."')
-                    lines.append('Never say: "use a longer lens", "use a 300mm", "telephoto would help".')
+                    lines.append('WF — BEHAVIOURAL RARITY (birds, adult single subject):')
+                    lines.append('  Common behaviour (landing, perching, walking): WF 5.5–6.5.')
+                    lines.append('  Excellent execution of common behaviour: WF 6.5–7.0.')
+                    lines.append('  Uncommon (courtship, display, alarm): WF 6.5–7.5.')
+                    lines.append('  Rare (predation, prey visible, conflict, feeding young): WF 7.5–8.5.')
+                    lines.append('WF — JUVENILE/FAMILY HARD FLOOR (separate signal):')
+                    lines.append('  Two or more juveniles in natural light with mutual awareness:')
+                    lines.append('  WF 7.5 MINIMUM regardless of behaviour rarity.')
+                    lines.append('  Tenderness IS the wonder. Alert both subjects: 7.5–8.0.')
+                    lines.append('  Physical contact (play, grooming): 8.0–8.5.')
+                    lines.append('')
+                    lines.append('DM — BIRDS BURST MODE:')
+                    lines.append('  20–30fps burst, peak selected in post: DM 6.5–7.5.')
+                    lines.append('  Single-frame / manual timing: DM 8.0–9.0.')
+                    lines.append('  Unknown frame rate: default DM 7.0–7.5.')
+                    lines.append('  DOD still scores full for sharpness and exposure — DM only adjusted.')
+                    lines.append('')
+                    lines.append('Coaching: "Without telephoto, proximity was the discipline."')
+                    lines.append('Never say: use a longer lens, 300mm, telephoto would help.')
                 elif _effective_genre == 'Astrophotography':
                     lines.append('HARD CONSTRAINT — SENSOR SIZE AND MANUAL CONTROL:')
                     lines.append('Night mode gives 3–10 second automatic exposures. Not equivalent')
