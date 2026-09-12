@@ -585,6 +585,49 @@ WF (Wonder Factor):
   for a portrait of an elderly woman with broken teeth — that title is testimony.
   The photographer saw the sunflower in her. Score that act of seeing as WF 9.0.
 
+  WF NAMED IMAGE ANCHORS — score new images above or below these fixed points:
+
+  Nihang Sikh horseman on two galloping horses (Sport):
+    WF 8.5 — Access + Cultural Wonder. A world disappearing. Sikh martial
+    tradition few outsiders witness at this proximity. Danger is real.
+    The moment is at its absolute physical peak.
+
+  Maternity shadow on cracked wall (Silhouette):
+    WF 8.0 — Eye Wonder. The photographer found the cracked wall beneath
+    the shadow. New life against decay. The seeing decision IS the image.
+
+  Kathak dancer feet, ICM in-camera (Dance):
+    WF 8.0 — Eye Wonder + Datsuzoku. Photographer looked at the feet not
+    the face. Sound made visible. One frame, not edited. BW Spider award.
+
+  Monks in Tibetan monastery corridor (Monks):
+    WF 7.9 — Cultural + Access Wonder. Inside a closed world most viewers
+    never enter. Red-on-red colour find. Strong access signal.
+
+  Mountain landscape, burning orange sky (Landscape):
+    WF 7.2 — Eye Wonder, moderate. Layered planes + diagonal cloud is a
+    compositional find. But CSI applies: most photographed landscape genre.
+
+  Woman in white sari, head bowed (Fineart):
+    WF 7.0 — Cultural Wonder, mild. Beautiful and specific but the world
+    it shows is accessible. Not a closed community.
+
+  Two lion cubs alert on log (Cubs):
+    WF 7.0 — Access Wonder, moderate. Wild proximity is real.
+    But every safari photographer brings this image. CSI applies.
+
+  Child reaching for cherry blossoms (Cherry):
+    WF 6.7 — Emotional Wonder, mild. Joy of childhood. Familiar.
+    Gentle. Not a compositional find. Not a closed world.
+
+  Studio portrait, contemplative gaze (Portrait):
+    WF 6.2 — No clear wonder signal. Technically masterful.
+    Nothing found the viewer could not see without the photographer.
+
+  Swallow landing, wings spread (Birds):
+    WF 6.2 — No wonder signal. Exceptional craft. Common subject.
+    No new world shown. No compositional find beyond the genre.
+
   WF / AQ CORRELATION RULE (Session 218 — from 75-image audit data):
   WF and AQ are measuring the same event from different angles — one asks what wonder
   the image creates, the other asks what feeling it creates. They MUST correlate.
@@ -696,67 +739,64 @@ WF (Wonder Factor):
   ══════════════════════════════════════════════════════════════════════════
 
 AQ (Affective Quotient):
-  The specific feeling the image creates in a viewer. NOT technical quality —
-  technical quality lives in DoD.
+  The specific feeling the image creates in a viewer. NOT technical quality.
+  Three questions: WHAT does the viewer feel? How PRECISELY is that feeling named?
+  How INTENSELY does it arrive and stay?
 
-  CRITICAL: Name the specific emotion FIRST. Then score its precision and intensity.
-  AQ is NOT a general quality score. It is not "this is a good photograph."
-  It is: WHAT DOES THIS IMAGE MAKE THE VIEWER FEEL, and HOW PRECISELY AND
-  INTENSELY does it deliver that specific feeling?
+  AQ is an emotional intensity meter, not a quality ladder.
+  Most technically good photographs score AQ 6.0–7.5. That is correct and honest.
 
-  MOST IMAGES SCORE AQ 6.0–7.5. This is correct. A technically good photograph
-  that creates a general pleasant or interesting response — but no specific
-  nameable feeling — scores AQ 6.5–7.0. That is not a failing. It is an honest
-  reading. The AQ scale is not a quality ladder — it is an emotional intensity meter.
+  ABSOLUTE REFERENCE — Raghu Rai, Bhopal gas tragedy, child's face in the earth:
+  AQ 9.5. Grief, horror, and witness simultaneously. Defines the event permanently.
+  Every other image on this platform scores below this. Use it as the ceiling.
 
-  AQ SCORING SCALE — READ EVERY BAND BEFORE SCORING:
-  9.5–9.7: Defines the image permanently. Viewer cannot look away or forget.
-    IPA/WSPA POTY/World Press Photo level — the emotion IS the historical record.
-    RARE. Perhaps 1 in 500 images evaluated on this platform.
-  9.0–9.4: Specific, powerful, undeniable emotion that lingers after looking away.
-    Viewer cannot remain neutral. Award-winning emotional register.
-    RARE. Perhaps 1 in 200 images.
-  8.5–8.9: Strong specific emotion — the viewer is moved, not just pleased.
-    The feeling is clear, nameable, and complete. The image does emotional work.
-    UNCOMMON. Perhaps 1 in 20 images.
-  8.0–8.4: A clear specific emotion that lands but doesn't overwhelm.
-    The viewer feels something definite — but it passes rather than lingers.
-    UNCOMMON. Perhaps 1 in 10 images. Do NOT default here for competent work.
-  7.0–7.9: Emotional content present but not fully resolved.
-    The image suggests a feeling without fully delivering it. Some emotional
-    register — warmth, interest, mild pleasure — but not specific or intense.
-    THIS IS THE CORRECT BAND FOR MOST TECHNICALLY GOOD PHOTOGRAPHS.
-    A well-executed bird landing: AQ 7.2–7.5 (aesthetic pleasure from craft).
-    A clean maternity portrait in studio: AQ 7.0–7.5.
-    A competent landscape at golden hour: AQ 7.0–7.5.
-  6.0–6.9: Minimal emotional content. Technically competent, emotionally neutral.
-    The viewer appreciates the craft but feels nothing specific. Documents without moving.
-    A correctly exposed building exterior: AQ 6.0–6.5.
-    A wildlife record shot with no behavioural significance: AQ 6.0–6.5.
-  Below 6.0: No emotional content, or negative — poor execution that frustrates the eye.
+  NAMED IMAGE ANCHORS — score new images above or below these fixed points:
 
-  THE ANTI-INFLATION RULE — MANDATORY:
-  AQ 8.0+ requires that you can answer YES to: "A stranger, stopping at this image
-  in a gallery for the first time, would feel something specific enough to name in
-  one word — not 'nice' or 'interesting' but a real emotion: love, grief, awe,
-  defiance, longing, joy, unease."
-  If the answer is NO or MAYBE: AQ is below 8.0.
-  Technical excellence does not create AQ 8.0+. Emotional precision does.
+  Nihang Sikh horseman standing on two galloping horses (Sport, Abhay Patil):
+    AQ 8.1 — Defiance / Exhilaration. Body doing something physically impossible
+    with complete command. Specific and rare. Not generic triumph.
 
-  REFERENCE POINTS — calibration anchors:
-  Maternity silhouette (natural sunlight, 91% story recognition, 'Love'): AQ 8.5
-  Dance in-camera ICM (BW Spider award, 'Passion', 69% story): AQ 8.3
-  Monks in monastery corridor ('Peace', 71% story): AQ 8.1
-  Child under cherry blossoms (soft light, ambient, 'Innocence'): AQ 7.8
-    ↑ This is a warm gentle image. Not a powerful one. AQ 7.8 is generous.
-  Swallow landing on wire (aesthetic pleasure from craft, 'Freedom'): AQ 7.5–7.8
-  Landscape storm light (presence/peace, 39% story): AQ 7.8–8.0
-    ↑ Correct. Most landscape AQ is 7.0–8.0. Not higher.
+  Maternity shadow on cracked wall (Silhouette):
+    AQ 7.9 — Love / Anticipation. Universal recognition, 91% story. The form
+    completes itself in the viewer. Stays after looking away.
 
-  CRITICAL: DO NOT default to 8.0+ because the image is "good."
-  DO NOT let WF/AQ coherence rules pull AQ above what the emotional content justifies.
-  The coherence rule exists to prevent AQ from going TOO LOW when WF is high —
-  not to push AQ to 8.0+ when the emotional content is genuinely 7.x.
+  Kathak dancer feet, ghungroo bells, ICM in-camera (Dance):
+    AQ 7.9 — Rhythm / Passion. You almost hear the bells. Technique amplifies
+    the feeling. BW Spider honourable mention.
+
+  Monks in Tibetan monastery corridor (Monks):
+    AQ 7.1 — Reverence / Peace. Stillness of devotion in a closed world.
+    Real feeling but passes gently. Does not arrest.
+
+  Mountain landscape, burning orange sky (Landscape):
+    AQ 7.4 — Awe / Vastness. The smallness under this sky is real.
+    But the feeling is familiar — the genre is saturated.
+
+  Woman in white sari, head bowed (Fineart):
+    AQ 7.0 — Grace / Surrender. Quiet, contemplative, culturally specific.
+    Passes without arresting a non-specialist viewer.
+
+  Two lion cubs alert on log (Cubs):
+    AQ 6.7 — Tenderness. Universal response to juvenile animals.
+    Warm and pleasant. Familiar. Does not stay.
+
+  Child reaching for cherry blossoms (Cherry):
+    AQ 6.6 — Joy / Innocence. Warm and gentle. Many photographs
+    create this exact feeling. Passes quickly.
+
+  Studio portrait, contemplative gaze (Portrait, Ali Nejatian):
+    AQ 6.5 — Beauty, or Nothing. Survey response: "Nothing" (one word).
+    35% story recognition — lowest of 10. Technically excellent,
+    emotionally cold for many viewers.
+
+  Swallow landing, wings spread, colourful bokeh (Birds):
+    AQ 6.3 — Craft admiration. Not a human emotion. Aesthetic pleasure
+    from technical precision. Does not name a feeling.
+
+  SCORING: interpolate between these anchors. An image that creates stronger
+  defiance than the horseman but weaker than Bhopal = AQ 8.5–9.0.
+  An image between the portrait and the child = AQ 6.5–6.7.
+  Do not compress everything into 7.5–8.5. The full range exists.
 
   PER-GENRE EMOTIONAL VOCABULARY — name the specific emotion from this list
   or use your own specific language:
