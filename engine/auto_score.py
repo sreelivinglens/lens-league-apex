@@ -327,9 +327,16 @@ DM (Decisive Moment):
   Identify the behavioural act first, then score DM relative to that act.
 
   PORTRAIT / PEOPLE: DM scores the moment of genuine unguarded expression —
-  the flicker of real feeling, not the held pose. A portrait where the
-  subject is posed and holding still scores DM 5.5–6.5.
-  The moment of genuine expression scores DM 7.5–8.5.
+  the flicker of real feeling, not the held pose.
+  DM HARD CEILING FOR STATIC/AMBIENT PEOPLE IMAGES:
+  A child looking up at blossoms, a person gazing at a view, a subject
+  standing or sitting in ambient light with no strong emotional peak = DM 5.5–6.5 MAX.
+  Beautiful light and a beautiful subject is NOT a decisive moment.
+  The DM question is: was there a specific unrepeatable instant the photographer caught?
+  Posed and holding still = DM 5.5–6.5. Cooperative ambient portrait = DM 5.5–6.5.
+  Genuine uninhibited expression (laugh, cry, surprise) = DM 7.5–8.5.
+  Private unguarded moment caught without subject awareness = DM 7.0–7.5.
+  DO NOT score DM 8.0+ for a child in beautiful light with no clear peak moment.
 
   CREATIVE / TECHNIQUE: DM scores the precision of technique execution —
   the exact exposure duration for ICM, the precise shutter timing for
