@@ -34652,6 +34652,9 @@ def _try_genre_context(genre):
     _HAIKU_GENRE_CONTEXT = {
         'Wildlife': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"            "DoD INTELLIGENCE WEIGHT for Wildlife: Situational 40% · Technical 40% · Intelligence 20%.\n"            "Key principles to look for: Ma (space given to animal), Point of View (eye-level = intimacy), Figure/Ground (background chosen, not accepted), Gestalt Proximity (two subjects = group composition).\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles does NOT lift DM, VD, WF, or AQ. "
+            "Each scores independently. Score DoD first, then each dim from scratch.\n"
             "WILDLIFE: VD GUIDES (not hard floors): small bird at peak wing-spread "
             "with symmetric feather geometry against bokeh = VD 7.0–7.5 "
             "(only 7.5–8.0 if bokeh is truly exceptional AND symmetry perfect). "
@@ -34695,6 +34698,14 @@ def _try_genre_context(genre):
         ),
         'Street': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for Street: Situational 35% · Technical 25% · Intelligence 40%.\n"            "Key principles: Leading Lines (corridor, street, architecture guiding the eye), Depth/Layering (monks at different distances = three planes), Gestalt Continuation (eye follows corridor beyond frame), Gestalt Proximity/Similarity (robes = visual group), Seijaku (stillness of monks against geometry = active quiet), Diagonal Tension (architecture or figures creating energy).\n"
             "STREET: VD HARD FLOORS (minimums): monks/figures silhouetted or in rich "
             "coloured environment with graphic architecture and directional light = VD 7.5 MINIMUM. "
@@ -34729,6 +34740,14 @@ def _try_genre_context(genre):
         ),
         'Landscape': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for Landscape: Situational 25% · Technical 25% · Intelligence 50%.\n"            "Key principles: Depth/Layering (foreground-midground-sky as three distinct planes), Diagonal Tension (light shafts, mountain ridges creating energy), Yugen (storm light creating profound mystery beneath the surface — name it), Ma (the space in the landscape IS the composition), Gestalt Continuation (mountain silhouettes lead eye beyond frame), Colour Relationship (storm palette, warm/cool contrast).\n"
             "LANDSCAPE: VD HARD FLOORS (minimums): landscape with exceptional golden/storm/"
             "dramatic light = VD 7.5 MINIMUM. Long exposure water or cloud = VD 7.5 MINIMUM. "
@@ -34783,6 +34802,14 @@ def _try_genre_context(genre):
         ),
         'Maternity': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for Maternity: Situational 20% · Technical 30% · Intelligence 50%.\n"            "Key principles: Kanso (reduction to pure silhouette form — highest elimination discipline), Figure/Ground (total subject-background separation IS the technical act — positioning + exposure + light created this), Gestalt Closure (viewer completes the human form from silhouette), Mono no aware (impermanence of pregnancy — the before and after — name it), Light Direction (rim or backlit — the light relationship IS the DoD).\n"
             "MATERNITY: VD HARD FLOORS (minimums): pregnancy silhouette backlit or rim-lit "
             "= VD 7.0 MINIMUM. Portrait with strong directional light = VD 6.5 MINIMUM. "
@@ -34820,6 +34847,14 @@ def _try_genre_context(genre):
         ),
         'People': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for People: Situational 15% · Technical 30% · Intelligence 55%.\n"            "Key principles: Light Direction (specific quality/direction on face — Rembrandt/split/rim/butterfly — IS the primary compositional act), Figure/Ground (subject reads against background by deliberate exposure + positioning), Wabi-sabi (image honours the real face, imperfection as beauty — not corrected), Seijaku (contemplative stillness as active subject), Negative Space (deliberate space giving subject weight), Ma (space around the subject is not empty — it is the composition).\n"
             "PEOPLE/PORTRAIT: VD HARD FLOOR (non-negotiable): portrait with direct engaged "
             "gaze = VD 7.0 MINIMUM. Looking-away or introspective portrait with strong "
@@ -34896,6 +34931,14 @@ def _try_genre_context(genre):
         ),
         'Creative': (
             "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for Creative: Situational 10% · Technical 35% · Intelligence 55%.\n"            "Key principles: Datsuzoku (breaking convention — the unconventional treatment IS the intelligence), Fukinsei (asymmetry as deliberate statement — subject not where expected), Gestalt Closure (viewer completes what is suggested — suggestion over statement), Kanso (reduction to the essential — what remains when everything else is removed), Wabi-sabi (imperfection and incompleteness as the aesthetic, not a flaw).\n"
             "CREATIVE: VD dominant — intentional rule-breaking scores higher than accidental. "
             "Assume ALL compositional unconventionality is deliberate. "
