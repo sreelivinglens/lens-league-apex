@@ -18244,10 +18244,16 @@ AQ NAMED ANCHORS — interpolate between these:
   Monks in monastery corridor = AQ 7.1 (Peace — real but passes gently)
   Mountain landscape burning sky = AQ 7.4 (Awe — real but familiar genre)
   Woman in white sari bowed = AQ 7.0 (Grace — quiet, culturally specific)
-  Two lion cubs alert on log = AQ 6.7 (Tenderness — warm, familiar, passes)
+  Two lion cubs alert on log = AQ 6.7 (Tenderness — real but familiar.
+    CSI applies to AQ: most common wildlife emotion. Passes. Not rare.
+    Score AQ 6.5-7.2 for juvenile wildlife. Not higher.)
   Child reaching for blossoms = AQ 6.6 (Joy — gentle, many images do this)
-  Studio portrait contemplative gaze = AQ 6.5 (Beauty/Nothing — 35% story)
-  Swallow landing wings spread = AQ 6.3 (Craft admiration — not an emotion)
+  Studio portrait contemplative gaze = AQ 6.5 (Beauty/Nothing.
+    Real survey response: one word = 'Nothing'. 35% story — lowest of 10.
+    Do not score above 7.0 for studio portrait with no legible specific emotion.)
+  Swallow landing wings spread = AQ 6.3 (Craft admiration — NOT an emotion.
+    Viewer admires precision and colour. No specific feeling in the chest.
+    Do not score above 6.5 for bird craft regardless of quality.)
 
 WF NAMED ANCHORS — interpolate between these:
   Nihang horseman = WF 8.5 (Access+Cultural — disappearing world, danger real)
