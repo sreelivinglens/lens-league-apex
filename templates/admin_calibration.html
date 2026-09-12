@@ -141,6 +141,16 @@ a.back:hover{text-decoration:underline}
   .res-header{flex-direction:column;gap:8px;align-items:flex-start}
   .engine-toggle{flex-wrap:wrap}
 }
+
+@media (max-width: 600px){
+  .wrap{padding-top:56px}
+  .rescore-all-bar{flex-direction:column;align-items:stretch}
+  .btn-rescore-all{width:100%;text-align:center}
+  .page-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .page-ts{margin-left:0}
+  .form-input,.form-select{font-size:16px!important}
+  .summary-grid{grid-template-columns:1fr!important}
+}
 </style>
 </head>
 <body>
@@ -945,13 +955,7 @@ function clearEngine(engine) {
 
 {# ── CSV export data — built in Python in admin_calibration() route, passed as JSON string ── #}
 <script type="application/json" id="cal-export-data">{{ export_data|safe }}</script>
-<script type="application/json" id="cal-meta">{"row_count":{{ rows|length 
-  .wrap{padding-top:56px}
-  .rescore-all-bar{flex-direction:column;align-items:stretch}
-  .btn-rescore-all{width:100%;text-align:center}
-  .page-header{flex-direction:column;align-items:flex-start;gap:8px}
-  .page-ts{margin-left:0}
-}</script>
+<script type="application/json" id="cal-meta">{"row_count":{{ rows|length }}}</script>
 
 </body>
 </html>
