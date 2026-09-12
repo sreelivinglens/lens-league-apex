@@ -1,4 +1,5 @@
-{# SL-VERSION: cal-4.0 (Session 219, 2026-09-11 — Track tier added: Camera / Mobile. Upload form gains Track selector. Engine toggle becomes 2D: engine × track = 4 paths. Table gains Track column and colour-coded tier pills. Rescore passes camera_track. CSV export gains Track column. pairs dict now has sonnet_camera/haiku_camera/sonnet_mobile/haiku_mobile slots. RETAINS cal-3.2.) #}
+{# SL-VERSION: cal-4.1 (Session 219, 2026-09-12 — Audit fixes: mobile breakpoint 56px, iPad breakpoint, font sizes 9px→11px, onerror on images, guide updated n=77+mobile calibration note. RETAINS cal-4.0.)
+{# cal-4.0 (Session 219, 2026-09-11 — Track tier added: Camera / Mobile. Upload form gains Track selector. Engine toggle becomes 2D: engine × track = 4 paths. Table gains Track column and colour-coded tier pills. Rescore passes camera_track. CSV export gains Track column. pairs dict now has sonnet_camera/haiku_camera/sonnet_mobile/haiku_mobile slots. RETAINS cal-3.2.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,10 +52,10 @@ a.back:hover{text-decoration:underline}
 .upload-btn:hover:not(:disabled){background:#A88830;color:#fff}
 .thumb-item{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid #E0DDD6;flex-shrink:0;background:#F5F3EF}
 .thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb-item .thumb-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center}
+.thumb-item .thumb-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
 .thumb-item .thumb-remove:hover{background:#B91C1C}
 .thumb-item.scored{border-color:#2E7D32}
-.thumb-item.scoring{border-color:#C8A84B}
+.thumb-item.selected{border-color:#C8A84B}
 
 /* ── PROGRESS ── */
 .progress-wrap{margin-top:14px;display:none}
@@ -93,11 +94,11 @@ a.back:hover{text-decoration:underline}
 .ep{font-size:11px;font-weight:700;padding:2px 6px;border-radius:99px;white-space:nowrap;display:inline-block}
 .ep-s{background:#E8EEF8;color:#1A2744}
 .ep-h{background:#F3E8FF;color:#6B21A8}
-.tp{font-size:10px;font-weight:600;padding:1px 5px;border-radius:99px;white-space:nowrap;display:inline-block;margin-left:2px}
+.tp{font-size:11px;font-weight:600;padding:1px 5px;border-radius:99px;white-space:nowrap;display:inline-block;margin-left:2px}
 .tp-camera{background:#F0F4F0;color:#2E5C2E}
 .tp-mobile{background:#FFF3E0;color:#B45309}
 .score-n{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
-.tier-n{font-size:10px;color:#B45309;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:block}
+.tier-n{font-size:11px;color:#B45309;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:block}
 .dim-n{font-size:13px;font-variant-numeric:tabular-nums}
 .d-pos{color:#2E7D32;font-weight:700}
 .d-neg{color:#B91C1C;font-weight:700}
@@ -120,14 +121,25 @@ a.back:hover{text-decoration:underline}
 .col-time{width:90px}
 .col-del{width:36px}
 
-@media(max-width:900px){
+@media (max-width: 768px){
   .res-table .col-time,.res-table th:nth-child(9),.res-table td:nth-child(9){display:none}
 }
-@media(max-width:600px){
+@media (max-width: 600px){
   .res-table .col-dim,.res-table th:nth-child(n+7),.res-table td:nth-child(n+7){display:none}
   .up-row{flex-direction:column}
   .engine-toggle,.up-select{width:100%}
   .eng-btn{flex:1}
+
+  .form-input,.form-select{font-size:16px!important}
+  .summary-grid{grid-template-columns:1fr!important}
+  .cal-row{display:block;margin-bottom:12px}
+}
+
+/* ── IPAD (768–1024px) ── */
+@media (max-width: 1024px){
+  .summary-grid{grid-template-columns:1fr 1fr !important}
+  .res-header{flex-direction:column;gap:8px;align-items:flex-start}
+  .engine-toggle{flex-wrap:wrap}
 }
 </style>
 </head>
@@ -145,7 +157,12 @@ a.back:hover{text-decoration:underline}
 </div>
 
 <div class="guide">
-  <strong>How to use.</strong> Pick genre, drop images, hit Score. Each image scores on <strong>Sonnet</strong> (full Apex DDI) then <strong>Haiku</strong> (bare 5-dim, no extras) — rows appear live. <strong>± Delta</strong> = Haiku minus Sonnet. Delete any row with ✕. Nothing touches member accounts.
+  <strong>How to use.</strong> Upload or rescore the 10 reference calibration images across all four paths — <strong>Sonnet Camera</strong>, <strong>Haiku Camera</strong>, <strong>Sonnet Mobile</strong>, <strong>Haiku Mobile</strong>. Compare each path to the human panel baseline (n=77, R20). Target: within ±0.4 of human on 8/10 images per path. <strong>Do not rescore without a structural reason</strong> — model variance of ±0.3 is normal.
+</div>
+<div class="guide info" style="margin-top:10px">
+  <strong>Camera vs Mobile calibration — important difference:</strong>
+  The 10 reference images were shot on camera. <strong>7 of 10 are valid for mobile calibration</strong> (Cherry, Landscape, Fineart, Dance, Silhouette, Monks, Portrait). <strong>Birds and Cubs cannot be used for mobile calibration</strong> — both require telephoto reach (400–600mm) that no phone can achieve. Sport is conditional on whether the image shows proximity action.
+  <br>When scoring mobile track: weights shift (+15% Disruption, +10% DM). DoD uses proximity-as-discipline (no telephoto) and portrait-mode execution (no optical bokeh). Photographic principles — Ma, Kanso, Gestalt Figure/Ground — apply equally to both tracks. <strong>Mobile human baseline not yet established</strong> — upload mobile-shot images and run a separate panel before treating mobile scores as calibrated.
 </div>
 
 {# ── UPLOAD PANEL ── #}
@@ -928,7 +945,13 @@ function clearEngine(engine) {
 
 {# ── CSV export data — built in Python in admin_calibration() route, passed as JSON string ── #}
 <script type="application/json" id="cal-export-data">{{ export_data|safe }}</script>
-<script type="application/json" id="cal-meta">{"row_count":{{ rows|length }}}</script>
+<script type="application/json" id="cal-meta">{"row_count":{{ rows|length 
+  .wrap{padding-top:56px}
+  .rescore-all-bar{flex-direction:column;align-items:stretch}
+  .btn-rescore-all{width:100%;text-align:center}
+  .page-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .page-ts{margin-left:0}
+}</script>
 
 </body>
 </html>
