@@ -348,6 +348,24 @@ DoD (Depth of Difficulty):
     — Pattern recognition, Gestalt Similarity, Scale/Proportion.
       The revelation of pattern from altitude is the compositional act.
 
+  ── ISOLATION RULE — MANDATORY ─────────────────────────────────────────────
+  Photographic Intelligence scores DoD ONLY.
+  Identifying Ma, Kanso, Gestalt Closure, Diagonal Tension, Yugen, or any
+  other principle in this image does NOT lift DM, VD, WF, or AQ.
+  Each dimension scores independently on its own criteria:
+  DM = was there a specific unrepeatable instant? (answered by the image alone)
+  VD = does the image stop the eye in 2 seconds? (answered by visual impact)
+  WF = which wonder signal is present? (answered by what the viewer feels)
+  AQ = what specific feeling does the image create? (answered by emotion)
+  The principles assessment here is for COMPONENT 3 of DoD ONLY.
+  Finding a beautiful composition does not mean DM was high.
+  A child under cherry blossoms with Ma present still has DM 5.5–6.5
+  because there is no unrepeatable instant — the child is ambient, not caught.
+  A Fine Art image with Datsuzoku + Fukinsei still has WF 7.0–7.8
+  because the Fine Art WF ceiling applies regardless of compositional intelligence.
+  SCORE DoD FIRST using the three components. Then score each other dimension
+  from scratch, independent of what the principles assessment revealed.
+
   IN EVALUATION TEXT: When DoD is scored above 7.5, name the specific
   photographic intelligence that earned it. Do not say "strong composition."
   Say what principle was applied: "The photographer applied Ma — the negative
@@ -1703,6 +1721,13 @@ GENRE_CONTEXT = {
         "MINIMALIST / GRAPHIC: Reduction is the statement. "
         "Fewer elements executed with precision scores higher than complexity. "
         "VD 7.5–8.5 when the reduction is complete and the geometry is exact.\n\n"
+        "FINE ART WF OVERRIDE — READ BEFORE SCORING WF:\n"
+        "For Fine Art / Abstract / Conceptual sub-types ONLY: "
+        "the WF/AQ coherence upward floor is WAIVED. "
+        "AQ 8.0+ does NOT force WF to 7.5+. Score WF on concept strength alone. "
+        "Fine Art WF ceiling: 7.0–7.8 unless the concept stops a non-specialist viewer "
+        "who names the feeling in one word. AQ 8.3 + WF 7.5 is correct for Fine Art. "
+        "Do NOT score WF 8.0+ simply because AQ is high.\n"
         "CRITICAL FOR CREATIVE GENRE — ABSTRACTION FIRST:\n"
         "When the primary subject is geometric pattern, texture, colour field, or aerial abstraction, "
         "DO NOT attempt to identify incidental small objects in the frame as wildlife or animals unless "
@@ -1989,7 +2014,11 @@ GENRE_CONTEXT = {
         "DoD: Score speed of reaction, working in chaos, difficult or hostile light, "
         "photographing in restricted or culturally specific environments, and the "
         "physical act of being present in a demanding situation. Motion blur on moving "
-        "subjects is acceptable and often enhances energy.\n\n"
+        "subjects is acceptable and often enhances energy.\n"
+        "SPORTS ACTION filed as Street: DoD intelligence principles REINFORCE, not replace, "
+        "DM and VD. A peak action frame with Diagonal Tension + Common Fate has BOTH high DoD "
+        "AND high DM independently. The isolation rule applies: principles lift DoD only. "
+        "Do NOT let DoD intelligence assessment reduce DM or VD on action images.\n\n"
         "VD: Score the visual presence of the image — would a stranger stop on this? "
         "Street VD rewards two things equally: (1) compositional disruption — shadows, "
         "reflections, unexpected juxtapositions, graphic reduction, silhouette against "
