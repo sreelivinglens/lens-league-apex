@@ -116,7 +116,7 @@ ASK TWO QUESTIONS before scoring WF and AQ:
 2. WHAT DOES A STRANGER FEEL IN 3 SECONDS?
    Before scoring WF, ask: what would a person feel if they walked past this image
    in a gallery without reading the label? Can you name that feeling in one word?
-   If YES: WF floor is 7.5. If the feeling is strong and specific: WF 8.0–9.0.
+   If YES: score WF in the 7.0–9.0 range based on the specific wonder signal present.
    If NO — the image produces no specific feeling: WF below 7.0.
 
 RECOGNITION WONDER TRIGGER — check before scoring WF:
@@ -579,14 +579,16 @@ WF (Wonder Factor):
   WF and AQ are measuring the same event from different angles — one asks what wonder
   the image creates, the other asks what feeling it creates. They MUST correlate.
   A gap of more than 2.0 points between WF and AQ on the same image is a scoring error.
-  MANDATORY FLOORS (apply to emotional, portrait, wildlife, landscape, street images):
-  If AQ >= 8.5: WF floor is 8.0 minimum.
-  If AQ >= 8.0: WF floor is 7.5 minimum.
-  If AQ >= 7.5: WF floor is 7.0 minimum.
-  If WF >= 8.0: AQ floor is 7.5 minimum.
-  If WF is scored below these floors when AQ is high, rescore WF upward.
-  The converse is also true: WF cannot be 9.0 if AQ is 5.0.
-  They are the same truth measured twice. Score them as such.
+  ANTI-GAP RULE ONLY — no floors, no minimums:
+  WF and AQ must not diverge by more than 2.0 points.
+  A gap greater than 2.0 is a scoring error — rescore the lower dimension upward
+  only enough to close the gap to 2.0. No further.
+  DO NOT apply floors. DO NOT prop either score up.
+  Score WF first on wonder signals alone. Score AQ first on emotional content alone.
+  Then check: is the gap above 2.0? If yes, close it minimally.
+  A WF of 8.0 and AQ of 6.5 = gap 1.5 = acceptable. No adjustment needed.
+  A WF of 8.0 and AQ of 5.5 = gap 2.5 = error. Raise AQ to 6.0 only.
+  The goal is consistency, not inflation.
 
   FINE ART / ABSTRACT / CONCEPTUAL EXCEPTION — MANDATORY:
   For images where the sub-type is Fine Art, Abstract, or Conceptual, the upward
@@ -687,34 +689,64 @@ AQ (Affective Quotient):
   The specific feeling the image creates in a viewer. NOT technical quality —
   technical quality lives in DoD.
 
-  CRITICAL: Name the specific emotion or feeling the image creates.
-  Score the precision and intensity of that feeling.
-  If no specific emotion is identifiable, AQ cannot exceed 7.5 regardless
-  of technical quality.
+  CRITICAL: Name the specific emotion FIRST. Then score its precision and intensity.
+  AQ is NOT a general quality score. It is not "this is a good photograph."
+  It is: WHAT DOES THIS IMAGE MAKE THE VIEWER FEEL, and HOW PRECISELY AND
+  INTENSELY does it deliver that specific feeling?
 
-  AQ SCORING SCALE:
-  9.5–9.7: The emotional register is so complete and specific that it defines
-    the image permanently. The viewer cannot look away or forget it.
-    IPA Photographer of the Year, WSPA POTY, World Press Photo — the image
-    that made the emotion of that moment universal. Defiance at its absolute
-    peak. Tenderness that stops the breath. Score 9.5–9.7 when the emotion
-    IS the historical record.
-  9.0–9.4: A specific, powerful emotion that is undeniable and lingers after
-    looking away. The viewer cannot remain neutral. The feeling is singular.
-    Award-winning work where the emotional register is the primary achievement.
-    DO NOT reserve this range only for People/Wedding — minimalist, landscape,
-    and street images score 9.0+ AQ when the emotional register is complete.
-  8.0–8.9:  A clear, specific emotion that lands. The viewer feels something
-    definite — loneliness, joy, unease, awe, tenderness, defiance.
-  7.0–7.9:  Emotional content present but not fully resolved. The image suggests
-    a feeling without fully delivering it. Technically accomplished but emotionally
-    incomplete.
-  6.0–6.9:  Minimal emotional content. Technically competent but emotionally neutral.
-  Below 6.0: No emotional content. Pure documentation or failed execution.
-  CRITICAL: DO NOT default to the middle of any range. Score what the image
-  actually achieves. For IPA/WSPA/World Press Photo POTY level work: score
-  AQ 9.5–9.7. An image where defiance, tenderness, or grief is undeniable
-  and permanent scores AQ 9.5+.
+  MOST IMAGES SCORE AQ 6.0–7.5. This is correct. A technically good photograph
+  that creates a general pleasant or interesting response — but no specific
+  nameable feeling — scores AQ 6.5–7.0. That is not a failing. It is an honest
+  reading. The AQ scale is not a quality ladder — it is an emotional intensity meter.
+
+  AQ SCORING SCALE — READ EVERY BAND BEFORE SCORING:
+  9.5–9.7: Defines the image permanently. Viewer cannot look away or forget.
+    IPA/WSPA POTY/World Press Photo level — the emotion IS the historical record.
+    RARE. Perhaps 1 in 500 images evaluated on this platform.
+  9.0–9.4: Specific, powerful, undeniable emotion that lingers after looking away.
+    Viewer cannot remain neutral. Award-winning emotional register.
+    RARE. Perhaps 1 in 200 images.
+  8.5–8.9: Strong specific emotion — the viewer is moved, not just pleased.
+    The feeling is clear, nameable, and complete. The image does emotional work.
+    UNCOMMON. Perhaps 1 in 20 images.
+  8.0–8.4: A clear specific emotion that lands but doesn't overwhelm.
+    The viewer feels something definite — but it passes rather than lingers.
+    UNCOMMON. Perhaps 1 in 10 images. Do NOT default here for competent work.
+  7.0–7.9: Emotional content present but not fully resolved.
+    The image suggests a feeling without fully delivering it. Some emotional
+    register — warmth, interest, mild pleasure — but not specific or intense.
+    THIS IS THE CORRECT BAND FOR MOST TECHNICALLY GOOD PHOTOGRAPHS.
+    A well-executed bird landing: AQ 7.2–7.5 (aesthetic pleasure from craft).
+    A clean maternity portrait in studio: AQ 7.0–7.5.
+    A competent landscape at golden hour: AQ 7.0–7.5.
+  6.0–6.9: Minimal emotional content. Technically competent, emotionally neutral.
+    The viewer appreciates the craft but feels nothing specific. Documents without moving.
+    A correctly exposed building exterior: AQ 6.0–6.5.
+    A wildlife record shot with no behavioural significance: AQ 6.0–6.5.
+  Below 6.0: No emotional content, or negative — poor execution that frustrates the eye.
+
+  THE ANTI-INFLATION RULE — MANDATORY:
+  AQ 8.0+ requires that you can answer YES to: "A stranger, stopping at this image
+  in a gallery for the first time, would feel something specific enough to name in
+  one word — not 'nice' or 'interesting' but a real emotion: love, grief, awe,
+  defiance, longing, joy, unease."
+  If the answer is NO or MAYBE: AQ is below 8.0.
+  Technical excellence does not create AQ 8.0+. Emotional precision does.
+
+  REFERENCE POINTS — calibration anchors:
+  Maternity silhouette (natural sunlight, 91% story recognition, 'Love'): AQ 8.5
+  Dance in-camera ICM (BW Spider award, 'Passion', 69% story): AQ 8.3
+  Monks in monastery corridor ('Peace', 71% story): AQ 8.1
+  Child under cherry blossoms (soft light, ambient, 'Innocence'): AQ 7.8
+    ↑ This is a warm gentle image. Not a powerful one. AQ 7.8 is generous.
+  Swallow landing on wire (aesthetic pleasure from craft, 'Freedom'): AQ 7.5–7.8
+  Landscape storm light (presence/peace, 39% story): AQ 7.8–8.0
+    ↑ Correct. Most landscape AQ is 7.0–8.0. Not higher.
+
+  CRITICAL: DO NOT default to 8.0+ because the image is "good."
+  DO NOT let WF/AQ coherence rules pull AQ above what the emotional content justifies.
+  The coherence rule exists to prevent AQ from going TOO LOW when WF is high —
+  not to push AQ to 8.0+ when the emotional content is genuinely 7.x.
 
   PER-GENRE EMOTIONAL VOCABULARY — name the specific emotion from this list
   or use your own specific language:
@@ -1919,8 +1951,8 @@ GENRE_CONTEXT = {
         "rarity. Two or more juvenile animals (cubs, calves, pups, chicks) in natural\n"
         "light with mutual awareness — the emotional response of tenderness is\n"
         "immediate, universal, and nameable in one word.\n"
-        "WF HARD FLOOR for juvenile family Wildlife: 7.5 MINIMUM.\n"
-        "This applies regardless of behavioural rarity — the tenderness IS the wonder.\n"
+        "WF for juvenile family Wildlife: score tenderness directly — no minimum.\n"
+        "Alert both subjects: WF 7.0–7.8. Physical contact: WF 7.5–8.2.\n"
         "Most humans will never be within 5 metres of wild lion cubs in golden grass.\n"
         "Alert expression in both subjects: WF 7.5–8.0.\n"
         "Physical contact (playing, grooming): WF 8.0–8.5.\n"
@@ -1957,9 +1989,9 @@ GENRE_CONTEXT = {
         "strong tonal contrast between elements; a colour relationship that feels "
         "extraordinary (deep purple storm against golden land). "
         "HARD FLOOR — NAMED EXAMPLES (these are minimums, not ceilings):\n"
-        "  Landscape with exceptional golden/storm/dramatic light = VD 7.5 MINIMUM.\n"
-        "  Long exposure water or cloud with clear technique intent = VD 7.5 MINIMUM.\n"
-        "  Strong graphic composition (leading lines, reflection, symmetry) = VD 7.0 MINIMUM.\n"
+        "  Landscape with exceptional golden/storm/dramatic light = VD 7.0–8.0.\n"
+        "  Long exposure water or cloud with clear technique intent = VD 7.0–7.8.\n"
+        "  Strong graphic composition (leading lines, reflection, symmetry) = VD 6.5–7.5.\n"
         "NOTE: When DM is low (static scene, no transient element), VD and WF carry the "
         "image. A visually stunning static landscape can score 7.5–8.5 overall on the "
         "strength of VD and WF alone. Do not let a low DM pull VD or WF down — "
@@ -2043,13 +2075,13 @@ GENRE_CONTEXT = {
         "dramatic light; (2) visual magnetism — a face, gesture, or scene with immediate "
         "impact that compels attention even in conventional framing. "
         "HARD FLOOR — NAMED EXAMPLES (minimums, not ceilings):\n"
-        "  Monks/figures silhouetted against dramatic light = VD 7.5 MINIMUM.\n"
+        "  Monks/figures silhouetted against dramatic light = VD 7.0–7.8.\n"
         "  Athletic or physical action — sport, dance, performance, running, jumping — "
-        "captured at peak moment in strong or dramatic light = VD 7.5 MINIMUM. "
+        "captured at peak moment in strong or dramatic light = VD 7.0–7.8. "
         "This applies even when the image is filed as Street rather than Sports genre. "
         "A cricket stroke, a basketball dunk, a dancer mid-leap in street context = VD 7.5+.\n"
-        "  Street portrait with direct eye contact and graphic quality = VD 7.0 MINIMUM.\n"
-        "  Rich cultural scene with layers and depth = VD 6.5 MINIMUM.\n"
+        "  Street portrait with direct eye contact and graphic quality = VD 6.5–7.5.\n"
+        "  Rich cultural scene with layers and depth = VD 6.0–7.0.\n"
         "NEVER give VD below 6.0 to a street image with clear visual impact and a "
         "recognisable primary subject. "
         "OVER-PROCESSED penalty: heavy HDR, crushed shadows, unnatural saturation — cap VD at 6.0.\n\n"
@@ -2127,7 +2159,7 @@ GENRE_CONTEXT = {
         "colour or tonal treatment that gives the image emotional weight. "
         "HARD FLOOR: A pregnancy silhouette — backlit, side-lit, or rim-lit — scores VD 7.0 MINIMUM. "
         "A maternity portrait with strong directional light and clear subject isolation "
-        "scores VD 6.5 MINIMUM. NEVER give VD below 5.5 to a correctly exposed maternity "
+        "scores VD 6.0–7.5. Below 5.5 only for failed exposure or framing on maternity. "
         "image with intentional lighting — the subject matter alone carries visual significance.\n\n"
 
         "DM: Score the decisive moment within the maternity subject — the first hold, the newborn "
@@ -2138,7 +2170,8 @@ GENRE_CONTEXT = {
 
         "WF: EMOTIONAL WONDER — the feeling of life, continuity, and vulnerability that "
         "maternity images uniquely carry. An image where a stranger feels the weight of the "
-        "moment — the miracle of new life, the tenderness of parenthood — scores WF 7.5 minimum. "
+        "moment — the miracle of new life, the tenderness of parenthood — scores WF 7.0–8.5 "
+        "depending on how specifically and intensely that feeling is delivered. "
         "Apply the one-word test: if you can name what the image makes you feel "
         "(awe, tenderness, anticipation, love), score WF 7.5+.\n\n"
 
@@ -2180,7 +2213,8 @@ GENRE_CONTEXT = {
         "to share — scores DM 7.5–8.5.\n\n"
         "Wonder: Score revealing the person's world, not just their face. "
         "EMOTIONAL WONDER: a portrait where the emotion is immediate and nameable — "
-        "dignity, grief, defiance, tenderness, joy — scores WF 7.5 minimum. "
+        "dignity, grief, defiance, tenderness, joy — score WF based on precision "
+        "and intensity of that specific feeling: 6.5–9.0 depending on strength. "
         "The one-word test: if you can name what the subject is feeling in one word, "
         "that is emotional wonder. Score it.\n\n"
         "AQ: Dominant dimension. Catchlight in the eye expected at 7+. "
@@ -5131,10 +5165,10 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
                     lines.append('')
                     lines.append('WF/AQ COHERENCE — TWO TIERS:')
                     lines.append('  QUIET / INTIMATE (child, contemplative, soft natural light,')
-                    lines.append('  no strong emotional peak): AQ >= 8.0 → WF floor 7.0. Gap max 1.5.')
+                    lines.append('  no strong emotional peak): WF 6.0-7.5. No floor. Score wonder signal directly.')
                     lines.append('  These score high on craft but wonder is gentle, not arresting.')
                     lines.append('  RECOGNITION WONDER (uninhibited laughter, raw grief, elderly')
-                    lines.append('  dignity, a stranger stops in a gallery): AQ >= 8.0 → WF floor 7.5.')
+                    lines.append('  dignity, a stranger stops in a gallery): WF 7.5-9.0 based on intensity. No floor.')
                     lines.append('  Identify which tier first. Child under cherry blossoms = quiet.')
                     lines.append('  Elderly woman laughing with broken teeth = recognition wonder.')
                 elif _effective_genre == 'Architecture':
@@ -5214,9 +5248,9 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
                     lines.append('  Excellent execution of common behaviour: WF 6.5–7.0.')
                     lines.append('  Uncommon (courtship, display, alarm): WF 6.5–7.5.')
                     lines.append('  Rare (predation, prey visible, conflict, feeding young): WF 7.5–8.5.')
-                    lines.append('WF — JUVENILE/FAMILY HARD FLOOR (separate signal):')
+                    lines.append('WF — JUVENILE/FAMILY (separate signal, score tenderness directly):')
                     lines.append('  Two or more juveniles in natural light with mutual awareness:')
-                    lines.append('  WF 7.5 MINIMUM regardless of behaviour rarity.')
+                    lines.append('  WF 7.0-8.0. Score tenderness: alert both = 7.2-7.8. Contact = 7.5-8.2.')
                     lines.append('  Tenderness IS the wonder. Alert both subjects: 7.5–8.0.')
                     lines.append('  Physical contact (play, grooming): 8.0–8.5.')
                     lines.append('')
