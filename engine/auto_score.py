@@ -207,37 +207,153 @@ IF WILDLIFE ICM / PANNING DETECTED:
 MODULE DEFINITIONS:
 
 DoD (Depth of Difficulty):
-  Score BOTH technical execution AND situational difficulty of capture.
-  Situational difficulty includes: physical risk, restricted access, environmental
-  hostility, subject unpredictability, timing constraints, regulatory complexity,
-  and the photographer's physical presence in a demanding or dangerous situation.
-  A technically competent shot taken in a war zone, extreme weather, underwater,
-  or with a dangerous animal scores higher than the same shot taken safely.
-  Technical execution includes: mechanical precision, sharpness where appropriate,
-  exposure control, and mastery of the photographic challenge the genre demands.
+  DoD scores THREE components simultaneously. All three matter. Score each, then
+  take the weighted average appropriate to the genre (see per-genre guidance below).
 
-  Per-genre guidance:
-  Wildlife: Physical risk, access to habitat, environmental hostility, mechanical
-    precision. Sharp animal subject = high DoD. Rare behaviour or dangerous proximity = maximum DoD.
-  Nature: Access to remote ecosystems, hostile weather conditions, patience for
-    the right natural moment, underwater or extreme terrain. Technical precision
-    on delicate subjects (macro flora, storm photography) = high DoD.
-  Drone: Physical difficulty of aerial operation — wind, altitude, vibration control,
-    light management from elevation, regulatory complexity. Geometric patterns and
-    impossible ground-level perspectives score highest.
-  Street: Speed of reaction, working in chaos, difficult or hostile light conditions,
-    photographing in conflict zones, crowded environments, or restricted spaces.
-    Motion blur on moving subjects is acceptable and adds energy.
-  Macro: Extreme precision at high magnification. Sharpness IS DoD.
-  Landscape: Patience, location access (remote or extreme terrain), weather timing,
-    long-exposure control. Predawn climbs, extreme cold, difficult terrain = high DoD.
-  Documentary: Physical access to restricted environments (hospitals, disaster zones,
-    conflict areas, slums), ethical difficulty of the shot, working under time
-    pressure in chaotic conditions, and the personal risk of bearing witness.
-    Access that most photographers will never have = maximum DoD.
-  Wedding/People: Emotional access, managing unpredictable human subjects, working
-    in low light, capturing unrepeatable moments under time pressure.
-  Creative: See STEP 0 above.
+  ── COMPONENT 1: SITUATIONAL DIFFICULTY ─────────────────────────────────────
+  Where was the photographer, and how hard was it to be there?
+  Physical risk, restricted access, environmental hostility, dangerous proximity,
+  extreme weather, regulatory complexity, social courage (raising a camera at a
+  stranger, entering a closed community, working in conflict).
+  A technically competent image made in a war zone, extreme weather, underwater,
+  at dangerous proximity to wildlife, or inside a community that resists cameras
+  scores higher situational DoD than the same image made safely.
+
+  ── COMPONENT 2: TECHNICAL EXECUTION ────────────────────────────────────────
+  Did the photographer master the instrument?
+  Mechanical precision (shutter, aperture, ISO), focus accuracy, exposure control
+  in challenging light, sharpness where the genre demands it, handling of the
+  specific technical challenges the genre requires.
+  Modern AF technology context: subject-detect AF (Sony Animal Eye, Canon R EyeAF,
+  Nikon Z, OM System) reduces the tracking difficulty for birds and wildlife — score
+  Technical DoD 7.0-7.8 for sharp result on modern body; 8.0-8.8 for older manual/
+  zone AF body; 7.5 default when body unknown.
+
+  ── COMPONENT 3: PHOTOGRAPHIC INTELLIGENCE ──────────────────────────────────
+  Did the photographer SEE — applying the principles that separate a photograph
+  from a record? This is the third leg. It is often the hardest.
+
+  CLASSICAL COMPOSITION PRINCIPLES (identify which are present and applied):
+  · Rule of Thirds / Golden Ratio — subject placed at geometric tension points
+  · Leading Lines — lines guiding the eye toward the subject or through the frame
+  · Frame within Frame — natural or architectural elements enclosing the subject
+  · Negative Space — deliberate empty space giving subject weight and breath
+  · Diagonal Tension — diagonal elements creating energy and movement
+  · Depth and Layering — foreground, midground, background creating three-dimensionality
+  · Pattern and Break — repetition with deliberate interruption
+  · Juxtaposition — contrasting elements in the same frame creating meaning
+  · Scale and Proportion — subject size relative to environment telling its story
+  · Symmetry / Deliberate Asymmetry — balance or its intentional absence
+  · Point of View — the specific position, height, angle, and distance chosen
+  · Colour Relationship — complementary, analogous, or monochromatic palette decisions
+  · Simplicity and Elimination — removing everything that does not serve the image
+  · Light as Composition — the direction, quality, and relationship of light
+    to subject (Rembrandt, split, rim, butterfly, golden, backlit, rim-lit silhouette)
+
+  JAPANESE AESTHETIC PRINCIPLES (identify which are present):
+  · Ma (間) — conscious negative space as presence, not absence. The empty field
+    around the bird, the space above the child, the silence in the corridor.
+    When a photographer gives a subject room to exist — that is Ma. Score it.
+  · Kanso (簡素) — reduction to the essential. Pure silhouette, single subject,
+    eliminated clutter. The discipline to leave things out is harder than including them.
+  · Wabi-sabi (侘寂) — beauty in imperfection, impermanence, incompleteness.
+    The weathered face, the broken tooth, the fleeting blossom. When the image
+    honours rather than corrects the imperfect, Wabi-sabi is present.
+  · Mono no aware (物の哀れ) — pathos of transience. Cherry blossoms fall.
+    Cubs will grow. The pregnancy is before. The stillness will break.
+    When the image holds this awareness — it is present and should be named.
+  · Yugen (幽玄) — profound mysterious beauty beneath the surface. Storm light
+    over mountains, the monk in the corridor, the silhouette at dusk.
+    Something is felt that cannot be fully explained. Name it as Yugen.
+  · Seijaku (静寂) — active stillness. The quiet that contains everything.
+    A contemplative portrait. Monks in a corridor. A bird on a wire.
+    Stillness as the subject, not the absence of action.
+  · Fukinsei (不均整) — deliberate asymmetry. The dancer off-centre.
+    The subject not where expected. Asymmetry as intention, not accident.
+  · Datsuzoku (脱俗) — freedom from convention, breaking the expected.
+    The unconventional angle, the unexpected treatment, the frame that
+    challenges what this subject "should" look like.
+
+  GESTALT PERCEPTUAL PRINCIPLES (identify which are active):
+  · Figure/Ground — the subject reads against its background because the
+    photographer made choices (position, exposure, depth of field) that
+    created the separation. This is present in EVERY strong image. Credit it.
+  · Closure — the viewer's mind completes what the image suggests but does not
+    show. Silhouette, partial subject, implied presence. Deliberate incompleteness.
+  · Continuation — the eye is led through and beyond the frame. Corridor
+    vanishing point, leading lines, implied space outside the edge.
+  · Proximity — elements placed close together are perceived as a group.
+    Two cubs. Two monks. A mother and child. The grouping IS the composition.
+  · Similarity — repeated visual elements (colour, shape, size) perceived as
+    related. The monks' robes. The repeated arches. The pattern of leaves.
+  · Common Fate — elements moving in the same direction read as unified.
+    Athletes, birds in flight, crowd movement. The direction creates the story.
+  · Prägnanz — the mind finds the simplest interpretation. Strong images
+    resolve instantly. The photographer eliminated ambiguity. Credit this.
+
+  SCORING PHOTOGRAPHIC INTELLIGENCE:
+  Before scoring DoD, identify which principles from the three families above
+  are ACTIVELY PRESENT in the image — not incidentally, but as evidence of
+  the photographer's decisions. Then score:
+  · 3+ principles from different families, applied with precision: +1.5 to DoD
+  · 2 principles clearly applied: +1.0 to DoD
+  · 1 principle clearly applied: +0.5 to DoD
+  · No compositional intelligence evident: +0.0 (situational + technical only)
+  The principles do not need to be named in the evaluation text unless they
+  contribute directly to the score explanation. But they MUST be assessed.
+
+  WHAT COUNTS AS "CLEARLY APPLIED" — the principle must be a DECISION:
+  Ma is clearly applied when the negative space is the deliberate subject of
+  the composition, not incidental emptiness. Kanso is clearly applied when
+  the reduction is complete — nothing remains that does not serve the image.
+  Figure/Ground is clearly applied when the photographer positioned, exposed,
+  or framed specifically to create the separation. Diagonal Tension is clearly
+  applied when the diagonal is the structural spine of the image, not a
+  byproduct of the subject's orientation.
+
+  ── PER-GENRE COMPONENT WEIGHTING ──────────────────────────────────────────
+  Different genres weight the three components differently:
+
+  Landscape: Situational 25% · Technical 25% · Photographic Intelligence 50%
+    — The seeing is everything. Depth/layering, diagonal tension, Yugen,
+      Ma, storm light direction. Pre-visualisation and precise positioning.
+  Portrait/People: Situational 15% · Technical 30% · Photographic Intelligence 55%
+    — Light direction on the face is the primary technical/compositional act.
+      Wabi-sabi (honouring the real face), Seijaku (stillness as subject),
+      Figure/Ground (subject against background by deliberate choice).
+  Wildlife: Situational 40% · Technical 40% · Photographic Intelligence 20%
+    — Being there and executing are primary. But: Ma (giving the animal room),
+      Point of View (eye level = intimacy), Gestalt Proximity (two cubs = group)
+      — these still count and separate strong wildlife from records.
+  Street/Documentary: Situational 35% · Technical 25% · Photographic Intelligence 40%
+    — Leading lines, layering, Gestalt Continuation, the position that makes
+      variables align. The street photographer's intelligence is in seeing the
+      geometry before it resolves.
+  Macro: Situational 15% · Technical 45% · Photographic Intelligence 40%
+    — Extreme precision plus: Kanso (reduction to the essential detail),
+      Figure/Ground (isolation of the subject), Negative Space.
+  Architecture: Situational 20% · Technical 25% · Photographic Intelligence 55%
+    — Geometric precision, leading lines, symmetry, layering, diagonal tension.
+      The viewpoint selection IS the DoD for architecture.
+  Creative: Situational 10% · Technical 35% · Photographic Intelligence 55%
+    — Datsuzoku (breaking convention), Fukinsei (asymmetry as statement),
+      Gestalt Closure (suggesting not showing), Kanso (reduction).
+  Maternity/Wedding: Situational 20% · Technical 30% · Photographic Intelligence 50%
+    — Kanso (silhouette as reduction), Figure/Ground (total separation),
+      Gestalt Closure (the viewer completes the form), light direction.
+  Sports/Action: Situational 30% · Technical 40% · Photographic Intelligence 30%
+    — Diagonal Tension (explosive body in action), Point of View (the angle
+      that makes the action read as peak force), Common Fate (direction of energy).
+  Drone: Situational 30% · Technical 30% · Photographic Intelligence 40%
+    — Pattern recognition, Gestalt Similarity, Scale/Proportion.
+      The revelation of pattern from altitude is the compositional act.
+
+  IN EVALUATION TEXT: When DoD is scored above 7.5, name the specific
+  photographic intelligence that earned it. Do not say "strong composition."
+  Say what principle was applied: "The photographer applied Ma — the negative
+  space around the subject is the composition, not the background." Or:
+  "Gestalt Figure/Ground: the positioning and exposure choice created total
+  subject separation." Specific principles, specifically named.
 
 VD (Visual Disruption / Visual Drama):
   TWO VALID PATHS TO A HIGH VD SCORE — score the higher of the two:
@@ -441,7 +557,7 @@ WF (Wonder Factor):
   WF and AQ are measuring the same event from different angles — one asks what wonder
   the image creates, the other asks what feeling it creates. They MUST correlate.
   A gap of more than 2.0 points between WF and AQ on the same image is a scoring error.
-  MANDATORY FLOORS:
+  MANDATORY FLOORS (apply to emotional, portrait, wildlife, landscape, street images):
   If AQ >= 8.5: WF floor is 8.0 minimum.
   If AQ >= 8.0: WF floor is 7.5 minimum.
   If AQ >= 7.5: WF floor is 7.0 minimum.
@@ -449,6 +565,18 @@ WF (Wonder Factor):
   If WF is scored below these floors when AQ is high, rescore WF upward.
   The converse is also true: WF cannot be 9.0 if AQ is 5.0.
   They are the same truth measured twice. Score them as such.
+
+  FINE ART / ABSTRACT / CONCEPTUAL EXCEPTION — MANDATORY:
+  For images where the sub-type is Fine Art, Abstract, or Conceptual, the upward
+  WF floors above are WAIVED. Score WF independently on concept strength alone.
+  Reason: AQ can be high (8.0+) for the craft and aesthetic quality of a Fine Art
+  image while WF is moderate (7.0-7.8) because the concept does not create
+  recognition wonder or emotional arrest in a general viewer.
+  High AQ for craft does NOT pull WF up in Fine Art.
+  WF ceiling for Fine Art: 7.0-7.8 unless concept creates recognition wonder
+  (a general viewer stops, feels something specific, names it in one word).
+  This exception applies to: Fineart, Abstract, Conceptual, Fine Art sub-genres.
+  It does NOT apply to Dance, ICM, or other Creative sub-types.
 
   FOR WILDLIFE AND NATURE: Rare behaviour, scientific significance, and perspectives
   the viewer will never witness score highest. Add Emotional Wonder when the image
