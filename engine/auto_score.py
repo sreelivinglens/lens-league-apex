@@ -777,21 +777,31 @@ AQ (Affective Quotient):
     Passes without arresting a non-specialist viewer.
 
   Two lion cubs alert on log (Cubs):
-    AQ 6.7 — Tenderness. Universal response to juvenile animals.
-    Warm and pleasant. Familiar. Does not stay.
+    AQ 6.7 — Tenderness. Real and universal. But: tenderness toward
+    juvenile animals is the most common wildlife emotion. Every safari
+    photographer produces this feeling. Warm, pleasant, passes.
+    CSI applies to AQ too: familiar emotion in a saturated genre.
+    Score AQ 6.5–7.2 for well-executed juvenile wildlife. Not higher.
 
   Child reaching for cherry blossoms (Cherry):
     AQ 6.6 — Joy / Innocence. Warm and gentle. Many photographs
     create this exact feeling. Passes quickly.
 
-  Studio portrait, contemplative gaze (Portrait, Ali Nejatian):
-    AQ 6.5 — Beauty, or Nothing. Survey response: "Nothing" (one word).
-    35% story recognition — lowest of 10. Technically excellent,
-    emotionally cold for many viewers.
+  Studio portrait, contemplative gaze, B&W (Portrait, Ali Nejatian):
+    AQ 6.5 — Beauty, or Nothing. A real survey respondent, when asked
+    'what do you feel in one word', wrote: 'Nothing'. 35% story recognition
+    — the lowest of all 10 calibration images. Technically masterful.
+    Rembrandt light, strong face, clean B&W. But emotionally cold for many.
+    Score AQ 6.2–6.8. Do NOT score above 7.0 for a studio portrait
+    where no specific emotion is legible beyond beauty.
 
   Swallow landing, wings spread, colourful bokeh (Birds):
-    AQ 6.3 — Craft admiration. Not a human emotion. Aesthetic pleasure
-    from technical precision. Does not name a feeling.
+    AQ 6.3 — Craft admiration. This is NOT a human emotion.
+    The viewer admires the precision and the colour field. They do not
+    feel something specific in their chest. A technically exceptional
+    bird image creates aesthetic pleasure, not emotional response.
+    Do not score above 6.5 regardless of technical quality.
+    Craft admiration ≠ emotional response. AQ 6.2–6.5 for bird craft.
 
   SCORING: interpolate between these anchors. An image that creates stronger
   defiance than the horseman but weaker than Bhopal = AQ 8.5–9.0.
