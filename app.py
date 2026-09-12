@@ -18230,6 +18230,13 @@ GENRE GUIDANCE:
 CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
 {cal_line}
 
+BLOWN HIGHLIGHTS PENALTY — CHECK FIRST:
+If subject highlights are blown (clipped whites on face/skin/primary subject):
+  DoD penalty: -0.5 to -1.0 (technical execution failure)
+  VD penalty: -0.3 to -0.5 (tonal collapse weakens visual impact)
+  AQ penalty: -0.3 to -0.5 (emotional impact reduced)
+Creative intentional high-key: exempt. Action/sport with blown subject: penalise.
+
 AQ ANTI-INFLATION RULE — READ BEFORE SCORING AQ:
 Most images score AQ 6.5-7.5. AQ 8.0+ requires that a stranger
 stopping at this image in a gallery would feel something specific
@@ -34778,7 +34785,13 @@ def _try_genre_context(genre):
             "DM — WHAT COUNTS AS TRANSIENT (score 7.0–8.0): storm light, burning sky, "
             "golden shafts that lasted minutes, fog at precise level, moon/sun at geometric "
             "position, moving subject at peak. "
-            "DM — WHAT IS STATIC (ceiling 6.5): good light on a mountain that lasted all "
+            "AQ — LANDSCAPE SCALE:\n"
+            "Storm light / burning sky / volumetric rays = AQ 7.8–8.2 (awe, peace, presence). "
+            "Image that transports viewer to the place = AQ 8.0–8.5. "
+            "Pleasant landscape in good light = AQ 7.0–7.5. "
+            "CSI reduces WF (wonder at image type) NOT AQ (specific feeling created). "
+            "Storm light creates awe/peace regardless of genre saturation — score it.\n"
+"DM — WHAT IS STATIC (ceiling 6.5): good light on a mountain that lasted all "
             "morning, even overcast, generic golden hour with no peak moment. "
             "Dramatic storm light IS a transient event — score DM 7.0–7.5, not 5.5. "
             "ISOLATION RULE EXCEPTION: storm light, burning sky, fog events ARE the "
@@ -34955,7 +34968,18 @@ def _try_genre_context(genre):
             "DOD = access to restricted venues, physical positioning at risk. "
             "Wonder = capturing the peak that even spectators missed. "
             "EMOTIONAL WONDER: peak athletic moment with immediate emotional response "
-            "(awe, urgency, triumph) — score the intensity: WF 6.5–9.0. No minimum. "
+            "SPORT/ACTION CSI: athletic victory/triumph is the most common sports emotion. "
+            "WF 6.5–7.5 for standard excellent sports action. "
+            "WF 7.5–8.5 only for extraordinary human drama beyond the sport: "
+            "face of defeat, injury, protest, rivals in connection. "
+            "BLOWN HIGHLIGHTS: if subject highlights are blown, reduce WF 0.3–0.5 AND DoD 0.5–1.0. "
+            "Blown highlights on subject skin/face = exposure failure = technical DoD penalty. "
+            "Blown highlights also reduce VD 0.3–0.5 (tonal collapse weakens impact). "
+            "Score WF on whether the image stops a non-sports viewer. No minimum.\n"
+            "AQ FOR SPORT: Victory/triumph = AQ 7.0–7.5 (most common sports emotion). "
+            "Specific non-generic emotion (pain at loss, relief, record-face) = AQ 7.5–8.0. "
+            "Emotion a non-sports viewer recognises and feels = AQ 8.0+. "
+            "Blown highlights further reduce AQ 0.3–0.5.\n"
             "Motion blur on moving subject acceptable if intentional. "
             "Clean background separation expected at 7+."
         ),
@@ -34977,12 +35001,14 @@ def _try_genre_context(genre):
             "IDENTIFY THE SUB-TYPE BEFORE SCORING:\n"
             "  DANCE / MOVEMENT / PERFORMANCE: body at peak geometric expression in "
             "directional light. Form + light + motion must all peak together.\n"
-            "  VD HARD FLOOR: 8.0 MINIMUM for any dance image where body geometry "
-            "and directional light are both clearly present. "
-            "VD 8.0–8.2 = good dance frame. VD 8.3–8.5 = exceptional — form, light, "
-            "and motion all simultaneously at their peak. "
-            "NEVER score VD below 8.0 for a well-executed dance image with "
-            "clear geometric body form and directional light.\n"
+            "  VD 8.0–8.2 = good dance frame. VD 8.3–8.5 = exceptional.\n"
+            "  NAMED ANCHOR — in-camera ICM dance (BW Spider honourable mention): "
+            "Multiple exposures as ONE FRAME in-camera, not edited in post. "
+            "DoD 8.5 | DM 8.1 | WF 8.1 | AQ 8.3 | VD 8.4. "
+            "Score new dance/ICM images above or below this anchor.\n"
+            "  WF for Dance: technique-wonder is a legitimate WF signal. "
+            "ICM/multiple-exposure creates visual magic the viewer cannot explain. "
+            "WF 7.8–8.3 for accomplished dance/movement work.\n"
             "  DANCE DOD — COMPOUNDING DIFFICULTY: live performance = no reshoot, "
             "no direction, no second chance. The photographer must simultaneously: "
             "anticipate peak body geometry (lasts <0.1s), hold correct exposure for "
