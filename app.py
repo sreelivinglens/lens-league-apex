@@ -35485,7 +35485,7 @@ Return ONLY valid JSON, no markdown:
         _payload = _sj.dumps({
             'model': _HAIKU_MODEL,
             'max_tokens': 1200,
-            'temperature': 0.3,
+            'temperature': 0,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode()
 
