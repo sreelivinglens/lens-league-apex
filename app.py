@@ -18103,39 +18103,78 @@ def _calibration_score_haiku(thumb_path, genre, camera_track=None):
         }
         _cap = _MOBILE_CAP.get(genre, 'FULL')
 
+        # _cap_notes: genre-specific, carries all WF/DM/sub-type fixes for mobile Haiku
+        _WILDLIFE_MOBILE_NOTE = (
+            "Wildlife Mobile: no optical telephoto beyond 5x (~120mm on iPhone Pro). "
+            "Beyond 5x = digital zoom = pixelated = Technical DoD 5.0-5.5. "
+            "Subject fills frame at 5x with clean edges: score freely. "
+            "Proximity within 2m of animal = Technical DoD 7.0-8.0. "
+            "No optical bokeh at wildlife distances — do NOT penalise absence. "
+            "Never suggest a longer lens.\n"
+            "WF BEHAVIOURAL RARITY (birds, adult single subject): "
+            "Common behaviour (landing, perching, walking) = WF 5.5-6.5. "
+            "Excellent execution of common behaviour = WF 6.5-7.0. "
+            "Uncommon (courtship, display, alarm, species interaction) = WF 6.5-7.5. "
+            "Rare (predation, prey visible, conflict, feeding young) = WF 7.5-8.5.\n"
+            "WF JUVENILE/FAMILY HARD FLOOR (separate signal — applies regardless of rarity): "
+            "Two or more juveniles in natural light with mutual awareness = WF 7.5 MINIMUM. "
+            "Tenderness IS the wonder. Alert both subjects: 7.5-8.0. Physical contact: 8.0-8.5. "
+            "Do NOT apply the common-behaviour ceiling to juvenile family images.\n"
+            "DM BIRDS BURST MODE: 20-30fps burst, peak selected in post = DM 6.5-7.5. "
+            "Single-frame / manual timing = DM 8.0-9.0. Unknown = default DM 7.0-7.5. "
+            "DOD still scores full for sharpness and exposure — DM only is adjusted."
+        )
+        _CREATIVE_MOBILE_NOTE = (
+            "Creative Mobile: ICM, motion blur, minimalism, long exposure, abstract — fully capable. "
+            "Portrait mode bokeh valid for close subjects. Wide-aperture optical bokeh NOT available.\n"
+            "IDENTIFY SUB-TYPE BEFORE SCORING:\n"
+            "DANCE / MOVEMENT / PERFORMANCE: body at peak geometric expression in directional light. "
+            "Form + light + motion must all peak together. VD 8.0-8.5. "
+            "Score 8.5 only when all three are exceptional — not an automatic floor.\n"
+            "FINE ART / ABSTRACT / CONCEPTUAL: concept strength + execution quality. "
+            "Strong concept + excellent technique: 7.8-8.2. "
+            "Strong concept + competent technique: 7.5-7.8. "
+            "Competent execution, weak concept: 7.2-7.5. "
+            "Do NOT apply Dance VD floor to Fine Art — different sub-type.\n"
+            "ICM / PANNING / BLUR / MINIMALIST: technique on DOD, pattern/colour on VD, "
+            "emotional register on AQ."
+        )
+        _PEOPLE_MOBILE_NOTE = (
+            "People Mobile: FULL capability. Wide (1x) and portrait mode cover all people work. "
+            "Portrait mode = valid creative tool. Clean edge separation = Technical DoD 6.5-7.5. "
+            "Environmental stranger portrait on phone = DoD 6.5-7.5 (social proximity is real difficulty).\n"
+            "WF/AQ COHERENCE — TWO TIERS:\n"
+            "QUIET / INTIMATE (child, contemplative, soft natural light, no strong emotional peak): "
+            "AQ >= 8.0 gives WF floor 7.0. Max gap 1.5. Craft is high but wonder is gentle.\n"
+            "RECOGNITION WONDER (uninhibited laughter, raw grief, elderly dignity, face a stranger stops for): "
+            "AQ >= 8.0 gives WF floor 7.5. "
+            "Identify which tier first. Child under cherry blossoms = quiet/intimate. "
+            "Elderly woman laughing with broken teeth = recognition wonder."
+        )
         _cap_notes = {
             'FULL': (
-                "This genre is FULLY achievable on a phone — it is a legitimate or often "
-                "superior instrument here. Score DoD without penalty for lack of telephoto "
-                "or optical bokeh. Those tools are not required in this genre."
+                "This genre is FULLY achievable on a phone — legitimate or superior instrument. "
+                "Score DoD without penalty for lack of telephoto or optical bokeh. "
+                + (_PEOPLE_MOBILE_NOTE if genre == 'People' else
+                   "Those tools are not required in this genre.")
             ),
             'PARTIAL': (
-                "This genre is PARTIALLY achievable on a phone. Wide and portrait mode "
-                "cover most work. Note specific limits: no optical telephoto compression "
-                "beyond 5x; no natural optical bokeh beyond 1.5m subject distance; "
-                "no studio strobe sync. Do NOT penalise what the phone cannot do. "
+                "This genre is PARTIALLY achievable on a phone. "
+                "Do NOT penalise what the phone cannot do. "
                 "Do NOT suggest equipment the phone does not have. "
-                "Score DoD on what was actually achieved within these constraints."
+                + (_CREATIVE_MOBILE_NOTE if genre == 'Creative' else
+                   "Score DoD on what was actually achieved within mobile constraints.")
             ),
             'CONSTRAINED': (
                 "This genre has FUNDAMENTAL HARDWARE LIMITS on a phone. "
                 "Score honestly — do not inflate DoD to compensate. "
                 "Situational DoD (being in the habitat/location) scores FULL — same effort. "
-                "Technical DoD ceiling applies where hardware limits are the cause of gaps: "
-                + (
-                    "Wildlife: no optical telephoto beyond 5x (~120mm equiv on iPhone Pro). "
-                    "Subject filling frame at 5x with clean edges = score freely. "
-                    "Subject small in frame with digital-zoom softness = Technical DoD 5.0–5.5. "
-                    "Proximity as discipline: within 2m of wildlife = Technical DoD 7.0–8.0. "
-                    "No optical bokeh at wildlife distances — do NOT penalise its absence. "
-                    "Never suggest: longer lens, 300mm, telephoto. "
-                    if genre == 'Wildlife' else
-                    "Astrophotography: Night mode gives 3–10s auto exposures, not 25–30s manual. "
-                    "No tracking mount. Technical DoD ceiling 6.5 for Night mode Milky Way. "
-                    "7.0–7.5 only for time-lapse stacking or strong aurora. "
-                    "Situational DoD (dark site access) scores full. "
-                    if genre == 'Astrophotography' else ""
-                )
+                + (_WILDLIFE_MOBILE_NOTE if genre == 'Wildlife' else
+                   "Astrophotography: Night mode gives 3-10s auto exposures, not 25-30s manual. "
+                   "No tracking mount. Technical DoD ceiling 6.5 for Night mode Milky Way. "
+                   "7.0-7.5 only for time-lapse stacking or strong aurora. "
+                   "Situational DoD (dark site access) scores full. "
+                   if genre == 'Astrophotography' else "")
             ),
         }
 
@@ -34617,13 +34656,20 @@ def _try_genre_context(genre):
             "(only 7.5–8.0 if bokeh is truly exceptional AND symmetry perfect). "
             "Lion/big cat cubs alert in golden light = VD 7.2 MINIMUM. "
             "Two juvenile animals simultaneously alert/looking at camera = VD 7.2 MINIMUM. "
-            "WF MINIMUMS: individual feather separation on fast small bird "
-            "= WF 7.5–8.0. Two young animals in golden natural light (tenderness) "
-            "= WF 7.8 MINIMUM. Cultural/access wonder = WF 8.0 MINIMUM. "
-            "DM — BIRDS: peak wing-spread on small bird with feather separation = DM 8.5–9.0. "
+            "WF — BEHAVIOURAL RARITY LADDER (birds, adult mammals, single subject):\n"
+            "  Common behaviour (landing, perching, walking, grazing): WF 5.5–6.5. "
+            "  Excellent execution of common behaviour: WF 6.5–7.0. "
+            "  Uncommon behaviour (courtship, display, alarm, species interaction): WF 6.5–7.5. "
+            "  Rare behaviour (predation, prey visible, conflict, feeding young): WF 7.5–8.5.\n"
+            "WF — JUVENILE/FAMILY HARD FLOOR (SEPARATE SIGNAL — applies regardless of rarity):\n"
+            "  Two or more juveniles in natural light with mutual awareness: WF 7.5 MINIMUM. "
+            "  Tenderness is the wonder — do NOT apply the common-behaviour ceiling here. "
+            "  Alert expression both subjects: WF 7.5–8.0. Physical contact: WF 8.0–8.5.\n"
+            "DM — BIRDS: peak wing-spread. "
+            "20–30fps burst, peak selected in post: DM 6.5–7.5. "
+            "Single-frame or manual timing: DM 8.0–9.0. Unknown: DM 7.0–7.5. "
             "DM — MAMMALS ACTIVE CONTACT (playing, wrestling, grooming): DM 7.0–8.5. "
-            "DM — MAMMALS ALERT/AWARE (not in contact, both alert, looking at camera): "
-            "DM 6.5–7.0. NOT a static scene but lower than active contact. "
+            "DM — MAMMALS ALERT/AWARE (not in contact, both alert): DM 6.5–7.0. "
             "Captive or hide-shot animals: penalise DOD and Wonder. "
             "ICM/PANNING: intentional blur = deliberate technique, do NOT penalise."
         ),
@@ -34722,7 +34768,16 @@ def _try_genre_context(genre):
             "A portrait where the subject is looking away in private thought — melancholy, "
             "contemplation, beauty — scores WF 7.5–8.0. "
             "AQ dominant (48%). Catchlight in the eye expected at 7+. "
-            "WF/AQ coherence: if AQ >= 8.0, WF floor 7.0."
+            "WF/AQ COHERENCE FOR PEOPLE — TWO TIERS:\n"
+            "  QUIET / INTIMATE images (child, contemplative portrait, soft natural light, "
+            "  no strong emotional peak): if AQ >= 8.0, WF floor 7.0. Gap max 1.5. "
+            "  These images score high on craft (AQ) but the wonder is gentle, not arresting.\n"
+            "  RECOGNITION WONDER images (uninhibited laughter, raw grief, elderly dignity, "
+            "  a stranger stops in a gallery): if AQ >= 8.0, WF floor 7.5. "
+            "  These images demand WF match the emotional arrest — the face IS the story.\n"
+            "IDENTIFY which tier before applying the floor. "
+            "A child under cherry blossoms is quiet/intimate. "
+            "An elderly woman laughing with broken teeth is recognition wonder."
         ),
         'Nature': (
             "NATURE: GENRE REDIRECT — if a human is the PRIMARY subject (child reaching "
@@ -34771,13 +34826,18 @@ def _try_genre_context(genre):
             "Assume ALL compositional unconventionality is deliberate. "
             "AQ = emotional or conceptual resonance, not technical sharpness. "
             "Over-processing that serves the concept: acceptable. "
-            "SCORE BY SUB-TYPE:\n"
-            "  Dance/movement/performance with graphic body geometry and dramatic light "
-            "= VD 8.5 MINIMUM, overall 8.2–8.8. The body as visual form at peak expression "
-            "in dramatic light is among the highest-scoring Creative subjects.\n"
-            "  Fine art / abstract / conceptual = calibrated to concept AND execution. "
-            "Strong concept with excellent technique = 7.8–8.2. "
-            "Competent execution without exceptional concept = 7.5–7.8.\n"
+            "IDENTIFY THE SUB-TYPE BEFORE SCORING:\n"
+            "  DANCE / MOVEMENT / PERFORMANCE: body at peak geometric expression in "
+            "directional light. All three must peak together: form, light, motion. "
+            "VD 8.0–8.5. Score 8.5 only when form + light + motion are all exceptional. "
+            "Do not floor VD at 8.5 automatically — a good dance frame is 8.0–8.2.\n"
+            "  FINE ART / ABSTRACT / CONCEPTUAL: concept strength + execution quality. "
+            "Strong concept + excellent execution: 7.8–8.2. "
+            "Strong concept + competent execution: 7.5–7.8. "
+            "Competent execution, weak concept: 7.2–7.5. "
+            "Do NOT apply Dance VD floor to Fine Art — different sub-type.\n"
+            "  ICM / PANNING / BLUR / MINIMALIST / GRAPHIC: technique on DOD, "
+            "pattern and colour on VD, emotional register on AQ.\n"
             "Under-scoring Creative because it looks 'different' is the most common error."
         ),
         'default': (
