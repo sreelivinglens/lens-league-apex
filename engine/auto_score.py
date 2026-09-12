@@ -229,6 +229,16 @@ DoD (Depth of Difficulty):
   Technical DoD 7.0-7.8 for sharp result on modern body; 8.0-8.8 for older manual/
   zone AF body; 7.5 default when body unknown.
 
+  EXPOSURE FAILURE — MANDATORY TECHNICAL PENALTY:
+  Blown highlights (clipped whites on subject skin, face, or primary subject)
+  are a technical execution failure, not a stylistic choice.
+  Blown highlights on subject: reduce Technical DoD by 0.5–1.0.
+  Blown highlights + subject skin/face lost: reduce Technical DoD by 1.0–1.5.
+  Creative intentional overexposure (fashion, high-key portrait) does not count.
+  CHECK: are the subject's highlights blown? If yes, apply penalty before scoring DoD.
+  Blown highlights also reduce VD — tonal collapse weakens visual impact.
+  VD penalty for blown highlights: 0.3–0.7 depending on severity.
+
   ── COMPONENT 3: PHOTOGRAPHIC INTELLIGENCE ──────────────────────────────────
   Did the photographer SEE — applying the principles that separate a photograph
   from a record? This is the third leg. It is often the hardest.
@@ -1743,9 +1753,17 @@ GENRE_CONTEXT = {
         "CREATIVE SUB-TYPE SCORING — IDENTIFY THE SUB-TYPE FIRST:\n"
         "DANCE / MOVEMENT / PERFORMANCE: Body as visual form at peak geometric expression "
         "in dramatic directional light. The subject, light, and motion must all peak together. "
-        "VD 8.0–8.5. Overall score 7.8–8.4. "
-        "Score 8.5+ VD only when geometric body form, dramatic light, AND peak motion "
-        "all three are simultaneously exceptional. Do not floor VD at 8.5 automatically.\n"
+        "VD 8.0–8.5. Score 8.5+ VD only when form, light, AND motion all simultaneously peak.\n"
+        "NAMED ANCHOR — in-camera ICM dance (BW Spider honourable mention): "
+        "Multiple exposures achieved as ONE FRAME in camera — not edited in post. "
+        "This is Datsuzoku — technique that breaks the convention of what a camera does. "
+        "DoD 8.5 (ICM mastery, no second chance). DM 8.1 (simultaneous exposures must peak). "
+        "WF 8.1 (technique-based wonder — rare craft that creates visual magic). "
+        "AQ 8.3 (Passion — the movement creates a specific visceral feeling). "
+        "Score new dance/ICM images above or below this anchor.\n"
+        "WF for Dance: technique-wonder is a legitimate WF signal for ICM/multiple-exposure. "
+        "The viewer stops because the image is physically impossible to understand at first. "
+        "That is wonder. WF 7.8–8.3 for accomplished dance/movement work.\n"
         "FINE ART / ABSTRACT / CONCEPTUAL: Scored on concept strength AND technical execution. "
         "Strong concept with excellent technique: 7.8–8.2. "
         "Strong concept with competent technique: 7.5–7.8. "
@@ -2050,7 +2068,15 @@ GENRE_CONTEXT = {
 
         "AQ: Name the specific emotion. Landscape AQ vocabulary: presence (the feeling of "
         "being somewhere), vastness, solitude, peace, unease, transcendence, melancholy, "
-        "suspension, the void. AQ above 8.5 requires the image to deliver the emotion "
+        "suspension, the void.\n"
+        "AQ SCALE FOR LANDSCAPE:\n"
+        "  Storm light, volumetric rays, burning sky = AQ 7.8–8.2 (awe, presence, peace).\n"
+        "  Image that makes the viewer feel transported to the place = AQ 8.0–8.5.\n"
+        "  Pleasant landscape in good light = AQ 7.0–7.5.\n"
+        "  CSI NOTE: CSI reduces WF (wonder at the image type). "
+        "AQ is independent — it scores the specific feeling the image creates, "
+        "not whether the subject is common. Storm light creates awe regardless of saturation.\n"
+        "AQ above 8.5 requires the image to deliver the emotion "
         "INDEPENDENT of location recognition — if the feeling collapses once you know it "
         "is Iceland, the AQ is the location's, not the photographer's. "
         "Over-processing (HDR halos, over-saturated skies, heavy tone-mapping) is an AQ "
@@ -2400,23 +2426,31 @@ GENRE_CONTEXT = {
         "anticipated the moment AND pressed the shutter at exactly the right millisecond. "
         "Reward precise timing severely. Penalise near-misses — the follow-through after "
         "peak, the wind-up before peak.\n\n"
-        "Wonder: The athletic body at its physical limit is the Wonder signal. "
-        "Score the combination of physical achievement visible in the image AND "
-        "the photographic skill required to capture it. "
-        "A clean peak-action frame of a world-class athlete in competition scores Wonder 8.0–9.0. "
-        "A compositionally revelatory image — the weight of a tackle made visible, the geometry "
-        "of a sprint at maximum acceleration, the isolation of a single athlete against a crowd — "
-        "scores Wonder 8.5–9.5 when the image communicates something about the physical reality "
-        "that slow-motion video cannot.\n\n"
+        "Wonder: APPLY CSI (Cultural Saturation Index) FOR SPORT.\n"
+        "Athletic action photography is the most photographed genre in the world. "
+        "Victory, triumph, peak physical effort have been documented since 1960. "
+        "Standard excellent sports action = WF 6.5–7.5. No higher.\n"
+        "WF 7.5–8.5 only when the image shows extraordinary human drama BEYOND the sport: "
+        "the face of defeat and its specific emotion, an injury witnessed, a protest or "
+        "political gesture, a moment of connection between rivals, a crowd at collective peak. "
+        "WF 8.5+ requires the image to communicate something that stops a non-sports viewer.\n"
+        "The question is NOT: was this a great sports photo? "
+        "It is: does this image create wonder in someone who doesn't follow this sport?\n"
+        "BLOWN HIGHLIGHTS: if subject highlights are blown, WF is further reduced "
+        "by 0.3–0.5 — tonal failure limits the emotional impact.\n\n"
         "Disruption: Reward unusual angles (low, underwater, through the net), motion blur "
         "techniques used deliberately (panning on a sprinter to freeze the face and blur the "
         "background, long-exposure crowd blur around a static athlete), and frames that refuse "
         "the standard side-on action shot. "
         "Penalise technically correct but compositionally generic sports frames.\n\n"
-        "AQ: The emotion of athletic performance — determination, pain, triumph, devastation. "
-        "Score the specific emotional state the image captures. A losing face at the finish line "
-        "scores higher AQ than a generic action frame where no emotional state is legible. "
-        "Crowd reaction frames can score high AQ when the collective emotion is specific and readable."
+        "AQ: The specific emotional state the image captures. BUT: apply CSI to sports emotions. "
+        "Victory and triumph are the most common sports emotions — they appear in every competition "
+        "photograph. Generic triumph = AQ 7.0–7.5. "
+        "AQ 7.5–8.0: a specific non-generic emotion is legible — pain at the exact moment of loss, "
+        "relief after a long struggle, the face of someone who knows they have just broken a record. "
+        "AQ 8.0+: rare emotional specificity that a non-sports viewer would recognise and feel. "
+        "A losing face at the finish line scores higher than a winning fist pump. "
+        "Crowd reaction at collective peak (a whole stand in simultaneous grief or joy) = AQ 8.0+."
     ),
     'default': (
         "Evaluate using genre-appropriate criteria. Reward artistic intent, "
