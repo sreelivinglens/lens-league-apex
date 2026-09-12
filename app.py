@@ -18270,6 +18270,22 @@ WF NAMED ANCHORS — interpolate between these:
 DO NOT compress scores into 7.5-8.5. Birds AQ is 6.3. Portrait WF is 6.2.
 The full range exists. Score what you see against these anchors.
 
+CONTEST EDITING STANDARD — CHECK BEFORE SCORING:
+Permitted: contrast, highlights, shadows, exposure, colour temp, dodge/burn, crop.
+NOT permitted in non-Creative genres: painterly rendering, skin smoothing to
+pastel/illustration quality, background replaced or rendered as smooth gradient
+beyond optical bokeh, HDR tone-mapping, texture overlays, digital art filters.
+DETECTION: if skin looks painted not photographed, if background is a smooth
+studio-gradient not a natural blur, if overall texture is canvas-like or
+watercolour-like — this image should have been filed as Creative.
+When detected in People/Portrait/Street/Wildlife/Landscape/Maternity:
+  DoD -0.5 to -0.8 (craft record obscured by processing)
+  VD -0.5 to -1.0 (visual drama is software's work, not photographer's)
+  AQ -0.3 to -0.5 (authenticity reduced)
+  Total score cap: 7.5 when painterly processing is dominant.
+Name it in evaluation: 'Processing takes this beyond standard editing —
+in a contest this would be reclassified to Creative.'
+
 BEFORE SCORING WF AND AQ — READ THIS:
 wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
 1. EYE WONDER: compositional find, juxtaposition, accidental frame = 8.0–9.5
@@ -34708,10 +34724,13 @@ def _try_genre_context(genre):
             "Older body / manual or zone AF: DOD 8.0–8.5. "
             "Unknown body: default DOD 7.5 for sharp bird-in-flight. "
             "Access, habitat proximity, and exposure difficulty still score fully.\n"
-            "JUVENILE WILDLIFE PROXIMITY: close range to wild predator cubs "
-            "(lion, leopard, cheetah) in natural habitat = Situational DOD 8.0–8.5. "
-            "Two juvenile wild subjects in golden light at proximity = DOD 8.0+. "
-            "Score DOD high when proximity to dangerous wildlife is evident.\n"
+            "JUVENILE WILDLIFE PROXIMITY — APPLY ACCESS CONTEXT:\n"
+            "Masai Mara, Serengeti, Kruger, Amboseli = established safari destinations. "
+            "Professional guides position vehicles at optimal distance. "
+            "Hundreds of photographers per month achieve this shot. "
+            "Vehicle-based safari in known tourist parks = DOD 7.0–7.5. Never 8.0+.\n"
+            "DOD 8.0+ only: on foot in habitat, remote location requiring multi-day trek, "
+            "or access not available to general tourists.\n"
 "AQ — WILDLIFE CRAFT ANCHOR: AQ scores the specific feeling the image creates. "
             "A technically exceptional bird image creates aesthetic pleasure (craft admiration). "
             "That is AQ 7.5–8.0 — not 8.0–8.5. Aesthetic pleasure from craft is real but "
@@ -34923,7 +34942,13 @@ def _try_genre_context(genre):
             "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
             "Score DoD using three components. Then score each other dimension from scratch.\n"
             "DoD INTELLIGENCE WEIGHT for People: Situational 15% · Technical 30% · Intelligence 55%.\n"            "Key principles: Light Direction (specific quality/direction on face — Rembrandt/split/rim/butterfly — IS the primary compositional act), Figure/Ground (subject reads against background by deliberate exposure + positioning), Wabi-sabi (image honours the real face, imperfection as beauty — not corrected), Seijaku (contemplative stillness as active subject), Negative Space (deliberate space giving subject weight), Ma (space around the subject is not empty — it is the composition).\n"
-            "PEOPLE/PORTRAIT VD GUIDES: portrait with direct engaged gaze = VD 6.5–7.5. "
+            "CONTEST EDITING — PEOPLE/PORTRAIT IS STRICT: permitted edits are contrast, "
+            "highlights, shadows, colour temperature, dodge/burn, crop. "
+            "Painterly skin, pastel rendering, background smoothed beyond optical bokeh, "
+            "canvas/watercolour texture = should be filed as Creative, not People. "
+            "When detected: DoD -0.5 to -0.8, VD -0.5 to -1.0, AQ -0.3 to -0.5. "
+            "Total cap 7.5 when painterly processing is dominant character of image.\n"
+"PEOPLE/PORTRAIT VD GUIDES: portrait with direct engaged gaze = VD 6.5–7.5. "
             "Looking-away or introspective portrait with strong light = VD 7.0–7.5. "
             "Soft ambient portrait (child under blossoms): VD 6.0–7.0. "
             "Below 6.0 only for clearly out-of-focus or technically failed portrait. "
