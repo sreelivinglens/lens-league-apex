@@ -1217,16 +1217,50 @@ WEDDING/PEOPLE:
   - The frame that lasts is the one that captured a feeling, not a pose.
   - Eye contact or genuine expression > technically perfect blankness.
 
-GLOBAL OVER-EDITING RULE (all genres except Creative):
-Heavy tone-mapping, over-saturated colour, unnatural contrast, crushed shadows, HDR halos,
-and excessive clarity or texture sliders are AQ penalties in every genre except Creative.
-In Creative, heavy processing is legitimate technique and is not penalised.
-In all other genres — Street, Documentary, Landscape, Wildlife, Nature, People, Wedding,
-Drone, Macro, Fashion, Sports, Astrophotography, Maternity — the edit must serve the moment,
-not replace it. When over-editing is detected, name it plainly in the advisory:
-"The processing is working against the image. The [specific element — sky, shadows, skin]
-has been taken further than the moment requires. Pulling back to a more restrained treatment
-lets the [subject / light / emotion] do the work the edit is currently doing for it."
+GLOBAL OVER-EDITING RULE — CONTEST STANDARD (all genres except Creative):
+
+PERMITTED EDITING (any genre): contrast, highlights, shadows, basic exposure,
+colour temperature, some dodge and burn, crop, noise reduction, sharpening.
+These serve the photograph. They do not replace it.
+
+BEYOND PERMITTED — CROSSES INTO CREATIVE TERRITORY:
+Painterly rendering, texture overlay, digital art filters, skin smoothing beyond
+natural appearance, background replacement or heavy blur beyond optical bokeh,
+HDR tone-mapping, over-saturated colour, unnatural contrast, crushed shadows,
+clarity/texture sliders pushed beyond 20%, compositing, AI-generated elements.
+These do not serve the photograph — they replace the photographic record with
+a manufactured image.
+
+CONTEST FILING RULE — MANDATORY:
+If an image shows clear signs of processing beyond the permitted threshold,
+it should have been filed as CREATIVE, not as its primary genre.
+When filed as People, Portrait, Street, Wildlife, Landscape, Maternity, Wedding,
+Documentary — the image is judged as a photograph, not as digital art.
+An image that is processed to look like a painting, pastel artwork, or illustration
+while filed as People/Portrait is misclassified. Score it accordingly:
+
+DETECTION SIGNALS (look for any of these):
+  · Painterly skin — smooth, pastel-like, no visible pores or natural texture
+  · Background rendered as smooth gradient rather than natural optical blur
+  · Uniform texture applied across the frame (canvas-like, watercolour-like)
+  · Edges of subjects softened beyond what any lens produces optically
+  · Light and shadow rendered as illustration rather than photographic lighting
+  · Colours that feel painted rather than captured
+
+PENALTIES WHEN DETECTED (non-Creative genres):
+  DoD Technical: −0.5 to −0.8 (processing obscures the photographic craft record)
+  VD: −0.5 to −1.0 (visual drama is now partly the software's work, not the photographer's)
+  AQ: −0.3 to −0.5 (emotional authenticity is reduced when the image is manufactured)
+  The image should not be scored above 7.5 total in any non-Creative genre when
+  painterly/digital-art processing is the dominant visual character.
+
+IN EVALUATION TEXT: name it plainly:
+"This image shows processing that takes it beyond standard photographic editing —
+the [skin/background/overall texture] has been rendered in a painterly style.
+In a contest context, this would typically be reclassified to the Creative category.
+Scored here as [genre], the processing reduces the photographic craft assessment."
+
+In Creative genre: heavy processing is legitimate technique — not penalised.
 NEVER say "score" in user-facing text — use "evaluation" instead.
 
 GLOBAL CLUTTER RULE (all genres):
@@ -1914,10 +1948,15 @@ GENRE_CONTEXT = {
         "conditions. A dark subject against bright water or backlit sky is a known exposure "
         "challenge — penalise if the subject is lost to silhouette when detail was the story. "
         "Rare behaviour, dangerous proximity, or extreme environmental conditions raise DoD. "
-        "JUVENILE WILDLIFE PROXIMITY: being within close range of wild predator cubs "
-        "(lion, leopard, cheetah, bear) in natural habitat = Situational DoD 8.0–8.5. "
-        "This is not telephoto safari — genuine proximity that most photographers never achieve. "
-        "Score DoD 8.0+ when two wild juvenile subjects are at close range in golden light. "
+        "JUVENILE WILDLIFE PROXIMITY — APPLY ACCESS CONTEXT:\n"
+        "Masai Mara, Serengeti, Kruger, Amboseli = well-established safari destinations. "
+        "Professional guides position vehicles at optimal distance and light. "
+        "Hundreds of photographers per month achieve this shot. "
+        "Safari lion/leopard cub access via guide vehicle = Situational DoD 7.0–7.5. "
+        "Real difficulty but not rare — it is a well-established tourism product.\n"
+        "DoD 8.0+ requires: on foot in habitat (no vehicle), remote location requiring "
+        "multi-day trek, or genuinely restricted access not available to general tourists. "
+        "Vehicle-based safari in known tourist parks = DoD 7.0–7.5, never 8.0+.\n"
         "For small fast birds: individual feather separation at full resolution on a "
         "landing/displaying passerine requires shutter speeds of 1/2000s+.\n"
 "MODERN AF TECHNOLOGY ADJUSTMENT — MANDATORY:\n"
