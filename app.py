@@ -18301,9 +18301,12 @@ wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
    An elderly Indian woman with broken teeth laughing in a sunflower field = WF 9.0.
    A child covering her eyes laughing completely = WF 9.0.
 
-WF/AQ COHERENCE: if aq >= 8.5, wf must be >= 8.0. If aq >= 8.0, wf must be >= 7.5.
-If aq >= 7.5, wf must be >= 7.0. A gap > 2.0 between wf and aq is impossible —
-they measure the same emotional truth. Check before submitting.
+WF/AQ COHERENCE — ANTI-GAP RULE ONLY (no floors, no minimums):
+Score WF on wonder signals alone. Score AQ on emotional content alone.
+Then check: is the gap between wf and aq greater than 2.0? If yes, that is a scoring error.
+Close the lower dimension upward only enough to bring the gap to 2.0. No further.
+DO NOT apply floors. DO NOT prop either score up. A gap of 1.5 is acceptable. A gap of 2.5 is not.
+Example: wf 8.0, aq 5.5 = gap 2.5 = error. Raise aq to 6.0 only. No further.
 
 Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
 - dod: Depth of Difficulty (how hard was this to achieve — use mobile weights if mobile track)
@@ -34689,10 +34692,11 @@ def _try_calibration_line(genre):
         f'ordinary subject belongs in the 5s and 6s. The figures above are not '
         f'a floor to stay above — they describe a real distribution with real '
         f'photographs at every level, including the bottom.\n\n'
-        f'DIMENSION AVERAGES across all 311 evaluated photographs:\n'
-        f'  dod 6.85 | disruption 6.70 | dm 6.96 | wonder 7.83 | aq 8.23\n'
-        f'These are AVERAGES. Roughly half of all photographs score below each '
-        f'of them on each dimension.\n'
+        f'DIMENSION AVERAGES — IMPORTANT: these figures are from the pre-calibration engine\n'
+        f'and are being updated. The AQ average was inflated by floors that have since been removed.\n'
+        f'Use the NAMED ANCHORS above (Bhopal 9.5, horseman 8.1, swallow 6.3) as your reference —\n'
+        f'not these historical averages. AQ 7.0–7.5 is a healthy average for well-executed work.\n'
+        f'AQ above 8.0 requires a stranger to feel a specific nameable emotion — not just admire the craft.\n'
     )
 
 
@@ -34731,13 +34735,14 @@ def _try_genre_context(genre):
             "Vehicle-based safari in known tourist parks = DOD 7.0–7.5. Never 8.0+.\n"
             "DOD 8.0+ only: on foot in habitat, remote location requiring multi-day trek, "
             "or access not available to general tourists.\n"
-"AQ — WILDLIFE CRAFT ANCHOR: AQ scores the specific feeling the image creates. "
-            "A technically exceptional bird image creates aesthetic pleasure (craft admiration). "
-            "That is AQ 7.5–8.0 — not 8.0–8.5. Aesthetic pleasure from craft is real but "
-            "it is not the same as being emotionally moved. Reserve AQ 8.0+ for images where "
-            "the viewer feels a specific nameable emotion — not just admires the execution. "
-            "A swallow landing: AQ 7.5–7.8 (craft pleasure). "
-            "Two cubs in golden light: AQ 7.8–8.2 (tenderness is a real emotion).\n"
+"AQ — WILDLIFE CALIBRATED ANCHORS (use these exact reference points): "
+            "Swallow landing, wings spread, colourful bokeh = AQ 6.3. "
+            "Craft admiration is NOT a human emotion. The viewer admires the precision. "
+            "They do not feel something specific in their chest. AQ 6.2–6.5 for bird craft. Never above 6.5. "
+            "Two lion cubs alert on log (Masai Mara safari) = AQ 6.7. "
+            "Tenderness is real but familiar — the most common wildlife emotion. Every safari produces this. "
+            "CSI applies: AQ 6.5–7.2 for juvenile wildlife. Not higher. "
+            "Reserve AQ 8.0+ for images where a stranger feels a specific nameable emotion — not just admires execution.\n"
 "WF — BEHAVIOURAL RARITY LADDER (birds, adult mammals, single subject):\n"
             "  Common behaviour (landing, perching, walking, grazing): WF 5.5–6.5. "
             "  Excellent execution of common behaviour: WF 6.5–7.0. "
