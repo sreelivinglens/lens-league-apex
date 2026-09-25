@@ -1,6 +1,16 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-181.14-staging (Session 190, 2026-08-19 — HOTFIX: image_id undefined — url_for calls now use image.id. RETAINS 181.13.)
-{# SL-VERSION: image_detail-181.13-staging (Session 189, 2026-08-19 — MOBILE: sc-topnav hidden on mobile (was showing dual nav). Bottom nav from base.html handles all mobile navigation. RETAINS 181.12.)
+{# SL-VERSION: image_detail-182.23 (Session 216, 2026-09-07 — Gestalt restructure: (1) Conclusion moved before sparklines — emotional close before data; (2) Take-away and Path-to-9 removed — eval means 9+ card is single forward-action; (3) "What you need to do" renamed "Your assignment"; (4) CSI cards dark backgrounds replaced with light (amber/blue); (5) Contest launchpad 9.0+ dark navy replaced with light cream; (6) Evaluation record footer restyled to match Haiku — single-line camera data, species footer-only, AI disclaimer. No dark section backgrounds. RETAINS 182.22.) #}
+{# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
+{# SL-VERSION: image_detail-182.22 (Session 215, 2026-09-06 — Evaluation record footer: full EXIF (camera, lens, focal, exposure, software), evaluated-for name, date, file, genre, species (when confident), AI disclaimer. Species removed from mid-card. RETAINS 182.21.) #}
+{# SL-VERSION: image_detail-182.21 (Session 215, 2026-09-06 — Conclusion: split into visual paragraphs at sentence boundaries — platform closing sentence always breaks to its own paragraph. RETAINS 182.20.) #}
+{# SL-VERSION: image_detail-182.20 (Session 215, 2026-09-06 — Conclusion: text-align:justify. RETAINS 182.19.) #}
+{# SL-VERSION: image_detail-182.19 (Session 215, 2026-09-06 — Dim obs: score column widened 64px→80px to prevent STRONGEST label overflow into description text. Text column 5px left padding added. RETAINS 182.18.) #}
+{# SL-VERSION: image_detail-182.18 (Session 215, 2026-09-06 — Dim obs redesign: (1) Desktop DDI tile strip hidden — redundant with detailed rows below. (2) Removed tap-detail panel and hint text. (3) Colour-coded dim obs rows: gold/green/slate/grey left border + tint + icon + coloured label per status. RETAINS 182.17.) #}
+{# SL-VERSION: image_detail-182.17 (Session 215, 2026-09-06 — (1) Dim obs: padding-top on text column for breathing space between score and analysis. (2) Removed 'What SL saw' accordion — duplicated impression/strength_obs/next_leap_obs already shown above. (3) Conclusion: dark background removed, replaced with Haiku-standard sage green open zone. RETAINS 182.16.) #}
+{# SL-VERSION: image_detail-182.16 (Session 215, 2026-09-06 — Three fixes: (1) Photographer name: use image.photographer_name not current_user — admin viewing any image was showing 'Admin'. (2) Dim observations: upgraded from 14px list to Haiku-level layout with 26px score left + obs text right, always visible. (3) Tech read + Visual flow: removed from hidden accordion, rendered as open warm-sand zone after master reference card. RETAINS 182.15 / 182.14.) #}
+{# SL-VERSION: image_detail-182.14 (Session 214, 2026-09-06 — Seven Haiku fields ported: impression, tech_read, visual_flow, imagine, master_name/why, dim_obs per dimension, species_note. Tier journey strip. Strength_obs + next_leap_obs in summary box always visible. Conclusion dark card before action bar. Award_context score-tier card. Contest launchpad dual threshold 8.5/9.0. Imagine moved to forward-looking position. Backfill enrichment banner: dark navy, gold progress bar, progressive messaging, auto-reload on completion. Fixes JS status check ok/scored. RETAINS 181.23-main.)
+{# SL-VERSION: image_detail-181.22 (Session 205, 2026-09-01 — Location fallback shows body; Frame N: bolded in BOW; To reach 9+ highlighted pink. RETAINS 181.18. — Field mapping fix: _what_stood_out now reads what_stood_out not transferable_advice (was causing duplication). Four card sections removed (card_1/2/3/4 don't exist in audit_json). Path-to-9 pink uses what_next field. RETAINS 181.17: contest cards, BOW frames, CSI cards, font fixes.)
+{# SL-VERSION: image_detail-181.23-main (Session 207, 2026-09-02 — NAV: sc-topnav (#111214 near-black) removed entirely. sl-top-nav from base.html now renders — correct navy colour, standard paid links. RETAINS 181.22.)
    Session 183 — 2026-08-14 (second pass)
    TYPOGRAPHY + LAYOUT PASS:
    1. Body copy up 1pt: 15px->16px across em-para, takeaway, accordion body, location, bow
@@ -21,7 +31,7 @@
    2. SCORE BLOCK — tier name above, score large (7.48/10 two decimal places), percentile
       below. Cleaner, more legible at 70yr. Score now reads as the conclusion of the trust
       marks, not the opening statement.
-   3. SUMMARY BOX — new section immediately below score: Strength pill + one line,
+   3. SUMMARY BOX — new section immediately below the evaluation: Strength pill + one line,
       Next Leap pill + one line. The two most important findings above the fold,
       visible without scrolling or tapping.
    4. DIMENSIONS — on mobile, all 5 now shown as colour-coded bars. Green = strongest,
@@ -180,8 +190,6 @@
 ===================================================== */
 
 /* ── SUPPRESS BASE CHROME ── */
-body.page-scorecard .sl-top-nav,
-body.page-scorecard nav.sl-top-nav       { display:none !important }
 body.page-scorecard .sl-bottom-nav       { display:none !important }
 body.page-scorecard footer               { display:none !important }
 body.page-scorecard .nav-mobile          { display:none !important }
@@ -204,12 +212,7 @@ body.page-scorecard                      { padding-top:0 !important; background:
 body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 /* ── TOPNAV ── */
-.sc-topnav{background:#111214;display:flex;align-items:center;padding:0 20px;height:54px;gap:8px}
-.sc-logo-area{display:flex;align-items:center;gap:8px}
-.sc-logo-text{font-size:13px;font-weight:600;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
-.sc-nl{padding:5px 10px;font-size:13px;color:rgba(255,255,255,.45);border-radius:5px;text-decoration:none}
-.sc-nl:hover{color:#fff}
-.sc-av{width:26px;height:26px;border-radius:50%;background:var(--sc-gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sc-dark)}
+
 
 /* ── LAYOUT: 2-column, no sidenav ── */
 .sc-wrap{max-width:1200px;margin:0 auto;background:var(--sc-cream)}
@@ -220,6 +223,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
 .sc-back-lnk{font-size:13px;color:var(--sc-muted);text-decoration:none}
 .sc-back-lnk:hover{color:var(--sc-dark)}
+/* ── SESSION 214: BACKFILL ENRICHMENT BANNER ── */
+
 .sc-page-lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 
 /* ── SHARED CARD ── */
@@ -271,7 +276,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-ddi-col.sc-leap{background:#f5f3ff}
 .sc-ddi-col.active{background:var(--sc-cream);box-shadow:inset 0 -2px 0 var(--sc-gold)}
 .sc-ddi-em{font-size:15px;margin-bottom:4px}
-.sc-ddi-nm{font-size:8.5px;color:var(--sc-muted);font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1.6;margin-bottom:4px;height:24px;display:flex;align-items:center;justify-content:center;text-align:center}
+.sc-ddi-nm{font-size:13px;color:var(--sc-muted);font-weight:700;text-transform:uppercase;letter-spacing:.01em;line-height:1.5;margin-bottom:4px;height:32px;display:flex;align-items:center;justify-content:center;text-align:center}
 .sc-ddi-sr{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;min-height:26px}
 .sc-ddi-num{font-size:20px;font-weight:700;color:var(--sc-dark)}
 .sc-ddi-ar{font-size:13px;margin-left:1px}
@@ -284,17 +289,17 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-dt-good{background:#f1f5f9;color:#475569}
 .sc-dt-str{background:#dcfce7;color:#166534}
 .sc-dt-exc{background:#dbeafe;color:#1e40af}
-.sc-ddi-detail{display:none;margin-top:10px;padding:11px 13px;background:var(--sc-cream);border-radius:8px;font-size:13px;color:var(--sc-text);line-height:1.65}
+.sc-ddi-detail{display:none;margin-top:10px;padding:14px 16px;background:var(--sc-cream);border-radius:8px;font-size:15px;color:var(--sc-text);line-height:1.75}
 .sc-ddi-hint{font-size:13px;color:var(--sc-muted);text-align:center;margin-top:7px}
 
 /* ── WHAT THIS EVALUATION MEANS — premium gold corners ── */
-.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;overflow:hidden;position:relative}
+.sc-eval-means{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:16px;overflow:hidden;position:relative}
 .sc-eval-means::before{content:'';position:absolute;top:0;left:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:12px 0 0 0;pointer-events:none;z-index:1}
 .sc-eval-means::after{content:'';position:absolute;top:0;right:0;width:28px;height:28px;border-top:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 12px 0 0;pointer-events:none;z-index:1}
 .sc-em-bl{position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-left:2px solid var(--sc-gold);border-radius:0 0 0 12px;pointer-events:none;z-index:1}
 .sc-em-br{position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2px solid var(--sc-gold);border-right:2px solid var(--sc-gold);border-radius:0 0 12px 0;pointer-events:none;z-index:1}
 .sc-em-inner{padding:17px 20px}
-.sc-em-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
+.sc-em-title{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:13px;display:block}
 .sc-em-preview.clamped,.sc-ta-preview.clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .sc-em-para{font-size:16px;color:var(--sc-text);line-height:1.85;margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid var(--sc-border)}
 .sc-em-para:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
@@ -303,7 +308,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-rm{min-height:44px;box-sizing:border-box;font-size:13px;color:var(--sc-gold-dk);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;margin-top:10px;display:inline-block}
 
 /* ── YOUR ONE TAKE-AWAY — warm fill, NOT dark ── */
-.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:10px;padding:18px 20px}
+.sc-takeaway{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:16px;padding:20px 22px}
 .sc-ta-eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .sc-ta-body,.sc-ta-preview,.sc-ta-full{font-size:16px;color:var(--sc-dark);line-height:1.85}
 
@@ -315,7 +320,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 /* ── ACCORDION ── */
 .sc-acc-block{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);overflow:hidden;margin-bottom:10px}
 .sc-acc-sec-hdr{padding:13px 18px 11px;border-bottom:0.5px solid var(--sc-border)}
-.sc-acc-sec-title{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
+.sc-acc-sec-title{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)}
 .sc-acc-row{border-bottom:0.5px solid var(--sc-border)}
 .sc-acc-row:last-child{border-bottom:none}
 .sc-acc-head{display:flex;align-items:flex-start;gap:10px;padding:13px 17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s}
@@ -368,10 +373,34 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--sc-border)}
 .sc-rr:last-child{border-bottom:none}
 .sc-rk{font-size:13px;color:var(--sc-muted)}
-.sc-rv{font-size:13px;font-weight:600;color:var(--sc-text)}
+.sc-rv{font-size:15px;font-weight:700;color:var(--sc-text)}
 .sc-rv.gd{color:var(--sc-gold-dk)}.sc-rv.gn{color:var(--sc-green)}
 
 /* ── EVALUATED BY SL BADGE ── */
+
+/* ── SESSION 214: TIER JOURNEY STRIP ── */
+.sc-tier-journey{display:flex;align-items:center;flex-wrap:wrap;gap:3px;padding:9px 14px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:8px;margin-bottom:10px}
+.sc-tj-item{font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;color:rgba(26,24,20,.32);white-space:nowrap}
+.sc-tj-item.done{color:rgba(26,24,20,.52)}
+.sc-tj-item.active{color:var(--sc-dark);font-weight:700;border-bottom:2px solid var(--sc-gold)}
+/* ── SESSION 214: IMPRESSION ── */
+.sc-impression{font-size:16px;color:var(--sc-text);line-height:1.85;font-style:italic;border-left:3px solid var(--sc-gold);padding:12px 16px;margin-bottom:10px;background:#FFFBF2;border-radius:0 8px 8px 0}
+/* ── SESSION 214: TECH READ + VISUAL FLOW ── */
+.sc-tech-card{background:#F6F8FF;border-radius:12px;border:0.5px solid #C5D0EE;padding:14px 16px;margin-bottom:10px}
+.sc-tech-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#185FA5;margin-bottom:8px}
+.sc-vf-card{background:#F8F6FF;border-radius:12px;border:0.5px solid #C4B8EE;padding:14px 16px;margin-bottom:10px}
+.sc-vf-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#4a3280;margin-bottom:8px}
+/* ── SESSION 214: MASTER REFERENCE (light — no dark bg) ── */
+.sc-master-card{background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;padding:16px 18px;margin-bottom:10px}
+.sc-master-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--sc-gold-dk);margin-bottom:6px}
+.sc-master-name{font-size:17px;font-weight:700;color:var(--sc-dark);margin-bottom:6px}
+.sc-master-why{font-size:14px;color:var(--sc-text);line-height:1.75}
+/* ── SESSION 214: IMAGINE ── */
+.sc-imagine-card{background:#F5F0FF;border-radius:12px;border:0.5px solid #C4B8EE;padding:16px 18px;margin-bottom:10px}
+.sc-imagine-label{font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#4a3280;margin-bottom:8px}
+.sc-imagine-body{font-size:16px;color:#2a1060;line-height:1.85}
+/* ── SESSION 214: SPECIES NOTE ── */
+.sc-species-note{background:var(--sc-pista);border:0.5px solid var(--sc-pista-b);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:14px;color:#1a3a1a;line-height:1.65}
 .sc-ev-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--sc-cream);border:0.5px solid var(--sc-border);border-radius:5px;font-size:13px;color:var(--sc-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:10px}
 
 /* ── FOOTER ── */
@@ -397,7 +426,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 .sc-eval-pct{font-size:13px;color:var(--sc-muted);margin-top:5px}
 .sc-eval-pct strong{color:var(--sc-green)}
 .sc-eval-right{text-align:right;flex-shrink:0}
-.sc-genre-pill{display:inline-block;font-size:13px;color:var(--sc-muted);background:var(--sc-cream);border:0.5px solid var(--sc-border);padding:3px 9px;border-radius:12px;margin-bottom:6px}
+.sc-interest-pill{display:inline-block;font-size:13px;color:var(--sc-muted);background:var(--sc-cream);border:0.5px solid var(--sc-border);padding:3px 9px;border-radius:12px;margin-bottom:6px}
 
 /* ── SL-181.11 SUMMARY BOX ── */
 .sc-summary-box{background:#fff;border-radius:12px;border:0.5px solid var(--sc-border);margin-bottom:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -536,9 +565,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
   .sc-shell{display:block}
   .sc-rpanel{display:none}
-  .sc-logo-text{display:none}
-  .sc-nav-links-wrap{display:none}
-  .sc-topnav{display:none!important}
+
   .sc-centre{padding:11px 11px 80px}
   .sc-photo-hero img{height:220px;object-fit:contain;background:var(--sc-dark)}
   .sc-ddi-strip-desktop{display:none}
@@ -584,11 +611,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
   {% endif %}
 {% endfor %}
 
-{# What stood out section — transferable_advice field #}
-{% set _what_stood_out = (_audit.get('transferable_advice') or _tech_val or '') | trim %}
+{# What stood out — what_stood_out field (the revelation/opening observation)
+   NOT transferable_advice — that is the photographer's advice, shown separately #}
+{% set _what_stood_out = (_audit.get('what_stood_out') or _audit.get('hard_truth') or _tech_val or '') | trim %}
 
-{# What you did that others didn't — tech+moment rows #}
-{% set _what_you_did = (_tech_val if (_audit.get('transferable_advice') or '') else _mom_val) | trim %}
+{# What you did that others didn't — SL-181.20: reads transferable_advice directly.
+   Old rows[] format (Depth of Difficulty / Decisive Moment) is always empty on
+   modern audit_json. transferable_advice is written by the engine for every image. #}
+{% set _what_you_did = (_audit.get('transferable_advice') or _tech_val or _mom_val) | trim %}
 
 {# What your eye read — affective_state #}
 {% set _what_eye = (_audit.get('affective_state') or '') | trim %}
@@ -613,9 +643,32 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _edit_base = (_audit.get('edit_base') or '') | trim %}
 {% set _edit_creative = (_audit.get('edit_creative') or '') | trim %}
 
+{# Session 205 fix: card_1/2/3/4 do not exist in audit_json.
+   Scoring engine writes: transferable_advice, background_check/byline_1,
+   byline_2/byline_2_body, body_of_work, what_next, note_on_eye.
+   Use these real fields directly. #}
+{% set _what_next = (_audit.get('what_next') or '') | trim %}
+
 {# Next shot from mentor_location fields #}
 {% set _mentor_1 = (_audit.get('mentor_location_1') or '') | trim %}
 {% set _mentor_2 = (_audit.get('mentor_location_2') or '') | trim %}
+
+{# Session 214 — seven Haiku fields ported to Sonnet scorecard #}
+{% set _impression    = (_audit.get('impression')    or '') | trim %}
+{% set _tech_read_s   = (_audit.get('tech_read')     or '') | trim %}
+{% set _visual_flow_s = (_audit.get('visual_flow')   or '') | trim %}
+{% set _imagine_s     = (_audit.get('imagine')        or '') | trim %}
+{% set _master_name_s = (_audit.get('master_name')   or '') | trim %}
+{% set _master_why_s  = (_audit.get('master_why')    or '') | trim %}
+{% set _species_note_s= (_audit.get('species_note')  or '') | trim %}
+
+{# Session 214 Part 2 — strength/leap obs, conclusion, award_context #}
+{% set _strength_name_s = (_audit.get('strength_name') or '') | trim %}
+{% set _strength_obs_s  = (_audit.get('strength_obs')  or '') | trim %}
+{% set _next_leap_name_s= (_audit.get('next_leap_name') or '') | trim %}
+{% set _next_leap_obs_s = (_audit.get('next_leap_obs')  or '') | trim %}
+{% set _conclusion_s    = (_audit.get('conclusion')     or '') | trim %}
+{% set _award_context_s = (_audit.get('award_context')  or '') | trim %}
 
 {# Percentile #}
 {% set _top_pct = percentile.top_pct if percentile else none %}
@@ -642,7 +695,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% set _is_pb = (stats and stats.best_this_year and image.score and image.score >= stats.best_this_year) %}
 
 {# Photographer name #}
-{% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) if current_user.is_authenticated else (image.photographer_name or '') %}
+{# Session 215 FIX: use image owner name, not viewer. current_user may be admin viewing another member's image. #}
+{% set _name = (image.photographer_name or '') %}
+{% if not _name and current_user.is_authenticated and image.user_id == current_user.id %}
+  {% set _name = (current_user.full_name.split()[0] if current_user.full_name else current_user.username) %}
+{% endif %}
 
 {# Scored date #}
 {% set _scored_date = image.scored_at.strftime('%-d %b %Y') if image.scored_at else '' %}
@@ -675,34 +732,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 <div class="sc-wrap">
 
 {# ── TOPNAV ── #}
-<nav class="sc-topnav">
-  <div class="sc-logo-area">
-    <a href="{{ url_for('dashboard') }}" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-           alt="Shutter League" style="height:30px;width:auto;display:block"
-           onerror="this.style.display='none'">
-      <span class="sc-logo-text">SHUTTER LEAGUE</span>
-    </a>
-  </div>
-  <div class="sc-nav-links-wrap" style="display:flex;align-items:center;gap:2px;margin-left:auto">
-    {# No active highlight — scorecard accessed from image click not nav #}
-    <a class="sc-nl" href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a class="sc-nl" href="{{ url_for('upload') }}">Upload</a>
-    <a class="sc-nl" href="{{ url_for('my_gallery') }}">My Gallery</a>
-    <a class="sc-nl" href="{{ url_for('learning') }}">Learn</a>
-    <a class="sc-nl" href="{{ url_for('portfolio_manager') }}">Portfolio</a>
-  </div>
-  {% if current_user.is_authenticated %}
-  <a href="{{ url_for('profile') }}" class="sc-av" style="margin-left:10px;text-decoration:none">
-    {{ current_user.full_name[0].upper() if current_user.full_name else current_user.username[0].upper() }}
-  </a>
-  {% endif %}
-</nav>
 
 <div class="sc-shell">
 
   {# ── MAIN CENTRE ── #}
   <main class="sc-centre">
+
+
+
 
     <div class="sc-back-row">
       <a href="{{ url_for('dashboard') }}" class="sc-back-lnk">← Back to Dashboard</a>
@@ -757,13 +794,27 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
     </div>
 
-    {# ── SL-181.11 TRUST MARKS — immediately below photo, before score ── #}
+    {# ── SL-181.11 TRUST MARKS — immediately below photo, before evaluation ── #}
     <div class="sc-trust-row">
       <span class="sc-trust-badge sc-trust-ai">✓ AI verified</span>
       <span class="sc-trust-badge sc-trust-cal">◉ Calibrated · 312 images</span>
       <span class="sc-trust-badge sc-trust-exp">★ Expert calibrated</span>
       {% if _is_pb %}<span class="sc-trust-badge" style="background:#fff8e6;color:var(--sc-gold-dk);border:0.5px solid var(--sc-gold)">↑ Personal best</span>{% endif %}
     </div>
+
+
+    {# ── SESSION 214: TIER JOURNEY STRIP ── #}
+    {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+    {% if image.tier and image.tier in _tiers %}
+    {% set _active_idx = _tiers.index(image.tier) %}
+    <div class="sc-tier-journey">
+      {% for t in _tiers %}
+        {% if loop.index0 < _active_idx %}<span class="sc-tj-item done">{{ t }}</span>
+        {% elif loop.index0 == _active_idx %}<span class="sc-tj-item active">{{ t }}</span>
+        {% else %}<span class="sc-tj-item">{{ t }}</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
 
     {# ── SL-181.11 SCORE BLOCK ── #}
     <div class="sc-eval-block">
@@ -784,7 +835,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           {% endif %}
         </div>
         <div class="sc-eval-right">
-          {% if image.genre %}<div class="sc-genre-pill">{{ image.genre }}</div>{% endif %}
+          {% if image.genre %}<div class="sc-interest-pill">{{ image.genre }}</div>{% endif %}
           {% if image.tier == 'Grandmaster' %}<div style="font-size:28px">👑</div>
           {% elif image.tier == 'Master' %}<div style="font-size:28px">🏅</div>
           {% elif image.tier == 'Maverick' %}<div style="font-size:28px">⚡</div>
@@ -794,7 +845,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
     </div>
 
-    {# ── SL-181.11 SUMMARY BOX — Strength + Next Leap above the fold ── #}
+
+    {# ── SESSION 214: IMPRESSION — engine's opening observation ── #}
+    {% if _impression %}
+    <div class="sc-impression">{{ _impression | safe }}</div>
+    {% endif %}
+
+    {# ── SL-181.11 SUMMARY BOX — expanded: Strength + obs / Next Leap + obs ── #}
     {% if _strongest_nm or _weakest_nm %}
     <div class="sc-summary-box">
       {% if _strongest_nm %}
@@ -802,6 +859,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <span class="sc-pill-strength">Strength</span>
         <span>{{ _strongest_nm }} — {{ '%.2f'|format(_strongest_val) if _strongest_val else '' }}</span>
       </div>
+      {% if _strength_obs_s %}
+      <div style="font-size:15px;color:var(--sc-text);line-height:1.75;padding:8px 0 4px;border-left:2.5px solid #C5E0BB;padding-left:12px;margin-left:2px">{{ _strength_obs_s | safe }}</div>
+      {% endif %}
       {% endif %}
       {% if _weakest_nm %}
       <div class="sc-summary-divider"></div>
@@ -809,6 +869,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <span class="sc-pill-leap">Next leap</span>
         <span>{{ _weakest_nm }} — {{ '%.2f'|format(_weakest_val) if _weakest_val else '' }}</span>
       </div>
+      {% if _next_leap_obs_s %}
+      <div style="font-size:15px;color:var(--sc-text);line-height:1.75;padding:8px 0 4px;border-left:2.5px solid #c4b5fd;padding-left:12px;margin-left:2px">{{ _next_leap_obs_s | safe }}</div>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}
@@ -825,8 +888,8 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           </div>
         </div>
 
-        {# Desktop strip #}
-        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip">
+        {# Desktop strip — hidden when dim_obs present below; kept for mobile fallback #}
+        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip" style="display:none">
           {# SL-181.9 — ONE NAME PER DIMENSION.
              The page carried three naming systems at once: abbreviations here
              ("Affective Q."), longer forms mid-page ("Affective Quotient"), and
@@ -873,11 +936,43 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           {% endfor %}
         </div>
 
-        <div class="sc-ddi-detail" id="sc-ddi-detail">
-          <strong id="sc-ddi-title" style="display:block;margin-bottom:5px;color:var(--sc-dark)"></strong>
-          <span id="sc-ddi-text"></span>
+
+        {# ── SESSION 214: DIMENSION OBSERVATIONS — always visible ── #}
+        {% set _dim_obs_map = {
+          'dod_score':         _audit.get('dim_obs_dod') or '',
+          'wonder_score':      _audit.get('dim_obs_wf')  or '',
+          'dm_score':          _audit.get('dim_obs_dm')  or '',
+          'disruption_score':  _audit.get('dim_obs_vd')  or '',
+          'aq_score':          _audit.get('dim_obs_aq')  or '',
+        } %}
+        {% set _has_dim_obs = _dim_obs_map.values() | select | list | length > 0 %}
+        {% if _has_dim_obs %}
+        {# Session 215.2: colour-coded dim obs rows — icon + label + left border per status #}
+        <div style="margin-top:4px;display:flex;flex-direction:column;gap:0">
+          {% for _attr, _nm, _em, _ar in _ddi_cols %}
+            {% set _obs = _dim_obs_map.get(_attr, '') %}
+            {% set _val = image|attr(_attr) if image|attr(_attr) is not none else none %}
+            {% if _obs %}
+            {% set _is_stg = (_val and _nm == _strongest_nm) %}
+            {% set _is_lp  = (_val and _nm == _weakest_nm) %}
+            {% set _is_str = (_val and not _is_stg and not _is_lp and _val >= 7.0) %}
+            <div style="display:grid;grid-template-columns:80px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {% if _is_stg %}#C8A84B{% elif _is_lp %}#94a3b8{% elif _is_str %}#4ade80{% else %}#e2e8f0{% endif %};background:{% if _is_stg %}linear-gradient(to right,#FEFBF0,transparent 50%){% elif _is_lp %}linear-gradient(to right,#F5F7FA,transparent 50%){% elif _is_str %}linear-gradient(to right,#F0FDF4,transparent 50%){% else %}transparent{% endif %}">
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:2px">
+                <span style="font-size:26px;font-weight:700;color:var(--sc-dark);line-height:1;font-variant-numeric:tabular-nums">{{ '%.1f'|format(_val) if _val else '—' }}</span>
+                <span style="font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:5px;text-align:center;{% if _is_stg %}color:#C8A84B{% elif _is_lp %}color:#64748b{% elif _is_str %}color:#16a34a{% else %}color:#94a3b8{% endif %}">{% if _is_stg %}Strongest{% elif _is_lp %}Next leap{% elif _is_str %}Strong{% else %}Good{% endif %}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:15px">{{ _em }}</span>
+                  <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;{% if _is_stg %}color:#A37B00{% elif _is_lp %}color:#475569{% elif _is_str %}color:#15803d{% else %}color:#94a3b8{% endif %}">{{ _nm }}</span>
+                </div>
+                <div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _obs | safe }}</div>
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
         </div>
-        <div class="sc-ddi-hint">Tap a dimension to see the engine's reasoning</div>
+        {% endif %}
 
         {# Mobile: all 5 dimensions as colour-coded bars — no tap required #}
         {# SL-181.11: removed "See all 5 dimensions" accordion. LENSIC shows all 5
@@ -911,19 +1006,22 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ③ WHAT THIS EVALUATION MEANS — gold corners, before take-away #}
+    {# ③ WHAT THIS EVALUATION MEANS — gold corners #}
+    {# SL-181.21: 9+ pink card is handled by JS post-render (DOMContentLoaded).
+       Jinja2 strings have no .split() method so the Jinja approach failed silently.
+       JS finds the <li> containing "9+" after scRenderText() runs and promotes it
+       to a pink inset card. Nothing to do here in Jinja. #}
     {% if _eval_means or _eval_means_2 %}
+    {% set _em_full = (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) %}
     <div class="sc-eval-means">
       <div class="sc-em-bl"></div><div class="sc-em-br"></div>
       <div class="sc-em-inner">
-        {# Header row with chevron — taps to collapse/expand #}
       <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="scToggleEvalMeans(this)">
         <span class="sc-em-title" style="margin-bottom:0">What this evaluation means</span>
         <span style="font-size:20px;color:var(--sc-muted);transition:transform .2s;display:inline-block" id="sc-em-chev">⌄</span>
       </div>
-      {# All content rendered via sc-render-text, CSS clamp shows 3 lines, JS expands #}
       <div class="sc-em-para sc-render-text sc-em-preview" id="sc-em-preview-block">
-        {{ (_eval_means + (' ■ ' + _eval_means_2 if (_eval_means_2 and _eval_means_2 != _takeaway) else '')) | safe }}
+        {{ _em_full | safe }}
       </div>
       </div>
     </div>
@@ -949,67 +1047,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
-    {# ⑤ YOUR ONE TAKE-AWAY — warm fill, NOT dark, stands out through colour not bold #}
-    {% if _takeaway %}
-    <div class="sc-takeaway">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px" onclick="scToggleTakeaway(this)">
-        <div class="sc-ta-eyebrow" style="margin-bottom:0">⭐ Your one take-away</div>
-        <span style="font-size:20px;color:var(--sc-gold-dk);transition:transform .2s;display:inline-block" id="sc-ta-chev">⌄</span>
-      </div>
-      {# All content rendered, CSS clamp shows 3 lines, JS expands #}
-      <div class="sc-ta-body sc-render-text sc-ta-preview" id="sc-ta-preview-block">{{ _takeaway | safe }}</div>
-    </div>
-    {% endif %}
+    {# Take-away removed Session 216 — eval means 9+ card is the single forward-action statement #}
 
-    {# ⑥ WHAT SL SAW IN YOUR PHOTOGRAPH — all accordions CLOSED by default #}
-    {% if _what_stood_out or _what_you_did or _what_eye %}
-    <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What SL saw in your photograph</div></div>
+    {# Path-to-9 removed Session 216 — eval means 9+ card is the single forward-action statement #}
 
-      {% if _what_stood_out %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#ede9fe">✨</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What stood out</div>
-            <div class="sc-acc-teaser">{{ _what_stood_out | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_stood_out | safe }}</div>
-      </div>
-      {% endif %}
 
-      {% if _what_you_did %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#e8f5e2">🏆</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What you did that others didn't</div>
-            <div class="sc-acc-teaser">{{ _what_you_did | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_you_did | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if _what_eye %}
-      <div class="sc-acc-row">
-        <div class="sc-acc-head" onclick="scToggleAcc(this.parentElement)">
-          <div class="sc-acc-icon" style="background:#fff8e6">👁️</div>
-          <div class="sc-acc-col">
-            <div class="sc-acc-title">What your eye read</div>
-            <div class="sc-acc-teaser">{{ _what_eye | replace('\u25a0','') | replace('\u25aa','') | replace('\u2022','') | replace('  ',' ') | trim | truncate(90) }}</div>
-          </div>
-          <span class="sc-acc-chev">⌄</span>
-        </div>
-        <div class="sc-acc-body sc-render-text">{{ _what_eye | safe }}</div>
-      </div>
-      {% endif %}
-
-    </div>
-    {% endif %}
 
     {# ── SL-181.11 LOCATION ADVISORY — promoted to first-class named card ── #}
     {# This is the differentiator no competitor has. No longer buried in accordion. #}
@@ -1032,26 +1074,85 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% elif location_links %}
     {% for loc in location_links[:1] %}
+    {% set _loc_name = loc.get('name') or loc.get('title') or '' %}
+    {% set _loc_body = loc.get('description') or loc.get('body') or loc.get('advisory') or '' %}
+    {% set _loc_url  = loc.get('maps_url') or loc.get('url') or '' %}
+    {% if _loc_name or _loc_body %}
     <div class="sc-location-card">
       <div class="sc-location-eyebrow">📍 Your next shot — bookmarked</div>
-      <div class="sc-location-title">{{ loc.get('name') or loc.get('title') or 'Nearby location' }}</div>
-      <a href="{{ loc.get('maps_url') or loc.get('url') or '#' }}" target="_blank" class="sc-location-cta">Go shoot →</a>
+      {% if _loc_name %}<div class="sc-location-title">{{ _loc_name }}</div>{% endif %}
+      {% if _loc_body %}<div class="sc-location-body">{{ _loc_body }}</div>{% endif %}
+      {% if _loc_url %}<a href="{{ _loc_url }}" target="_blank" class="sc-location-cta">Go shoot →</a>{% endif %}
     </div>
+    {% endif %}
     {% endfor %}
+    {% endif %}
+
+
+    {# ── SESSION 214: MASTER REFERENCE ── #}
+    {% if _master_name_s %}
+    <div class="sc-master-card">
+      <div class="sc-master-label">Master reference</div>
+      <div class="sc-master-name">{{ _master_name_s }}</div>
+      {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | safe }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {# ── SESSION 215: TECH READ + VISUAL FLOW — open zones, not accordion ── #}
+    {% if _tech_read_s or _visual_flow_s %}
+    <div style="background:#F8F4EE;border-radius:12px;padding:20px 22px;margin-bottom:10px">
+      {% if _tech_read_s %}
+      <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Technical read</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80;{% if _visual_flow_s %}margin-bottom:20px{% endif %}">{{ _tech_read_s | safe }}</div>
+      {% endif %}
+      {% if _visual_flow_s %}
+      <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Visual flow</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80">{{ _visual_flow_s | safe }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── SESSION 214: IMAGINE — possibility language, forward-looking ── #}
+    {% if _imagine_s %}
+    <div class="sc-imagine-card">
+      <div class="sc-imagine-label">Imagine</div>
+      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | safe }}</div>
+    </div>
     {% endif %}
 
     {# ── SL-181.11 BODY OF WORK — promoted to named numbered section ── #}
     {% if _body_of_work %}
     <div class="sc-bow-card">
       <div class="sc-bow-hdr">Your next body of work</div>
-      <div class="sc-bow-frames">{{ _body_of_work | safe }}</div>
+      <div class="sc-bow-frames">
+        {%- set _bow_text = _body_of_work | replace('\r\n', '\n') | replace('\r', '\n') -%}
+        {%- if 'Frame 1' in _bow_text or 'Frame 2' in _bow_text -%}
+          {%- set _bow_parts = _bow_text | replace('Frame 1:', '|||1|||') | replace('Frame 2:', '|||2|||') | replace('Frame 3:', '|||3|||') | replace('Frame 4:', '|||4|||') | replace('Frame 5:', '|||5|||') -%}
+          {%- for _part in _bow_parts.split('|||') -%}
+            {%- set _part = _part | trim -%}
+            {%- if _part and _part[0] in '12345' and _part[1:2] == '|||' -%}
+              {# skip — separator artifact #}
+            {%- elif _part and _part | length > 2 and _part[0] in '12345' -%}
+              <div class="sc-bow-frame">
+                <div class="sc-bow-num">{{ _part[0] }}</div>
+                <div class="sc-bow-text">{{ _part[1:] | trim | safe }}</div>
+              </div>
+            {%- elif _part and not (_part | length == 1 and _part in '12345') -%}
+              <div class="sc-bow-intro">{{ _part | safe }}</div>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- else -%}
+          {# No Frame labels — render as bullet list via scRenderText #}
+          <div class="sc-bow-frames sc-render-text">{{ _bow_text | safe }}</div>
+        {%- endif -%}
+      </div>
     </div>
     {% endif %}
 
     {# ⑦ WHAT YOU NEED TO DO — remaining accordions (assignment, note on eye) #}
     {% if _assignment or _note_on_eye %}
     <div class="sc-acc-block">
-      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">What you need to do</div></div>
+      <div class="sc-acc-sec-hdr"><div class="sc-acc-sec-title">Your assignment</div></div>
 
       {% if _assignment %}
       <div class="sc-acc-row">
@@ -1081,6 +1182,16 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       </div>
       {% endif %}
 
+    </div>
+    {% endif %}
+
+
+    {# ── SESSION 214: AWARD CONTEXT — score-tier recognition card ── #}
+    {% if _award_context_s %}
+    {% set _ac_score = image.score | float if image.score else 0 %}
+    <div style="background:{% if _ac_score >= 9.0 %}#1A2744{% elif _ac_score >= 8.5 %}#E8F5E2{% else %}var(--sc-cream){% endif %};border-radius:12px;border:{% if _ac_score >= 9.0 %}none{% elif _ac_score >= 8.5 %}1px solid #C5E0BB{% else %}0.5px solid var(--sc-border){% endif %};padding:16px 18px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:{% if _ac_score >= 9.0 %}var(--sc-gold){% elif _ac_score >= 8.5 %}#2A7A3A{% else %}var(--sc-gold-dk){% endif %};margin-bottom:8px">{% if _ac_score >= 9.0 %}🏆 Grandmaster-level recognition{% elif _ac_score >= 8.5 %}🥇 Award-ready{% else %}Your path to recognition{% endif %}</div>
+      <div style="font-size:15px;color:{% if _ac_score >= 9.0 %}rgba(245,243,239,.85){% else %}var(--sc-text){% endif %};line-height:1.8">{{ _award_context_s | safe }}</div>
     </div>
     {% endif %}
 
@@ -1117,6 +1228,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     </div>
     {% endif %}
 
+
+{# Species note moved to evaluation record footer — Session 215 #}
+
     {# ⑨ CONTEST LAUNCHPAD — Session 203
          Shown to subscribed owners of scored images only.
          JS fetches /api/contest-suggestions async — no page-load delay.
@@ -1125,56 +1239,95 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
          Dynamic values are passed via data- attributes on the container div;
          the inline JS reads them via getAttribute — no Jinja in executable JS.
     #}
-    {% if current_user.is_authenticated and image.user_id == current_user.id and image.status == 'scored' and image.score %}
+    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and image.score %}
     <div id="sl-launchpad"
          data-image-id="{{ image.id }}"
+         data-score-tier="{% if image.score and image.score|float >= 9.0 %}gm{% elif image.score and image.score|float >= 8.5 %}master{% else %}below{% endif %}"
          data-score="{{ '%.2f'|format(image.score) }}"
          data-threshold="8.5"
+         data-threshold-gm="9.0"
          data-tier="{{ image.tier or '' }}"
          style="margin-bottom:10px">
 
       {% set _lp_score = image.score | float %}
-      {% if _lp_score >= 8.5 %}
-      {# Above threshold — async card, fills in from API #}
-      <div class="sc-card" id="sl-lp-card" style="display:none">
-        <div class="sc-card-body">
-          <div class="sc-card-hdr" style="margin-bottom:14px">
-            <span class="sc-card-title">Photography awards worth entering</span>
-            <span id="sl-lp-badge" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#2A7A3A;padding:3px 8px;border-radius:4px">{{ '%.2f'|format(image.score) }}</span>
-          </div>
-          <div id="sl-lp-loading" style="padding:12px 0;color:var(--sc-muted);font-size:15px;line-height:1.6">
-            Finding open awards for your work…
-          </div>
-          <div id="sl-lp-awards" style="display:none"></div>
-          <div id="sl-lp-empty" style="display:none;font-size:15px;color:var(--sc-muted);line-height:1.7">
-            No awards found right now — check back in a few days as new calls open regularly.
-          </div>
-          <div id="sl-lp-error" style="display:none;font-size:14px;color:var(--sc-muted)">
-            Could not load award suggestions. Try again later.
-          </div>
+      {% if _lp_score >= 9.0 %}
+      {# 9.0+ — Grandmaster-level card, dark navy, gold, top-tier awards #}
+      <div id="sl-lp-card" style="display:none;background:#F5F3EF;border-radius:12px;border:1px solid #C8A84B;margin-bottom:10px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8A6A00">👑 Major awards — your work qualifies</span>
+          <span id="sl-lp-badge" style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#8A6A00;padding:3px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }}</span>
+        </div>
+        <div id="sl-lp-loading" style="padding:12px 0;color:#8A6A00;font-size:15px;line-height:1.6">
+          Finding major awards for your work…
+        </div>
+        <div id="sl-lp-awards" style="display:none"></div>
+        <div id="sl-lp-empty" style="display:none;font-size:15px;color:#4A3A00;line-height:1.7">
+          No open calls right now — check back in a few days. At 9.0+ your work stands among the best on the platform globally.
+        </div>
+        <div id="sl-lp-error" style="display:none;font-size:14px;color:#6A5A40">
+          Could not load award suggestions. Try again later.
+        </div>
+      </div>
+      {% elif _lp_score >= 8.5 %}
+      {# Above threshold — async card, fills in from API — deep blue premium card #}
+      <div id="sl-lp-card" style="display:none;background:#E8F5E2;border-radius:12px;border:1px solid #C5E0BB;margin-bottom:10px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2A7A3A">Photography awards worth entering</span>
+          <span id="sl-lp-badge" style="font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#2A7A3A;padding:3px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }}</span>
+        </div>
+        <div id="sl-lp-loading" style="padding:12px 0;color:#2A7A3A;font-size:15px;line-height:1.6">
+          Finding open awards for your work…
+        </div>
+        <div id="sl-lp-awards" style="display:none"></div>
+        <div id="sl-lp-empty" style="display:none;font-size:15px;color:#1a3a1a;line-height:1.7">
+          No awards found right now — check back in a few days as new calls open regularly.
+        </div>
+        <div id="sl-lp-error" style="display:none;font-size:14px;color:#1a3a1a">
+          Could not load award suggestions. Try again later.
         </div>
       </div>
 
       {% else %}
-      {# Below threshold — static motivational gap block #}
+      {# Below threshold — motivational gap block. SL-181.20: progress bar,
+         best-year reference, correct dimension names, forward link. #}
       {% set _lp_gap = (8.5 - _lp_score) | round(1) %}
+      {% set _lp_pct = [(_lp_score / 8.5 * 100) | round | int, 99] | min %}
+      {# Weakest dim from all 5 available scores — correct names #}
       {% set _weakest_dim = '' %}
-      {% if image.aq_score and image.dm_score and image.dod_score %}
-        {% set _dims_map = [('Whether it made you feel something', image.aq_score), ('Whether the timing was right', image.dm_score), ('How difficult it was', image.dod_score)] %}
-        {% set _weakest_dim = (_dims_map | sort(attribute=1) | first)[0] %}
-      {% endif %}
-      <div class="sc-card">
-        <div class="sc-card-body">
-          <div class="sc-card-hdr" style="margin-bottom:10px">
-            <span class="sc-card-title">Photography awards</span>
-          </div>
-          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
-            An 8.5 is where Shutter League points you to specific photography awards your work is ready for.
-          </p>
-          <p style="font-size:15px;color:var(--sc-text);line-height:1.75;margin:0 0 8px">
-            Your evaluation of <strong>{{ '%.2f'|format(image.score) }}</strong> is <strong>{{ _lp_gap }}</strong> point{{ 's' if _lp_gap != 1.0 else '' }} away.{% if _weakest_dim %} Your weakest dimension right now is <em>{{ _weakest_dim }}</em> — focus there.{% endif %}
-          </p>
+      {% set _weakest_val = 10.0 %}
+      {% for _dk, _dn in [('dod_score','Difficulty'),('wonder_score','Visual Impact'),('dm_score','Timing'),('disruption_score','Disruption'),('aq_score','Emotion')] %}
+        {% set _dv = image[_dk] if image[_dk] is defined else none %}
+        {% if _dv is not none and _dv | float < _weakest_val %}
+          {% set _weakest_val = _dv | float %}
+          {% set _weakest_dim = _dn %}
+        {% endif %}
+      {% endfor %}
+      <div style="background:#FFF8EC;border-radius:12px;border:1px solid #EDD89A;margin-bottom:16px;padding:20px 22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A37B2C">Photography awards</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;background:#A37B2C;padding:2px 10px;border-radius:20px">{{ '%.2f'|format(image.score) }} · {{ _lp_gap }} to go</div>
         </div>
+        {# Progress bar #}
+        <div style="height:5px;background:#EDD89A;border-radius:3px;margin-bottom:14px;overflow:hidden">
+          <div style="height:5px;width:{{ _lp_pct }}%;background:#A37B2C;border-radius:3px"></div>
+        </div>
+        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 10px">
+          An 8.5 is where Shutter League begins pointing you to specific photography awards your work is ready for.
+          {% if stats and stats.best_this_year and stats.best_this_year >= 8.5 %}
+          Your best this year reached <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> — you have already made a frame that qualifies.
+          {% elif stats and stats.best_this_year %}
+          Your best this year is <strong>{{ '%.2f'|format(stats.best_this_year) }}</strong> — you are closer than you think.
+          {% endif %}
+        </p>
+        {% if _weakest_dim %}
+        <p style="font-size:15px;color:#1A1814;line-height:1.8;margin:0 0 12px">
+          <strong>{{ _weakest_dim }}</strong> is your lowest dimension right now. Fix that one ceiling and the rest of your evaluation follows.
+        </p>
+        {% endif %}
+        <a href="{{ url_for('standings_public') }}?score_min=8.5{% if image.genre %}&genre={{ image.genre | urlencode }}{% endif %}"
+           style="font-size:13px;font-weight:600;color:#A37B2C;text-decoration:none">
+          See what 8.5 images look like →
+        </a>
       </div>
       {% endif %}
 
@@ -1198,7 +1351,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
       card.style.display = 'block';
 
-      fetch('/api/contest-suggestions?image_id=' + imageId)
+      fetch('/api/contest-suggestions?image_id=' + imageId + '&score=' + score)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           loading.style.display = 'none';
@@ -1210,14 +1363,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           data.awards.forEach(function(a, i) {
             var isFree = (a.entry_fee || '').toLowerCase() === 'free';
             var feeBadge = isFree
-              ? '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2A7A3A;background:#E8F5E2;border:0.5px solid #C5E0BB;padding:2px 7px;border-radius:4px">Free</span>'
-              : '<span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7A5E00;background:#FDF6E3;border:0.5px solid #D6A42840;padding:2px 7px;border-radius:4px">' + (a.entry_fee || 'Paid') + '</span>';
+              ? '<span style="font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2A7A3A;background:#E8F5E2;border:0.5px solid #C5E0BB;padding:2px 7px;border-radius:4px">Free</span>'
+              : '<span style="font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7A5E00;background:#FDF6E3;border:0.5px solid #D6A42840;padding:2px 7px;border-radius:4px">' + (a.entry_fee || 'Paid') + '</span>';
             var border = i < data.awards.length - 1
               ? 'border-bottom:0.5px solid var(--sc-border);margin-bottom:16px;padding-bottom:16px'
               : '';
             html += '<div style="' + border + '">';
             html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">';
-            html += '<div style="font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.4">' + _esc(a.name) + '</div>';
+            html += '<div style="font-size:16px;font-weight:600;color:var(--sc-dark);line-height:1.7">' + _esc(a.name) + '</div>';
             html += feeBadge;
             html += '</div>';
             if (a.organiser) {
@@ -1254,6 +1407,132 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       }
     })();
     </script>
+    {% endif %}
+
+    {# SL-181.20: REPEAT MISTAKE DETECTOR — computed from portfolio_data.dimensions.
+       If the same dimension has the lowest current evaluation across last N images,
+       and its pill is "Dipped recently" or "Steady", surface the pattern explicitly.
+       Only shows if portfolio_data exists and user has sufficient history (≥6 images).
+       No AI call. No new query. Pure Jinja2 over existing data. #}
+    {% if portfolio_data and portfolio_data.has_trends and portfolio_data.dimensions and portfolio_data.plotted_count >= 6 %}
+      {# Find which dimension has the lowest current value #}
+      {% set _rmd_ns = namespace(weakest_label='', weakest_val=10.0, weakest_pill='') %}
+      {% for _d in portfolio_data.dimensions %}
+        {% if _d.current < _rmd_ns.weakest_val %}
+          {% set _rmd_ns.weakest_val = _d.current %}
+          {% set _rmd_ns.weakest_label = _d.label %}
+          {% set _rmd_ns.weakest_pill = _d.pill or '' %}
+        {% endif %}
+      {% endfor %}
+      {# Show only if the weakest dim is dipping or volatile (not climbing) #}
+      {% if _rmd_ns.weakest_label and ('Dipped' in _rmd_ns.weakest_pill or 'Steady' in _rmd_ns.weakest_pill) %}
+      {# Generate varied, non-bot language based on dimension name #}
+      {# _rmd_msgs keys match single-word labels set in app.py _dims loop — SL-181.21 #}
+      {% set _rmd_msgs = {
+        'Emotion': ['Your Emotion has been under pressure across recent images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.', 'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and see what changes.'],
+        'Timing': ['Timing has been your most persistent challenge. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.', 'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.'],
+        'Difficulty': ['You have been shooting within your comfort zone recently. The difficulty readings suggest familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.', 'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.'],
+        'Visual Impact': ['Visual Impact has been steady but not climbing. Your frames are clear and well-composed — but not yet magnetic. The gap is usually in the light. Wait for one more improbable quality of light before pressing the shutter.', 'Your Visual Impact has plateaued. The composition is working. The subject is right. The missing element is almost always the light quality — and that means being in the right place before the light arrives, not reacting to it after.'],
+        'Disruption': ['Your frames have been consistent but predictable lately. The Disruption reading suggests you are still working within conventions familiar to photographers of similar subjects. What would you do with this scene if you had never seen another photograph of it?', 'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.']
+      } %}
+      {% set _rmd_options = _rmd_msgs.get(_rmd_ns.weakest_label, ['This dimension has been your most consistent gap. Patterns matter more than any single image. A deliberate session focused here will move it faster than hoping the next frame fixes it.', 'Your evaluations here have been under quiet but consistent pressure. Worth addressing directly rather than waiting for it to resolve itself.']) %}
+      {% set _rmd_text = _rmd_options[image.id % 2] %}
+      <div style="background:var(--sc-cream);border-radius:12px;border:0.5px solid var(--sc-border);border-left:3px solid #A37B2C;padding:18px 20px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A37B2C;margin-bottom:10px">A pattern in your work</div>
+        <div style="font-size:15px;color:var(--sc-text);line-height:1.8">{{ _rmd_text }}</div>
+      </div>
+      {% endif %}
+    {% endif %}
+
+    {# SL-181.20: BODY OF WORK SEED — if user has 6+ images in the same Interest all ≥ 8.0,
+       surface a quiet signal. No collection naming yet — that is the Collections system.
+       This is the detector: it plants the idea before the photographer has named it. #}
+    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and stats and stats.bow_seed_count is defined and stats.bow_seed_count >= 6 %}
+    <div style="background:#F0F4FF;border-radius:12px;border:0.5px solid #C0CCEE;border-left:3px solid #1A2744;padding:18px 20px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1A2744;margin-bottom:10px">A body of work is forming</div>
+      <div style="font-size:15px;color:#1A2744;line-height:1.8">You have {{ stats.bow_seed_count }} {{ image.genre or '' }} images evaluating at 8.0 or above. That is not a streak — that is the beginning of a coherent body of work. A photographer with 6 strong images sharing a visual theme has the foundation for an exhibition conversation.</div>
+      <div style="margin-top:10px;font-size:13px;color:#3A4A6B">We will track this as you upload more. When it grows, we will help you name it.</div>
+    </div>
+    {% endif %}
+
+    {# ── SESSION 214: CONCLUSION — closing paragraph written to YOU ── #}
+    {% if _conclusion_s %}
+    <div style="background:#E8F0E9;border-radius:12px;border-top:1px solid rgba(60,120,70,0.18);border-bottom:1px solid rgba(60,120,70,0.18);padding:28px 24px;margin-bottom:10px;text-align:center">
+      {# Session 215: split conclusion into visual paragraphs at sentence boundaries #}
+{% set _conc_sentences = _conclusion_s.replace('. The standard we are measuring', '|||The standard we are measuring').replace('. An image at this level', '|||An image at this level').split('|||') %}
+{% if _conc_sentences | length > 1 %}
+  {% for _cp in _conc_sentences %}
+    {% if _cp.strip() %}
+    <div style="font-size:18px;color:#1A3020;line-height:1.85;font-weight:500;max-width:640px;margin:0 auto 16px;text-align:justify">{{ _cp.strip() | safe }}</div>
+    {% endif %}
+  {% endfor %}
+{% else %}
+<div style="font-size:18px;color:#1A3020;line-height:1.85;font-weight:500;max-width:640px;margin:0 auto;text-align:justify">{{ _conclusion_s | safe }}</div>
+{% endif %}
+    </div>
+    {% endif %}
+
+    {# ── SESSION 216: EVALUATION RECORD FOOTER — Haiku-matched style ── #}
+    {% if _name or _scored_date or image.asset_name or image.genre or image.exif_make or image.exif_camera or image.exif_lens or _species_note_s %}
+    <div style="padding:14px 0;border-top:1px solid rgba(26,39,68,0.08)">
+      <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">Evaluation record</div>
+      {# Name · Date · File · Genre #}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:{% if image.exif_make or image.exif_camera or image.exif_lens or image.exif_aperture or _species_note_s %}12px{% else %}0{% endif %}">
+        {% if _name %}
+        <div>
+          <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">Evaluated for</div>
+          <div style="font-size:14px;color:rgba(26,39,68,0.75);line-height:1.5">{{ _name }}</div>
+        </div>
+        {% endif %}
+        {% if _scored_date %}
+        <div>
+          <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">Date</div>
+          <div style="font-size:14px;color:rgba(26,39,68,0.75);line-height:1.5">{{ _scored_date }}</div>
+        </div>
+        {% endif %}
+        {% if image.asset_name or image.title %}
+        <div>
+          <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">File</div>
+          <div style="font-size:14px;color:rgba(26,39,68,0.75);line-height:1.5">{{ image.asset_name or image.title }}</div>
+        </div>
+        {% endif %}
+        {% if image.genre %}
+        <div>
+          <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">Genre</div>
+          <div style="font-size:14px;color:rgba(26,39,68,0.75);line-height:1.5">{{ image.genre }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {# Camera data #}
+      {% set _cam_str = (image.exif_camera or ((image.exif_make or '') + ' ' + (image.exif_model or ''))) | trim %}
+      {% if _cam_str or image.exif_lens or image.exif_focal_length or image.exif_aperture or image.exif_shutter or image.exif_iso or image.exif_software %}
+      <div style="margin-bottom:{% if _species_note_s %}10px{% else %}0{% endif %}">
+        <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Camera data</div>
+        <div style="font-size:14px;color:rgba(26,39,68,0.65);line-height:1.6">
+          {% set _exif_parts = [] %}
+          {% if _cam_str %}{% set _exif_parts = _exif_parts + [_cam_str] %}{% endif %}
+          {% if image.exif_lens %}{% set _exif_parts = _exif_parts + [image.exif_lens] %}{% endif %}
+          {% if image.exif_focal_length %}{% set _exif_parts = _exif_parts + [image.exif_focal_length] %}{% endif %}
+          {% if image.exif_aperture %}{% set _exif_parts = _exif_parts + [image.exif_aperture] %}{% endif %}
+          {% if image.exif_shutter %}{% set _exif_parts = _exif_parts + [image.exif_shutter] %}{% endif %}
+          {% if image.exif_iso %}{% set _exif_parts = _exif_parts + ['ISO ' + image.exif_iso|string] %}{% endif %}
+          {% if image.exif_software %}{% set _exif_parts = _exif_parts + [image.exif_software] %}{% endif %}
+          {{ _exif_parts | join('  ·  ') }}
+        </div>
+      </div>
+      {% endif %}
+      {# Species — Wildlife only, never mid-card (Rule 31) #}
+      {% if _species_note_s %}
+      <div style="margin-bottom:0">
+        <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Species and behaviour</div>
+        <div style="font-size:14px;color:rgba(26,39,68,0.65);line-height:1.6">{{ _species_note_s | safe }}</div>
+      </div>
+      {% endif %}
+      {# AI disclaimer #}
+      <div style="border-top:0.5px solid rgba(26,39,68,0.10);margin-top:12px;padding-top:10px">
+        <div style="font-size:13px;color:rgba(26,39,68,0.40);line-height:1.7">This evaluation was generated by the Apex DDI Engine — an AI system trained on calibrated photographic assessment. Evaluations are a creative and technical guide and may contain errors.</div>
+      </div>
+    </div>
     {% endif %}
 
     {# ⑩ HOW YOU'RE DEVELOPING — per-dimension sparklines matching main scorecard #}
@@ -1301,6 +1580,22 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
       {% endif %}
       {% endfor %}
 
+    </div>
+    {% endif %}
+
+    {# ── CSI CARD A — duplicate image notification ── #}
+    {% if csi_own_duplicate %}
+    <div style="background:#FFF8E6;border-left:3px solid #C8A84B;border-radius:0 8px 8px 8px;padding:20px 24px;margin:0 0 10px;border:1px solid #EDD89A">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">Image already in your record</div>
+      <div style="font-size:15px;line-height:1.75;color:#4A3A00">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+    </div>
+    {% endif %}
+
+    {# ── CSI CARD B — Shutter League pool match notification ── #}
+    {% if csi_threshold_hit %}
+    <div style="background:#E8F0F8;border-left:3px solid #2C5F8A;border-radius:0 8px 8px 8px;padding:20px 24px;margin:0 0 10px;border:1px solid #C5D8EA">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#2C5F8A;margin-bottom:8px">Seen in the Shutter League pool</div>
+      <div style="font-size:15px;line-height:1.75;color:#1A3A5A">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
     </div>
     {% endif %}
 
@@ -1352,7 +1647,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% if _beat_pct is not none %}<div class="sc-rr"><span class="sc-rk">Percentile</span><span class="sc-rv{% if _beat_pct >= 50 %} gn{% endif %}">{{ _beat_pct }}{{ _pct_ord }}</span></div>{% endif %}
         {% if portfolio_data and portfolio_data.count %}<div class="sc-rr"><span class="sc-rk">Evaluations</span><span class="sc-rv">{{ portfolio_data.count }}</span></div>{% endif %}
         {% if stats and stats.best_this_year %}<div class="sc-rr"><span class="sc-rk">Best this year</span><span class="sc-rv gn">{{ '%.2f'|format(stats.best_this_year) }}</span></div>{% endif %}
-        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Genre</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
+        {% if image.genre %}<div class="sc-rr"><span class="sc-rk">Interest</span><span class="sc-rv">{{ image.genre }}</span></div>{% endif %}
       </div>
     </div>
     {% if _beat_pct is not none %}
@@ -1414,14 +1709,52 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 
 </div>{# /sc-wrap #}
 
-{# DDI data island — Jinja2 renders, browser reads as JSON #}
+{# DDI data island — Jinja2 renders, browser reads as JSON.
+   SL-181.20: evaluation-derived fallbacks replace generic boilerplate.
+   If the engine wrote a reasoning field, that wins. If absent, the fallback
+   is computed from the actual evaluation — specific to this image, never a generic sentence. #}
+{% if image.dod_score %}
+  {% set _dod_s = image.dod_score | float %}
+  {% if _dod_s >= 8.5 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — this is technically demanding work. The conditions, timing, and execution required here are not reproducible on demand. That rarity is part of what holds the evaluation.' %}
+  {% elif _dod_s >= 7.0 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — solid technical execution. The frame required genuine skill to achieve, though the conditions stopped short of the controlled chaos that pushes evaluations above 8.5.' %}
+  {% elif _dod_s >= 5.5 %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — the technical challenge here was moderate. The frame was achievable with patience and standard technique. Raising this evaluation means deliberately seeking harder conditions: tighter windows, less forgiving light, subjects that do not hold still.' %}
+  {% else %}{% set _dod_fb = 'Difficulty — ' ~ '%.1f'|format(_dod_s) ~ ' — the technical demand was low on this frame. That is not a failing — simplicity can be deliberate. But if this matters to you, seek the technically harder version of the same subject.' %}{% endif %}
+{% endif %}
+{% if image.wonder_score %}
+  {% set _won_s = image.wonder_score | float %}
+  {% if _won_s >= 8.5 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — this frame stops the scroll. The light, colour, and geometry combine into something that demands a second look. That is rarer than most photographers realise.' %}
+  {% elif _won_s >= 7.0 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the frame has real presence. It holds attention longer than most, but the element that makes a viewer stop mid-scroll and return is not yet fully resolved.' %}
+  {% elif _won_s >= 5.5 %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the photograph reads clearly but does not yet command the eye. The gap between clear and magnetic is usually one decision: the light quality, the single dominant colour, or the geometric tension that was almost but not quite there.' %}
+  {% else %}{% set _won_fb = 'Visual Impact — ' ~ '%.1f'|format(_won_s) ~ ' — the frame needs a stronger visual anchor. The eye moves through it without finding a place to rest. One dominant element — a colour, a shape, a shaft of light — would change this entirely.' %}{% endif %}
+{% endif %}
+{% if image.dm_score %}
+  {% set _dm_s = image.dm_score | float %}
+  {% if _dm_s >= 8.5 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the shutter fired at the right instant. The peak of the action, the resolution of the geometry, the unrepeatable expression — this frame has it. That is the result of reading the scene, not reacting to it.' %}
+  {% elif _dm_s >= 7.0 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — you were close to the peak moment. The capture is strong, but there was a fraction of a second — just before or just after — where the geometry was tighter, the expression more resolved, the elements more unified.' %}
+  {% elif _dm_s >= 5.5 %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the moment is present but not at its peak. The action was captured, but the instant where all elements resolve into a single unified event had not yet arrived — or had just passed.' %}
+  {% else %}{% set _dm_fb = 'Decisive Moment — ' ~ '%.1f'|format(_dm_s) ~ ' — the timing needs work. The photograph shows what was there, not the moment when it became most itself. Staying longer with the subject — past the obvious frame — is where this changes.' %}{% endif %}
+{% endif %}
+{% if image.disruption_score %}
+  {% set _dis_s = image.disruption_score | float %}
+  {% if _dis_s >= 8.5 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — this frame does something unexpected. The point of view, the subject choice, or the visual grammar breaks from what photographers typically do with this material. That originality is what makes it memorable.' %}
+  {% elif _dis_s >= 7.0 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — there is a distinct perspective here, though the frame still operates within familiar photographic conventions for this subject. The next version of this image asks: what would it look like if the most expected decision were replaced?' %}
+  {% elif _dis_s >= 5.5 %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — the approach is competent but not yet distinctive. This subject has been photographed this way before. The question worth asking: what does only you see in this scene that no one else has shown?' %}
+  {% else %}{% set _dis_fb = 'Disruption — ' ~ '%.1f'|format(_dis_s) ~ ' — the frame follows a well-worn path. Nothing wrong with that — but nothing separates it from the thousands of similar frames made of similar subjects. One unexpected decision — in framing, light, or moment — would begin to change that.' %}{% endif %}
+{% endif %}
+{% if image.aq_score %}
+  {% set _aq_s = image.aq_score | float %}
+  {% if _aq_s >= 8.5 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — this photograph makes you feel something before you understand why. That is the hardest thing to achieve and the first thing a viewer trusts. It is your strongest dimension on this frame.' %}
+  {% elif _aq_s >= 7.0 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the frame carries genuine emotional weight. There is something at stake in the image, and the viewer senses it. The gap to 8.5 is closing the distance between "I feel something" and "I cannot look away."' %}
+  {% elif _aq_s >= 5.5 %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the image is competent but emotionally neutral. It shows something without making the viewer feel something about it. The subject has emotional potential — the frame has not yet unlocked it.' %}
+  {% else %}{% set _aq_fb = 'Emotion — ' ~ '%.1f'|format(_aq_s) ~ ' — the photograph does not yet move the viewer. Technical quality is present but emotional resonance is absent. This changes when the photographer is invested in the subject — when something genuinely matters in the frame.' %}{% endif %}
+{% endif %}
 <script type="application/json" id="sc-ddi-data">
 [
-  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or 'How technically demanding this photograph was to make.') | tojson }}},{% endif %}
-  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or 'The visual impact, mood and drama of your photograph.') | tojson }}},{% endif %}
-  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or 'How well you timed the capture of the peak moment.') | tojson }}},{% endif %}
-  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or 'How unexpected and original this frame is.') | tojson }}},{% endif %}
-  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or 'The emotional resonance this photograph creates.') | tojson }}},{% endif %}
+  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or _dod_fb or '') | tojson }}},{% endif %}
+  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or _won_fb or '') | tojson }}},{% endif %}
+  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or _dm_fb or '') | tojson }}},{% endif %}
+  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or _dis_fb or '') | tojson }}},{% endif %}
+  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or _aq_fb or '') | tojson }}},{% endif %}
   null
 ]
 </script>
@@ -1553,6 +1886,10 @@ function scRenderText() {
 
     /* **bold** → <strong> (short spans only) */
     raw = raw.replace(/\*\*([^*]{1,60})\*\*/g, '<strong>$1</strong>');
+    /* Bold Frame N: labels in BOW sequences */
+    /* Bold BOW sequence header and break frames onto new lines */
+    raw = raw.replace(/(YOUR NEXT BODY OF WORK SEQUENCE:)/g, '<strong>$1</strong>');
+    raw = raw.replace(/\s*(Frame\s+(\d+):)/g, '<br><br><strong>Frame $2:</strong>');
     /* Search: X. → Google Images link */
     raw = raw.replace(/Search:\s*([^.<]{5,60})\./g, function(m, term) {
       var q = encodeURIComponent(term.trim() + ' photography');
@@ -1563,12 +1900,44 @@ function scRenderText() {
       var q = encodeURIComponent(term.trim());
       return '<a href="https://www.google.com/search?q=' + q + '&tbm=isch" target="_blank" rel="noopener" style="color:var(--sc-gold-dk);text-decoration:underline">' + term.trim() + '</a>.';
     });
+    /* Highlight "To reach 9+" — kept for older images, broadened to match both phrasings */
+    raw = raw.replace(/((?:To reach|The)\s+9\+[^<]*?)\.(<\/span>|<\/li>|<\/p>)/g, '<span style="color:#A0304A;font-weight:600">$1.</span>$2');
     el.innerHTML = raw;
   });
 }
 /* Run immediately + on DOMContentLoaded for any late-rendered elements */
 scRenderText();
 document.addEventListener('DOMContentLoaded', scRenderText);
+
+/* ── 9+ PINK CARD — SL-181.21 ─────────────────────────────────────────────
+   After scRenderText() builds the <li> list, find the <li> containing "9+"
+   and promote it to a prominent pink inset card pulled out of the bullet list.
+   Matches current engine: "The 9+ version of this frame:"
+   Matches older images:   "To reach 9+"
+────────────────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  var em = document.getElementById('sc-em-preview-block');
+  if (!em) return;
+  var items = em.querySelectorAll('li');
+  for (var i = 0; i < items.length; i++) {
+    var li = items[i];
+    if (/9\+/.test(li.textContent)) {
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#FFF0F5;border-radius:10px;border-left:3px solid #A0304A;padding:16px 18px;margin-top:16px';
+      var eyebrow = document.createElement('div');
+      eyebrow.style.cssText = 'font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A0304A;margin-bottom:10px';
+      eyebrow.textContent = 'The 9+ version of this frame';
+      var body = document.createElement('div');
+      body.style.cssText = 'font-size:16px;color:#3a1020;line-height:1.85';
+      body.innerHTML = li.innerHTML.replace(/^(The\s+9\+\s+version\s+of\s+this\s+frame\s*:|To\s+reach\s+9\+\s*[—-]?\s*)/i, '').trim();
+      card.appendChild(eyebrow);
+      card.appendChild(body);
+      li.parentNode.removeChild(li);
+      em.appendChild(card);
+      break;
+    }
+  }
+});
 </script>
 
 

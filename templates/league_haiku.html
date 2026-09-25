@@ -1,4 +1,4 @@
-{# SL-VERSION: 1.2-staging (Session 201 — audit fixes: line-height 1.12/1.15→1.5 on display elements. RETAINS 1.1.) — league_haiku: Haiku world League page. Two-column desktop. Left: declaration / spotlight. Right: league + masters grids. Mobile bottom nav. Standalone. #}
+{# SL-VERSION: 1.6-main (Session 207, 2026-09-02 — Bottom nav: cream #F5F3EF→navy #1A2744, icon colour light rgba(255,255,255,0.45), tap-highlight + transition added. RETAINS 1.5.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,7 +66,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* SPOTLIGHT */
 .sl-spot { display:none; flex-direction:column; height:100%; overflow:hidden; }
 .sl-spot-date { padding:16px 28px 0; font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(26,39,68,0.45); flex-shrink:0; }
-.sl-spot-img-wrap { flex:1; background:#0C1018; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:0; overflow:hidden; margin-top:12px; }
+.sl-spot-img-wrap { flex:1; background:#0C1018; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:0; overflow:hidden; margin:12px 20px 0 20px; border-radius:2px; }
 .sl-spot-img { width:100%; height:100%; object-fit:contain; display:block; }
 .sl-spot-hover { position:absolute; inset:0; background:rgba(26,39,68,0.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; font-size:14px; color:#F5F3EF; letter-spacing:0.03em; }
 .sl-spot-img-wrap:hover .sl-spot-hover { opacity:1; }
@@ -145,11 +145,10 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-mob-nav {
   display:none;
   position:fixed; bottom:0; left:0; right:0;
-  background:#F5F3EF;
-  border-top:0.5px solid rgba(26,39,68,0.12);
+  background:#1A2744;
+  border-top:0.5px solid rgba(255,255,255,0.10);
   padding:0;
   z-index:200;
-  -webkit-backdrop-filter:blur(10px);
 }
 .sl-mob-nav-items {
   display:flex;
@@ -167,7 +166,7 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   font-size:13px;
   letter-spacing:0.04em;
   text-transform:uppercase;
-  color:rgba(26,39,68,0.42);
+  color:rgba(255,255,255,0.45);
   cursor:pointer;
   text-decoration:none;
   background:none;
@@ -175,8 +174,11 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   font-family:'Inter',sans-serif;
   min-height:44px;
   padding:4px 2px 2px;
+  -webkit-tap-highlight-color:rgba(200,168,75,0.20);
+  transition:color .1s,opacity .1s;
 }
 .sl-mob-nav-item.active { color:#C8A84B; }
+.sl-mob-nav-item:active { color:#C8A84B; opacity:.75; }
 .sl-mob-nav-item svg {
   width:22px; height:22px;
   stroke:currentColor; fill:none;
@@ -331,9 +333,11 @@ body { background:#E8E5DF; font-family:'Inter',sans-serif; color:#1A2744; -webki
           </div>
         </div>
       </div>
+      {% if spotlight.aha_line %}
       <div class="sl-spot-aha">
         <div class="sl-spot-aha-text">{{ spotlight.aha_line }}</div>
       </div>
+      {% endif %}
       <div class="sl-spot-cta">
         <a href="{{ url_for('try_standing', image_id=spotlight.id) }}" class="sl-spot-cta-link">See the full evaluation →</a>
       </div>
@@ -612,6 +616,10 @@ document.addEventListener('click', function(e) {
     drawer.classList.remove('open');
   }
 });
+
+// Initialise grid from JS data on load — replaces static Jinja [:8] slice
+// so all 24 images are available with pagination from the first render.
+render();
 </script>
 </body>
 </html>

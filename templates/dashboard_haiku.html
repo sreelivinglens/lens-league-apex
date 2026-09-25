@@ -1,4 +1,4 @@
-{# SL-VERSION: 181.55-staging (Session 201 — audit fixes: single column stack at 480px, gp-row single col. RETAINS 181.54. Session 200b, 2026-08-27 — Full dashboard redesign. Single column scorecard rhythm. 8 Haiku synthesis fields: sherpa, signature, gap, next_session, aq_insight, tier_insight, master_insight. Dims with signal observations. Tier progression. EXIF-aware engine. Mobile bottom nav. Standalone — does not extend base.html.) #}
+{# SL-VERSION: 182.10 (Session 213, 2026-09-05 — play_exhausted CTA price corrected: ₹100 → ₹200. Dashboard hero shows latest image score/link when latest ≠ best. RETAINS 181.87.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,6 +91,10 @@ html,body{font-family:'Inter',sans-serif;color:#1A2744;-webkit-font-smoothing:an
 .gap-truth{font-size:16px;line-height:1.80;color:rgba(26,39,68,0.65)}
 .gap-count{font-size:13px;color:rgba(26,39,68,0.52);margin-top:12px;letter-spacing:0.04em}
 
+.master-name{font-family:'Playfair Display',serif;font-size:24px;color:#1A2744;margin-bottom:10px}
+.master-link{font-size:13px;color:#C8A84B;letter-spacing:0.09em;text-transform:uppercase;text-decoration:none;display:inline-block;margin-top:14px}
+.master-link:hover{text-decoration:underline}
+
 /* ── NEXT SESSION ── */
 .next-card{background:#EEF2FA;border:0.5px solid rgba(80,120,200,0.15);border-left:3px solid #4A6FA8;border-radius:0 4px 4px 0;padding:28px 32px}
 .next-label{font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#2A4A7A;margin-bottom:12px}
@@ -173,10 +177,11 @@ canvas.spark{flex:1;height:48px;display:block}
 .cta-secondary{display:block;text-align:center;margin-top:12px;font-size:13px;color:rgba(26,39,68,0.52);text-decoration:none;letter-spacing:0.03em}
 
 /* ── MOBILE BOTTOM NAV ── */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#F5F3EF;border-top:0.5px solid rgba(26,39,68,0.12);z-index:200}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#1A2744;border-top:0.5px solid rgba(255,255,255,0.10);z-index:200}
 .mob-nav-items{display:flex;height:56px}
-.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:rgba(26,39,68,0.42);text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;min-height:44px;padding:4px 2px}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;letter-spacing:0.02em;text-transform:uppercase;color:rgba(255,255,255,0.45);text-decoration:none;background:none;border:none;font-family:'Inter',sans-serif;min-height:44px;padding:4px 2px;-webkit-tap-highlight-color:rgba(200,168,75,0.20);transition:color .1s,opacity .1s}
 .mob-nav-item.active{color:#C8A84B}
+.mob-nav-item:active{color:#C8A84B;opacity:.75}
 .mob-nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .mob-drawer{display:none;position:fixed;bottom:56px;left:0;right:0;background:#F5F3EF;border-top:0.5px solid rgba(26,39,68,0.12);z-index:199;box-shadow:0 -4px 24px rgba(26,39,68,0.08)}
 .mob-drawer.open{display:block}
@@ -199,6 +204,19 @@ canvas.spark{flex:1;height:48px;display:block}
   .id-score{font-size:48px}
   .evals-grid{grid-template-columns: 1fr !important}
   .gp-row{grid-template-columns:1fr}
+
+  /* Tier strip — stack vertically, no horizontal overflow */
+  .tier-strip{flex-direction:column}
+  .tier-cell{border-right:none;border-bottom:0.5px solid rgba(26,39,68,0.07)}
+  .tier-cell:last-child{border-bottom:none}
+  .tier-header{padding:16px 20px 12px}
+  .tier-body{padding:16px 20px}
+  .tier-dim-need .dn{min-width:100px}
+
+  /* Dim header — hide sparkline, tighten score on narrow screens */
+  .dim-header{grid-template-columns:1fr 44px}
+  canvas.spark{display:none}
+  .dim-score{font-size:20px}
 }
 
 /* TIER PROGRESSION */
@@ -249,6 +267,17 @@ canvas.spark{flex:1;height:48px;display:block}
 .gp-tag-gap{background:#FEF0E0;color:#8A4A00}
 .gp-tag-neutral{background:rgba(26,39,68,0.06);color:rgba(26,39,68,0.45)}
 
+/* ── PLAY EXHAUSTED ── */
+.exhausted-block{padding:36px 48px;border-top:0.5px solid rgba(200,168,75,0.18);background:#F5F3EF}
+.exhausted-heading{font-family:'Playfair Display',serif;font-size:22px;color:#1A2744;margin-bottom:8px;line-height:1.55}
+.exhausted-sub{font-size:15px;color:rgba(26,39,68,0.60);line-height:1.75;margin-bottom:28px}
+.exhausted-btns{display:flex;flex-direction:column;gap:12px}
+.cta-upgrade{display:block;width:100%;background:#1A2744;color:#C8A84B;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:16px;border:none;border-radius:3px;cursor:pointer;text-align:center;text-decoration:none;min-height:52px;transition:background .15s}
+.cta-upgrade:hover{background:#243660}
+.cta-get-more{display:block;width:100%;background:transparent;color:#1A2744;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:15px;border:1.5px solid #1A2744;border-radius:3px;cursor:pointer;text-align:center;text-decoration:none;min-height:52px;transition:background .15s,color .15s}
+.cta-get-more:hover{background:#1A2744;color:#C8A84B}
+.exhausted-note{font-size:13px;color:rgba(26,39,68,0.42);text-align:center;margin-top:16px;line-height:1.6}
+
 </style>
 </head>
 <body>
@@ -270,7 +299,7 @@ canvas.spark{flex:1;height:48px;display:block}
     <a href="{{ url_for('try_gallery') }}" class="{% if request.endpoint == 'try_gallery' %}nav-active{% endif %}">My evaluations</a>
     <a href="{{ url_for('try_page') }}" class="{% if request.endpoint == 'try_page' %}nav-active{% endif %}">Upload</a>
     <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}" class="{% if request.endpoint == 'league_haiku' %}nav-active{% endif %}">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}" class="{% if request.endpoint == 'league_haiku' %}nav-active{% endif %}">The League</a>
     <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
     <button class="nav-logout" onclick="window.location='{{ url_for('logout') }}'" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -293,40 +322,53 @@ canvas.spark{flex:1;height:48px;display:block}
       Your record begins with your first photograph.
     {% endif %}
   </span>
-  <span class="since-evals">{{ evals_used }} of {{ limit }} free evaluations used</span>
+  <span class="since-evals">
+    {% if play_exhausted %}All 100 evaluations used · upgrade to continue
+    {% elif play_plan %}{{ evals_used }} of {{ limit }} play evaluations used
+    {% else %}{{ evals_used }} of {{ limit }} free evaluations used
+    {% endif %}
+  </span>
 </div>
 
 <div class="page">
 
   <!-- HERO IMAGE -->
-  {% if user_hero and user_hero.thumb_url %}
+  {% set _hero_display = latest_image if latest_image else user_hero %}
+  {% if _hero_display and _hero_display.thumb_url %}
   <div class="hero-wrap">
-    <img src="{{ user_hero.thumb_url }}" alt="Your best photograph so far" class="hero-img" onerror="this.style.display='none'">
+    <img src="{{ _hero_display.thumb_url }}" alt="Your most recent photograph" class="hero-img" onerror="this.style.display='none'">
   </div>
   {% endif %}
 
   <!-- IDENTITY -->
   {% if user_hero %}
+  {% set _show_latest = latest_image and latest_image.id != user_hero.id %}
+  {% set _id_image = latest_image if _show_latest else user_hero %}
   <div class="identity">
     <div class="id-greeting" id="sl-greeting">Good morning</div>
     <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
     <div class="id-score-row">
-      <span class="id-score">{{ "%.2f"|format(user_hero.score) }}</span>
+      <span class="id-score">{{ "%.2f"|format(_id_image.score) }}</span>
       <div class="id-meta">
-        <span class="id-tier">{{ user_hero.tier }}</span>
-        <span class="id-genre">{{ user_hero.genre }}</span>
+        <span class="id-tier">{{ _id_image.tier }}</span>
+        <span class="id-genre">{{ _id_image.genre }}</span>
         {% if haiku_percentile %}<span class="id-pct">Top {{ haiku_percentile }}% of all evaluated</span>{% endif %}
       </div>
     </div>
+    {% if _show_latest %}
+    <a href="{{ url_for('try_result', image_id=latest_image.id) }}" class="id-link">Your last evaluation — see the full scorecard →</a>
+    {% else %}
     <a href="{{ url_for('try_result', image_id=user_hero.id) }}" class="id-link">Your best so far — see the full evaluation →</a>
+    {% endif %}
   </div>
   {% else %}
-  <div class="identity">
+  <div class="identity" style="padding-bottom:32px">
     <div class="id-greeting" id="sl-greeting">Good morning</div>
-    <div class="id-name">{{ current_user.full_name.split()[0] }}. We have been watching.</div>
-    <div style="font-size:17px;color:rgba(26,39,68,0.55);line-height:1.80;margin-top:12px">
-      Your standing has not started yet. Your record begins with your next photograph.
+    <div class="id-name">{{ current_user.full_name.split()[0] }}. Your record starts with your next photograph.</div>
+    <div style="font-size:17px;color:rgba(26,39,68,0.65);line-height:1.85;margin-top:16px;max-width:520px">
+      Submit any photograph you have taken — your everyday work, not your best. The engine will tell you exactly what your eye found, what it missed, and what to look for in your next session.
     </div>
+    <a href="{{ url_for('try_page') }}" style="display:inline-block;margin-top:24px;background:#1A2744;color:#C8A84B;font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:14px 24px;border-radius:3px;text-decoration:none">Submit your first photograph →</a>
   </div>
   {% endif %}
 
@@ -341,8 +383,23 @@ canvas.spark{flex:1;height:48px;display:block}
   </div>
   {% elif evals_used == 0 %}
   <div class="sherpa-section">
-    <div class="eyebrow">The standard you are building toward</div>
-    <div class="sherpa-opening">Every photographer who has reached the League of Photographers began with their first evaluated photograph. The standard is the same for everyone. The work determines everything.</div>
+    <div class="eyebrow">What you will receive</div>
+    <div class="sherpa-opening">After your first photograph goes through the engine, you will know your tier, your strongest dimension, the one thing holding you back, and a specific instruction for your next session.</div>
+    <div style="margin-top:28px;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#fff;border-left:3px solid #C8A84B;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">What we see</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"This is a photograph built on real timing — the geometry creates a single, unrepeatable instant. There is genuine tension here, and the photographer was clearly positioned and ready."</div>
+      </div>
+      <div style="background:#fff;border-left:3px solid #C8A84B;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">Your one take-away</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"Timing is your strength — now push the compositional risk to make the next frame unforgettable rather than just well-captured."</div>
+      </div>
+      <div style="background:#fff;border-left:3px solid #D4860A;padding:18px 22px;border-radius:0 4px 4px 0">
+        <div style="font-size:13px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#8A4A00;margin-bottom:8px">The gap that follows you</div>
+        <div style="font-size:16px;line-height:1.80;color:rgba(26,39,68,0.70);font-style:italic">"Composition follows expected convention — ask what frame would make this moment unforgettable rather than dramatic."</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;font-size:15px;color:rgba(26,39,68,0.52);line-height:1.70">These are real outputs from a single evaluation. Submit any photograph — street, wildlife, portrait, landscape. The engine reads what is actually in the frame.</div>
   </div>
   {% endif %}
 
@@ -449,7 +506,15 @@ canvas.spark{flex:1;height:48px;display:block}
         {% elif dim.tag == 'leap' %}
         <div class="dim-signal">
           <span class="signal-label">Where to focus next</span>
-          {{ tier_insight if tier_insight else 'This dimension is what your next tier is waiting for.' }}
+          {% if tier_insight %}
+            {{ tier_insight }}
+          {% elif next_leap_name and tier_display %}
+            {{ next_leap_name }} is the distance between where you are and {{ tier_display.next }}. Every image you make has a ceiling — right now, this dimension is it. Your next session needs one photograph where you push further here than you have before.
+          {% elif next_leap_name %}
+            {{ next_leap_name }} is what your next tier is waiting on. One image where you push this dimension is all it takes to shift the record.
+          {% else %}
+            This is your lowest-scoring dimension. One session focused here — not on subject, not on light, but on this — is what moves the record.
+          {% endif %}
         </div>
         {% endif %}
       </div>
@@ -523,11 +588,21 @@ canvas.spark{flex:1;height:48px;display:block}
   {% endif %}
 
   <!-- ══ MASTER REFERENCE ══ -->
-  {% if master_insight %}
+  {% if master_insight or master_name_dash %}
   <div class="section">
     <div class="master-card">
       <div class="master-label">The eye behind this</div>
+      {% if master_name_dash %}
+      <div class="master-name">{{ master_name_dash }}</div>
+      {% if master_why_dash %}<div class="master-why" style="margin-top:8px">{{ master_why_dash }}</div>{% endif %}
+      {% if master_name_dash in all_masters %}
+      <a href="https://www.google.com/search?q={{ all_masters[master_name_dash] }}&tbm=isch" target="_blank" rel="noopener" class="master-link">See their work →</a>
+      {% else %}
+      <a href="https://www.google.com/search?q={{ master_name_dash|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener" class="master-link">See their work →</a>
+      {% endif %}
+      {% elif master_insight %}
       <div class="master-why">{{ master_insight }}</div>
+      {% endif %}
     </div>
   </div>
   {% endif %}
@@ -537,7 +612,7 @@ canvas.spark{flex:1;height:48px;display:block}
   {% if league_hero.id %}
   <a href="{{ url_for('try_standing', image_id=league_hero.id) }}" class="gm-section">
   {% else %}
-  <a href="{{ url_for('standings_public') }}" class="gm-section">
+  <a href="{{ url_for('league_haiku') }}" class="gm-section">
   {% endif %}
     <img src="{{ league_hero.thumb_url }}"
          alt="Grandmaster photograph — {{ league_hero.photographer }}"
@@ -596,43 +671,68 @@ canvas.spark{flex:1;height:48px;display:block}
   {% endif %}
 
   <!-- ══ PROGRESS + CTA ══ -->
+  {% if play_exhausted %}
+  <div class="exhausted-block">
+    <div class="exhausted-heading">You have used all 100 evaluations.</div>
+    <div class="exhausted-sub">Your record stands. Every image you submitted is evaluated and preserved. To continue building your record, upgrade to Sonnet for unlimited evaluations — or purchase another 100 to stay in Haiku world.</div>
+    <div class="exhausted-btns">
+      <a href="{{ url_for('pricing') }}" class="cta-upgrade">Upgrade to Sonnet — unlimited evaluations →</a>
+      <a href="{{ url_for('pricing') }}#play" class="cta-get-more">Get another 100 evaluations — ₹200 →</a>
+    </div>
+    <div class="exhausted-note">Your {{ evals_used }} evaluated photographs are safe and always accessible in My Evaluations.</div>
+  </div>
+  {% else %}
   <div class="cta-section">
     <div class="progress-label">
+      {% if play_plan %}
+      <span class="progress-text">Play evaluations</span>
+      {% else %}
       <span class="progress-text">Free evaluations</span>
+      {% endif %}
       <span class="progress-num">{{ evals_used }} of {{ limit }} used</span>
     </div>
     <div class="progress-bar-bg">
       <div class="progress-bar-fill" style="width:{{ [(evals_used / limit * 100)|round(0)|int, 100]|min }}%"></div>
     </div>
+    {% if evals_remaining > 0 %}
     <a href="{{ url_for('try_page') }}" class="cta-primary">
       {% if evals_used > 0 %}Continue my record →{% else %}Start my record →{% endif %}
     </a>
+    {% if play_plan %}
+    <a href="{{ url_for('pricing') }}" class="cta-secondary">Upgrade to Sonnet for unlimited evaluations</a>
+    {% else %}
+    <a href="{{ url_for('pricing') }}" class="cta-secondary">Upgrade to Sonnet for unlimited evaluations</a>
+    {% endif %}
+    {% else %}
+    <a href="{{ url_for('pricing') }}" class="cta-primary">Upgrade to Sonnet — unlimited evaluations →</a>
+    {% endif %}
   </div>
+  {% endif %}
 
 </div><!-- /page -->
 
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mob-nav">
   <div class="mob-nav-items">
-    <a href="{{ url_for('try_welcome') }}" class="mob-nav-item active">
+    <a href="{{ url_for('try_welcome') }}" class="mob-nav-item {% if request.endpoint == 'try_welcome' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
     </a>
-    <a href="{{ url_for('try_gallery') }}" class="mob-nav-item">
+    <a href="{{ url_for('try_gallery') }}" class="mob-nav-item {% if request.endpoint == 'try_gallery' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>My Evals
     </a>
-    <a href="{{ url_for('try_page') }}" class="mob-nav-item">
+    <a href="{{ url_for('try_page') }}" class="mob-nav-item {% if request.endpoint == 'try_page' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>Upload
     </a>
-    <a href="{{ url_for('pricing') }}" class="mob-nav-item">
+    <a href="{{ url_for('pricing') }}" class="mob-nav-item {% if request.endpoint == 'pricing' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Pricing
     </a>
-    <button class="mob-nav-item" onclick="toggleBottomMoreHaiku(event)" id="sl-mob-more-btn" type="button">
+    <button class="mob-nav-item {% if request.endpoint in ('league_haiku', 'profile') %}active{% endif %}" onclick="toggleBottomMoreHaiku(event)" id="sl-mob-more-btn" type="button">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>More
     </button>
   </div>
 </nav>
 <div class="mob-drawer" id="sl-mob-more-drawer">
-  <a href="{{ url_for('league_haiku') }}" class="mob-drawer-item">League of Photographers</a>
+  <a href="{{ url_for('league_haiku') }}" class="mob-drawer-item">The League</a>
   <a href="{{ url_for('profile') }}" class="mob-drawer-item">Profile</a>
   <a href="{{ url_for('logout') }}" class="mob-drawer-item">Log out</a>
 </div>

@@ -1,0 +1,961 @@
+{# SL-VERSION: cal-4.1 (Session 219, 2026-09-12 — Audit fixes: mobile breakpoint 56px, iPad breakpoint, font sizes 9px→11px, onerror on images, guide updated n=77+mobile calibration note. RETAINS cal-4.0.)
+{# cal-4.0 (Session 219, 2026-09-11 — Track tier added: Camera / Mobile. Upload form gains Track selector. Engine toggle becomes 2D: engine × track = 4 paths. Table gains Track column and colour-coded tier pills. Rescore passes camera_track. CSV export gains Track column. pairs dict now has sonnet_camera/haiku_camera/sonnet_mobile/haiku_mobile slots. RETAINS cal-3.2.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="Calibration Drift — Shutter League Admin">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Admin calibration drift tool — compare Sonnet and Haiku engine scores.">
+<meta property="og:image" content="/static/img/og-default.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="/static/img/og-default.jpg">
+<link rel="canonical" href="/admin/calibration">
+<title>Calibration Drift — Shutter League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px 80px}
+.page-header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:500}
+.page-sub{font-size:14px;color:#6B6B68;margin-top:2px}
+a.back{font-size:15px;color:#1A2744;text-decoration:none;display:inline-flex;align-items:center;gap:5px;margin-bottom:16px}
+a.back:hover{text-decoration:underline}
+.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;font-size:15px;color:#1A1A18;line-height:1.6}
+.guide strong{font-weight:600;color:#92400E}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.up-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.up-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.up-field{display:flex;flex-direction:column;gap:5px}
+.up-label{font-size:14px;color:#6B6B68;font-weight:500}
+.up-select{padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:16px;background:#FAFAF6;color:#1A1A18;font-family:inherit;min-height:44px;min-width:180px}
+.engine-toggle{display:flex;border:1px solid #E0DDD6;border-radius:8px;overflow:hidden}
+.eng-btn{font-size:14px;font-weight:600;padding:10px 18px;background:#FAFAF6;color:#6B6B68;border:none;border-right:1px solid #E0DDD6;cursor:pointer;font-family:inherit;min-height:44px;transition:background .12s}
+.eng-btn:last-child{border-right:none}
+.eng-btn.active-both{background:#1A1A18;color:#fff}
+.eng-btn.active-sonnet{background:#1A2744;color:#fff}
+.eng-btn.active-haiku{background:#6B21A8;color:#fff}
+.drop-zone{border:2px dashed #C8C5BE;border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:#FAFAF6;transition:border-color .15s,background .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.drop-zone:hover,.drop-zone.drag{border-color:#1A2744;background:#EFF6FF}
+.drop-zone i{font-size:28px;color:#1A2744}
+.drop-zone-text{font-size:15px;color:#6B6B68}
+.drop-zone-sub{font-size:14px;color:#AEAEA8}
+#file-input{display:none}
+.upload-btn{padding:11px 24px;border-radius:8px;border:none;background:#C8A84B;color:#1A1A18;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;min-height:44px;min-width:160px}
+.upload-btn:disabled{opacity:.5;cursor:not-allowed}
+.upload-btn:hover:not(:disabled){background:#A88830;color:#fff}
+.thumb-item{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid #E0DDD6;flex-shrink:0;background:#F5F3EF}
+.thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb-item .thumb-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.thumb-item .thumb-remove:hover{background:#B91C1C}
+.thumb-item.scored{border-color:#2E7D32}
+.thumb-item.selected{border-color:#C8A84B}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin-top:14px;display:none}
+.progress-eng{font-size:13px;font-weight:600;color:#1A1A18;margin-bottom:5px}
+.progress-bar-bg{height:6px;background:#E0DDD6;border-radius:99px;overflow:hidden;margin-bottom:5px}
+.progress-bar-fill{height:100%;background:#C8A84B;border-radius:99px;transition:width .3s}
+.progress-lbl{font-size:13px;color:#6B6B68}
+.flash{padding:10px 14px;border-radius:8px;font-size:15px;margin-top:10px;display:none}
+.flash.ok{background:#F0FDF4;color:#2E7D32;border:1px solid #BBF7D0}
+.flash.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+
+/* ── BULK BAR ── */
+.bulk-bar{display:none;position:sticky;top:0;z-index:40;background:#1A1A18;color:#fff;padding:10px 16px;border-radius:10px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bulk-bar.show{display:flex}
+
+/* ── RESULTS TABLE ── */
+.results-wrap{background:#fff;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.res-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #EEE;flex-wrap:wrap;gap:8px}
+.res-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;display:flex;align-items:center;gap:6px}
+.res-count{font-size:13px;color:#8A8A86;font-weight:400;letter-spacing:0;text-transform:none;margin-left:6px}
+.clear-btns{display:flex;gap:6px;flex-wrap:wrap}
+.clr-btn{font-size:13px;padding:5px 12px;border-radius:6px;border:1px solid #E0DDD6;background:#FAFAF6;color:#6B6B68;cursor:pointer;font-family:inherit;min-height:32px}
+.clr-btn:hover{border-color:#B91C1C;color:#B91C1C;background:#FEF2F2}
+
+.res-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.res-table th{font-size:11px;color:#8A8A86;font-weight:600;padding:8px 8px;border-bottom:1px solid #EEE;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;text-align:left}
+.res-table th.r,.res-table td.r{text-align:right}
+.res-table td{font-size:13px;padding:8px 8px;border-bottom:1px solid #F5F3EF;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-table tr:last-child td{border-bottom:none}
+.res-table tr.row-s td{background:#FAFBFF}
+.res-table tr.row-h td{background:#FDFAFF}
+.res-table tr.row-pair-top td{border-bottom:none}
+.res-table tr.row-pair-bot td{border-bottom:none}
+.res-table tr.row-sep td{border-bottom:2px solid #E0DDD6;padding:0;height:6px}
+.res-table tr.row-scoring td{background:#FFFBEB;opacity:.7}
+.ep{font-size:11px;font-weight:700;padding:2px 6px;border-radius:99px;white-space:nowrap;display:inline-block}
+.ep-s{background:#E8EEF8;color:#1A2744}
+.ep-h{background:#F3E8FF;color:#6B21A8}
+.tp{font-size:11px;font-weight:600;padding:1px 5px;border-radius:99px;white-space:nowrap;display:inline-block;margin-left:2px}
+.tp-camera{background:#F0F4F0;color:#2E5C2E}
+.tp-mobile{background:#FFF3E0;color:#B45309}
+.score-n{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.tier-n{font-size:11px;color:#B45309;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:block}
+.dim-n{font-size:13px;font-variant-numeric:tabular-nums}
+.d-pos{color:#2E7D32;font-weight:700}
+.d-neg{color:#B91C1C;font-weight:700}
+.d-zero{color:#8A8A86;font-weight:700}
+.del-btn{background:none;border:none;color:#C8C5BE;font-size:15px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;min-height:26px;width:26px}
+.del-btn:hover{color:#B91C1C;background:#FEF2F2}
+.rescore-cal-btn{background:none;border:none;color:#C8C5BE;font-size:15px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;min-height:26px;width:26px}
+.rescore-cal-btn:hover{color:#B45309;background:#FFF3CD}
+.rescore-cal-btn:disabled{opacity:.4;cursor:not-allowed}
+.empty-state{text-align:center;padding:40px;color:#8A8A86;font-size:15px}
+
+/* col widths */
+.col-cb{width:32px}
+.col-file{width:160px}
+.col-eng{width:72px}
+.col-genre{width:90px}
+.col-score{width:80px}
+.col-delta{width:72px}
+.col-dim{width:50px}
+.col-time{width:90px}
+.col-del{width:36px}
+
+@media (max-width: 768px){
+  .res-table .col-time,.res-table th:nth-child(9),.res-table td:nth-child(9){display:none}
+}
+@media (max-width: 600px){
+  .res-table .col-dim,.res-table th:nth-child(n+7),.res-table td:nth-child(n+7){display:none}
+  .up-row{flex-direction:column}
+  .engine-toggle,.up-select{width:100%}
+  .eng-btn{flex:1}
+
+  .form-input,.form-select{font-size:16px!important}
+  .summary-grid{grid-template-columns:1fr!important}
+  .cal-row{display:block;margin-bottom:12px}
+}
+
+/* ── IPAD (768–1024px) ── */
+@media (max-width: 1024px){
+  .summary-grid{grid-template-columns:1fr 1fr !important}
+  .res-header{flex-direction:column;gap:8px;align-items:flex-start}
+  .engine-toggle{flex-wrap:wrap}
+}
+
+@media (max-width: 600px){
+  .wrap{padding-top:56px}
+  .rescore-all-bar{flex-direction:column;align-items:stretch}
+  .btn-rescore-all{width:100%;text-align:center}
+  .page-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .page-ts{margin-left:0}
+  .form-input,.form-select{font-size:16px!important}
+  .summary-grid{grid-template-columns:1fr!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="{{ url_for('admin_dashboard') }}"><i class="ti ti-arrow-left"></i> Back to admin</a>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">Calibration Drift</div>
+    <div class="page-sub">Score on both engines — results appear live in the table below</div>
+  </div>
+  <div style="font-size:12px;color:#AEAEA8">{{ now.strftime('%-d %b %Y %H:%M UTC') }}</div>
+</div>
+
+<div class="guide">
+  <strong>How to use.</strong> Upload or rescore the 10 reference calibration images across all four paths — <strong>Sonnet Camera</strong>, <strong>Haiku Camera</strong>, <strong>Sonnet Mobile</strong>, <strong>Haiku Mobile</strong>. Compare each path to the human panel baseline (n=77, R20). Target: within ±0.4 of human on 8/10 images per path. <strong>Do not rescore without a structural reason</strong> — model variance of ±0.3 is normal.
+</div>
+<div class="guide info" style="margin-top:10px">
+  <strong>Camera vs Mobile calibration — important difference:</strong>
+  The 10 reference images were shot on camera. <strong>7 of 10 are valid for mobile calibration</strong> (Cherry, Landscape, Fineart, Dance, Silhouette, Monks, Portrait). <strong>Birds and Cubs cannot be used for mobile calibration</strong> — both require telephoto reach (400–600mm) that no phone can achieve. Sport is conditional on whether the image shows proximity action.
+  <br>When scoring mobile track: weights shift (+15% Disruption, +10% DM). DoD uses proximity-as-discipline (no telephoto) and portrait-mode execution (no optical bokeh). Photographic principles — Ma, Kanso, Gestalt Figure/Ground — apply equally to both tracks. <strong>Mobile human baseline not yet established</strong> — upload mobile-shot images and run a separate panel before treating mobile scores as calibrated.
+</div>
+
+{# ── UPLOAD PANEL ── #}
+<div class="upload-panel">
+  <div class="up-title"><i class="ti ti-upload"></i> Upload &amp; score</div>
+  <div class="up-row">
+    <div class="up-field">
+      <span class="up-label">Run on</span>
+      <div class="engine-toggle">
+        <button class="eng-btn active-both" id="eng-both"   onclick="setEngine('both')">Both</button>
+        <button class="eng-btn"             id="eng-sonnet" onclick="setEngine('sonnet')">Sonnet only</button>
+        <button class="eng-btn"             id="eng-haiku"  onclick="setEngine('haiku')">Haiku only</button>
+      </div>
+    </div>
+    <div class="up-field">
+      <span class="up-label">Track (tier)</span>
+      <div class="engine-toggle">
+        <button class="eng-btn active-sonnet" id="trk-camera" onclick="setTrack('camera')">📷 Camera</button>
+        <button class="eng-btn"               id="trk-mobile" onclick="setTrack('mobile')">📱 Mobile</button>
+      </div>
+    </div>
+    <div class="up-field">
+      <span class="up-label">Genre</span>
+      <select class="up-select" id="genre-sel">
+        <option value="">— select —</option>
+        {% for g in genres %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="drop-zone" id="drop-zone"
+       onclick="document.getElementById('file-input').click()"
+       ondragover="event.preventDefault();this.classList.add('drag')"
+       ondragleave="this.classList.remove('drag')"
+       ondrop="onDrop(event)">
+    <i class="ti ti-photo" id="drop-icon"></i>
+    <span class="drop-zone-text" id="drop-text">Drop images here or click to browse</span>
+    <span class="drop-zone-sub" id="drop-sub">JPEG / PNG / HEIC · 1–20 images</span>
+  </div>
+  <input type="file" id="file-input" multiple accept="image/*" onchange="onFilePick(this.files)">
+
+  <div id="thumb-strip" style="display:none;margin-top:10px">
+    <div style="font-size:13px;color:#6B6B68;margin-bottom:6px">Selected</div>
+    <div id="thumb-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:14px;align-items:center;flex-wrap:wrap">
+    <button class="upload-btn" id="upload-btn" onclick="startUpload()" disabled>
+      <i class="ti ti-bolt"></i> Score images
+    </button>
+    <span id="file-count" style="font-size:14px;color:#6B6B68"></span>
+  </div>
+
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-eng" id="progress-eng"></div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+    <div class="progress-lbl" id="progress-lbl">Starting…</div>
+  </div>
+  <div class="flash" id="flash"></div>
+</div>
+
+{# ── BULK BAR ── #}
+<div class="bulk-bar" id="bulk-bar">
+  <span id="bulk-label" style="font-size:15px;font-weight:500"></span>
+  <div style="display:flex;gap:8px">
+    <button onclick="deleteSelected()" style="padding:7px 16px;border-radius:6px;border:none;background:#B91C1C;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;min-height:34px">Delete selected</button>
+    <button onclick="deselectAll()" style="padding:7px 12px;border-radius:6px;border:1px solid #555;background:transparent;color:#fff;font-size:15px;cursor:pointer;font-family:inherit;min-height:34px">Cancel</button>
+  </div>
+</div>
+
+{# ── RESULTS TABLE ── #}
+<div class="results-wrap" id="results-table">
+  <div class="res-header">
+    <div class="res-title">
+      <i class="ti ti-table"></i> Results
+      <span class="res-count" id="res-count">{{ pairs|length }} image{{ 's' if pairs|length != 1 }} · {{ rows|length }} run{{ 's' if rows|length != 1 }}</span>
+    </div>
+    <div class="clear-btns">
+      <button class="clr-btn" onclick="exportCSV()" style="border-color:#1A2744;color:#1A2744">↓ CSV</button>
+      <button class="clr-btn" onclick="rescoreSelected()" style="border-color:#B45309;color:#B45309" id="bulk-rescore-btn">↺ Rescore selected</button>
+      <button class="clr-btn" onclick="rescoreAll()" style="border-color:#B45309;color:#B45309">↺ Rescore all</button>
+      <button class="clr-btn" onclick="clearEngine('sonnet')">Clear Sonnet</button>
+      <button class="clr-btn" onclick="clearEngine('haiku')">Clear Haiku</button>
+      <button class="clr-btn" onclick="clearEngine('')">Clear all</button>
+    </div>
+  </div>
+
+  {# ── Rescore progress bar — shown during single and bulk rescore ── #}
+  <div id="rescore-status" style="display:none;padding:10px 16px;background:#FFFBEB;border-bottom:1px solid #FDE68A;font-size:13px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <span id="rescore-status-eng" style="font-weight:600;color:#92400E;min-width:120px"></span>
+      <span id="rescore-status-lbl" style="color:#78350F;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <span id="rescore-status-count" style="color:#92400E;font-weight:600;white-space:nowrap"></span>
+    </div>
+    <div style="background:#FEF3C7;border-radius:4px;height:6px;overflow:hidden">
+      <div id="rescore-progress-bar" style="height:100%;background:#D97706;border-radius:4px;width:0%;transition:width .3s ease"></div>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto">
+  <table class="res-table" id="res-tbody-wrap">
+    <colgroup>
+      <col style="width:32px">
+      <col style="width:148px">
+      <col style="width:68px">
+      <col style="width:72px">
+      <col style="width:76px">
+      <col style="width:68px">
+      <col style="width:60px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:42px">
+      <col style="width:82px">
+      <col style="width:30px">
+    </colgroup>
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="sel-all" onchange="toggleAll(this)" style="width:15px;height:15px;cursor:pointer"></th>
+        <th>File</th>
+        <th>Engine</th>
+        <th>Track</th>
+        <th>Genre</th>
+        <th class="r">Score</th>
+        <th class="r" style="color:#2E7D32;background:#F0FDF4">Δ H−S</th>
+        <th class="r">DOD</th>
+        <th class="r">VD</th>
+        <th class="r">DM</th>
+        <th class="r">WF</th>
+        <th class="r">AQ</th>
+        <th>Scored</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="res-tbody">
+      {% if pairs %}
+        {# pairs is built in Python: fname → {sonnet_camera, haiku_camera, sonnet_mobile, haiku_mobile} #}
+        {# Each slot is the most-recent row for that engine×track combo, or None #}
+        {% for fname, pair in pairs.items() %}
+
+          {# All four slots #}
+          {% set sc = pair.get('sonnet_camera') %}
+          {% set hc = pair.get('haiku_camera') %}
+          {% set sm = pair.get('sonnet_mobile') %}
+          {% set hm = pair.get('haiku_mobile') %}
+
+          {# Deltas: Haiku minus Sonnet per track #}
+          {% set dv_cam = (hc.score - sc.score) if (sc and hc and sc.score and hc.score) else none %}
+          {% set dv_mob = (hm.score - sm.score) if (sm and hm and sm.score and hm.score) else none %}
+
+          {# Helper macro: one data row #}
+          {% macro cal_row(r, engine, track, dv, paired_s) %}
+          {% if r %}
+          <tr class="row-{{ 's' if engine=='sonnet' else 'h' }} row-pair-top" id="cal-row-{{ r.id }}"
+              data-pair-id="" data-engine="{{ engine }}" data-track="{{ track }}">
+            <td><input type="checkbox" class="cal-cb" data-id="{{ r.id }}" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>
+            <td title="{{ fname }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">{{ fname }}</td>
+            <td><span class="ep {{ 'ep-s' if engine=='sonnet' else 'ep-h' }}">{{ 'Sonnet' if engine=='sonnet' else 'Haiku' }}</span></td>
+            <td><span class="tp {{ 'tp-camera' if track=='camera' else 'tp-mobile' }}">{{ '📷' if track=='camera' else '📱' }} {{ track|capitalize }}</span></td>
+            <td style="color:#6B6B68;font-size:13px">{{ r.genre or '—' }}</td>
+            <td class="r"><span class="score-n">{{ '%.2f'|format(r.score) if r.score else '—' }}</span>{% if r.tier %}<span class="tier-n">{{ r.tier }}</span>{% endif %}</td>
+            <td class="r" style="background:#F0FDF4">
+              {% if engine == 'sonnet' and dv is not none %}
+                {% if dv > 0.04 %}<span style="color:#2E7D32;font-weight:700;font-size:13px">+{{ '%.2f'|format(dv) }}</span>
+                {% elif dv < -0.04 %}<span style="color:#B91C1C;font-weight:700;font-size:13px">{{ '%.2f'|format(dv) }}</span>
+                {% else %}<span style="color:#8A8A86;font-weight:600;font-size:13px">≈0</span>{% endif %}
+              {% else %}<span style="color:#8A8A86;font-size:13px">—</span>{% endif %}
+            </td>
+            {# Per-dim with divergence colouring vs paired Sonnet row #}
+            {% for hv, sv in [(r.dod_score, paired_s.dod_score if paired_s else none),
+                              (r.disruption_score, paired_s.disruption_score if paired_s else none),
+                              (r.dm_score, paired_s.dm_score if paired_s else none),
+                              (r.wonder_score, paired_s.wonder_score if paired_s else none),
+                              (r.aq_score, paired_s.aq_score if paired_s else none)] %}
+              {% if engine == 'haiku' and hv and sv %}
+                {% set dd = hv - sv %}
+                {% if dd >= 0.5 %}<td class="r dim-n" style="color:#2E7D32;font-weight:600">{{ '%.1f'|format(hv) }}</td>
+                {% elif dd <= -0.5 %}<td class="r dim-n" style="color:#B91C1C;font-weight:600">{{ '%.1f'|format(hv) }}</td>
+                {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) }}</td>{% endif %}
+              {% else %}<td class="r dim-n">{{ '%.1f'|format(hv) if hv else '—' }}</td>{% endif %}
+            {% endfor %}
+            <td style="color:#8A8A86;font-size:12px;white-space:nowrap">{{ r.scored_at.strftime('%-d %b %H:%M') if r.scored_at else '—' }}</td>
+            <td style="white-space:nowrap">
+              <button class="rescore-cal-btn" onclick="rescoreOne({{ r.id }}, '{{ engine }}', '{{ track }}', this)" title="Rescore {{ engine }} {{ track }}">↺</button>
+              <button class="del-btn" onclick="deleteRow({{ r.id }}, null, this)" title="Delete">✕</button>
+            </td>
+          </tr>
+          {% endif %}
+          {% endmacro %}
+
+          {# Render all 4 slots — Camera pair first, Mobile pair second #}
+          {{ cal_row(sc, 'sonnet', 'camera', dv_cam, none) }}
+          {{ cal_row(hc, 'haiku',  'camera', none,    sc) }}
+          {{ cal_row(sm, 'sonnet', 'mobile', dv_mob,  none) }}
+          {{ cal_row(hm, 'haiku',  'mobile', none,    sm) }}
+
+          {# Image-level separator #}
+          <tr class="row-sep"><td colspan="14"></td></tr>
+
+        {% endfor %}
+      {% else %}
+      <tr id="empty-row"><td colspan="14" class="empty-state">No calibration images yet — upload a batch above.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+</div>
+<script>
+var _engine = 'both';
+var _track  = 'camera';   // 'camera' | 'mobile'
+var _files  = [];
+var _rowCount = (function(){ try { return JSON.parse(document.getElementById('cal-meta').textContent).row_count; } catch(e){ return 0; } })();
+
+// ── ENGINE TOGGLE ─────────────────────────────────────────────────────────────
+function setEngine(e) {
+  _engine = e;
+  document.getElementById('eng-both').className   = 'eng-btn' + (e==='both'   ? ' active-both'   : '');
+  document.getElementById('eng-sonnet').className = 'eng-btn' + (e==='sonnet' ? ' active-sonnet' : '');
+  document.getElementById('eng-haiku').className  = 'eng-btn' + (e==='haiku'  ? ' active-haiku'  : '');
+}
+
+// ── TRACK TOGGLE ─────────────────────────────────────────────────────────────
+function setTrack(t) {
+  _track = t;
+  document.getElementById('trk-camera').className = 'eng-btn' + (t === 'camera' ? ' active-sonnet' : '');
+  document.getElementById('trk-mobile').className = 'eng-btn' + (t === 'mobile' ? ' active-haiku'  : '');
+}
+
+// ── FILE PICK / THUMBNAILS ────────────────────────────────────────────────────
+function renderThumbs() {
+  var strip = document.getElementById('thumb-strip');
+  var list  = document.getElementById('thumb-list');
+  if (!_files.length) { strip.style.display = 'none'; return; }
+  strip.style.display = 'block';
+  list.innerHTML = '';
+  _files.forEach(function(f, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'thumb-item';
+    wrap.id = 'th-' + i;
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.onload = function(){ URL.revokeObjectURL(this.src); };
+    var rm = document.createElement('button');
+    rm.className = 'thumb-remove';
+    rm.innerHTML = '✕';
+    (function(idx){ rm.onclick = function(e){ e.stopPropagation(); _files.splice(idx,1); renderThumbs(); updateCount(); }; })(i);
+    wrap.appendChild(img); wrap.appendChild(rm);
+    wrap.title = f.name;
+    list.appendChild(wrap);
+  });
+}
+function onFilePick(files) { _files = Array.from(files); renderThumbs(); updateCount(); }
+function onDrop(evt) {
+  evt.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  _files = Array.from(evt.dataTransfer.files).filter(function(f){ return f.type.startsWith('image/'); });
+  renderThumbs(); updateCount();
+}
+function updateCount() {
+  var n = _files.length;
+  document.getElementById('file-count').textContent = n > 0 ? n + ' image' + (n>1?'s':'') + ' ready' : '';
+  document.getElementById('upload-btn').disabled = (n === 0);
+  var dt = document.getElementById('drop-text');
+  var ds = document.getElementById('drop-sub');
+  if (dt) dt.textContent = n > 0 ? 'Click to add more' : 'Drop images here or click to browse';
+  if (ds) ds.textContent = n > 0 ? n + ' selected' : 'JPEG / PNG / HEIC · 1–20 images';
+}
+
+// ── FLASH ─────────────────────────────────────────────────────────────────────
+function showFlash(msg, type) {
+  var el = document.getElementById('flash');
+  el.textContent = msg; el.className = 'flash ' + type; el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 7000);
+}
+
+// ── LIVE ROW INJECTION ────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function makeRow(id, fname, engine, track, d, pairedId, pairedDims) {
+  var tr = document.createElement('tr');
+  tr.id = 'cal-row-' + id;
+  tr.className = engine === 'sonnet' ? 'row-s row-pair-top' : 'row-h row-pair-bot';
+  tr.dataset.pairId  = pairedId || '';
+  tr.dataset.engine  = engine;
+  tr.dataset.track   = track || _track;
+
+  var score = d && d.score != null ? parseFloat(d.score).toFixed(2) : '—';
+  var tier  = d && d.tier ? d.tier : '';
+  var genre = d && d.genre ? d.genre : (document.getElementById('genre-sel').value || '—');
+  var epCls = engine === 'sonnet' ? 'ep-s' : 'ep-h';
+  var epLbl = engine === 'sonnet' ? 'Sonnet' : 'Haiku';
+  var trkVal = tr.dataset.track;
+  var trkPill = '<span class="tp ' + (trkVal === 'mobile' ? 'tp-mobile' : 'tp-camera') + '">'
+              + (trkVal === 'mobile' ? '📱 Mobile' : '📷 Camera') + '</span>';
+  var now   = new Date();
+  var mm    = now.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()];
+  var hhmm  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  var dims  = pairedDims || {};
+
+  var deltaCell = '<td class="r" style="background:#F0FDF4;color:#8A8A86;font-size:13px" id="delta-' + id + '">—</td>';
+
+  function dimCell(hv, sv) {
+    if (hv == null) return '<td class="r dim-n">—</td>';
+    var val = parseFloat(hv).toFixed(1);
+    if (engine === 'haiku' && sv != null) {
+      var dd = hv - sv;
+      if (dd >= 0.5)  return '<td class="r dim-n" style="color:#2E7D32;font-weight:600">' + val + '</td>';
+      if (dd <= -0.5) return '<td class="r dim-n" style="color:#B91C1C;font-weight:600">' + val + '</td>';
+    }
+    return '<td class="r dim-n">' + val + '</td>';
+  }
+
+  tr.innerHTML =
+    '<td><input type="checkbox" class="cal-cb" data-id="'+id+'" onchange="onCbChange()" style="width:15px;height:15px;cursor:pointer"></td>' +
+    '<td title="'+escHtml(fname)+'" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">'+escHtml(fname)+'</td>' +
+    '<td><span class="ep '+epCls+'">'+epLbl+'</span></td>' +
+    '<td>'+trkPill+'</td>' +
+    '<td style="color:#6B6B68;font-size:13px">'+escHtml(genre)+'</td>' +
+    '<td class="r"><span class="score-n">'+score+'</span>'+(tier?'<span class="tier-n">'+tier+'</span>':'')+'</td>' +
+    deltaCell +
+    dimCell(d && d.dod != null ? d.dod : null, dims.dod) +
+    dimCell(d && d.vd  != null ? d.vd  : null, dims.vd) +
+    dimCell(d && d.dm  != null ? d.dm  : null, dims.dm) +
+    dimCell(d && d.wf  != null ? d.wf  : null, dims.wf) +
+    dimCell(d && d.aq  != null ? d.aq  : null, dims.aq) +
+    '<td style="color:#8A8A86;font-size:12px;white-space:nowrap">'+mm+' '+hhmm+'</td>' +
+    '<td style="white-space:nowrap"><button class="rescore-cal-btn" onclick="rescoreOne('+id+',\''+engine+'\',\''+trkVal+'\',this)" title="Rescore">↺</button>'
+    +'<button class="del-btn" onclick="deleteRow('+id+','+(pairedId||'null')+',this)" title="Delete">✕</button></td>';
+  return tr;
+}
+
+function updateSonnetDelta(sonnetRow, haikuScore) {
+  if (!sonnetRow || haikuScore == null) return;
+  var scoreEl = sonnetRow.querySelector('.score-n');
+  if (!scoreEl) return;
+  var sScore = parseFloat(scoreEl.textContent);
+  if (isNaN(sScore)) return;
+  var diff = haikuScore - sScore;
+  var deltaCell = sonnetRow.cells[6];  // col 0=cb 1=file 2=engine 3=track 4=genre 5=score 6=delta
+  if (!deltaCell) return;
+  var cls, txt;
+  if (diff > 0.04)      { cls = 'color:#2E7D32;font-weight:700'; txt = '+' + diff.toFixed(2); }
+  else if (diff < -0.04){ cls = 'color:#B91C1C;font-weight:700'; txt = diff.toFixed(2); }
+  else                   { cls = 'color:#8A8A86;font-weight:600'; txt = '≈0'; }
+  deltaCell.innerHTML = '<span style="font-size:13px;'+cls+'">'+txt+'</span>';
+}
+
+function makeSepRow() {
+  var tr = document.createElement('tr');
+  tr.className = 'row-sep';
+  tr.innerHTML = '<td colspan="14"></td>';
+  return tr;
+}
+
+function removeEmptyState() {
+  var er = document.getElementById('empty-row');
+  if (er) er.remove();
+}
+
+function updateResCount() {
+  var rows = document.querySelectorAll('#res-tbody tr.row-s, #res-tbody tr.row-h');
+  var imgs = document.querySelectorAll('#res-tbody tr.row-s').length || document.querySelectorAll('#res-tbody tr.row-h').length;
+  var el = document.getElementById('res-count');
+  if (el) el.textContent = imgs + ' image' + (imgs!==1?'s':'') + ' · ' + rows.length + ' run' + (rows.length!==1?'s':'');
+}
+
+// ── UPLOAD ────────────────────────────────────────────────────────────────────
+async function startUpload() {
+  var genre = document.getElementById('genre-sel').value;
+  if (!genre) { showFlash('Select a genre first.', 'err'); return; }
+  if (!_files.length) { showFlash('No images selected.', 'err'); return; }
+
+  var btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader"></i> Scoring…';
+
+  var progWrap = document.getElementById('progress-wrap');
+  var progBar  = document.getElementById('progress-bar');
+  var progLbl  = document.getElementById('progress-lbl');
+  var progEng  = document.getElementById('progress-eng');
+  progWrap.style.display = 'block';
+  progBar.style.width = '0%';
+
+  var engines = _engine === 'both' ? ['sonnet', 'haiku'] : [_engine];
+  var total   = _files.length * engines.length;
+  var done    = 0; var scored = 0;
+
+  for (var i = 0; i < _files.length; i++) {
+    var f = _files[i];
+    var th = document.getElementById('th-' + i);
+    if (th) th.className = 'thumb-item scoring';
+
+    var sonnetRowEl  = null;
+    var sonnetResult = null;
+
+    for (var j = 0; j < engines.length; j++) {
+      var eng = engines[j];
+      progEng.textContent = 'Image ' + (i+1) + ' / ' + _files.length + '  ·  ' + (eng === 'sonnet' ? 'Sonnet (Apex DDI)' : 'Haiku (bare 5-dim)');
+      progLbl.textContent = f.name;
+      progBar.style.width = Math.round((done/total)*100) + '%';
+
+      var fd = new FormData();
+      fd.append('image', f);
+      fd.append('genre', genre);
+      fd.append('engine', eng);
+      fd.append('camera_track', _track);
+
+      var d = null;
+      try {
+        var resp = await fetch('/admin/calibration/upload', {method:'POST', body:fd});
+        d = await resp.json();
+      } catch(e) { d = {status:'network error'}; }
+
+      removeEmptyState();
+
+      if (d && d.image_id) {
+        var tbody = document.getElementById('res-tbody');
+
+        if (eng === 'sonnet') {
+          // Sonnet first — insert a sep row as placeholder, then Sonnet above it
+          var sep = makeSepRow();
+          sep.id = 'sep-' + d.image_id;
+          tbody.insertBefore(sep, tbody.firstChild);
+          var row = makeRow(d.image_id, f.name, 'sonnet', _track, d, null, null);
+          tbody.insertBefore(row, sep);
+          sonnetRowEl  = row;
+          sonnetResult = d;
+
+        } else if (eng === 'haiku') {
+          // Haiku goes below Sonnet row for same track
+          var pairedId = sonnetResult ? sonnetResult.image_id : null;
+          var pairedDims = sonnetResult ? {
+            dod: sonnetResult.dod, vd: sonnetResult.vd,
+            dm:  sonnetResult.dm,  wf: sonnetResult.wf, aq: sonnetResult.aq
+          } : null;
+          var row = makeRow(d.image_id, f.name, 'haiku', _track, d, pairedId, pairedDims);
+          if (sonnetRowEl) {
+            tbody.insertBefore(row, sonnetRowEl.nextSibling);
+            sonnetRowEl.dataset.pairId = d.image_id;
+            if (d.score != null && sonnetResult && sonnetResult.score != null) {
+              updateSonnetDelta(sonnetRowEl, d.score);
+            }
+          } else {
+            tbody.insertBefore(row, tbody.firstChild);
+          }
+        }
+
+        scored++;
+        updateResCount();
+      }
+
+      done++;
+      progBar.style.width = Math.round((done/total)*100) + '%';
+    }
+
+    if (th) th.className = 'thumb-item scored';
+  }
+
+  progBar.style.width = '100%';
+  progEng.textContent = 'Complete ✓';
+  progLbl.textContent = scored + ' of ' + total + ' engine runs scored.';
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-bolt"></i> Score images';
+  _files = [];
+  document.getElementById('file-input').value = '';
+  document.getElementById('file-count').textContent = '';
+  document.getElementById('thumb-strip').style.display = 'none';
+  document.getElementById('thumb-list').innerHTML = '';
+  var dt = document.getElementById('drop-text'); if (dt) dt.textContent = 'Drop images here or click to browse';
+  var ds = document.getElementById('drop-sub');  if (ds) ds.textContent = 'JPEG / PNG / HEIC · 1–20 images';
+
+  // Scroll to table
+  document.getElementById('results-table').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── CHECKBOXES ────────────────────────────────────────────────────────────────
+function getChecked() { return Array.from(document.querySelectorAll('.cal-cb:checked')); }
+function onCbChange() {
+  var checked = getChecked();
+  var total   = document.querySelectorAll('.cal-cb').length;
+  var bar     = document.getElementById('bulk-bar');
+  var lbl     = document.getElementById('bulk-label');
+  var selAll  = document.getElementById('sel-all');
+  bar.classList.toggle('show', checked.length > 0);
+  if (lbl) lbl.textContent = checked.length + ' row' + (checked.length!==1?'s':'') + ' selected';
+  if (selAll) {
+    selAll.indeterminate = checked.length > 0 && checked.length < total;
+    selAll.checked = checked.length === total && total > 0;
+  }
+}
+function toggleAll(master) {
+  document.querySelectorAll('.cal-cb').forEach(function(cb){ cb.checked = master.checked; });
+  onCbChange();
+}
+function deselectAll() {
+  document.querySelectorAll('.cal-cb').forEach(function(cb){ cb.checked = false; });
+  var sa = document.getElementById('sel-all');
+  if (sa) { sa.checked = false; sa.indeterminate = false; }
+  document.getElementById('bulk-bar').classList.remove('show');
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+function doDelete(ids, onDone) {
+  var fd = new FormData();
+  fd.append('image_ids', ids.join(','));
+  fetch('/admin/calibration/delete-selected', {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        ids.forEach(function(id){
+          var r = document.getElementById('cal-row-' + id);
+          if (r) r.remove();
+        });
+        updateResCount();
+        onDone && onDone(d.deleted);
+      } else {
+        showFlash('Delete failed: ' + (d.message||'error'), 'err');
+      }
+    })
+    .catch(function(){ showFlash('Network error.', 'err'); });
+}
+
+function deleteRow(id, pairedId, btn) {
+  var ids;
+  if (pairedId) {
+    var choice = confirm('Delete both Sonnet + Haiku rows for this image?\n\nOK = delete both\nCancel = delete this row only');
+    ids = choice ? [id, pairedId] : [id];
+  } else {
+    if (!confirm('Delete this row?')) return;
+    ids = [id];
+  }
+  btn.disabled = true;
+  doDelete(ids, function(n){ showFlash('Deleted ' + n + ' row' + (n!==1?'s':'') + '.', 'ok'); });
+}
+
+function deleteSelected() {
+  var checked = getChecked();
+  if (!checked.length) return;
+  if (!confirm('Delete ' + checked.length + ' selected row' + (checked.length!==1?'s':'') + '?')) return;
+  var ids = checked.map(function(cb){ return parseInt(cb.dataset.id); });
+  doDelete(ids, function(n){
+    deselectAll();
+    showFlash('Deleted ' + n + ' row' + (n!==1?'s':'') + '.', 'ok');
+  });
+}
+
+function exportCSV() {
+  var dataEl = document.getElementById('cal-export-data');
+  if (!dataEl) { showFlash('No data to export.', 'err'); return; }
+  var data;
+  try { data = JSON.parse(dataEl.textContent); } catch(e) { showFlash('Export error.', 'err'); return; }
+
+  var header = ['File','Engine','Track','Genre','Score','Tier','DOD','VD','DM','WF','AQ','Delta (H-S)','Scored'];
+  var csvRows = [header].concat(data);
+  var csv = csvRows.map(function(r){
+    return r.map(function(v){
+      var s = String(v == null ? '' : v);
+      return s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0
+        ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',');
+  }).join('\r\n');
+
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var ts   = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.href = url; a.download = 'SL_calibration_' + ts + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── RESCORE PROGRESS HELPERS ─────────────────────────────────────────────────
+function rescoreStatusShow(eng, lbl, pct, count) {
+  var wrap  = document.getElementById('rescore-status');
+  var eEl   = document.getElementById('rescore-status-eng');
+  var lEl   = document.getElementById('rescore-status-lbl');
+  var cEl   = document.getElementById('rescore-status-count');
+  var bar   = document.getElementById('rescore-progress-bar');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  if (eEl) eEl.textContent = eng || '';
+  if (lEl) lEl.textContent = lbl || '';
+  if (cEl) cEl.textContent = count || '';
+  if (bar) bar.style.width = (pct || 0) + '%';
+}
+function rescoreStatusDone(msg) {
+  var eEl = document.getElementById('rescore-status-eng');
+  var lEl = document.getElementById('rescore-status-lbl');
+  var bar = document.getElementById('rescore-progress-bar');
+  if (eEl) eEl.textContent = 'Complete ✓';
+  if (lEl) lEl.textContent = msg || '';
+  if (bar) bar.style.width = '100%';
+  setTimeout(function(){
+    var wrap = document.getElementById('rescore-status');
+    if (wrap) wrap.style.display = 'none';
+    if (bar)  bar.style.width = '0%';
+  }, 3000);
+}
+
+// ── RESCORE ───────────────────────────────────────────────────────────────────
+function applyRescoreResult(imageId, d) {
+  var row = document.getElementById('cal-row-' + imageId);
+  if (!row) return;
+
+  // Amber flash
+  row.style.transition = 'background .15s';
+  row.style.background = '#FFFBEB';
+
+  var scoreEl = row.querySelector('.score-n');
+  var tierEl  = row.querySelector('.tier-n');
+  if (scoreEl && d.score != null) scoreEl.textContent = parseFloat(d.score).toFixed(2);
+  if (d.tier) {
+    if (tierEl) tierEl.textContent = d.tier;
+    else if (scoreEl) {
+      var sp = document.createElement('span');
+      sp.className = 'tier-n'; sp.textContent = d.tier;
+      scoreEl.parentNode.appendChild(sp);
+    }
+  }
+
+  // Dims — col index 7-11 (0=cb 1=file 2=engine 3=track 4=genre 5=score 6=delta 7-11=dims)
+  var dims = [d.dod, d.vd, d.dm, d.wf, d.aq];
+  for (var i = 0; i < dims.length; i++) {
+    var cell = row.cells[7 + i];
+    if (cell && dims[i] != null) cell.textContent = parseFloat(dims[i]).toFixed(1);
+  }
+
+  // Delta
+  var isSonnet = !!row.querySelector('.ep-s');
+  var pairedId = row.dataset.pairId;
+  if (isSonnet && pairedId) {
+    var hRow = document.getElementById('cal-row-' + pairedId);
+    if (hRow) { var hSc = hRow.querySelector('.score-n'); if (hSc) updateSonnetDelta(row, parseFloat(hSc.textContent)); }
+  }
+  if (!isSonnet && pairedId && d.score != null) {
+    var sRow = document.getElementById('cal-row-' + pairedId);
+    if (sRow) updateSonnetDelta(sRow, parseFloat(d.score));
+  }
+
+  setTimeout(function(){ row.style.background = ''; }, 1500);
+}
+
+function rescoreOne(imageId, engine, track, btn) {
+  // track may be omitted in old inline callers — default to row data or 'camera'
+  if (typeof track === 'object') { btn = track; track = null; }
+  var row = document.getElementById('cal-row-' + imageId);
+  track = track || (row && row.dataset.track) || 'camera';
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  var fname = row ? (row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + imageId) : ('image ' + imageId);
+
+  rescoreStatusShow(
+    (engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' · ' + track + ' rescoring…',
+    fname.trim(),
+    50, ''
+  );
+
+  var fd = new FormData();
+  fd.append('engine', engine);
+  fd.append('camera_track', track);
+  fetch('/admin/calibration/rescore/' + imageId, {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false; btn.textContent = '↺';
+      if (d.status === 'scored') {
+        applyRescoreResult(imageId, d);
+        rescoreStatusDone((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' → ' + parseFloat(d.score).toFixed(2) + ' ' + (d.tier || ''));
+        showFlash((engine === 'sonnet' ? 'Sonnet' : 'Haiku') + ' rescored → ' + parseFloat(d.score).toFixed(2) + ' ' + (d.tier || ''), 'ok');
+      } else {
+        var wrap = document.getElementById('rescore-status');
+        if (wrap) wrap.style.display = 'none';
+        showFlash('Rescore failed: ' + (d.message || d.status || 'error'), 'err');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false; btn.textContent = '↺';
+      var wrap = document.getElementById('rescore-status');
+      if (wrap) wrap.style.display = 'none';
+      showFlash('Network error — check Railway logs.', 'err');
+    });
+}
+
+function rescoreSelected() {
+  var checked = getChecked();
+  if (!checked.length) { showFlash('Select rows first.', 'err'); return; }
+  doBulkRescore(checked.map(function(cb){ return parseInt(cb.dataset.id); }));
+}
+
+function rescoreAll() {
+  var allCbs = Array.from(document.querySelectorAll('.cal-cb'));
+  if (!allCbs.length) { showFlash('No images to rescore.', 'err'); return; }
+  doBulkRescore(allCbs.map(function(cb){ return parseInt(cb.dataset.id); }));
+}
+
+async function doBulkRescore(ids) {
+  var total = ids.length;
+  if (!total) return;
+
+  document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=true; b.textContent='…'; });
+  var bulkBtn = document.getElementById('bulk-rescore-btn');
+  if (bulkBtn) bulkBtn.disabled = true;
+
+  var ok = 0;
+  for (var i = 0; i < total; i++) {
+    var id  = ids[i];
+    var row = document.getElementById('cal-row-' + id);
+    var engine = (row && row.dataset.engine) || ((row && row.querySelector('.ep-h')) ? 'haiku' : 'sonnet');
+    var track  = (row && row.dataset.track) || 'camera';
+    var engLabel = (engine === 'haiku' ? 'Haiku' : 'Sonnet') + ' · ' + track;
+    var fname = row
+      ? ((row.querySelector('td:nth-child(2)') || {}).textContent || ('image ' + id)).trim()
+      : ('image ' + id);
+
+    rescoreStatusShow(
+      engLabel + ' · ' + (i + 1) + ' / ' + total,
+      fname,
+      Math.round((i / total) * 100),
+      (i + 1) + ' of ' + total
+    );
+    if (row) { row.style.transition = 'opacity .15s'; row.style.opacity = '0.5'; }
+
+    try {
+      var fd = new FormData();
+      fd.append('engine', engine);
+      fd.append('camera_track', track);
+      var resp = await fetch('/admin/calibration/rescore/' + id, {method:'POST', body:fd});
+      var d    = await resp.json();
+      if (row) row.style.opacity = '1';
+      if (d.status === 'scored') { applyRescoreResult(id, d); ok++; }
+    } catch(e) {
+      if (row) row.style.opacity = '1';
+    }
+
+    if (row) { var btn = row.querySelector('.rescore-cal-btn'); if (btn) { btn.disabled=false; btn.textContent='↺'; } }
+  }
+
+  document.querySelectorAll('.rescore-cal-btn').forEach(function(b){ b.disabled=false; b.textContent='↺'; });
+  if (bulkBtn) bulkBtn.disabled = false;
+  deselectAll();
+  rescoreStatusDone(ok + ' of ' + total + ' rows rescored');
+  showFlash('Rescored ' + ok + ' of ' + total + ' rows.', 'ok');
+}
+
+function clearEngine(engine) {
+  var label = engine ? engine + ' rows' : 'ALL calibration rows';
+  if (!confirm('Delete ' + label + '?')) return;
+  fetch('/admin/calibration/clear' + (engine ? '?engine=' + engine : ''), {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        showFlash('Cleared ' + d.deleted + ' row' + (d.deleted!==1?'s':'') + '.', 'ok');
+        setTimeout(function(){ location.reload(); }, 1000);
+      } else { showFlash('Failed: ' + (d.message||'error'), 'err'); }
+    })
+    .catch(function(){ showFlash('Network error.', 'err'); });
+}
+
+// Auto-highlight if redirected after scoring
+(function(){
+  if (window.location.search.indexOf('scored=1') !== -1) {
+    var tbl = document.getElementById('results-table');
+    if (tbl) {
+      setTimeout(function(){
+        tbl.scrollIntoView({behavior:'smooth', block:'start'});
+        tbl.style.transition = 'box-shadow .4s';
+        tbl.style.boxShadow = '0 0 0 3px #C8A84B';
+        setTimeout(function(){ tbl.style.boxShadow = ''; }, 2500);
+      }, 200);
+    }
+  }
+})();
+</script>
+
+{# ── CSV export data — built in Python in admin_calibration() route, passed as JSON string ── #}
+<script type="application/json" id="cal-export-data">{{ export_data|safe }}</script>
+<script type="application/json" id="cal-meta">{"row_count":{{ rows|length }}}</script>
+
+</body>
+</html>

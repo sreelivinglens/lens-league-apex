@@ -1,4 +1,4 @@
-{# SL-VERSION: pricing_haiku-1.0-staging (Session 201 — standalone Haiku pricing page. No base.html. Haiku nav. Sample links: Full → try_standing/31, Basic → try_sample. Served to anonymous + free users via pricing() route.) #}
+{# SL-VERSION: pricing_haiku-1.4 (Session 205 — 2026-08-31 — Nav label 11px, padding tightened to prevent PRICING cutoff. RETAINS 1.3: — 2026-08-31 — Mobile bottom nav: dynamic active state via request.endpoint; tap highlight + transition added. RETAINS 1.2: — 2026-08-31 — Full eval sample → try_sample_sonnet (Sonnet/League eval); Basic eval sample → try_sample (Haiku eval). Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,8 +147,9 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 /* ── MOBILE BOTTOM NAV ── */
 .sl-mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); padding:6px 0 8px; z-index:200; }
 .sl-mob-nav-items { display:flex; justify-content:space-around; align-items:flex-end; }
-.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:14px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 10px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; }
+.sl-mob-nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:13px; letter-spacing:0.02em; text-transform:uppercase; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; padding:4px 4px; min-height:44px; justify-content:center; background:none; border:none; font-family:'Inter',sans-serif; -webkit-tap-highlight-color:rgba(200,168,75,0.20); transition:color .1s,opacity .1s; }
 .sl-mob-nav-item.active { color:#C8A84B; }
+.sl-mob-nav-item:active { color:#C8A84B; opacity:.75; }
 .sl-mob-nav-item svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 .sl-mob-more-drawer { display:none; position:fixed; bottom:56px; left:0; right:0; background:#1A2744; border-top:0.5px solid rgba(255,255,255,0.10); z-index:199; padding:8px 0; }
 .sl-mob-more-drawer.open { display:block; }
@@ -205,7 +206,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     <a href="{{ url_for('try_gallery') }}">My evaluations</a>
     <a href="{{ url_for('try_page') }}">Upload</a>
     <a href="{{ url_for('pricing') }}" class="active">Pricing</a>
-    <a href="{{ url_for('league_haiku') }}">League of Photographers</a>
+    <a href="{{ url_for('league_haiku') }}">The League</a>
     <a href="{{ url_for('profile') }}">Profile</a>
     <a href="{{ url_for('logout') }}" class="sl-nav-logout" title="Log out">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -248,7 +249,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
           </ul>
-    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
   </div>
 
@@ -270,16 +271,16 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory</li>
           </ul>
-    <a href="{{ url_for('try_standing', image_id=31) }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
+    <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
   <!-- 100 for 100 -->
   <div class="pr-plan">
-    <div class="pr-plan-label">100 for 100</div>
-    <div class="pr-plan-price"><sup>₹</sup>100</div>
+    <div class="pr-plan-label">100 Basic Evaluations</div>
+    <div class="pr-plan-price"><sup>₹</sup>200</div>
     <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
-    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League of Photographers is here.</p>
+    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League is here.</p>
     <div class="pr-divider"></div>
     <ul class="pr-features">
       <li>100 Basic Evaluations</li>
@@ -289,7 +290,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>One-time purchase — no subscription</li>
     </ul>
     <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
-    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹100</button>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹200</button>
   </div>
 
 </div>
@@ -334,7 +335,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
         <th style="width:36%"> </th>
         <th class="hl">Annual ₹4,000</th>
         <th>6 Months ₹2,500</th>
-        <th>100 for 100 ₹100</th>
+        <th>100 Basic Evaluations ₹200</th>
       </tr>
     </thead>
     <tbody>
@@ -434,23 +435,23 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <!-- MOBILE BOTTOM NAV -->
 <nav class="sl-mob-nav">
   <div class="sl-mob-nav-items">
-    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item">
+    <a href="{{ url_for('try_welcome') }}" class="sl-mob-nav-item {% if request.endpoint == 'try_welcome' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Dashboard
     </a>
-    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item">
+    <a href="{{ url_for('try_page') }}" class="sl-mob-nav-item {% if request.endpoint == 'try_page' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="21" y1="3" x2="12" y2="15"/></svg>
       Evaluate
     </a>
-    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item">
+    <a href="{{ url_for('league_haiku') }}" class="sl-mob-nav-item {% if request.endpoint == 'league_haiku' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
       League
     </a>
-    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item active">
+    <a href="{{ url_for('pricing') }}" class="sl-mob-nav-item {% if request.endpoint == 'pricing' %}active{% endif %}">
       <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
       Pricing
     </a>
-    <button class="sl-mob-nav-item" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
+    <button class="sl-mob-nav-item {% if request.endpoint in ('profile', 'try_gallery') %}active{% endif %}" onclick="toggleBottomMoreHaiku(event)" type="button" id="sl-mob-more-btn">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
       More
     </button>
@@ -486,10 +487,10 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 var _isLoggedIn  = document.getElementById('pr-data').dataset.loggedin === 'true';
 var _loginUrl    = document.getElementById('pr-data').dataset.loginurl;
 var _currentPlan = 'annual';
-var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 for 100 — ₹100'];
+var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 Basic Evaluations — ₹200'];
 var _planKeys    = ['annual','half_yearly','play'];
 var _planRzp     = ['annual','halfyearly','play'];
-var _planCharges = [4000, 2500, 100];
+var _planCharges = [4000, 2500, 200];
 
 function _getPlanData(plan) {
   var idx = _planKeys.indexOf(plan);

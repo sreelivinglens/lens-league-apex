@@ -36,9 +36,19 @@ GENRE_WEIGHTS = {
     'Street':           {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
     'Wedding':          {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
     'Wildlife':         {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
+    # Session 219 — Wildlife weights RETAINED (reverted from weight-change attempt).
+    # Composition, exposure, technical precision all matter equally in Wildlife.
+    # The overcorrection (Birds Sonnet 8.42 vs human 7.97) is a WF signal error:
+    # engine scored WF 8.3 for a common landing behaviour. Fix is in the prompt
+    # guidance (WF behavioural rarity ladder + 30fps burst DM adjustment),
+    # not in the weights. All dimensions remain equally important.
     # Session 153 — Maternity/Family as standalone genre (S150 decision)
-    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
-    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.22, 'wonder': 0.14, 'aq': 0.48},
+    # Session 218 — weight rebalance: DM reduced (posed silhouettes have low DM by design),
+    # wonder raised (emotional response is THE primary signal for this genre — survey data
+    # confirmed: 8/35 humans named 'love' for maternity silhouette, 86% saw a story).
+    # AQ reduced slightly to fund the wonder increase.
+    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.12, 'wonder': 0.32, 'aq': 0.40},
+    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.14, 'wonder': 0.28, 'aq': 0.42},
     # Legacy keys — kept for backward compat with existing DB rows
     'Drone & Aerial':   {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
 }

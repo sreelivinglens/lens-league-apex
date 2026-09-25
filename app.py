@@ -1,4 +1,4 @@
-# SL-VERSION: 181.73-staging (Session 201, 2026-08-28 — gallery query restored to original (no is_haiku_try filter). try_standing: @login_required removed (public page), is_public+is_haiku_try filters added to query, haiku_try source guard added. league_haiku: @login_required removed. Post-login redirect: Haiku→try_welcome, Paid→dashboard. RETAINS 181.72.)
+# SL-VERSION: 182.19 (Session 218, 2026-09-10 — Calibration rescore: POST /admin/calibration/rescore/<id> (single row, uses stored thumb_path) and POST /admin/calibration/rescore-bulk (multi-row). Both Sonnet and Haiku paths. No file re-upload needed. Returns same JSON shape as upload route.)
 
 import os
 import re
@@ -242,6 +242,39 @@ ALL_MASTERS = {
     'Edgerton':               'Harold+Edgerton+photography',
     # Platform mentor — pinned query avoids wrong-person Google results
     'Ashok Kochhar':          'Ashok+Kochhar+soulfulphotographer+street+portrait+photography',
+    # Session 210 additions — Indian and global masters from reference library
+    'Shaaz Jung':             'Shaaz+Jung+photography+leopard',
+    'Dhritiman Mukherjee':    'Dhritiman+Mukherjee+wildlife+photography',
+    'Baiju Patil':            'Baiju+Patil+wildlife+photography+ReFocus',
+    'Rathika Ramasamy':       'Rathika+Ramasamy+bird+photography',
+    'Aishwarya Sridhar':      'Aishwarya+Sridhar+wildlife+photographer',
+    'Varun Aditya':           'Varun+Aditya+nature+photography+NatGeo',
+    'Sudhir Shivaram':        'Sudhir+Shivaram+wildlife+photography',
+    'Kalyan Varma':           'Kalyan+Varma+wildlife+photography',
+    'Charlie Hamilton James': 'Charlie+Hamilton+James+wildlife+photography+BBC',
+    'Steve Winter':           'Steve+Winter+wildlife+photography+NatGeo+snow+leopard',
+    'Thomas Mangelsen':       'Thomas+Mangelsen+nature+photography',
+    'Vineet Vohra':           'Vineet+Vohra+street+photography+India',
+    'Sohrab Hura':            'Sohrab+Hura+Magnum+photography',
+    'Dimpy Bhalotia':         'Dimpy+Bhalotia+photography',
+    'Ketaki Sheth':           'Ketaki+Sheth+photography+Mumbai',
+    'Raghubir Singh':         'Raghubir+Singh+colour+photography+India',
+    'Alex Webb':              'Alex+Webb+Magnum+photography',
+    'Martin Parr':            'Martin+Parr+photography',
+    'Bruce Gilden':           'Bruce+Gilden+street+photography',
+    'Matt Stuart':            'Matt+Stuart+street+photography',
+    'Nick Brandt':            'Nick+Brandt+photography+Africa',
+    'Levon Biss':             'Levon+Biss+microsculpture+photography',
+    'Babak Tafreshi':         'Babak+Tafreshi+night+sky+photography',
+    'Rogelio Bernal Andreo':  'Rogelio+Bernal+Andreo+astrophotography',
+    'Julius Shulman':         'Julius+Shulman+architecture+photography',
+    'Ezra Stoller':           'Ezra+Stoller+architecture+photography',
+    'Neil Leifer':            'Neil+Leifer+sports+photography',
+    'Walter Iooss':           'Walter+Iooss+sports+photography',
+    'Jose Villa':             'Jose+Villa+wedding+photography',
+    'Jonas Peterson':         'Jonas+Peterson+wedding+photography',
+    'Eliot Porter':           'Eliot+Porter+nature+photography',
+    'Michael Kenna':          'Michael+Kenna+landscape+photography',
 }
 
 # ---------------------------------------------------------------------------
@@ -511,7 +544,8 @@ Photographs evaluated this week count toward your Annual Excellence Award eligib
     return sent
 
 
-FREE_IMAGE_LIMIT = 10  # Staging only: 10 free Haiku evaluations. Production stays 3 until free tier launches officially.
+FREE_IMAGE_LIMIT = 10  # Free tier: 10 evaluations lifetime. Official as of Session 213.
+HAIKU_LAUNCH_DATE = '2026-08-30'  # Date Haiku free tier opened to public. Anyone registered before this is Sonnet/UAT.
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 # ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
@@ -2237,6 +2271,54 @@ def _run_startup_tasks():
                 db.session.rollback()
                 print(f'blocked_ips migration warning: {_bip_mig}')
 
+            # Session 210 — master_references: add last_updated tracking
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE master_references ADD COLUMN IF NOT EXISTS "
+                    "last_refreshed_at TIMESTAMP"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE master_references ADD COLUMN IF NOT EXISTS "
+                    "added_by VARCHAR(50) DEFAULT 'seed'"
+                ))
+                db.session.commit()
+            except Exception as _mr_mig:
+                db.session.rollback()
+                print(f'master_references migration: {_mr_mig}')
+
+            # Session 210 — Audit & Legal: admin_action_log
+            # Permanent record of every destructive or consequential admin action.
+            # Used for dispute resolution, subscription audit, and legal evidence trail.
+            # Never deleted — append-only. detail column stores JSON snapshot.
+            try:
+                db.session.execute(db.text(
+                    "CREATE TABLE IF NOT EXISTS admin_action_log ("
+                    "  id          SERIAL PRIMARY KEY,"
+                    "  admin_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,"
+                    "  action      VARCHAR(60)  NOT NULL,"
+                    "  target_type VARCHAR(20)  NOT NULL,"
+                    "  target_id   INTEGER      NOT NULL,"
+                    "  detail      TEXT,"
+                    "  created_at  TIMESTAMP DEFAULT NOW()"
+                    ")"
+                ))
+                db.session.commit()
+                print('admin_action_log table OK.')
+            except Exception as _aal_mig:
+                db.session.rollback()
+                print(f'admin_action_log migration warning: {_aal_mig}')
+
+            # Session 208 — calibration_logs missing image_id column (engine query fails)
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS image_id INTEGER"
+                ))
+                db.session.commit()
+                print('calibration_logs image_id column OK.')
+            except Exception as _cl_mig:
+                db.session.rollback()
+                print(f'calibration_logs image_id migration warning: {_cl_mig}')
+
             print('Columns migrated OK.')
 
             # Purge expired date-bound seasonal_calendar rows on every startup.
@@ -2288,6 +2370,86 @@ def _run_startup_tasks():
                     print('Admin account updated.')
                 conn.commit()
             print('Database ready.')
+
+            # Session 211: upsert critical master_references entries that may be
+            # missing from live DB because seed_master_references() only runs on
+            # empty table. These run every boot, idempotently — safe.
+            try:
+                _critical_masters = [
+                    {
+                        'name': 'Charlie Hamilton James',
+                        'genre_tags': 'Wildlife,Birds,Fire,Raptor',
+                        'region': 'UK',
+                        'tier': 'Tier 1',
+                        'known_for': 'Black Kites hunting insects at Australian wildfires — BBC Natural World and NHM. Raptors in extreme conditions, fire-following foraging behaviour, behavioural wildlife at fire front.',
+                        'reference_when': 'ANY raptor, bird of prey, or kite near or at a fire or burn. Raptors in wildfire, extreme conditions, fire-following bird behaviour. Black Kite, Brahminy Kite, any raptor hunting at fire line.',
+                        'do_not_reference': 'Street,Fashion,Landscape,Portrait,Marine',
+                        'is_platform_mentor': False,
+                    },
+                    {
+                        'name': 'Baiju Patil',
+                        'genre_tags': 'Wildlife,Birds,India',
+                        'region': 'India',
+                        'tier': 'Tier 1',
+                        'known_for': 'Indian bird behaviour, Sanctuary Asia award winner, raptor and wetland bird specialist.',
+                        'reference_when': 'Indian bird behaviour, raptors in India, wetland birds, Sanctuary Asia standard wildlife.',
+                        'do_not_reference': 'Street,Fashion,Landscape,Marine',
+                        'is_platform_mentor': False,
+                    },
+                ]
+                _upserted = 0
+                for _cm in _critical_masters:
+                    _existing = db.session.execute(db.text(
+                        "SELECT id FROM master_references WHERE name = :name"
+                    ), {'name': _cm['name']}).fetchone()
+                    if _existing:
+                        db.session.execute(db.text(
+                            "UPDATE master_references SET genre_tags=:genre_tags, "
+                            "known_for=:known_for, reference_when=:reference_when, "
+                            "tier=:tier, do_not_reference=:do_not_ref, is_active=TRUE "
+                            "WHERE name=:name"
+                        ), {
+                            'name': _cm['name'], 'genre_tags': _cm['genre_tags'],
+                            'known_for': _cm['known_for'], 'reference_when': _cm['reference_when'],
+                            'tier': _cm['tier'], 'do_not_ref': _cm['do_not_reference'],
+                        })
+                    else:
+                        db.session.execute(db.text(
+                            "INSERT INTO master_references "
+                            "(name, genre_tags, region, tier, known_for, reference_when, do_not_reference, is_platform_mentor, is_active) "
+                            "VALUES (:name, :genre_tags, :region, :tier, :known_for, :reference_when, :do_not_ref, :mentor, TRUE)"
+                        ), {
+                            'name': _cm['name'], 'genre_tags': _cm['genre_tags'],
+                            'region': _cm['region'], 'tier': _cm['tier'],
+                            'known_for': _cm['known_for'], 'reference_when': _cm['reference_when'],
+                            'do_not_ref': _cm['do_not_reference'], 'mentor': _cm['is_platform_mentor'],
+                        })
+                    _upserted += 1
+                db.session.commit()
+                print(f'[master_ref_upsert] {_upserted} critical entries upserted OK')
+            except Exception as _mru_err:
+                db.session.rollback()
+                print(f'[master_ref_upsert] {_mru_err}')
+
+            # Session 212: backfill is_haiku_try=TRUE for images whose audit_json
+            # contains "source": "haiku_try" but whose is_haiku_try column is not set.
+            # Fixes evals_used showing 0 for older images. Idempotent — safe every boot.
+            try:
+                _ht_result = db.session.execute(db.text(
+                    "UPDATE images SET is_haiku_try = TRUE "
+                    "WHERE (is_haiku_try IS NULL OR is_haiku_try = FALSE) "
+                    "AND (audit_json LIKE '%\"source\":\"haiku_try\"%' "
+                    "  OR audit_json LIKE '%\"source\": \"haiku_try\"%')"
+                ))
+                _ht_count = _ht_result.rowcount
+                db.session.commit()
+                if _ht_count > 0:
+                    print(f'[haiku_try_backfill] Patched {_ht_count} images with is_haiku_try=TRUE OK')
+                else:
+                    print('[haiku_try_backfill] OK — 0 images needed patching')
+            except Exception as _ht_err:
+                db.session.rollback()
+                print(f'[haiku_try_backfill] warning: {_ht_err}')
 
             # Sprint 3 — one-time residency backfill for existing subscribers
             try:
@@ -3320,6 +3482,32 @@ def seed_master_references():
             ('Pablo Bartholomew WPP','Documentary','India','Contest Winner','World Press Photo winner, Bhopal. Indian at international standard.','Indian WPP winner, Bhopal documentation','Fashion,Wildlife,Minimalist',False),
             ('Dimpy Bhalotia IPPA 2020','Mobile,Street','India / UK','Contest Winner','IPPA 2020 iPhone Photography Award winner.','IPPA winner, iPhone award, Indian mobile street photography','Studio,Landscape',False),
             ('Juliette Pavy SWPA 2024','Street','France','Contest Winner','Street Photography Awards 2024 Photographer of the Year.','SWPA 2024 Photographer of the Year citation','Wildlife,Fashion,Studio',False),
+            # Session 210 additions — Indian masters and global specialists
+            ('Shaaz Jung','Wildlife,Predator','India — South India','Tier 1','Melanistic leopard and big cat low-light photography, South India forests, atmospheric predator work.','Low-light predator behaviour, melanistic subjects, atmospheric wildlife mood','Street,Fashion,Landscape',False),
+            ('Dhritiman Mukherjee','Wildlife,Conservation','India','Tier 1','Rare species documentation across extreme terrains, conservation storytelling, decades of Indian wildlife.','Rare species access, ecological documentation, extreme terrain wildlife','Street,Fashion',False),
+            ('Baiju Patil','Wildlife,Birds','India','Tier 1','World No.1 ReFocus Awards 2025, darter at Keoladeo, precise bird behavioural moments, Indian wetlands.','Bird behaviour decisive moment, Indian wetland birds, ReFocus 2025 World No.1','Street,Fashion,Urban',False),
+            ('Rathika Ramasamy','Wildlife,Birds','India','Tier 2','Professional bird photography and storytelling, patience and positioning, Indian bird specialist.','Patient bird positioning, bird behaviour storytelling, Indian bird photography','Street,Fashion,Urban',False),
+            ('Varun Aditya','Wildlife,Nature,Macro','India','Tier 1','NatGeo Nature Photographer of Year 2016, moody artistic wildlife and macro, Indian natural world.','Moody artistic wildlife, NatGeo winner, artistic framing over documentary instinct','Street,Fashion,Urban',False),
+            ('Sudhir Shivaram','Wildlife','India','Tier 2','Big cats, birds, Indian reserves, wildlife educator, disciplined technical craft.','Technical discipline in Indian wildlife, big cats and birds in reserves','Street,Fashion,Urban',False),
+            ('Charlie Hamilton James','Wildlife,Birds,Fire','UK','Tier 1','Black kites hunting in Australian wildfires, BBC/NHM, raptors in extreme conditions.','Raptors in wildfire and extreme conditions, behavioural wildlife in fire','Street,Fashion,Landscape',False),
+            ('Steve Winter','Wildlife,BigCats','USA','Tier 1','Snow leopards and tigers for NatGeo, patient dangerous tracking, years-long access to apex predators.','Rare big cat access over time, patience and physical risk, NatGeo big cats','Street,Fashion,Landscape',False),
+            ('Thomas Mangelsen','Wildlife,Nature','USA','Tier 1','Iconic unmanipulated nature moments — bear catching salmon, polar bears, American wilderness seasons.','Unrepeatable natural moments requiring extraordinary patience, zero manipulation','Street,Fashion,Landscape',False),
+            ('Sohrab Hura','Street,Documentary','India','Tier 2','Magnum photographer, visceral personal storytelling, raw psychological landscapes of contemporary India.','Raw visceral personal documentary, psychological intensity, Magnum India','Fashion,Wildlife',False),
+            ('Ketaki Sheth','Street,Documentary','India — Mumbai','Tier 2','Long-term intimate B&W documentation of Mumbai and Siddi community, geometric order in density.','Long-term community documentation, quiet geometric order in dense urban life','Wildlife,Fashion',False),
+            ('Raghubir Singh','Street,Colour','India','Tier 1','Pioneer of Indian colour street photography, vibrant 35mm colour, Bombay and Calcutta social fabric.','Indian colour street pioneer, vibrant city life colour, Indian social fabric','Wildlife,Fashion',False),
+            ('Bruce Gilden','Street','USA','Tier 2','Aggressive close flash photography, raw confrontation, New York street faces.','Extreme proximity and confrontation, flash street, raw New York faces','Wildlife,Landscape,Fashion',False),
+            ('Matt Stuart','Street,Humour','UK','Tier 2','Serendipitous geometric coincidences, visual humour, London streets, HCB disciple.','Visual serendipity and coincidence, geometric humour in street','Wildlife,Landscape,Fashion',False),
+            ('Levon Biss','Macro,Science','UK','Tier 1','Microsculpture — insects at extreme magnification revealing invisible structure, Museum of Natural History.','Extreme magnification revealing hidden structure and beauty','Wildlife,Street,Fashion',False),
+            ('Babak Tafreshi','Astrophotography','Iran / USA','Tier 1','Night sky in landscape context, Earth and sky as unified frame, TWAN, NatGeo night sky specialist.','Night sky integrated with landscape, Earth-sky relationship as subject','Street,Fashion,Urban',False),
+            ('Rogelio Bernal Andreo','Astrophotography','Spain / USA','Tier 1','Deep sky imaging, Milky Way at scale, nebulae and cosmic structure, technical precision.','Deep sky imaging precision, cosmic scale and structure','Street,Fashion,Urban',False),
+            ('Julius Shulman','Architecture','USA','Tier 1','Case Study Houses, modernist architecture at golden hour, human scale in built environment.','Modernist architecture photography, relationship between architecture and human life','Street,Fashion,Wildlife',False),
+            ('Ezra Stoller','Architecture','USA','Tier 1','Architectural photography as art, light and shadow revealing structural geometry and intent.','Light revealing architectural geometry, structure as subject','Street,Fashion,Wildlife',False),
+            ('Neil Leifer','Sports','USA','Tier 1','Muhammad Ali, Olympics, Sports Illustrated — iconic peak sports moments.','Peak athletic achievement moments, iconic sports decisive moment','Wildlife,Landscape,Fashion',False),
+            ('Walter Iooss','Sports','USA','Tier 1','Sports portraiture and peak action, athletes at rest and at their limit, Sports Illustrated decades.','Athletic power and humanity combined, sports portraiture','Wildlife,Landscape,Fashion',False),
+            ('Jose Villa','Wedding','USA','Tier 1','Film-grain romantic wedding photography, warm light, ethereal wedding moments.','Soft romantic film quality, warm light, intimate wedding moments','Wildlife,Documentary,Street',False),
+            ('Jonas Peterson','Wedding','Australia','Tier 1','Raw documentary wedding moments, unposed emotion, photojournalistic wedding style.','Unposed raw emotion, documentary wedding style, photojournalistic approach','Wildlife,Landscape,Street',False),
+            ('Eliot Porter','Nature,Landscape','USA','Tier 1','Colour nature photography pioneer, birds in habitat, fine art sensitivity to natural world colour.','Fine art colour precision in natural world, birds in habitat','Street,Fashion,Urban',False),
+            ('Michael Kenna','Landscape,Minimalist','UK','Tier 1','Long exposure minimalism, Japanese and French landscapes, pre-dawn stillness, near-abstract landscape.','Minimalist landscape, long exposure stillness, near-abstract reductive composition','Street,Fashion,Studio',False),
         ]
         for row in MSEED:
             db.session.execute(db.text(
@@ -3627,6 +3815,15 @@ def register():
             _existing_email = User.query.filter_by(email=email).first()
             if _existing_email:
                 if not _existing_email.is_active:
+                    # Check if this is a soft-deleted (admin-deactivated) account
+                    _is_soft_deleted = db.session.execute(db.text(
+                        "SELECT 1 FROM admin_action_log WHERE target_type='user' "
+                        "AND target_id=:uid AND action IN ('soft_delete','bot_delete') "
+                        "ORDER BY created_at DESC LIMIT 1"
+                    ), {'uid': _existing_email.id}).fetchone()
+                    if _is_soft_deleted:
+                        flash('This account has been deactivated. Contact support if you believe this is an error.', 'error')
+                        return render_template('login.html')
                     # Unverified account — resend verification instead of blocking
                     import secrets as _sec2
                     _existing_email.email_verify_token = _sec2.token_urlsafe(32)
@@ -3867,8 +4064,8 @@ def auth_google_callback():
         post_next = session.pop('post_login_next', None)
         if post_next:
             return redirect(post_next)
-        # Haiku free users → try_welcome; paid/admin → dashboard
-        if getattr(user, 'is_subscribed', False) or getattr(user, 'role', '') == 'admin':
+        # Haiku free users and play plan → try_welcome; Sonnet/admin → dashboard
+        if _is_sonnet_user(user) or getattr(user, 'role', '') == 'admin':
             return redirect(url_for('dashboard'))
         return redirect(url_for('try_welcome'))
     else:
@@ -4182,8 +4379,8 @@ def login():
             return redirect(url_for('judge_dashboard'))
         if getattr(user, 'onboarding_complete', False) and not getattr(user, 'interests_complete', False):
             return redirect(url_for('onboarding_interests'))
-        # Haiku free users → try_welcome; paid/admin → dashboard
-        if getattr(user, 'is_subscribed', False):
+        # Haiku free users and play plan → try_welcome; Sonnet/admin → dashboard
+        if _is_sonnet_user(user):
             return redirect(url_for('dashboard'))
         return redirect(url_for('try_welcome'))
 
@@ -4569,9 +4766,8 @@ def first_login_welcome():
 @login_required
 def dashboard():
     # 181.22: Free Haiku users have no paid dashboard — redirect to /try world.
-    # A free user is defined as not subscribed and not admin.
-    # Their world is /try → upload → /try/result → /try/gallery.
-    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+    # play plan (₹200/100 evals) is also Haiku-world — redirect them too.
+    if current_user.role != 'admin' and not _is_sonnet_user(current_user):
         return redirect(url_for('try_welcome'))
 
     # Approved judges should not see the photographer dashboard
@@ -5259,23 +5455,29 @@ def dashboard():
             app.logger.warning(f'[curriculum_lesson] {_le}')
         # SL-176.1d: Weather — session-cached 1h to eliminate external API calls
         try:
-            _wx_city = getattr(current_user, 'city', '') or ''
-            if _wx_city:
-                _wx_cache_key = f'wx_{_wx_city}'
-                _wx_ts_key    = f'wx_ts_{_wx_city}'
-                _wx_ttl       = 3600  # 1 hour
-                import time as _wxt
+            _wx_city  = getattr(current_user, 'city',  '') or ''
+            _wx_state = getattr(current_user, 'state', '') or ''
+            # Try city first, fall back to state if city returns no condition
+            # (handles non-standard city names like sanctuaries, rural areas)
+            import time as _wxt
+            _wx_ttl = 3600  # 1 hour
+            for _wx_loc in [l for l in [_wx_city, _wx_state] if l]:
+                _wx_cache_key = f'wx_{_wx_loc}'
+                _wx_ts_key    = f'wx_ts_{_wx_loc}'
                 if (session.get(_wx_ts_key) and
                         _wxt.time() - session[_wx_ts_key] < _wx_ttl and
                         session.get(_wx_cache_key)):
                     _weather = session[_wx_cache_key]
                 else:
-                    _weather = _get_weather(_wx_city)
+                    _weather = _get_weather(_wx_loc)
                     try:
                         session[_wx_cache_key] = _weather
                         session[_wx_ts_key]    = _wxt.time()
                     except Exception:
                         pass
+                # If we got a real condition, stop — don't try fallback
+                if _weather and _weather.get('condition'):
+                    break
         except Exception as _we:
             app.logger.warning(f'[weather] {_we}')
         # Mission due — open mission upload within last 7 days still pending/processing
@@ -7942,7 +8144,8 @@ def set_mission_genre():
 @login_required
 def profile():
     # Session 200e: Haiku users — gate = images + history_log (permanent, delete does not restore slot)
-    if not getattr(current_user, 'is_subscribed', False):
+    # play plan (₹200) is Haiku-world — also uses haiku image count
+    if not _is_sonnet_user(current_user):
         images_used = int(db.session.execute(
             db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
             {'uid': current_user.id}
@@ -8498,6 +8701,25 @@ def account_deleted():
 
 
 
+def _is_sonnet_user(user):
+    """
+    Returns True only for genuine Sonnet paid subscribers.
+    The 'play' plan (₹200 / 100 evaluations) is Haiku-world — it must NOT
+    pass Sonnet gates even though is_subscribed=True.
+    Sonnet plans: monthly, halfyearly, annual, uat, beta, learning.
+    Haiku plans:  play (and NULL / unsubscribed).
+    Admin always returns True.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if getattr(user, 'role', '') == 'admin':
+        return True
+    if not getattr(user, 'is_subscribed', False):
+        return False
+    _plan = getattr(user, 'subscription_plan', None) or ''
+    return _plan != 'play'
+
+
 def _check_upload_quota(user):
     """
     Returns a user-facing message string if `user` is currently blocked from
@@ -8521,7 +8743,7 @@ def _check_upload_quota(user):
     from datetime import date as _date
     today   = _date.today()
     _track  = getattr(user, 'subscription_track', None) or ''
-    _is_sub = getattr(user, 'is_subscribed', False)
+    _is_sub = _is_sonnet_user(user)  # play plan is Haiku — treated as free tier
 
     if not _is_sub:
         # Free tier — 10 lifetime assessments per user_id + referral bonus
@@ -8845,22 +9067,17 @@ def upload_preflight():
         return jsonify(result)
 
     # ── 1. Similar image check ────────────────────────────────────────────────
+    # Session 216 fix: use compute_phash() directly on the thumbnail bytes.
+    # ingest_image() was previously used here but it runs a 1500px resolution
+    # gate — which always fails on the browser thumbnail (≤600px by design).
+    # This caused a false "resolution too low" error shown to users with valid
+    # full-res files. compute_phash() has no resolution gate — safe for thumbnails.
     try:
-        from engine.processor import hash_similarity_pct, ingest_image
-        import tempfile, os as _os
-
-        _tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-        _tmp.write(img_bytes)
-        _tmp.close()
-        try:
-            _thumb_path, _w, _h, _fmt, _phash = ingest_image(
-                _tmp.name, app.config['UPLOAD_FOLDER']
-            )
-            if _thumb_path and _os.path.exists(_thumb_path):
-                _os.remove(_thumb_path)
-        finally:
-            if _os.path.exists(_tmp.name):
-                _os.remove(_tmp.name)
+        from engine.processor import hash_similarity_pct, compute_phash
+        from PIL import Image as _PIL_IMG
+        import io as _io
+        _pil_thumb = _PIL_IMG.open(_io.BytesIO(img_bytes)).convert('RGB')
+        _phash = compute_phash(_pil_thumb)
 
         if _phash:
             from datetime import timedelta as _td
@@ -9043,14 +9260,10 @@ def upload():
         return redirect(url_for('onboarding_interests'))
 
     # ── SL 172.2: Free user redirect to /try ─────────────────────────────────
-    # Free users (is_subscribed=False, not admin/beta/uat) use /try for Haiku
-    # evaluations. Clicking "Upload" in the nav sends them to /try, not here.
-    # Subscribed users, admin, beta, and uat plans proceed to the full upload.
-    _plan_check = getattr(current_user, 'subscription_plan', None) or ''
+    # play plan (₹200/100 evals) is Haiku-world — redirect to /try/upload.
     _is_free_user = (
-        not getattr(current_user, 'is_subscribed', False) and
-        current_user.role != 'admin' and
-        _plan_check not in ('beta', 'uat')
+        not _is_sonnet_user(current_user) and
+        current_user.role != 'admin'
     )
     if _is_free_user and request.method == 'GET':
         return redirect(url_for('try_page'))
@@ -9095,6 +9308,23 @@ def upload():
                     raw_path = _jpeg_path
         except Exception as _mpo_err:
             app.logger.warning(f'[upload] MPO check failed (continuing): {_mpo_err}')
+
+        # ── Session 215: EXIF orientation auto-correction ───────────────────────
+        # Phone cameras save landscape shots with an EXIF orientation tag instead of
+        # rotating the pixel data. Without this fix, the engine sees a rotated image.
+        # ImageOps.exif_transpose() rotates pixels to match EXIF orientation and strips
+        # the tag — the corrected file then goes into ingest_image() correctly oriented.
+        try:
+            from PIL import Image as _PILOrient, ImageOps as _IOOrient
+            with _PILOrient.open(raw_path) as _po:
+                _po_corrected = _IOOrient.exif_transpose(_po)
+                if _po_corrected is not _po:
+                    # Orientation correction was applied — overwrite raw file
+                    _po_corrected = _po_corrected.convert('RGB')
+                    _po_corrected.save(raw_path, 'JPEG', quality=95)
+                    app.logger.info(f'[upload] EXIF orientation corrected: {raw_path}')
+        except Exception as _orient_err:
+            app.logger.warning(f'[upload] EXIF orientation check failed (continuing): {_orient_err}')
 
         try:
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
@@ -11102,6 +11332,31 @@ def score_status(image_id):
     })
 
 
+# ── AUDIT & LEGAL HELPER — Session 208 ─────────────────────────────────────
+# Append-only log of every consequential admin action.
+# Called from admin routes — never raises, never blocks the action.
+# detail: JSON string with before/after state relevant to the action.
+def _log_admin_action(action, target_type, target_id, detail=None):
+    """Insert one row into admin_action_log. Silent on failure."""
+    try:
+        import json as _laj
+        db.session.execute(db.text(
+            "INSERT INTO admin_action_log (admin_id, action, target_type, target_id, detail) "
+            "VALUES (:aid, :action, :ttype, :tid, :detail)"
+        ), {
+            'aid':    getattr(current_user, 'id', None),
+            'action': action,
+            'ttype':  target_type,
+            'tid':    target_id,
+            'detail': _laj.dumps(detail) if detail else None,
+        })
+        db.session.commit()
+    except Exception as _lae:
+        db.session.rollback()
+        app.logger.warning(f'[admin_action_log] Failed to log {action} on {target_type} {target_id}: {_lae}')
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 @app.route('/admin/image/<int:image_id>/force-rescore', methods=['POST'])
 @login_required
 @admin_required
@@ -11125,6 +11380,24 @@ def admin_force_rescore(image_id):
     famous-event calibration gate).
     """
     img = Image.query.get_or_404(image_id)
+
+    # Rule 26 — HARD GATE: force_rescore is Sonnet only. Never on Haiku images.
+    # Running Sonnet on a Haiku image overwrites _audit_json permanently — irreversible.
+    # Raw SQL per Rule 8 — is_haiku_try is not an ORM column.
+    _is_haiku = db.session.execute(
+        db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+        {'iid': image_id}
+    ).scalar()
+    if _is_haiku:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+            return jsonify({'status': 'error', 'message': 'This is a Haiku image. Use Haiku rescore instead — force_rescore would destroy the Haiku record.'}), 400
+        flash('This is a Haiku image. Use Haiku rescore — force_rescore on a Haiku image destroys its audit record.', 'error')
+        return redirect(request.referrer or url_for('admin_dashboard'))
+
+    _log_admin_action('force_rescore', 'image', image_id, {
+        'asset_name': img.asset_name, 'score_before': float(img.score or 0),
+        'tier_before': img.tier, 'user_id': img.user_id
+    })
 
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
@@ -12291,7 +12564,8 @@ def public_card(token):
 
         if _scored_count >= 5:
             _recent = db.session.query(
-                Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                Image.aq_score, Image.dm_score, Image.dod_score,
+                Image.wonder_score, Image.disruption_score, Image.score
             ).filter(
                 Image.user_id == _owner_id,
                 Image.status  == 'scored',
@@ -12336,15 +12610,20 @@ def public_card(token):
                     return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                              'value': round(vals[i], 1)} for i in idxs]
 
-                _feeling    = [r.aq_score  for r in _recent if r.aq_score  is not None]
-                _timing     = [r.dm_score  for r in _recent if r.dm_score  is not None]
-                _difficulty = [r.dod_score for r in _recent if r.dod_score is not None]
+                # SL-181.21: all 5 dimensions, single-word labels matching image_detail.html
+                _feeling    = [r.aq_score         for r in _recent if r.aq_score         is not None]
+                _timing     = [r.dm_score         for r in _recent if r.dm_score         is not None]
+                _difficulty = [r.dod_score        for r in _recent if r.dod_score        is not None]
+                _impact     = [r.wonder_score     for r in _recent if r.wonder_score     is not None]
+                _disruption = [r.disruption_score for r in _recent if r.disruption_score is not None]
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
-                    ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
-                    ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
-                    ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                    ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
+                    ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
+                    ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
+                    ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
                 ]:
                     if len(_vals) >= 2:
                         _sp, _pts  = _spark(_vals)
@@ -12510,10 +12789,18 @@ def public_card_download(token):
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
 
-    # 181.15: Haiku free-try images must never render on the paid scorecard.
-    # The paid template shows the wrong download button which hits download_card_pdf,
-    # which gates haiku_try source and redirects to pricing — confusing the user.
-    # Redirect to /try/result/<id> immediately, before any other processing.
+    # 181.15 / Session 211: Haiku free-try images must never render on the paid scorecard.
+    # Rule 8: is_haiku_try is raw SQL only — never ORM. Check via raw SQL first,
+    # then audit_json source as fallback.
+    try:
+        _is_ht = db.session.execute(
+            db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+            {'iid': image_id}
+        ).scalar()
+        if _is_ht:
+            return redirect(url_for('try_result', image_id=image_id))
+    except Exception:
+        pass
     try:
         import json as _idj
         _id_audit = _idj.loads(img._audit_json or '{}')
@@ -12592,7 +12879,8 @@ def image_detail(image_id):
                 # actually tracks "where am I going" rather than just the
                 # last handful of uploads.
                 _recent = db.session.query(
-                    Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                    Image.aq_score, Image.dm_score, Image.dod_score,
+                    Image.wonder_score, Image.disruption_score, Image.score
                 ).filter(
                     Image.user_id == _owner_id,
                     Image.status  == 'scored',
@@ -12653,11 +12941,21 @@ def image_detail(image_id):
                         return [{'x_pct': round(pts[i]['x'] / 300 * 100, 1),
                                  'value': round(vals[i], 1)} for i in idxs]
 
+                    # SL-181.21: all 5 dimensions, index access matches _recent tuple order:
+                    # aq[0], dm[1], dod[2], wonder[3], disruption[4], score[5]
+                    _feeling    = [r[0] for r in _recent if r[0] is not None]
+                    _timing     = [r[1] for r in _recent if r[1] is not None]
+                    _difficulty = [r[2] for r in _recent if r[2] is not None]
+                    _impact     = [r[3] for r in _recent if r[3] is not None]
+                    _disruption = [r[4] for r in _recent if r[4] is not None]
+
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
-                        ('Whether it made one feel something', _feeling,    '#F5C518', '#BA7517'),
-                        ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
-                        ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                        ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
+                        ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
+                        ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
+                        ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
+                        ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
                     ]:
                         if len(_vals) >= 2:
                             _sp, _pts = _spark(_vals)
@@ -12712,11 +13010,25 @@ def image_detail(image_id):
                 Image.scored_at >= _month_start,
             ).count()
 
+            # SL-181.21: BOW seed count — images in same genre scoring ≥ 8.0
+            _bow_seed_count = 0
+            if img.genre:
+                try:
+                    _bow_seed_count = db.session.query(Image).filter(
+                        Image.user_id == _owner_id,
+                        Image.status  == 'scored',
+                        Image.genre   == img.genre,
+                        Image.score   >= 8.0,
+                    ).count()
+                except Exception:
+                    _bow_seed_count = 0
+
             _stats = {
-                'best_this_year':  _best_row.score     if _best_row else None,
+                'best_this_year':  _best_row.score      if _best_row else None,
                 'best_title':      _best_row.asset_name if _best_row else None,
-                'best_genre':      _best_row.genre      if _best_row else None,
+                'best_genre':      _best_row.genre       if _best_row else None,
                 'this_month_count': _month_count,
+                'bow_seed_count':  _bow_seed_count,
             }
         except Exception as _se:
             app.logger.warning(f'[image_detail] stats: {_se}')
@@ -12746,7 +13058,7 @@ def image_detail(image_id):
     # ── First-eval full access — every free user's very first evaluated     ──
     # ── image shows the full scorecard (dimension scores, mission block,     ──
     # ── location advisory) even without a subscription. This is deliberately ──
-    # ── ONE moment, not all 3 free evaluations — it demonstrates full value  ──
+    # ── ONE moment, not all 10 free evaluations — it demonstrates full value  ──
     # ── once, then the normal subscriber gate applies again. See image_detail──
     # ── .html "SUBSCRIBER GATE" for where this is consumed. ──────────────────
     _is_first_eval = False
@@ -12967,9 +13279,10 @@ Only include awards with known, verifiable deadlines. Do not invent or hallucina
 def evolving_eye():
     """
     SL-176: My Evolving Eye — So Far.
-    Renders the personal photographic advisory page.
-    Advisory is pre-generated at milestones — this just displays it.
-    If no advisory exists yet, shows a motivational prompt to keep shooting.
+    Session 205: On-demand generation — if no advisory exists and user has >= 10
+    scored images, trigger generation for the last completed 10x milestone in a
+    background thread. Show honest waiting state. No polling. Email on completion.
+    Will not re-trigger until user reaches the next 10-image milestone.
     """
     import json as _ej
     _eye_json = db.session.execute(
@@ -12992,15 +13305,50 @@ def evolving_eye():
         {'uid': current_user.id}
     ).scalar() or 0
 
-    _next_milestone = ((_scored_count // 10) + 1) * 10 if _scored_count < 10 else (((_scored_count // 10) + 1) * 10)
+    _last_milestone = (_scored_count // 10) * 10  # e.g. 48 images → milestone 40
+    _next_milestone = _last_milestone + 10         # e.g. 50
     _images_to_next = _next_milestone - _scored_count
+
+    _generating = False
+
+    # On-demand trigger: if no advisory exists and user has completed at least one
+    # 10-image milestone, fire generation for the last completed milestone.
+    # Guard: only trigger if evolving_eye_milestone in DB does not match _last_milestone
+    # (prevents re-triggering on refresh while generation is in flight).
+    if not _advisory and _scored_count >= 10:
+        _db_milestone = _eye_json[1] if _eye_json else None
+        if _db_milestone != _last_milestone:
+            # Mark milestone in DB immediately to prevent duplicate triggers on refresh
+            try:
+                db.session.execute(
+                    db.text('UPDATE users SET evolving_eye_milestone = :m WHERE id = :uid'),
+                    {'m': _last_milestone, 'uid': current_user.id}
+                )
+                db.session.commit()
+            except Exception as _mark_err:
+                app.logger.warning(f'[evolving_eye] milestone mark failed: {_mark_err}')
+            # Fire generation in background thread
+            try:
+                import threading as _eet
+                _t = _eet.Thread(
+                    target=_generate_evolving_eye,
+                    args=(current_user.id, _last_milestone),
+                    daemon=True
+                )
+                _t.start()
+                app.logger.info(f'[evolving_eye] on-demand triggered uid={current_user.id} milestone={_last_milestone}')
+            except Exception as _trig_err:
+                app.logger.warning(f'[evolving_eye] on-demand trigger failed: {_trig_err}')
+        _generating = True  # show waiting state regardless (either just triggered or in flight)
 
     return render_template('evolving_eye.html',
         advisory=_advisory,
         milestone=_milestone,
         scored_count=_scored_count,
+        last_milestone=_last_milestone,
         next_milestone=_next_milestone,
         images_to_next=_images_to_next,
+        generating=_generating,
         now=datetime.utcnow()
     )
 
@@ -13122,6 +13470,12 @@ def score_image(image_id):
         byline_1=request.form.get('byline_1','')
         byline_2=request.form.get('byline_2','')
         iucn_tag=request.form.get('iucn_tag','')
+        _log_admin_action('recalibrate', 'image', image_id, {
+            'asset_name': img.asset_name, 'score_before': float(img.score or 0),
+            'tier_before': img.tier, 'user_id': img.user_id,
+            'dod': dod, 'disruption': disruption, 'dm': dm, 'wonder': wonder, 'aq': aq,
+            'reason': reason, 'caveat': caveat
+        })
         final_score, tier, soul_bonus, checks = calculate_score(img.genre, dod, disruption, dm, wonder, aq)
         img.dod_score=dod; img.disruption_score=disruption; img.dm_score=dm
         img.wonder_score=wonder; img.aq_score=aq; img.score=final_score
@@ -13568,7 +13922,10 @@ def leaderboard():
             Image.status == 'scored',
             Image.is_public == True,
             db.or_(Image.is_flagged == False, Image.is_flagged == None),
-            db.or_(Image.needs_review == False, Image.needs_review == None)
+            db.or_(Image.needs_review == False, Image.needs_review == None),
+            # Rule 8 — is_haiku_try not an ORM column, raw SQL required.
+            # Haiku free-tier images must never appear in paid leaderboard.
+            db.text("(is_haiku_try IS NOT TRUE)")
         )
         if since:
             q = q.filter(Image.created_at >= since)
@@ -14056,10 +14413,13 @@ def admin_csi_page():
         _log_rows = db.session.execute(db.text("""
             SELECT l.id, l.image_id, l.similar_image_id, l.similarity_pct,
                    l.genre, l.threshold_hit, l.logged_at,
-                   i1.asset_name AS img_name, i2.asset_name AS sim_name
+                   i1.asset_name AS img_name, i2.asset_name AS sim_name,
+                   u1.username AS img_user, u2.username AS sim_user
             FROM csi_admin_log l
             LEFT JOIN images i1 ON i1.id = l.image_id
             LEFT JOIN images i2 ON i2.id = l.similar_image_id
+            LEFT JOIN users u1 ON u1.id = i1.user_id
+            LEFT JOIN users u2 ON u2.id = i2.user_id
             ORDER BY l.logged_at DESC LIMIT 100
         """)).fetchall()
     except Exception:
@@ -14892,6 +15252,141 @@ def admin_bot_review():
         '</div></body></html>'
     )
     return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+# ── HAIKU MEMBER NUDGE — /admin/haiku/nudge ───────────────────────────────────
+# Session 209: Pre-populated Sherpa-tone nudge emails for Haiku members.
+# GET  /admin/haiku/nudge-draft?user_id=X&type=welcome|engage|convert
+#      → returns {subject, body, name, email} JSON for modal pre-population
+# POST /admin/haiku/nudge
+#      → sends the (possibly edited) email, logs to admin_sent_emails
+
+_SHERPA_NUDGES = {
+    'welcome': {
+        'subject': 'Your first photograph is waiting',
+        'body': """{name},
+
+You registered for Shutter League a few days ago — but your first photograph hasn't arrived yet.
+
+That is the only thing standing between you and your first evaluation.
+
+The Sherpa does not grade on promise or potential. It reads what is actually in the frame — light, geometry, the decision behind the shutter. One photograph tells you more about your eye than a month of thinking about photography.
+
+Upload anything. A frame from this morning. Something you have been sitting on. It does not have to be your best work — it just has to be your next step.
+
+Your evaluation will be ready within minutes.
+
+— The Shutter League Sherpa""",
+    },
+    'engage': {
+        'subject': 'Your eye is developing — the record shows it',
+        'body': """{name},
+
+You have put {used} photographs through the Shutter League evaluation. That is {used} data points about how your eye sees.
+
+The pattern is beginning to form. But patterns need more data to become reliable.
+
+The photographers who develop fastest are the ones who keep uploading consistently — not because volume guarantees improvement, but because every evaluation is a conversation between what you intended and what the frame actually captured.
+
+Your next evaluation is waiting. Upload when you are ready.
+
+— The Shutter League Sherpa""",
+    },
+    'convert': {
+        'subject': 'You have reached the edge of the free tier',
+        'body': """{name},
+
+You have used all {used} of your free Shutter League evaluations.
+
+That is not a wall — it is a threshold.
+
+The photographers who join the full League at this point already know what the Sherpa sees in their work. They have a baseline. They know which genres their eye is strongest in, and where the work needs to happen.
+
+You are at that point now.
+
+The Camera League gives you 48 evaluations a year, a calibrated standing in the League of Photographers, and the Mentor narrative on every frame — the full record of how your photography is evolving.
+
+When you are ready: shutterleague.com/pricing
+
+— The Shutter League Sherpa""",
+    },
+}
+
+@app.route('/admin/haiku/nudge-draft')
+@login_required
+@admin_required
+def admin_haiku_nudge_draft():
+    """Return pre-populated nudge draft as JSON for the admin modal."""
+    _uid  = request.args.get('user_id', type=int)
+    _type = request.args.get('type', 'welcome')
+    if not _uid or _type not in _SHERPA_NUDGES:
+        return jsonify({'error': 'Invalid params'}), 400
+    _user = User.query.get(_uid)
+    if not _user:
+        return jsonify({'error': 'User not found'}), 404
+    _name = _user.full_name or _user.username or 'Photographer'
+    _used = 0
+    try:
+        _used = int(db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try IS TRUE"
+        ), {'uid': _uid}).scalar() or 0)
+    except Exception:
+        pass
+    _tpl = _SHERPA_NUDGES[_type]
+    return jsonify({
+        'name':    _name,
+        'email':   _user.email,
+        'subject': _tpl['subject'],
+        'body':    _tpl['body'].format(name=_name, used=_used),
+        'nudge_type': _type,
+    })
+
+
+@app.route('/admin/haiku/nudge', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_nudge():
+    """Send a (possibly edited) nudge email to a single Haiku member."""
+    _uid     = request.form.get('user_id', type=int)
+    _subject = request.form.get('subject', '').strip()
+    _body    = request.form.get('body', '').strip()
+    _type    = request.form.get('nudge_type', 'welcome')
+    if not _uid or not _subject or not _body:
+        return jsonify({'error': 'Missing fields'}), 400
+    _user = User.query.get(_uid)
+    if not _user:
+        return jsonify({'error': 'User not found'}), 404
+    _name = _user.full_name or _user.username or 'Photographer'
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _html = _build_newsletter_html(_name, _subject, _body, _site)
+    _text = f'Hi {_name},\n\n{_body}\n\n—\nShutter League · support@shutterleague.com'
+    _ok   = send_email(_user.email, _subject, _html, _text)
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO admin_sent_emails "
+            "(admin_id, recipient_user_id, recipient_email, subject, body, send_type, success) "
+            "VALUES (:aid, :uid, :email, :subject, :body, 'haiku_nudge', :ok)"
+        ), {
+            'aid':     current_user.id,
+            'uid':     _uid,
+            'email':   _user.email,
+            'subject': _subject,
+            'body':    _body[:2000],
+            'ok':      _ok,
+        })
+        db.session.commit()
+    except Exception as _le:
+        db.session.rollback()
+        app.logger.warning(f'[admin_haiku_nudge] log failed: {_le}')
+    _log_admin_action('haiku_nudge', 'user', _uid, {
+        'nudge_type': _type,
+        'subject':    _subject,
+        'email':      _user.email,
+        'success':    _ok,
+    })
+    if _ok:
+        return jsonify({'ok': True, 'message': f'Sent to {_user.email}'})
+    return jsonify({'ok': False, 'message': f'Send failed for {_user.email}'}), 500
 
 
 # ── IP BLOCK MANAGEMENT — /admin/blocked-ips ─────────────────────────────────
@@ -15894,12 +16389,38 @@ def admin_dashboard():
     scored       = Image.query.filter_by(status='scored').count()
     pending      = Image.query.filter_by(status='pending').count()
 
+    # Session 208 — new images in last 24h (for badge on engine tabs)
+    try:
+        from datetime import timedelta as _atd
+        _since_24h = datetime.utcnow() - _atd(hours=24)
+        sonnet_new_today = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE status='scored' "
+            "AND (is_haiku_try IS NOT TRUE) AND created_at >= :since"
+        ), {'since': _since_24h}).scalar() or 0
+        haiku_new_today = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM images WHERE status='scored' "
+            "AND is_haiku_try IS TRUE AND created_at >= :since"
+        ), {'since': _since_24h}).scalar() or 0
+    except Exception as _ntd_e:
+        app.logger.warning(f'[admin] new_today counts failed: {_ntd_e}')
+        sonnet_new_today = haiku_new_today = 0
+
     admin_q     = request.args.get('q', '').strip()
     admin_track = request.args.get('track', 'all').strip().lower()
     if admin_track not in ('mobile', 'camera', 'all'):
         admin_track = 'all'
+    # Session 208 — engine filter: sonnet (default) or haiku
+    admin_engine = request.args.get('engine', 'sonnet').strip().lower()
+    if admin_engine not in ('sonnet', 'haiku'):
+        admin_engine = 'sonnet'
     admin_page  = request.args.get('page', 1, type=int)
     img_query   = Image.query.order_by(Image.created_at.desc())
+    # Session 208 — filter by engine: Haiku free vs Sonnet paid
+    # Rule 8 — is_haiku_try is not an ORM column, must use raw SQL filter
+    if admin_engine == 'haiku':
+        img_query = img_query.filter(db.text('(is_haiku_try IS TRUE)'))
+    else:
+        img_query = img_query.filter(db.text('(is_haiku_try IS NOT TRUE)'))
     if admin_q:
         img_query = img_query.join(User, User.id == Image.user_id).filter(
             db.or_(
@@ -16033,13 +16554,16 @@ def admin_dashboard():
 
     # Subscription stats for export panel
     stats_sub = {
-        'subscribers':  User.query.filter_by(is_subscribed=True).count(),
-        'camera_subs':  User.query.filter_by(is_subscribed=True, subscription_track='camera').count(),
-        'mobile_subs':  User.query.filter_by(is_subscribed=True, subscription_track='mobile').count(),
-        'free_users':   User.query.filter(
-                            User.role != 'admin',
-                            db.or_(User.is_subscribed == False, User.is_subscribed == None)
-                        ).count(),
+        'subscribers':  User.query.filter(User.is_subscribed==True, User.subscription_plan!='play').count(),
+        'camera_subs':  User.query.filter(User.is_subscribed==True, User.subscription_track=='camera', User.subscription_plan!='play').count(),
+        'mobile_subs':  User.query.filter(User.is_subscribed==True, User.subscription_track=='mobile', User.subscription_plan!='play').count(),
+        'free_users':   db.session.execute(db.text(
+                            "SELECT COUNT(*) FROM users u "
+                            "WHERE u.role != 'admin' "
+                            "AND u.created_at >= :haiku_launch "
+                            "AND (u.subscription_plan IS NULL "
+                            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','learning'))"
+                        ), {'haiku_launch': HAIKU_LAUNCH_DATE}).scalar() or 0,
     }
 
     # Active contest banners — shown in admin dashboard for visibility
@@ -16089,10 +16613,272 @@ def admin_dashboard():
     except Exception as _ee:
         app.logger.warning(f'[admin_dashboard] engagement snapshot failed: {_ee}')
 
+    # ── SL-181.22: Paid subscribers panel — admin sees what user sees ────────
+    # Builds a quick-view list of all paid users with their latest + best image,
+    # contest cache age, and a cache bust action.
+    _paid_users = []
+    try:
+        import json as _puj
+        from datetime import datetime as _pudt
+        # Strictly paying plans only — monthly/halfyearly/annual.
+        # UAT/beta/learning shown in separate panel below.
+        # Newest members first.
+        _sub_users = User.query.filter(
+            User.is_subscribed == True,
+            User.subscription_plan.in_(['monthly', 'halfyearly', 'annual'])
+        ).order_by(User.created_at.desc()).all()
+        for _pu in _sub_users:
+            # Latest scored image
+            _latest = db.session.query(Image).filter(
+                Image.user_id == _pu.id,
+                Image.status == 'scored',
+            ).order_by(Image.scored_at.desc()).first()
+            # Best scored image this year
+            _best = db.session.query(Image).filter(
+                Image.user_id == _pu.id,
+                Image.status == 'scored',
+                Image.score != None,
+            ).order_by(Image.score.desc()).first()
+            # Contest cache age
+            _cache_age = 'empty'
+            if _latest:
+                try:
+                    _la = _puj.loads(_latest._audit_json or '{}')
+                    _cs = _la.get('contest_suggestions')
+                    if _cs and isinstance(_cs, dict):
+                        _cat = _cs.get('cached_at')
+                        if _cat:
+                            _cdt = _pudt.fromisoformat(_cat)
+                            _days = (_pudt.utcnow() - _cdt).days
+                            _cache_age = f'{_days}d ago'
+                except Exception:
+                    pass
+            # Last upload date
+            _last_up = _latest.scored_at.strftime('%-d %b') if _latest and _latest.scored_at else None
+            _paid_users.append({
+                'id':              _pu.id,
+                'full_name':       _pu.full_name or _pu.username,
+                'email':           _pu.email,
+                'tier':            _latest.tier if _latest else None,
+                'image_count':     Image.query.filter_by(user_id=_pu.id, status='scored').count(),
+                'latest_image_id': _latest.id if _latest else None,
+                'best_image_id':   _best.id if _best else None,
+                'best_score':      _best.score if _best else None,
+                'last_upload_date': _last_up,
+                'contest_cache_age': _cache_age,
+                'subscription_plan':  _pu.subscription_plan or '—',
+                'subscription_track': _pu.subscription_track or '—',
+                'joined_date': _pu.created_at.strftime('%-d %b %Y') if _pu.created_at else '—',
+            })
+    except Exception as _pue:
+        app.logger.warning(f'[admin_dashboard] paid_users build failed: {_pue}')
+
+    # ── UAT / Learning members panel ──────────────────────────────────────────
+    # Separate from paid — these are not billed. Includes uat, beta, learning plans
+    # regardless of is_subscribed flag (legacy UAT members may have is_subscribed=False).
+    # Newest first.
+    _uat_users = []
+    try:
+        from sqlalchemy import or_ as _uat_or
+        # Include:
+        # 1. Explicit UAT/beta/learning plan users (regardless of is_active)
+        # 2. Pre-launch Sonnet free trial users — registered before HAIKU_LAUNCH_DATE,
+        #    no paid plan, no uat plan, but have Sonnet images (MIM workshop participants etc)
+        _uat_plan_users = User.query.filter(
+            User.subscription_plan.in_(['uat', 'beta', 'learning']),
+            User.role != 'admin',
+        ).all()
+        _uat_plan_ids = {u.id for u in _uat_plan_users}
+
+        # Pre-launch Sonnet free trial cohort via raw SQL
+        _prelaunched = db.session.execute(db.text(
+            "SELECT DISTINCT u.id FROM users u "
+            "JOIN images i ON i.user_id = u.id "
+            "WHERE u.created_at < :launch "
+            "AND u.role != 'admin' "
+            "AND (u.subscription_plan IS NULL "
+            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','uat','beta','learning','play')) "
+            "AND (i.is_haiku_try IS NULL OR i.is_haiku_try = FALSE)"
+        ), {'launch': HAIKU_LAUNCH_DATE}).fetchall()
+        _prelaunched_ids = {r[0] for r in _prelaunched} - _uat_plan_ids
+
+        _prelaunched_users = User.query.filter(
+            User.id.in_(_prelaunched_ids),
+            User.role != 'admin',
+        ).all() if _prelaunched_ids else []
+
+        _uat_rows = sorted(
+            _uat_plan_users + _prelaunched_users,
+            key=lambda u: u.created_at or __import__('datetime').datetime.min,
+            reverse=True
+        )
+        for _uu in _uat_rows:
+            _uu_latest = db.session.query(Image).filter(
+                Image.user_id == _uu.id,
+                Image.status == 'scored',
+            ).order_by(Image.scored_at.desc()).first()
+            _uu_best = db.session.query(Image).filter(
+                Image.user_id == _uu.id,
+                Image.status == 'scored',
+                Image.score != None,
+            ).order_by(Image.score.desc()).first()
+            _uu_cache_age = 'empty'
+            if _uu_latest:
+                try:
+                    import json as _uuj
+                    _uu_la = _uuj.loads(_uu_latest._audit_json or '{}')
+                    _uu_cs = _uu_la.get('contest_suggestions')
+                    if _uu_cs and isinstance(_uu_cs, dict):
+                        _uu_cat = _uu_cs.get('cached_at')
+                        if _uu_cat:
+                            from datetime import datetime as _uudt
+                            _uu_days = (_uudt.utcnow() - _uudt.fromisoformat(_uu_cat)).days
+                            _uu_cache_age = f'{_uu_days}d ago'
+                except Exception:
+                    pass
+            _uat_users.append({
+                'id':              _uu.id,
+                'full_name':       _uu.full_name or _uu.username,
+                'email':           _uu.email,
+                'subscription_plan':  _uu.subscription_plan or '—',
+                'subscription_track': _uu.subscription_track or '—',
+                'joined_date':     _uu.created_at.strftime('%-d %b %Y') if _uu.created_at else '—',
+                'image_count':     Image.query.filter_by(user_id=_uu.id, status='scored').count(),
+                'latest_image_id': _uu_latest.id if _uu_latest else None,
+                'best_image_id':   _uu_best.id if _uu_best else None,
+                'best_score':      _uu_best.score if _uu_best else None,
+                'last_upload_date': _uu_latest.scored_at.strftime('%-d %b') if _uu_latest and _uu_latest.scored_at else None,
+                'contest_cache_age': _uu_cache_age,
+                'is_active': _uu.is_active,
+            })
+    except Exception as _uue:
+        app.logger.warning(f'[admin_dashboard] uat_users query failed: {_uue}')
+
+    # ── Session 209: Haiku members list for admin dashboard panel ───────────
+    # stats.free_users is a count only — this query gives per-user rows with
+    # eval usage (haiku_used = COUNT of is_haiku_try images) for the dot display.
+    haiku_users = []
+    try:
+        _hu_rows = db.session.execute(db.text(
+            "SELECT u.id, u.full_name, u.username, u.email, u.city, "
+            "u.created_at, u.onboarding_complete, u.is_active, "
+            "COUNT(i.id) AS haiku_used, "
+            "MAX(i.created_at) AS last_image_at, "
+            "(SELECT id FROM images WHERE user_id=u.id AND is_haiku_try IS TRUE "
+            " ORDER BY id DESC LIMIT 1) AS latest_image_id "
+            "FROM users u "
+            "LEFT JOIN images i ON i.user_id = u.id AND i.is_haiku_try IS TRUE "
+            "WHERE u.role != 'admin' "
+            "AND u.created_at >= :haiku_launch "
+            "AND (u.subscription_plan IS NULL "
+            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','learning')) "
+            "GROUP BY u.id ORDER BY u.created_at DESC LIMIT 50"
+        ), {'haiku_launch': HAIKU_LAUNCH_DATE}).fetchall()
+        haiku_users = _hu_rows
+    except Exception as _hue:
+        app.logger.warning(f'[admin_dashboard] haiku_users query failed: {_hue}')
+
+
+    # ── OPTION 1: Recent admin actions feed (last 20) — Session 208 ────────
+    # Surfaces on admin dashboard as live audit card.
+    recent_admin_actions = []
+    try:
+        _aal_rows = db.session.execute(db.text(
+            'SELECT aal.id, aal.action, aal.target_type, aal.target_id,'
+            ' aal.detail, aal.created_at, u.full_name AS admin_name'
+            ' FROM admin_action_log aal'
+            ' LEFT JOIN users u ON u.id = aal.admin_id'
+            ' ORDER BY aal.created_at DESC LIMIT 20'
+        )).fetchall()
+        import json as _aalj
+        for _r in _aal_rows:
+            _det = {}
+            try:
+                _det = _aalj.loads(_r.detail or '{}')
+            except Exception:
+                pass
+            recent_admin_actions.append({
+                'id':          _r.id,
+                'action':      _r.action,
+                'target_type': _r.target_type,
+                'target_id':   _r.target_id,
+                'detail':      _det,
+                'created_at':  _r.created_at,
+                'admin_name':  _r.admin_name or 'Admin',
+            })
+    except Exception as _aal_e:
+        app.logger.warning(f'[admin_dashboard] audit log fetch failed: {_aal_e}')
+
+    # Master references for admin panel
+    _mr_refs_list = []
+    _mr_stale = True
+    _mr_total = 0
+    _mr_days = None
+    try:
+        _mr_rows = db.session.execute(db.text(
+            "SELECT id, name, genre_tags, region, tier, known_for, is_active, "
+            "COALESCE(added_by, 'seed') as added_by "
+            "FROM master_references ORDER BY "
+            "CASE tier WHEN 'Tier 1' THEN 1 WHEN 'Contest Winner' THEN 2 "
+            "WHEN 'Tier 2' THEN 3 ELSE 4 END, name ASC LIMIT 200"
+        )).fetchall()
+        _mr_last = db.session.execute(db.text(
+            "SELECT MAX(last_refreshed_at) FROM master_references "
+            "WHERE last_refreshed_at IS NOT NULL"
+        )).scalar()
+        _mr_refs_list = [
+            {'id': r.id, 'name': r.name, 'genre_tags': r.genre_tags,
+             'region': r.region or '', 'tier': r.tier,
+             'known_for': r.known_for or '', 'is_active': r.is_active,
+             'added_by': r.added_by or 'seed'}
+            for r in _mr_rows
+        ]
+        _mr_total = sum(1 for r in _mr_refs_list if r['is_active'])
+        _mr_stale = _mr_last is None or (datetime.utcnow() - _mr_last).days > 21
+        _mr_days = (datetime.utcnow() - _mr_last).days if _mr_last else None
+    except Exception as _mr_err:
+        app.logger.warning(f'[admin_dashboard] master_refs failed: {_mr_err}')
+
+    # SL-182.18 — Evolving Eye: users with 10+ scored images but no report yet.
+    # Powers the admin trigger panel in the dashboard.
+    _evolving_eye_users = []
+    try:
+        _ee_rows = db.session.execute(db.text("""
+            SELECT u.id, u.full_name, u.username, u.email,
+                   COUNT(i.id) AS scored_count,
+                   u.evolving_eye_json IS NOT NULL AS has_report,
+                   u.evolving_eye_milestone
+            FROM users u
+            JOIN images i ON i.user_id = u.id
+                AND i.status = 'scored'
+                AND (i.is_haiku_try IS NOT TRUE)
+            WHERE u.is_active = TRUE
+              AND u.role != 'admin'
+            GROUP BY u.id, u.full_name, u.username, u.email,
+                     u.evolving_eye_json, u.evolving_eye_milestone
+            HAVING COUNT(i.id) >= 10
+            ORDER BY has_report ASC, COUNT(i.id) DESC
+            LIMIT 30
+        """)).fetchall()
+        _evolving_eye_users = [
+            {
+                'id':         r.id,
+                'name':       r.full_name or r.username or f'User {r.id}',
+                'email':      r.email or '',
+                'scored':     r.scored_count,
+                'has_report': bool(r.has_report),
+                'milestone':  r.evolving_eye_milestone,
+            }
+            for r in _ee_rows
+        ]
+    except Exception as _ee_adm_err:
+        app.logger.warning(f'[admin_dashboard] evolving_eye_users query failed: {_ee_adm_err}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track,
+                           recent_pages=recent_pages, admin_q=admin_q, admin_track=admin_track, admin_engine=admin_engine, sonnet_new_today=sonnet_new_today, haiku_new_today=haiku_new_today,
                            recent_users=recent_users,
+                           paid_users=_paid_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
@@ -16118,8 +16904,154 @@ def admin_dashboard():
                            attention_users=attention_users,
                            bot_count=db.session.execute(db.text(
                                "SELECT COUNT(*) FROM users WHERE is_active=FALSE "                               "AND created_at >= NOW() - INTERVAL '7 days' "                               "AND username ~ '^[a-z]{8,16}$' "                               "AND NOT EXISTS (SELECT 1 FROM images WHERE user_id=users.id)"
-                           )).scalar() or 0)
+                           )).scalar() or 0,
+                           recent_admin_actions=recent_admin_actions,
+                           haiku_users=haiku_users,
+                           uat_users=_uat_users,
+                           deleted_users=db.session.execute(db.text(
+                               "SELECT u.id, u.full_name, u.username, u.email, u.created_at, "
+                               "u.subscription_plan, aal.created_at AS deleted_at "
+                               "FROM users u "
+                               "JOIN admin_action_log aal ON aal.target_id = u.id "
+                               "AND aal.target_type = 'user' AND aal.action = 'soft_delete' "
+                               "WHERE u.is_active = FALSE AND u.role != 'admin' "
+                               "ORDER BY aal.created_at DESC LIMIT 50"
+                           )).fetchall(),
+                           master_refs=_mr_refs_list,
+                           master_refs_stale=_mr_stale,
+                           master_refs_total=_mr_total,
+                           master_refs_days=_mr_days,
+                           evolving_eye_users=_evolving_eye_users,
+                           now=datetime.utcnow())
 
+
+# ── OPTION 2: Audit Log full search page — Session 208 ─────────────────────────────
+# Full dispute lookup: filter by user email, action type, date range.
+# Used for legal evidence, dispute resolution, subscription audit.
+@app.route('/admin/audit-log')
+@login_required
+@admin_required
+def admin_audit_log():
+    """
+    GET /admin/audit-log — Full admin action log with search/filter.
+    Session 208: Audit & Legal — dispute resolution and subscription evidence trail.
+    Session 209: Added username, name, user ID search via target user join.
+    Filters: user email/username/name/ID, action type, target type, date from/to.
+    """
+    import json as _alj
+    q_email   = request.args.get('email', '').strip()
+    q_user    = request.args.get('user', '').strip()   # Session 209: name/username/user ID
+    q_action  = request.args.get('action', '').strip()
+    q_target  = request.args.get('target', '').strip()
+    q_from    = request.args.get('date_from', '').strip()
+    q_to      = request.args.get('date_to', '').strip()
+    al_page   = max(1, request.args.get('page', 1, type=int))
+    PER_PAGE  = 50
+
+    # Build WHERE clauses dynamically
+    _where = ['1=1']
+    _params = {}
+    if q_email:
+        _where.append('u.email ILIKE :email')
+        _params['email'] = f'%{q_email}%'
+    if q_user:
+        # Search by target user: name, username, or numeric ID
+        if q_user.isdigit():
+            _where.append('aal.target_id = :target_user_id')
+            _params['target_user_id'] = int(q_user)
+        else:
+            _where.append('(tu.full_name ILIKE :uname OR tu.username ILIKE :uname OR tu.email ILIKE :uname)')
+            _params['uname'] = f'%{q_user}%'
+    if q_action:
+        _where.append('aal.action = :action')
+        _params['action'] = q_action
+    if q_target:
+        _where.append('aal.target_type = :target')
+        _params['target'] = q_target
+    if q_from:
+        _where.append('aal.created_at >= :date_from')
+        _params['date_from'] = q_from
+    if q_to:
+        _where.append('aal.created_at <= :date_to')
+        _params['date_to'] = q_to + ' 23:59:59'
+
+    _where_sql = ' AND '.join(_where)
+    # Session 209: LEFT JOIN target user (tu) for name/username/ID search
+    _joins = (
+        ' FROM admin_action_log aal'
+        ' LEFT JOIN users u ON u.id = aal.admin_id'
+        ' LEFT JOIN users tu ON tu.id = aal.target_id'
+    )
+    _base_sql = (
+        'SELECT aal.id, aal.action, aal.target_type, aal.target_id,'
+        ' aal.detail, aal.created_at, u.full_name AS admin_name, u.email AS admin_email,'
+        ' tu.full_name AS target_name, tu.username AS target_username, tu.email AS target_email'
+        + _joins
+        + f' WHERE {_where_sql}'
+    )
+
+    try:
+        _total = db.session.execute(
+            db.text(f'SELECT COUNT(*){_joins} WHERE {_where_sql}'),
+            _params
+        ).scalar() or 0
+        _rows = db.session.execute(
+            db.text(_base_sql + ' ORDER BY aal.created_at DESC LIMIT :lim OFFSET :off'),
+            {**_params, 'lim': PER_PAGE, 'off': (al_page - 1) * PER_PAGE}
+        ).fetchall()
+        _actions = []
+        for _r in _rows:
+            _det = {}
+            try:
+                _det = _alj.loads(_r.detail or '{}')
+            except Exception:
+                pass
+            _actions.append({
+                'id':            _r.id,
+                'action':        _r.action,
+                'target_type':   _r.target_type,
+                'target_id':     _r.target_id,
+                'detail':        _det,
+                'created_at':    _r.created_at,
+                'admin_name':    _r.admin_name or 'Admin',
+                'admin_email':   _r.admin_email or '',
+                'target_name':   _r.target_name or '',
+                'target_username': _r.target_username or '',
+                'target_email':  _r.target_email or '',
+            })
+    except Exception as _ale:
+        app.logger.error(f'[admin_audit_log] query failed: {_ale}')
+        _actions = []
+        _total = 0
+
+    # Distinct action types for filter dropdown
+    _action_types = []
+    try:
+        _action_types = [
+            r[0] for r in db.session.execute(
+                db.text('SELECT DISTINCT action FROM admin_action_log ORDER BY action')
+            ).fetchall()
+        ]
+    except Exception:
+        pass
+
+    _total_pages = max(1, (_total + PER_PAGE - 1) // PER_PAGE)
+
+    return render_template('audit_log.html',
+        actions=_actions,
+        total=_total,
+        page=al_page,
+        total_pages=_total_pages,
+        per_page=PER_PAGE,
+        q_email=q_email,
+        q_user=q_user,
+        q_action=q_action,
+        q_target=q_target,
+        q_from=q_from,
+        q_to=q_to,
+        action_types=_action_types,
+    )
+# ────────────────────────────────────────────────────────────────────────────
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
 @login_required
@@ -16133,6 +17065,38 @@ def admin_clear_suspension(user_id):
     user.camera_mismatch_count   = 0
     db.session.commit()
     flash(f'League suspension cleared for {user.full_name or user.username}.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/bust-contest-cache/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_bust_contest_cache(user_id):
+    """SL-181.22: Clear contest_suggestions cache for all scored images owned by user.
+    Forces fresh award recommendations on their next scorecard visit.
+    Used when award deadlines change (e.g. Sanctuary extension) or stale data suspected."""
+    import json as _bcj
+    _user = User.query.get_or_404(user_id)
+    _images = Image.query.filter_by(user_id=user_id, status='scored').all()
+    _cleared = 0
+    for _img in _images:
+        try:
+            _audit = _bcj.loads(_img._audit_json or '{}')
+            if 'contest_suggestions' in _audit:
+                del _audit['contest_suggestions']
+                _img._audit_json = _bcj.dumps(_audit)
+                _cleared += 1
+        except Exception:
+            continue
+    db.session.commit()
+    _msg = (
+        f'Contest cache cleared for {_user.full_name or _user.username} '
+        f'({_cleared} image{"s" if _cleared != 1 else ""} updated). '
+        f'Fresh award recommendations will load on their next scorecard visit.'
+    )
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'ok': True, 'message': _msg})
+    flash(_msg, 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
@@ -16302,6 +17266,11 @@ def delete_image(image_id):
 @admin_required
 def admin_delete_image(image_id):
     img = Image.query.get_or_404(image_id)
+    _log_admin_action('delete_image', 'image', image_id, {
+        'asset_name': img.asset_name, 'score': float(img.score or 0),
+        'tier': img.tier, 'user_id': img.user_id,
+        'genre': img.genre, 'thumb_url': img.thumb_url
+    })
     if img.thumb_url:
         try:
             key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
@@ -16484,6 +17453,91 @@ def admin_bulk_delete():
         app.logger.error(f'[bulk delete] final commit failed: {_e}')
     flash(f'Deleted {deleted} image(s).', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/image-grid/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_image_grid_delete():
+    """
+    POST /admin/image-grid/delete
+    JSON endpoint for the image grid delete button and bulk delete.
+    Accepts: image_ids (comma-separated string in form data).
+    Returns JSON {ok, deleted, failed} — no page redirect, grid removes rows live.
+    Reuses the full FK-cascade delete logic from admin_bulk_delete().
+    """
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({'ok': False, 'message': 'Invalid IDs'}), 400
+    if not ids:
+        return jsonify({'ok': False, 'message': 'No IDs provided'}), 400
+
+    deleted = 0
+    failed  = []
+    for image_id in ids:
+        try:
+            img = Image.query.get(image_id)
+            if not img:
+                failed.append(image_id)
+                continue
+            _log_admin_action('delete_image', 'image', image_id, {
+                'asset_name': img.asset_name, 'score': float(img.score or 0),
+                'tier': img.tier, 'user_id': img.user_id,
+                'genre': img.genre, 'source': 'image_grid_delete',
+            })
+            # R2 cleanup
+            for _url in [img.thumb_url, img.card_url]:
+                if _url:
+                    try:
+                        r2.delete_file(_url.replace(r2.R2_PUBLIC_URL + '/', ''))
+                    except Exception:
+                        pass
+            # NULL parent refs
+            try:
+                db.session.execute(
+                    db.text("UPDATE images SET parent_image_id = NULL WHERE parent_image_id = :iid"),
+                    {'iid': image_id}
+                )
+            except Exception:
+                pass
+            # FK cascades — same 12-table set as admin_delete_image
+            for _sql in [
+                "DELETE FROM raw_submissions      WHERE image_id = :iid",
+                "DELETE FROM weekly_submissions   WHERE image_id = :iid",
+                "DELETE FROM contest_entries      WHERE image_id = :iid",
+                "DELETE FROM open_contest_entries WHERE image_id = :iid",
+                "DELETE FROM image_reports        WHERE image_id = :iid",
+                "DELETE FROM rating_assignments   WHERE image_id = :iid",
+                "DELETE FROM peer_ratings         WHERE image_id = :iid",
+                "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+                "DELETE FROM peer_recognitions    WHERE image_id = :iid",
+                "DELETE FROM brand_entries        WHERE image_id = :iid",
+                "DELETE FROM calibration_notes    WHERE image_id = :iid",
+                "DELETE FROM judge_assignments    WHERE image_id = :iid",
+                "DELETE FROM judge_scores         WHERE image_id = :iid",
+            ]:
+                try:
+                    db.session.execute(db.text(_sql), {'iid': image_id})
+                except Exception:
+                    pass
+            db.session.delete(img)
+            deleted += 1
+        except Exception as _de:
+            db.session.rollback()
+            app.logger.error(f'[image_grid_delete] image {image_id}: {_de}')
+            failed.append(image_id)
+
+    try:
+        db.session.commit()
+    except Exception as _ce:
+        db.session.rollback()
+        app.logger.error(f'[image_grid_delete] commit failed: {_ce}')
+        return jsonify({'ok': False, 'message': f'Commit failed: {_ce}'}), 500
+
+    app.logger.info(f'[image_grid_delete] deleted={deleted} failed={failed} admin={current_user.id}')
+    return jsonify({'ok': True, 'deleted': deleted, 'failed': failed}), 200
 
 
 @app.route('/admin/image/<int:image_id>/toggle-example', methods=['POST'])
@@ -16973,6 +18027,966 @@ def admin_curation_upload():
     return jsonify(result), 200
 
 
+# ---------------------------------------------------------------------------
+# SL-182.18 — Admin Calibration Drift Tool
+# /admin/calibration          GET  — dashboard page
+# /admin/calibration/upload   POST — score one image (Sonnet or Haiku)
+# /admin/calibration/clear    POST — delete all calibration images
+#
+# Purpose: founder uploads 10–20 test images through Sonnet AND Haiku engines
+# to watch for score drift between the two. Completely isolated from member
+# accounts and League data.
+#
+# Sonnet path  — reuses auto_score_ddi_fast (same as Curator's Bench).
+# Haiku path   — bare direct API call: 5 DDI dimensions + calibration anchor
+#                only. No history, no master refs, no species research,
+#                no Wikipedia, no location advisory, no mentor, no email.
+#
+# Images saved with is_admin_curation=True (existing isolation flag).
+# A new column is_calibration_drift (BOOLEAN) further distinguishes them
+# from Curator's Bench images. Migration runs on first upload if needed.
+# ---------------------------------------------------------------------------
+
+def _ensure_calibration_drift_column():
+    """Add is_calibration_drift column if not present. Called once on first upload."""
+    try:
+        db.session.execute(db.text(
+            "ALTER TABLE images ADD COLUMN IF NOT EXISTS "
+            "is_calibration_drift BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _calibration_score_haiku(thumb_path, genre, camera_track=None):
+    """
+    Bare Haiku calibration score — 5 DDI dimensions only.
+    No history, no master refs, no species research, no wiki, no location.
+    camera_track: 'mobile' | 'camera' | None — controls whether Mobile League
+    weights and genre capability block are injected into the prompt.
+    Returns dict {dod, vd, dm, wf, aq, score, tier} or None on failure.
+    """
+    import base64 as _b64
+    import json as _cj
+    import urllib.request as _ur
+    from engine.scoring import calculate_score, get_tier
+    from engine.auto_score import compute_mobile_weights, MOBILE_EXCLUDED_GENRES
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return None
+
+    with open(thumb_path, 'rb') as _f:
+        img_b64 = _b64.b64encode(_f.read()).decode()
+
+    cal_line  = _try_calibration_line(genre or '')
+    genre_ctx = _try_genre_context(genre or 'default')
+
+    # ── Mobile League block (mirrors auto_score build_exif_context logic) ─────
+    _mobile_block = ''
+    _is_mobile = (camera_track == 'mobile')
+    _mobile_weights = None
+    if _is_mobile and genre and genre not in MOBILE_EXCLUDED_GENRES:
+        _mobile_weights = compute_mobile_weights(genre)
+
+    if _is_mobile and _mobile_weights and genre not in MOBILE_EXCLUDED_GENRES:
+        _mw = _mobile_weights
+        # Genre capability tier
+        _MOBILE_CAP = {
+            'Street': 'FULL', 'Documentary': 'FULL', 'Family': 'FULL',
+            'Wedding': 'FULL', 'People': 'FULL', 'Landscape': 'FULL',
+            'Nature': 'FULL', 'Macro': 'FULL', 'Architecture': 'FULL',
+            'Sports': 'PARTIAL', 'Creative': 'PARTIAL',
+            'Fashion': 'PARTIAL', 'Maternity': 'PARTIAL',
+            'Wildlife': 'CONSTRAINED', 'Astrophotography': 'CONSTRAINED',
+        }
+        _cap = _MOBILE_CAP.get(genre, 'FULL')
+
+        # _cap_notes: genre-specific, carries all WF/DM/sub-type fixes for mobile Haiku
+        _WILDLIFE_MOBILE_NOTE = (
+            "Wildlife Mobile: no optical telephoto beyond 5x (~120mm on iPhone Pro). "
+            "Beyond 5x = digital zoom = pixelated = Technical DoD 5.0-5.5. "
+            "Subject fills frame at 5x with clean edges: score freely. "
+            "Proximity within 2m of animal = Technical DoD 7.0-8.0. "
+            "No optical bokeh at wildlife distances — do NOT penalise absence. "
+            "Never suggest a longer lens.\n"
+            "WF BEHAVIOURAL RARITY (birds, adult single subject): "
+            "Common behaviour (landing, perching, walking) = WF 5.5-6.5. "
+            "Excellent execution of common behaviour = WF 6.5-7.0. "
+            "Uncommon (courtship, display, alarm, species interaction) = WF 6.5-7.5. "
+            "Rare (predation, prey visible, conflict, feeding young) = WF 7.5-8.5.\n"
+            "WF JUVENILE/FAMILY (separate signal — score tenderness directly): "
+            "Two or more juveniles in natural light with mutual awareness = WF 7.0-8.0. "
+            "Alert both subjects: 7.2-7.8. Physical contact: 7.5-8.2. No minimum. "
+            "Score what the tenderness actually delivers, not what a floor says.\n"
+            "DM BIRDS BURST MODE: 20-30fps burst, peak selected in post = DM 6.5-7.5. "
+            "Single-frame / manual timing = DM 8.0-9.0. Unknown = default DM 7.0-7.5. "
+            "DOD still scores full for sharpness and exposure — DM only is adjusted."
+        )
+        _CREATIVE_MOBILE_NOTE = (
+            "Creative Mobile: ICM, motion blur, minimalism, long exposure, abstract — fully capable. "
+            "Portrait mode bokeh valid for close subjects. Wide-aperture optical bokeh NOT available.\n"
+            "IDENTIFY SUB-TYPE BEFORE SCORING:\n"
+            "DANCE / MOVEMENT / PERFORMANCE: body at peak geometric expression in directional light. "
+            "Form + light + motion must all peak together. VD 8.0-8.5. "
+            "Score 8.5 only when all three are exceptional — not an automatic floor.\n"
+            "FINE ART / ABSTRACT / CONCEPTUAL: concept strength + execution quality. "
+            "Strong concept + excellent technique: 7.8-8.2. "
+            "Strong concept + competent technique: 7.5-7.8. "
+            "Competent execution, weak concept: 7.2-7.5. "
+            "Do NOT apply Dance VD floor to Fine Art — different sub-type.\n"
+            "ICM / PANNING / BLUR / MINIMALIST: technique on DOD, pattern/colour on VD, "
+            "emotional register on AQ."
+        )
+        _PEOPLE_MOBILE_NOTE = (
+            "People Mobile: FULL capability. Wide (1x) and portrait mode cover all people work. "
+            "Portrait mode = valid creative tool. Clean edge separation = Technical DoD 6.5-7.5. "
+            "Environmental stranger portrait on phone = DoD 6.5-7.5 (social proximity is real difficulty).\n"
+            "WF/AQ COHERENCE — TWO TIERS:\n"
+            "QUIET / INTIMATE (child, contemplative, soft natural light, no strong emotional peak): "
+            "AQ gap vs WF must not exceed 2.0. Score WF on wonder signal alone. No floor.\n"
+            "RECOGNITION WONDER (uninhibited laughter, raw grief, elderly dignity, face a stranger stops for): "
+            "WF gap must not exceed 2.0 vs AQ. Score WF on wonder signal alone. "
+            "Identify which tier first. Child under cherry blossoms = quiet/intimate. "
+            "Elderly woman laughing with broken teeth = recognition wonder."
+        )
+        _cap_notes = {
+            'FULL': (
+                "This genre is FULLY achievable on a phone — legitimate or superior instrument. "
+                "Score DoD without penalty for lack of telephoto or optical bokeh. "
+                + (_PEOPLE_MOBILE_NOTE if genre == 'People' else
+                   "Those tools are not required in this genre.")
+            ),
+            'PARTIAL': (
+                "This genre is PARTIALLY achievable on a phone. "
+                "Do NOT penalise what the phone cannot do. "
+                "Do NOT suggest equipment the phone does not have. "
+                + (_CREATIVE_MOBILE_NOTE if genre == 'Creative' else
+                   "Score DoD on what was actually achieved within mobile constraints.")
+            ),
+            'CONSTRAINED': (
+                "This genre has FUNDAMENTAL HARDWARE LIMITS on a phone. "
+                "Score honestly — do not inflate DoD to compensate. "
+                "Situational DoD (being in the habitat/location) scores FULL — same effort. "
+                + (_WILDLIFE_MOBILE_NOTE if genre == 'Wildlife' else
+                   "Astrophotography: Night mode gives 3-10s auto exposures, not 25-30s manual. "
+                   "No tracking mount. Technical DoD ceiling 6.5 for Night mode Milky Way. "
+                   "7.0-7.5 only for time-lapse stacking or strong aurora. "
+                   "Situational DoD (dark site access) scores full. "
+                   if genre == 'Astrophotography' else "")
+            ),
+        }
+
+        _mobile_block = f"""
+═══════════════════════════════════════════════════════════════
+MOBILE LEAGUE SCORING — MANDATORY (read before scoring)
+═══════════════════════════════════════════════════════════════
+
+This image was uploaded by a Mobile League subscriber.
+Apply Mobile League criteria as written below.
+
+MOBILE DIMENSION WEIGHTS — USE THESE, NOT THE GENRE DEFAULTS:
+DoD={int(_mw['dod']*100)}%  Disruption={int(_mw['disruption']*100)}%  DM={int(_mw['dm']*100)}%  Wonder={int(_mw['wonder']*100)}%  AQ={int(_mw['aq']*100)}%
+(+15% Disruption and +10% DM vs Camera League; DoD/Wonder/AQ proportionally reduced.)
+
+DOD — SCORED AS TWO COMPONENTS, AVERAGED:
+  Situational DoD: physical presence, access, environmental conditions.
+    A phone shot at the Masai Mara scores identically to DSLR on situational DoD.
+  Technical DoD: scored against mobile ceiling only.
+    Lighting difficulty for a small sensor. Proximity required by lack of telephoto.
+    Spontaneity demand — cannot set up, pre-focus, or burst the same way.
+    Portrait mode bokeh: clean edge separation with no fringing = DoD 6.5–7.5.
+
+PORTRAIT MODE / COMPUTATIONAL BOKEH:
+Portrait mode (iPhone, Android) is the phone equivalent of wide-aperture optical bokeh.
+Clean portrait mode execution (no edge fringing, no subject-background artefacts) is a
+deliberate technical achievement — score as Technical DoD 6.5–7.5, not a penalty risk.
+Portrait mode IS the correct tool for this instrument. Do not expect optical bokeh.
+Only penalise when artefacts are clearly visible: fringing, halos, cut-through blur.
+
+LENSES AVAILABLE:
+  Ultrawide 0.5x (~13mm) · Wide 1x (~24mm) · 2x crop (~48mm, standard iPhone/Android)
+  3x optical (OnePlus/some Android flagships) · 5x optical (iPhone Pro/Pro Max only)
+  Beyond 5x = digital zoom = pixelated = Technical DoD penalty applies.
+  No zoom beyond 5x is optical. Never suggest or reference a focal length > 120mm equiv.
+
+WONDER and AQ — UNCHANGED. Universal. Instrument-agnostic.
+Emotional truth and visual arrest do not depend on the camera.
+
+GENRE CAPABILITY — {_cap}:
+{_cap_notes[_cap]}
+
+═══════════════════════════════════════════════════════════════
+"""
+
+    prompt = f"""You are evaluating a photograph on the Shutter League DDI rubric.
+Genre: {genre or 'General'}
+{f'Track: Mobile League' if _is_mobile else 'Track: Camera League'}
+
+GENRE GUIDANCE:
+{genre_ctx}
+{_mobile_block}
+CALIBRATION CONTEXT (use this to anchor your scores to the real distribution):
+{cal_line}
+
+BLOWN HIGHLIGHTS — CHECK FIRST:
+Blown subject highlights = DoD -0.5 to -1.0, VD -0.3 to -0.5, AQ -0.3 to -0.5.
+Creative high-key exempt. Action/sport with blown subject: penalise.
+
+ABSOLUTE AQ REFERENCE: Raghu Rai Bhopal image (child's face in earth) = AQ 9.5.
+Every image on this platform scores below this. Use as ceiling.
+
+AQ NAMED ANCHORS — interpolate between these:
+  Nihang horseman on two galloping horses = AQ 8.1 (Defiance — specific, rare)
+  Maternity shadow on cracked wall = AQ 7.9 (Love — universal, 91% story, stays)
+  Kathak feet ICM in-camera BW Spider = AQ 7.9 (Rhythm — you almost hear bells)
+  Monks in monastery corridor = AQ 7.1 (Peace — real but passes gently)
+  Mountain landscape burning sky = AQ 7.4 (Awe — real but familiar genre)
+  Woman in white sari bowed = AQ 7.0 (Grace — quiet, culturally specific)
+  Two lion cubs alert on log = AQ 6.7 (Tenderness — real but familiar.
+    CSI applies to AQ: most common wildlife emotion. Passes. Not rare.
+    Score AQ 6.5-7.2 for juvenile wildlife. Not higher.)
+  Child reaching for blossoms = AQ 6.6 (Joy — gentle, many images do this)
+  Studio portrait contemplative gaze = AQ 6.5 (Beauty/Nothing.
+    Real survey response: one word = 'Nothing'. 35% story — lowest of 10.
+    Do not score above 7.0 for studio portrait with no legible specific emotion.)
+  Swallow landing wings spread = AQ 6.3 (Craft admiration — NOT an emotion.
+    Viewer admires precision and colour. No specific feeling in the chest.
+    Do not score above 6.5 for bird craft regardless of quality.)
+
+WF NAMED ANCHORS — interpolate between these:
+  Nihang horseman = WF 8.5 (Access+Cultural — disappearing world, danger real)
+  Maternity shadow on cracked wall = WF 8.0 (Eye Wonder — found the wall)
+  Kathak feet ICM = WF 8.0 (Eye Wonder — sound made visible, one frame)
+  Monks monastery = WF 7.9 (Cultural+Access — closed world, red-on-red find)
+  Mountain landscape burning sky = WF 7.2 (Eye Wonder — CSI applies, genre saturated)
+  Woman in sari = WF 7.0 (Cultural mild — beautiful, accessible world)
+  Lion cubs on log = WF 7.0 (Access moderate — CSI: every safari has this)
+  Child with blossoms = WF 6.7 (Emotional mild — familiar, gentle, not a find)
+  Studio portrait = WF 6.2 (None — no world shown, no find)
+  Swallow landing = WF 6.2 (None — exceptional craft, common subject)
+
+DO NOT compress scores into 7.5-8.5. Birds AQ is 6.3. Portrait WF is 6.2.
+The full range exists. Score what you see against these anchors.
+
+CONTEST EDITING STANDARD — CHECK BEFORE SCORING:
+Permitted: contrast, highlights, shadows, exposure, colour temp, dodge/burn, crop.
+NOT permitted in non-Creative genres: painterly rendering, skin smoothing to
+pastel/illustration quality, background replaced or rendered as smooth gradient
+beyond optical bokeh, HDR tone-mapping, texture overlays, digital art filters.
+DETECTION: if skin looks painted not photographed, if background is a smooth
+studio-gradient not a natural blur, if overall texture is canvas-like or
+watercolour-like — this image should have been filed as Creative.
+When detected in People/Portrait/Street/Wildlife/Landscape/Maternity:
+  DoD -0.5 to -0.8 (craft record obscured by processing)
+  VD -0.5 to -1.0 (visual drama is software's work, not photographer's)
+  AQ -0.3 to -0.5 (authenticity reduced)
+  Total score cap: 7.5 when painterly processing is dominant.
+Name it in evaluation: 'Processing takes this beyond standard editing —
+in a contest this would be reclassified to Creative.'
+
+BEFORE SCORING WF AND AQ — READ THIS:
+wf (Wow Factor) has FIVE signals. Score the HIGHEST present:
+1. EYE WONDER: compositional find, juxtaposition, accidental frame = 8.0–9.5
+2. ACCESS WONDER: photographer inside a world most cannot enter = 7.5–9.5
+3. CULTURAL WONDER: shows a world viewers cannot otherwise enter = 7.0–9.0
+4. EMOTIONAL WONDER: specific nameable emotion — joy, grief, defiance, tenderness = 8.0–9.5
+5. RECOGNITION WONDER: a human truth so universal a stranger stops in a gallery.
+   A face so alive with genuine emotion — elderly person's infectious smile, broken-toothed
+   laughter, weathered skin full of dignity — WF 8.5–9.5.
+   A child's pure uninhibited joy, laughing so hard they lose themselves — WF 9.0.
+   The beauty the world overlooks. The photographer stopped. That is the wonder.
+   Do NOT require rarity of subject. The SEEING is rare, not the subject.
+   An elderly Indian woman with broken teeth laughing in a sunflower field = WF 9.0.
+   A child covering her eyes laughing completely = WF 9.0.
+
+WF/AQ COHERENCE — ANTI-GAP RULE ONLY (no floors, no minimums):
+Score WF on wonder signals alone. Score AQ on emotional content alone.
+Then check: is the gap between wf and aq greater than 2.0? If yes, that is a scoring error.
+Close the lower dimension upward only enough to bring the gap to 2.0. No further.
+DO NOT apply floors. DO NOT prop either score up. A gap of 1.5 is acceptable. A gap of 2.5 is not.
+Example: wf 8.0, aq 5.5 = gap 2.5 = error. Raise aq to 6.0 only. No further.
+
+Score this photograph on exactly 5 dimensions, each 0.0–10.0 (one decimal place):
+- dod: Depth of Difficulty (how hard was this to achieve — use mobile weights if mobile track)
+- vd: Visual Drama (impact, contrast, light, colour, geometry — what stops the eye)
+- dm: Decisive Moment (timing, peak action, unrepeatable instant)
+- wf: Wow Factor (see FIVE signals above — score the HIGHEST present)
+- aq: Artisan Quality (specific feeling created in viewer — name it before scoring)
+
+Return ONLY valid JSON, no preamble, no markdown fences:
+{{"dod": 0.0, "vd": 0.0, "dm": 0.0, "wf": 0.0, "aq": 0.0}}"""
+
+    payload = _cj.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 200,
+        'temperature': 0,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': prompt}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=60) as resp:
+            raw = _cj.loads(resp.read().decode())
+    except Exception as _e:
+        app.logger.error(f'[cal_haiku] API call failed: {_e}')
+        return None
+
+    text = ''.join(
+        b.get('text', '') for b in (raw.get('content') or []) if b.get('type') == 'text'
+    ).strip()
+    if text.startswith('```'):
+        parts = text.split('```')
+        text = parts[1][4:] if len(parts) > 1 and parts[1].startswith('json') else (parts[1] if len(parts) > 1 else text)
+    text = text.strip()
+
+    try:
+        d = _cj.loads(text)
+    except Exception as _pe:
+        app.logger.error(f'[cal_haiku] JSON parse failed: {_pe} | raw: {text[:200]}')
+        return None
+
+    def _cl(v):
+        try: return min(10.0, max(0.0, round(float(v), 1)))
+        except Exception: return 5.0
+
+    dod = _cl(d.get('dod', 5.0))
+    vd  = _cl(d.get('vd',  5.0))
+    dm  = _cl(d.get('dm',  5.0))
+    wf  = _cl(d.get('wf',  5.0))
+    aq  = _cl(d.get('aq',  5.0))
+
+    try:
+        if _mobile_weights and _is_mobile:
+            # Mobile track: compute weighted score directly using mobile weights
+            # (calculate_score uses Camera League weights from GENRE_WEIGHTS)
+            _mw = _mobile_weights
+            final_score = round(
+                dod * _mw['dod'] +
+                vd  * _mw['disruption'] +
+                dm  * _mw['dm'] +
+                wf  * _mw['wonder'] +
+                aq  * _mw['aq'],
+                2
+            )
+            tier = get_tier(final_score)
+        else:
+            final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+    except Exception as _sce:
+        app.logger.warning(f'[cal_haiku] calculate_score failed ({_sce}), using mean fallback')
+        final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
+        tier = get_tier(final_score)
+
+    return {'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
+            'score': round(final_score, 2), 'tier': tier,
+            'track': camera_track or 'camera'}
+
+
+@app.route('/admin/audit/low-emotion')
+@login_required
+@admin_required
+def admin_audit_low_emotion():
+    """
+    GET /admin/audit/low-emotion
+    Pulls all Sonnet-scored member images where WF < 7.0 OR AQ < 7.0.
+    Excludes calibration drift images and haiku images.
+    Groups by genre. Shows title, score, all dimensions, and narrative.
+    Purpose: identify systematic engine failures on emotional dimensions.
+    """
+    import json as _j
+    threshold = request.args.get('threshold', 7.0, type=float)
+    genre_filter = request.args.get('genre', '').strip()
+    sort_by = request.args.get('sort', 'wf').strip()  # wf, aq, score, date
+
+    try:
+        _rows = db.session.execute(db.text("""
+            SELECT
+                i.id, i.original_filename, i.asset_name, i.genre, i.score, i.tier,
+                i.dod_score, i.disruption_score, i.dm_score, i.wonder_score, i.aq_score,
+                i.scored_at, i.audit_json,
+                u.username, u.full_name, u.subscription_plan
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND COALESCE(i.is_haiku_try, FALSE) = FALSE
+              AND COALESCE(i.is_admin_curation, FALSE) = FALSE
+              AND (i.wonder_score < :thr OR i.aq_score < :thr)
+              AND i.wonder_score IS NOT NULL
+              AND i.aq_score IS NOT NULL
+            ORDER BY i.wonder_score ASC, i.aq_score ASC
+            LIMIT 500
+        """), {'thr': threshold}).fetchall()
+    except Exception as _e:
+        app.logger.error(f'[admin_audit_low_emotion] query failed: {_e}')
+        _rows = []
+
+    # Parse audit_json for narrative
+    results = []
+    for r in _rows:
+        narrative = ''
+        hard_truth = ''
+        try:
+            if r.audit_json:
+                _a = _j.loads(r.audit_json)
+                hard_truth = _a.get('hard_truth', '')
+                b1 = (_a.get('background_check') or _a.get('byline_1') or '').strip()
+                b2 = (_a.get('byline_2_body') or _a.get('byline_2') or '').strip()
+                narrative = '\n\n'.join(filter(None, [b1, b2]))[:300]
+        except: pass
+
+        results.append({
+            'id':         r.id,
+            'filename':   r.original_filename or r.asset_name or f'image-{r.id}',
+            'genre':      r.genre or '—',
+            'score':      round(float(r.score), 2) if r.score else 0,
+            'tier':       r.tier or '—',
+            'dod':        round(float(r.dod_score), 1) if r.dod_score else 0,
+            'vd':         round(float(r.disruption_score), 1) if r.disruption_score else 0,
+            'dm':         round(float(r.dm_score), 1) if r.dm_score else 0,
+            'wf':         round(float(r.wonder_score), 1) if r.wonder_score else 0,
+            'aq':         round(float(r.aq_score), 1) if r.aq_score else 0,
+            'scored_at':  r.scored_at,
+            'username':   r.username,
+            'full_name':  r.full_name or r.username,
+            'plan':       r.subscription_plan or 'free',
+            'hard_truth': hard_truth,
+            'narrative':  narrative,
+            'thumb_url':  None,  # populated below
+        })
+
+    # Sort
+    if sort_by == 'aq':
+        results.sort(key=lambda x: x['aq'])
+    elif sort_by == 'score':
+        results.sort(key=lambda x: x['score'])
+    elif sort_by == 'date':
+        results.sort(key=lambda x: x['scored_at'] or '', reverse=True)
+    else:
+        results.sort(key=lambda x: x['wf'])
+
+    # Genre filter
+    if genre_filter:
+        results = [r for r in results if r['genre'].lower() == genre_filter.lower()]
+
+    # Genre breakdown
+    from collections import Counter as _Ctr
+    genre_counts = _Ctr(r['genre'] for r in results)
+    wf_below_6  = sum(1 for r in results if r['wf'] < 6.0)
+    aq_below_6  = sum(1 for r in results if r['aq'] < 6.0)
+    both_below  = sum(1 for r in results if r['wf'] < threshold and r['aq'] < threshold)
+    only_wf     = sum(1 for r in results if r['wf'] < threshold and r['aq'] >= threshold)
+    only_aq     = sum(1 for r in results if r['aq'] < threshold and r['wf'] >= threshold)
+
+    app.logger.info(f'[admin_audit_low_emotion] threshold={threshold} results={len(results)} genre={genre_filter or "all"}')
+
+    # Recent rescores — last 10 Sonnet images rescored today, sorted by scored_at desc
+    try:
+        _recent = db.session.execute(db.text("""
+            SELECT i.id, i.original_filename, i.asset_name, i.genre, i.score, i.tier,
+                   i.wonder_score, i.aq_score, i.dod_score, i.disruption_score, i.dm_score,
+                   i.scored_at, u.username, u.full_name
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND COALESCE(i.is_haiku_try, FALSE) = FALSE
+              AND COALESCE(i.is_admin_curation, FALSE) = FALSE
+              AND i.scored_at >= NOW() - INTERVAL '24 hours'
+            ORDER BY i.scored_at DESC
+            LIMIT 15
+        """)).fetchall()
+    except Exception:
+        _recent = []
+
+    recent_rescores = [{
+        'id':       r.id,
+        'filename': r.original_filename or r.asset_name or f'image-{r.id}',
+        'genre':    r.genre or '—',
+        'score':    round(float(r.score), 2) if r.score else 0,
+        'tier':     r.tier or '—',
+        'wf':       round(float(r.wonder_score), 1) if r.wonder_score else 0,
+        'aq':       round(float(r.aq_score), 1) if r.aq_score else 0,
+        'dod':      round(float(r.dod_score), 1) if r.dod_score else 0,
+        'vd':       round(float(r.disruption_score), 1) if r.disruption_score else 0,
+        'dm':       round(float(r.dm_score), 1) if r.dm_score else 0,
+        'scored_at': r.scored_at,
+        'username': r.username,
+        'full_name': r.full_name or r.username,
+    } for r in _recent]
+
+    return render_template('admin_low_emotion.html',
+        results=results,
+        genre_counts=genre_counts.most_common(),
+        total=len(results),
+        threshold=threshold,
+        genre_filter=genre_filter,
+        sort_by=sort_by,
+        wf_below_6=wf_below_6,
+        aq_below_6=aq_below_6,
+        both_below=both_below,
+        only_wf=only_wf,
+        only_aq=only_aq,
+        recent_rescores=recent_rescores,
+    )
+
+
+@app.route('/admin/calibration')
+@login_required
+@admin_required
+def admin_calibration():
+    """GET /admin/calibration — drift comparison dashboard."""
+    import json as _cj
+    _ensure_calibration_drift_column()
+    try:
+        rows = db.session.execute(db.text("""
+            SELECT id, original_filename, genre, score, tier,
+                   dod_score, disruption_score, dm_score, wonder_score, aq_score,
+                   scored_at, created_at,
+                   COALESCE(is_haiku_try, FALSE) AS engine_haiku,
+                   COALESCE(camera_track, 'camera') AS camera_track
+            FROM images
+            WHERE is_admin_curation = TRUE
+              AND COALESCE(is_calibration_drift, FALSE) = TRUE
+              AND user_id = :uid
+            ORDER BY created_at DESC
+            LIMIT 200
+        """), {'uid': current_user.id}).fetchall()
+    except Exception as _re:
+        app.logger.warning(f'[admin_calibration] query failed: {_re}')
+        rows = []
+
+    # Build pairs dict keyed by filename → {sonnet_camera, haiku_camera, sonnet_mobile, haiku_mobile}
+    # Each slot holds the most-recent row for that combination.
+    pairs = {}
+    for r in rows:
+        fn = r.original_filename or f'image-{r.id}'
+        if fn not in pairs:
+            pairs[fn] = {
+                'sonnet_camera': None, 'haiku_camera': None,
+                'sonnet_mobile': None, 'haiku_mobile': None,
+            }
+        engine = 'haiku' if r.engine_haiku else 'sonnet'
+        track  = (r.camera_track or 'camera').lower()
+        if track not in ('mobile', 'camera'):
+            track = 'camera'
+        slot = f'{engine}_{track}'
+        # Keep most recent per slot
+        existing = pairs[fn].get(slot)
+        if existing is None or (r.scored_at and existing.scored_at and r.scored_at > existing.scored_at):
+            pairs[fn][slot] = r
+
+    # Build export rows — all four paths per image
+    export_rows = []
+    _engine_labels = [
+        ('sonnet_camera', 'Sonnet', 'Camera'),
+        ('haiku_camera',  'Haiku',  'Camera'),
+        ('sonnet_mobile', 'Sonnet', 'Mobile'),
+        ('haiku_mobile',  'Haiku',  'Mobile'),
+    ]
+    for fn, p in pairs.items():
+        # delta = haiku_camera - sonnet_camera (primary comparison)
+        sc = p.get('sonnet_camera')
+        hc = p.get('haiku_camera')
+        delta_cam = round(hc.score - sc.score, 2) if (sc and hc and sc.score and hc.score) else ''
+        sm = p.get('sonnet_mobile')
+        hm = p.get('haiku_mobile')
+        delta_mob = round(hm.score - sm.score, 2) if (sm and hm and sm.score and hm.score) else ''
+        for slot, eng_label, track_label in _engine_labels:
+            r = p.get(slot)
+            if not r:
+                continue
+            delta = delta_cam if track_label == 'Camera' and eng_label == 'Haiku' else (
+                    delta_mob if track_label == 'Mobile' and eng_label == 'Haiku' else '')
+            export_rows.append([
+                fn, eng_label, track_label, r.genre or '',
+                round(float(r.score), 2) if r.score else '',
+                r.tier or '',
+                round(float(r.dod_score), 1) if r.dod_score else '',
+                round(float(r.disruption_score), 1) if r.disruption_score else '',
+                round(float(r.dm_score), 1) if r.dm_score else '',
+                round(float(r.wonder_score), 1) if r.wonder_score else '',
+                round(float(r.aq_score), 1) if r.aq_score else '',
+                delta,
+                r.scored_at.strftime('%Y-%m-%d %H:%M') if r.scored_at else '',
+            ])
+
+    return render_template('admin_calibration.html',
+                           rows=rows, pairs=pairs,
+                           export_data=_cj.dumps(export_rows),
+                           genres=GENRE_IDS, now=datetime.utcnow())
+
+
+@app.route('/admin/calibration/upload', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_upload():
+    """
+    POST /admin/calibration/upload
+    Fields: image (file), genre (str), engine ('sonnet'|'haiku')
+    No watermark check, no duplicate check, no NSFW, no AI side-calls.
+    Returns JSON {filename, engine, score, tier, dod, vd, dm, wf, aq, status, image_id}.
+    """
+    _ensure_calibration_drift_column()
+
+    file         = request.files.get('image')
+    genre        = normalise_genre(request.form.get('genre', '').strip())
+    engine       = (request.form.get('engine', 'sonnet') or 'sonnet').strip().lower()
+    camera_track = (request.form.get('camera_track', '') or '').strip().lower()
+    if camera_track not in ('mobile', 'camera'):
+        camera_track = None  # default: camera-league scoring
+
+    if not file or not file.filename:
+        return jsonify({'status': 'error', 'message': 'No file received'}), 400
+    if not allowed_file(file.filename):
+        return jsonify({'filename': file.filename, 'status': 'skipped — unsupported type',
+                        'score': None, 'tier': None}), 200
+    if not genre:
+        return jsonify({'status': 'error', 'message': 'No genre provided'}), 400
+    if engine not in ('sonnet', 'haiku'):
+        engine = 'sonnet'
+
+    result = {'filename': file.filename, 'engine': engine,
+              'score': None, 'tier': None, 'status': 'failed'}
+    try:
+        uid      = str(uuid.uuid4())
+        filename = secure_filename(file.filename)
+        raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', uid + '_' + filename)
+        file.save(raw_path)
+
+        thumb_path, w, h, fmt, phash = ingest_image(
+            raw_path, app.config['UPLOAD_FOLDER'],
+            min_short_side=ADMIN_CURATION_MIN_DIMENSION
+        )
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+        from models import Image as _IM
+        img = _IM(
+            user_id               = current_user.id,
+            original_filename     = filename,
+            stored_filename       = os.path.basename(thumb_path),
+            thumb_path            = thumb_path,
+            thumb_url             = thumb_url,
+            file_size_kb          = int(os.path.getsize(thumb_path) / 1024),
+            width=w, height=h, format=fmt,
+            asset_name            = auto_title(filename, genre),
+            phash                 = phash,
+            genre                 = genre,
+            status                = 'pending',
+            is_public             = False,
+            is_admin_curation     = True,
+        )
+        db.session.add(img)
+        db.session.flush()
+
+        # is_haiku_try is not a mapped ORM column — set via raw SQL (Rule 8)
+        if engine == 'haiku':
+            db.session.execute(
+                db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+                {'iid': img.id}
+            )
+        # Store camera_track on the image so the calibration dashboard can group by tier
+        if camera_track in ('mobile', 'camera'):
+            db.session.execute(
+                db.text('UPDATE images SET camera_track = :ct WHERE id = :iid'),
+                {'ct': camera_track, 'iid': img.id}
+            )
+
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if engine == 'sonnet':
+            from engine.auto_score import auto_score_ddi_fast
+            scored = auto_score_ddi_fast(image_path=img.thumb_path, genre=genre, sub_genre=None)
+            if scored:
+                img.dod_score        = scored.get('dod', 0)
+                img.disruption_score = scored.get('disruption', 0) or scored.get('vd', 0)
+                img.dm_score         = scored.get('dm', 0)
+                img.wonder_score     = scored.get('wonder', 0) or scored.get('wf', 0)
+                img.aq_score         = scored.get('aq', 0)
+                img.score            = scored.get('score', 0)
+                img.tier             = scored.get('tier', '')
+                img.archetype        = scored.get('archetype', '')
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                # Commit everything including is_calibration_drift in one transaction
+                db.session.execute(db.text(
+                    "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
+                ), {'iid': img.id})
+                db.session.commit()
+                result = {
+                    'filename': file.filename, 'engine': 'sonnet',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': img.dod_score, 'vd': img.disruption_score,
+                    'dm': img.dm_score, 'wf': img.wonder_score, 'aq': img.aq_score,
+                    'status': 'scored', 'image_id': img.id,
+                }
+            else:
+                db.session.commit()
+                result = {'filename': file.filename, 'engine': 'sonnet',
+                          'status': 'upload OK — scoring failed', 'image_id': img.id}
+        else:
+            # Haiku — bare calibration score (camera_track controls mobile weights)
+            scored = _calibration_score_haiku(img.thumb_path, genre, camera_track=camera_track)
+            if scored:
+                img.dod_score        = scored['dod']
+                img.disruption_score = scored['vd']
+                img.dm_score         = scored['dm']
+                img.wonder_score     = scored['wf']
+                img.aq_score         = scored['aq']
+                img.score            = scored['score']
+                img.tier             = scored['tier']
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.execute(db.text(
+                    "UPDATE images SET is_calibration_drift = TRUE WHERE id = :iid"
+                ), {'iid': img.id})
+                db.session.commit()
+                result = {
+                    'filename': file.filename, 'engine': 'haiku',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': scored['dod'], 'vd': scored['vd'],
+                    'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
+                    'status': 'scored', 'image_id': img.id,
+                    'track': camera_track or 'camera',
+                }
+            else:
+                db.session.commit()
+                result = {'filename': file.filename, 'engine': 'haiku',
+                          'status': 'upload OK — Haiku scoring failed', 'image_id': img.id}
+
+        app.logger.info(
+            f'[admin_calibration] engine={engine} image={img.id} '
+            f'score={img.score} genre={genre} admin={current_user.id}'
+        )
+
+    except Exception as _err:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] upload failed: {_err}')
+        result = {'filename': file.filename, 'engine': engine,
+                  'score': None, 'tier': None, 'status': f'failed — {_err}'}
+
+    return jsonify(result), 200
+
+
+@app.route('/admin/calibration/rescore/<int:image_id>', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_rescore(image_id):
+    """
+    POST /admin/calibration/rescore/<image_id>
+    Re-scores an existing calibration image.
+    Tries thumb_path first (local disk). Falls back to thumb_url (R2) when
+    the container has been redeployed and local files are gone.
+    Frontend calls this per-row sequentially (not bulk) to avoid gunicorn timeout.
+    """
+    import tempfile as _tf
+    _tmp_path = None
+    try:
+        img = Image.query.filter_by(
+            id=image_id,
+            is_admin_curation=True
+        ).first_or_404()
+
+        # ── Resolve image path: local disk first, R2 fallback ────────────────
+        score_path = None
+        if img.thumb_path and os.path.exists(img.thumb_path):
+            score_path = img.thumb_path
+        elif img.thumb_url:
+            # Download from R2 using boto3 client (thumb_url is private, not public HTTP)
+            try:
+                from storage import get_client, BUCKET
+                import tempfile as _tf2
+                _key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+                _tf_obj = _tf2.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(BUCKET, _key, _tf_obj)
+                _tf_obj.close()
+                _tmp_path = _tf_obj.name
+                score_path = _tmp_path
+                app.logger.info(f'[calibration_rescore] R2 fallback OK image={image_id} key={_key}')
+            except Exception as _dl_err:
+                app.logger.error(f'[calibration_rescore] R2 download failed image={image_id}: {_dl_err}')
+
+        if not score_path:
+            return jsonify({'ok': False,
+                'message': 'Thumbnail not found on disk or R2 — re-upload this image'}), 400
+
+        # ── Engine detection ─────────────────────────────────────────────────
+        _row = db.session.execute(
+            db.text('SELECT is_haiku_try FROM images WHERE id = :iid'), {'iid': image_id}
+        ).fetchone()
+        _is_haiku = bool(_row and _row[0])
+
+        _engine_override = request.form.get('engine', '').strip().lower()
+        engine = _engine_override if _engine_override in ('sonnet', 'haiku') else (
+            'haiku' if _is_haiku else 'sonnet'
+        )
+
+        _track_override = (request.form.get('camera_track', '') or '').strip().lower()
+        camera_track = _track_override if _track_override in ('mobile', 'camera') else None
+
+        genre  = img.genre or 'General'
+        result = {'image_id': image_id, 'engine': engine, 'status': 'failed'}
+
+        # Persist camera_track so calibration dashboard can group by tier
+        if camera_track in ('mobile', 'camera'):
+            try:
+                db.session.execute(
+                    db.text('UPDATE images SET camera_track = :ct WHERE id = :iid'),
+                    {'ct': camera_track, 'iid': image_id}
+                )
+            except Exception:
+                pass
+
+        img.status = 'pending'
+        db.session.commit()
+        app.logger.info(f'[calibration_rescore] START image={image_id} engine={engine} genre={genre}')
+
+        if engine == 'sonnet':
+            from engine.auto_score import auto_score_ddi_fast
+            scored = auto_score_ddi_fast(image_path=score_path, genre=genre, sub_genre=img.sub_genre)
+            if scored:
+                img.dod_score        = scored.get('dod', 0)
+                img.disruption_score = scored.get('disruption', 0) or scored.get('vd', 0)
+                img.dm_score         = scored.get('dm', 0)
+                img.wonder_score     = scored.get('wonder', 0) or scored.get('wf', 0)
+                img.aq_score         = scored.get('aq', 0)
+                img.score            = scored.get('score', 0)
+                img.tier             = scored.get('tier', '')
+                img.archetype        = scored.get('archetype', '')
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'image_id': image_id, 'engine': 'sonnet', 'status': 'scored',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': img.dod_score, 'vd': img.disruption_score,
+                    'dm': img.dm_score, 'wf': img.wonder_score, 'aq': img.aq_score,
+                }
+            else:
+                img.status = 'error'; db.session.commit()
+                result['status'] = 'scoring failed'
+        else:
+            scored = _calibration_score_haiku(score_path, genre, camera_track=camera_track)
+            if scored:
+                img.dod_score        = scored['dod']
+                img.disruption_score = scored['vd']
+                img.dm_score         = scored['dm']
+                img.wonder_score     = scored['wf']
+                img.aq_score         = scored['aq']
+                img.score            = scored['score']
+                img.tier             = scored['tier']
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                db.session.commit()
+                result = {
+                    'image_id': image_id, 'engine': 'haiku', 'status': 'scored',
+                    'track': camera_track or 'camera',
+                    'score': img.score, 'tier': img.tier,
+                    'dod': scored['dod'], 'vd': scored['vd'],
+                    'dm': scored['dm'], 'wf': scored['wf'], 'aq': scored['aq'],
+                }
+            else:
+                img.status = 'error'; db.session.commit()
+                result['status'] = 'haiku scoring failed'
+
+        app.logger.info(f'[calibration_rescore] image={image_id} engine={engine} score={img.score}')
+        return jsonify(result), 200
+
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[calibration_rescore] image={image_id}: {_e}')
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+    finally:
+        # Clean up temp R2 download if used
+        if _tmp_path and os.path.exists(_tmp_path):
+            try: os.unlink(_tmp_path)
+            except: pass
+
+
+
+@app.route('/admin/calibration/delete-selected', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_delete_selected():
+    """
+    POST /admin/calibration/delete-selected
+    Form field: image_ids — comma-separated image IDs.
+    Deletes only images owned by admin with is_calibration_drift=TRUE.
+    Returns JSON {ok, deleted}.
+    """
+    ids_raw = request.form.get('image_ids', '')
+    try:
+        ids = [int(x) for x in ids_raw.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({'ok': False, 'message': 'Invalid IDs'}), 400
+    if not ids:
+        return jsonify({'ok': False, 'message': 'No IDs provided'}), 400
+    try:
+        imgs = Image.query.filter(
+            Image.id.in_(ids),
+            Image.is_admin_curation == True,
+        ).all()
+        deleted = 0
+        for img in imgs:
+            try:
+                if img.thumb_path and os.path.exists(img.thumb_path):
+                    os.remove(img.thumb_path)
+            except Exception as _fe:
+                app.logger.warning(f'[admin_calibration] thumb delete warning id={img.id}: {_fe}')
+            db.session.delete(img)
+            deleted += 1
+        db.session.commit()
+        app.logger.info(f'[admin_calibration] delete-selected {deleted} images admin={current_user.id}')
+        return jsonify({'ok': True, 'deleted': deleted}), 200
+    except Exception as _de:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] delete-selected failed: {_de}')
+        return jsonify({'ok': False, 'message': str(_de)}), 500
+
+
+@app.route('/admin/calibration/clear', methods=['POST'])
+@login_required
+@admin_required
+def admin_calibration_clear():
+    """
+    POST /admin/calibration/clear
+    Deletes all calibration drift images for the admin user.
+    Optionally scoped: ?engine=sonnet|haiku
+    """
+    engine = request.args.get('engine', '').strip().lower()
+    try:
+        q = "DELETE FROM images WHERE is_admin_curation = TRUE AND is_calibration_drift = TRUE AND user_id = :uid"
+        params = {'uid': current_user.id}
+        if engine in ('sonnet', 'haiku'):
+            q += " AND is_haiku_try = :hk"
+            params['hk'] = (engine == 'haiku')
+        deleted = db.session.execute(db.text(q + " RETURNING id"), params).fetchall()
+        db.session.commit()
+        app.logger.info(f'[admin_calibration] cleared {len(deleted)} images engine={engine or "all"} admin={current_user.id}')
+        return jsonify({'ok': True, 'deleted': len(deleted)}), 200
+    except Exception as _ce:
+        db.session.rollback()
+        app.logger.error(f'[admin_calibration] clear failed: {_ce}')
+        return jsonify({'ok': False, 'message': str(_ce)}), 500
+
+
 @app.route('/admin/curation/delete/<int:image_id>', methods=['POST'])
 @login_required
 @admin_required
@@ -17260,6 +19274,9 @@ def admin_toggle_visibility(image_id):
     img.is_public = not img.is_public
     db.session.commit()
     state = 'public' if img.is_public else 'hidden'
+    _log_admin_action('toggle_visibility', 'image', image_id, {
+        'asset_name': img.asset_name, 'is_public_after': img.is_public, 'user_id': img.user_id
+    })
     flash(f'Image "{img.asset_name or "Untitled"}" is now {state}.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
@@ -17283,7 +19300,8 @@ def owner_toggle_visibility(image_id):
 @admin_required
 def admin_toggle_subscription(user_id):
     user = User.query.get_or_404(user_id)
-    user.is_subscribed = not getattr(user, 'is_subscribed', False)
+    _sub_before = getattr(user, 'is_subscribed', False)
+    user.is_subscribed = not _sub_before
     if user.is_subscribed:
         user.subscription_track = request.form.get('track', 'camera')
         user.subscription_plan  = request.form.get('plan', 'uat')  # UAT default — unlimited uploads
@@ -17292,8 +19310,16 @@ def admin_toggle_subscription(user_id):
         user.subscription_track = None
         user.subscription_plan  = None
     db.session.commit()
+    _log_admin_action('toggle_subscription', 'user', user_id, {
+        'email': user.email, 'full_name': user.full_name,
+        'is_subscribed_before': _sub_before, 'is_subscribed_after': user.is_subscribed,
+        'track': user.subscription_track, 'plan': user.subscription_plan
+    })
     status = 'activated' if user.is_subscribed else 'deactivated'
-    flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
+    _msg = f'Subscription {status} for {user.full_name or user.username}.'
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'ok': True, 'message': _msg, 'status': status})
+    flash(_msg, 'success')
     return redirect(url_for('admin_users'))
 
 
@@ -17319,110 +19345,792 @@ def admin_set_plan(user_id):
 @login_required
 @admin_required
 def admin_delete_user(user_id):
+    """
+    Soft delete — sets is_active=False, locks out the user, sends farewell email.
+    Data and images are preserved for reinstatement. Logged as soft_delete.
+    Session 210: replaced hard delete with soft delete to allow reinstatement.
+    """
     user = User.query.get_or_404(user_id)
     if user.role == 'admin':
         flash('Cannot delete an admin account.', 'error')
         return redirect(url_for('admin_users'))
 
-    username = user.full_name or user.username
+    _uname = user.full_name or user.username or f'user {user_id}'
+    _uemail = user.email or ''
 
     try:
-        # 1. CalibrationNotes by this user (as admin) and on their images
-        try:
-            from models import CalibrationNote
-            CalibrationNote.query.filter_by(admin_id=user_id).delete()
-            image_ids = [img.id for img in user.images]
-            if image_ids:
-                CalibrationNote.query.filter(CalibrationNote.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] calibration notes: {e}')
-
-        # 2. ImageReports filed by this user + reports on their images
-        try:
-            ImageReport.query.filter_by(reporter_id=user_id).delete()
-            if image_ids:
-                ImageReport.query.filter(ImageReport.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] image reports: {e}')
-
-        # 3. Peer ratings given by this user + received on their images
-        try:
-            PeerRating.query.filter_by(rater_id=user_id).delete()
-            if image_ids:
-                PeerRating.query.filter(PeerRating.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] peer ratings: {e}')
-
-        # 4. Rating assignments
-        try:
-            RatingAssignment.query.filter_by(rater_id=user_id).delete()
-            if image_ids:
-                RatingAssignment.query.filter(RatingAssignment.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] rating assignments: {e}')
-
-        # 5. Peer pool entries
-        try:
-            PeerPoolEntry.query.filter_by(user_id=user_id).delete()
-            if image_ids:
-                PeerPoolEntry.query.filter(PeerPoolEntry.image_id.in_(image_ids)).delete(synchronize_session=False)
-        except Exception as e:
-            app.logger.warning(f'[delete_user] peer pool: {e}')
-
-        # 6. Contest entries
-        try:
-            ContestEntry.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] contest entries: {e}')
-
-        # 7. Open contest entries
-        try:
-            OpenContestEntry.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] open contest entries: {e}')
-
-        # 8. BOW submissions
-        try:
-            from models import BowSubmission
-            BowSubmission.query.filter_by(user_id=user_id).delete()
-        except Exception as e:
-            app.logger.warning(f'[delete_user] bow submissions: {e}')
-
-        # 9. Delete images + R2 cleanup
-        for img in list(user.images):
-            # raw_submissions.image_id is NOT NULL — must delete before image row
-            try:
-                db.session.execute(
-                    db.text('DELETE FROM raw_submissions WHERE image_id = :iid'),
-                    {'iid': img.id}
-                )
-            except Exception:
-                pass
-            if img.thumb_url:
-                try:
-                    key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
-                    r2.delete_file(key)
-                except Exception:
-                    pass
-            if img.card_url:
-                try:
-                    key = img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
-                    r2.delete_file(key)
-                except Exception:
-                    pass
-            db.session.delete(img)
-
-        # 10. Delete the user
-        db.session.delete(user)
+        user.is_active = False
+        if getattr(user, 'is_subscribed', False):
+            user.is_subscribed = False
         db.session.commit()
-        flash(f'User "{username}" and all associated data permanently deleted.', 'success')
+
+        _log_admin_action('soft_delete', 'user', user_id, {
+            'username': _uname,
+            'email':    _uemail,
+            'note':     'Admin soft delete — account locked, data preserved, reinstatable',
+        })
+        app.logger.info(f'[soft_delete] uid={user_id} email={_uemail} by admin={current_user.id}')
+
+        # Farewell email
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            send_email(
+                to_addresses=[_uemail],
+                subject='Your Shutter League account has been deactivated',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="padding:28px 28px 24px;">'
+                    '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Account deactivated</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">Hi ' + _uname + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'Your Shutter League account has been deactivated by our team. '
+                    'Your data is retained and your account can be reinstated if this was made in error.</p>'
+                    '<p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 24px;">'
+                    'If you believe this was a mistake or wish to dispute this action, '
+                    'please contact us immediately at '
+                    '<a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a>.</p>'
+                    '<p style="font-size:15px;color:#8a8070;margin:0;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; '
+                    '<a href="' + _site + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    'Hi ' + _uname + ',\n\n'
+                    'Your Shutter League account has been deactivated by our team. '
+                    'Your data is retained and can be reinstated if this was made in error.\n\n'
+                    'If you believe this was a mistake, contact us at ' + CONTACT_EMAIL + '\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _email_err:
+            app.logger.warning(f'[soft_delete] farewell email failed: {_email_err}')
+
+        flash(f'Account "{_uname}" deactivated. Data preserved — use Reinstate to restore.', 'success')
 
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'[admin_delete_user] failed for user {user_id}: {e}')
+        app.logger.error(f'[soft_delete] failed for user {user_id}: {e}')
         flash(f'Delete failed: {str(e)[:120]}', 'error')
 
     return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/user/<int:user_id>/reinstate', methods=['POST'])
+@login_required
+@admin_required
+def admin_reinstate_user(user_id):
+    """
+    Reinstate a soft-deleted user. Sets is_active=True.
+    Subscription is NOT automatically restored — admin must do that separately.
+    Logs reinstate action. Sends welcome-back email. Session 210.
+    """
+    user = User.query.get_or_404(user_id)
+    if user.role == 'admin':
+        return jsonify({'ok': False, 'message': 'Cannot reinstate admin.'}), 400
+
+    _uname = user.full_name or user.username or f'user {user_id}'
+    _uemail = user.email or ''
+
+    try:
+        user.is_active = True
+        db.session.commit()
+
+        _log_admin_action('reinstate', 'user', user_id, {
+            'username': _uname,
+            'email':    _uemail,
+            'note':     'Admin reinstate — account restored, subscription not auto-restored',
+        })
+        app.logger.info(f'[reinstate] uid={user_id} email={_uemail} by admin={current_user.id}')
+
+        # Welcome-back email
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            send_email(
+                to_addresses=[_uemail],
+                subject='Your Shutter League account has been reinstated',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="padding:28px 28px 24px;">'
+                    '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Account reinstated</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">Hi ' + _uname + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'Good news — your Shutter League account has been reinstated. '
+                    'You can log in again at the link below.</p>'
+                    '<a href="' + _site + '/login" style="display:inline-block;background:#C8A84B;color:#1A1A18;'
+                    'font-weight:700;padding:14px 28px;border-radius:6px;text-decoration:none;margin:8px 0 20px;">'
+                    'Log in to Shutter League &#8594;</a>'
+                    '<p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 24px;">'
+                    'If you had a paid subscription, please contact us at '
+                    '<a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a> '
+                    'to have it restored.</p>'
+                    '<p style="font-size:15px;color:#8a8070;margin:0;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; '
+                    '<a href="' + _site + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    'Hi ' + _uname + ',\n\n'
+                    'Your Shutter League account has been reinstated. Log in at: '
+                    + _site + '/login\n\n'
+                    'If you had a paid subscription, contact us at ' + CONTACT_EMAIL + ' to restore it.\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _email_err:
+            app.logger.warning(f'[reinstate] welcome-back email failed: {_email_err}')
+
+        return jsonify({'ok': True, 'message': f'Account reinstated. Welcome-back email sent to {_uemail}.'})
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[reinstate] failed for user {user_id}: {e}')
+        return jsonify({'ok': False, 'message': str(e)[:120]}), 500
+
+
+@app.route('/admin/haiku/bulk-delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_bulk_delete():
+    """
+    POST /admin/haiku/bulk-delete
+    Body: user_ids=1,2,3  delete_type=bot|user
+    Bulk hard-delete Haiku members.
+      bot  → hard delete + ban email in blocked_ips + log action='bot_delete'
+      user → hard delete + log action='delete_user'
+    Returns JSON {deleted: N, failed: [{id, reason}]}
+    Session 210 — bulk bot/user delete from Haiku members table.
+    """
+    import json as _bdj
+    _raw_ids  = request.form.get('user_ids', '').strip()
+    _del_type = request.form.get('delete_type', 'user').strip()  # 'bot' or 'user'
+
+    if not _raw_ids:
+        return jsonify({'ok': False, 'message': 'No user IDs supplied.'}), 400
+    if _del_type not in ('bot', 'user'):
+        return jsonify({'ok': False, 'message': 'Invalid delete_type.'}), 400
+
+    try:
+        _uid_list = [int(x.strip()) for x in _raw_ids.split(',') if x.strip().isdigit()]
+    except Exception:
+        return jsonify({'ok': False, 'message': 'Malformed user_ids.'}), 400
+
+    if not _uid_list:
+        return jsonify({'ok': False, 'message': 'No valid user IDs.'}), 400
+
+    _deleted = 0
+    _failed  = []
+
+    for _uid in _uid_list:
+        _user = User.query.get(_uid)
+        if not _user:
+            _failed.append({'id': _uid, 'reason': 'not found'})
+            continue
+        if _user.role == 'admin':
+            _failed.append({'id': _uid, 'reason': 'cannot delete admin'})
+            continue
+
+        _uname = _user.full_name or _user.username or f'user {_uid}'
+        _uemail = _user.email or ''
+
+        try:
+            _image_ids = [img.id for img in _user.images]
+
+            # 1. CalibrationNotes
+            try:
+                from models import CalibrationNote
+                CalibrationNote.query.filter_by(admin_id=_uid).delete()
+                if _image_ids:
+                    CalibrationNote.query.filter(
+                        CalibrationNote.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} calibration notes: {_e}')
+
+            # 2. ImageReports
+            try:
+                ImageReport.query.filter_by(reporter_id=_uid).delete()
+                if _image_ids:
+                    ImageReport.query.filter(
+                        ImageReport.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} image reports: {_e}')
+
+            # 3. Peer ratings
+            try:
+                PeerRating.query.filter_by(rater_id=_uid).delete()
+                if _image_ids:
+                    PeerRating.query.filter(
+                        PeerRating.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} peer ratings: {_e}')
+
+            # 4. Rating assignments
+            try:
+                RatingAssignment.query.filter_by(rater_id=_uid).delete()
+                if _image_ids:
+                    RatingAssignment.query.filter(
+                        RatingAssignment.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} rating assignments: {_e}')
+
+            # 5. Peer pool entries
+            try:
+                PeerPoolEntry.query.filter_by(user_id=_uid).delete()
+                if _image_ids:
+                    PeerPoolEntry.query.filter(
+                        PeerPoolEntry.image_id.in_(_image_ids)
+                    ).delete(synchronize_session=False)
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} peer pool: {_e}')
+
+            # 6. Contest entries
+            try:
+                ContestEntry.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} contest entries: {_e}')
+
+            # 7. Open contest entries
+            try:
+                OpenContestEntry.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} open contest entries: {_e}')
+
+            # 8. BOW submissions
+            try:
+                from models import BowSubmission
+                BowSubmission.query.filter_by(user_id=_uid).delete()
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} bow submissions: {_e}')
+
+            # 9. POTY entries
+            try:
+                db.session.execute(
+                    db.text('DELETE FROM poty_entry_images WHERE entry_id IN '
+                            '(SELECT id FROM poty_entries WHERE user_id = :uid)'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM poty_entries WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} poty: {_e}')
+
+            # 10. Raw submissions + scored_phash_cache + upload_history_log
+            try:
+                if _image_ids:
+                    db.session.execute(
+                        db.text('DELETE FROM raw_submissions WHERE image_id = ANY(:ids)'),
+                        {'ids': _image_ids}
+                    )
+                db.session.execute(
+                    db.text('DELETE FROM scored_phash_cache WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM upload_history_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM seasonal_shown_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+                db.session.execute(
+                    db.text('DELETE FROM advisory_shown_log WHERE user_id = :uid'),
+                    {'uid': _uid}
+                )
+            except Exception as _e:
+                app.logger.warning(f'[bulk_delete] uid={_uid} log tables: {_e}')
+
+            # 11. Images + R2 cleanup
+            for _img in list(_user.images):
+                try:
+                    db.session.execute(
+                        db.text('DELETE FROM raw_submissions WHERE image_id = :iid'),
+                        {'iid': _img.id}
+                    )
+                except Exception:
+                    pass
+                if _img.thumb_url:
+                    try:
+                        _key = _img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                        r2.delete_file(_key)
+                    except Exception:
+                        pass
+                if _img.card_url:
+                    try:
+                        _key = _img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                        r2.delete_file(_key)
+                    except Exception:
+                        pass
+                db.session.delete(_img)
+
+            # 12. Delete or soft-delete depending on type
+            if _del_type == 'bot':
+                # Hard delete — bots get no reinstatement
+                db.session.delete(_user)
+                db.session.commit()
+                _action = 'bot_delete'
+            else:
+                # Soft delete — real users: lock out, preserve data, send farewell email
+                _user.is_active = False
+                if getattr(_user, 'is_subscribed', False):
+                    _user.is_subscribed = False
+                db.session.commit()
+                _action = 'soft_delete'
+                # Farewell email for soft-deleted real users
+                try:
+                    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    send_email(
+                        to_addresses=[_uemail],
+                        subject='Your Shutter League account has been deactivated',
+                        html_body=(
+                            '<p>Hi ' + _uname + ',</p>'
+                            '<p>Your Shutter League account has been deactivated. '
+                            'Your data is preserved and can be reinstated if this was made in error.</p>'
+                            '<p>Contact us at <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> to dispute.</p>'
+                            '<p>&#8212; Shutter League</p>'
+                        ),
+                        text_body=(
+                            'Hi ' + _uname + ',\n\nYour Shutter League account has been deactivated. '
+                            'Contact us at ' + CONTACT_EMAIL + ' to dispute.\n\n-- Shutter League'
+                        )
+                    )
+                except Exception as _be:
+                    app.logger.warning(f'[bulk_delete] farewell email failed uid={_uid}: {_be}')
+
+            # 13. Audit log
+            _log_admin_action(_action, 'user', _uid, {
+                'username':    _uname,
+                'email':       _uemail,
+                'delete_type': _del_type,
+                'email_banned': (_del_type == 'bot'),
+                'note':        'Bulk delete — Haiku members panel',
+            })
+
+            app.logger.info(
+                f'[bulk_delete] {_action} uid={_uid} email={_uemail} '
+                f'by admin={current_user.id}'
+            )
+            _deleted += 1
+
+        except Exception as _exc:
+            db.session.rollback()
+            app.logger.error(f'[bulk_delete] uid={_uid} FAILED: {_exc}')
+            _failed.append({'id': _uid, 'reason': str(_exc)[:120]})
+
+    _label = 'bot-deleted' if _del_type == 'bot' else 'deleted'
+    return jsonify({
+        'ok':      True,
+        'deleted': _deleted,
+        'failed':  _failed,
+        'message': f'{_deleted} user(s) {_label}.' + (
+            f' {len(_failed)} failed: ' + ', '.join(str(f["id"]) for f in _failed)
+            if _failed else ''
+        ),
+    })
+
+
+@app.route('/admin/image/<int:image_id>/haiku-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_rescore(image_id):
+    """
+    POST /admin/image/<id>/haiku-rescore
+    Re-runs _try_run_haiku on a Haiku image — fires the Haiku prompt,
+    not the Sonnet auto_score engine. Safe for is_haiku_try=TRUE images.
+    Session 210: needed because force_rescore wrongly runs Sonnet on Haiku images.
+    """
+    import tempfile as _hrt
+    img = Image.query.get_or_404(image_id)
+    # Session 210: removed is_haiku_try guard — admin can force Haiku rescore on any image
+    # Ensure the image is marked as haiku_try so try_result renders correctly
+    # Rule 8: is_haiku_try is raw SQL only — never ORM
+    _is_ht = db.session.execute(
+        db.text('SELECT is_haiku_try FROM images WHERE id = :iid'),
+        {'iid': image_id}
+    ).scalar()
+    if not _is_ht:
+        db.session.execute(
+            db.text('UPDATE images SET is_haiku_try = TRUE WHERE id = :iid'),
+            {'iid': image_id}
+        )
+        db.session.commit()
+
+    try:
+        import threading as _hrtd
+        # Download image for scoring
+        from storage import get_client as _hr_get_client, BUCKET as _HR_BUCKET
+        _tf = _hrt.NamedTemporaryFile(suffix='.jpg', delete=False)
+        _key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+        _hr_get_client().download_fileobj(_HR_BUCKET, _key, _tf)
+        _tf.close()
+        import base64 as _hrb64
+        with open(_tf.name, 'rb') as _f:
+            _img_b64 = _hrb64.b64encode(_f.read()).decode()
+        import os as _hros
+        _hros.unlink(_tf.name)
+
+        _iid = image_id
+        _b64 = _img_b64
+        _genre = img.genre or 'General'
+        _uid = img.user_id
+
+        def _run_haiku_rescore():
+            with app.app_context():
+                _try_run_haiku(_iid, _b64, _genre, user_id=_uid)
+                app.logger.info(f'[haiku_rescore] image={_iid} complete')
+
+        _hrtd.Thread(target=_run_haiku_rescore, daemon=True).start()
+
+        _log_admin_action('haiku_rescore', 'image', image_id, {
+            'genre': _genre, 'user_id': _uid
+        })
+        return jsonify({'ok': True, 'message': f'Haiku rescore started for image {image_id}. Refresh the scorecard in 15 seconds.'})
+
+    except Exception as _e:
+        app.logger.error(f'[haiku_rescore] image={image_id} failed: {_e}')
+        return jsonify({'ok': False, 'message': str(_e)[:200]}), 500
+
+
+@app.route('/admin/haiku/bulk-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_haiku_bulk_rescore():
+    """
+    POST /admin/haiku/bulk-rescore
+    Re-runs _try_run_haiku on ALL scored Haiku images.
+    Used after prompt improvements to refresh existing scorecards.
+    Session 210.
+    """
+    import threading as _brtd
+    import tempfile as _brtf
+    import base64 as _brb64
+
+    try:
+        _rows = db.session.execute(db.text(
+            "SELECT id, thumb_url, genre, user_id FROM images "
+            "WHERE is_haiku_try = TRUE AND status = 'scored' "
+            "ORDER BY id ASC"
+        )).fetchall()
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+    if not _rows:
+        return jsonify({'ok': True, 'message': 'No scored Haiku images found.', 'count': 0})
+
+    def _run_bulk():
+        with app.app_context():
+            from storage import get_client as _bg_client, BUCKET as _BG_BUCKET
+            _done = 0
+            for _row in _rows:
+                try:
+                    _tf = _brtf.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    _key = 'thumbs/' + _row.thumb_url.split('/thumbs/')[-1]
+                    _bg_client().download_fileobj(_BG_BUCKET, _key, _tf)
+                    _tf.close()
+                    with open(_tf.name, 'rb') as _f:
+                        _b64 = _brb64.b64encode(_f.read()).decode()
+                    import os as _bros
+                    _bros.unlink(_tf.name)
+                    _try_run_haiku(_row.id, _b64, _row.genre or 'General', user_id=_row.user_id)
+                    app.logger.info(f'[haiku_bulk_rescore] image={_row.id} done')
+                    _done += 1
+                    import time as _bt
+                    _bt.sleep(2)  # rate limit — avoid hammering Anthropic API
+                except Exception as _re:
+                    app.logger.error(f'[haiku_bulk_rescore] image={_row.id} failed: {_re}')
+            app.logger.info(f'[haiku_bulk_rescore] complete — {_done}/{len(_rows)} rescored')
+
+    _brtd.Thread(target=_run_bulk, daemon=True).start()
+
+    _log_admin_action('haiku_bulk_rescore', 'system', 0, {
+        'image_count': len(_rows),
+        'note': 'Bulk Haiku rescore after prompt improvement'
+    })
+    return jsonify({
+        'ok': True,
+        'count': len(_rows),
+        'message': f'Rescoring {len(_rows)} Haiku image(s) in background. Check logs — allow 15 seconds per image.'
+    })
+
+
+@app.route('/admin/master-references', methods=['GET'])
+@login_required
+@admin_required
+def admin_master_references():
+    """
+    GET /admin/master-references
+    Shows master reference library with staleness indicator and refresh controls.
+    Session 210.
+    """
+    import json as _mrj
+    try:
+        _rows = db.session.execute(db.text(
+            "SELECT id, name, genre_tags, region, tier, known_for, reference_when, "
+            "do_not_reference, is_platform_mentor, is_active, created_at, last_refreshed_at, added_by "
+            "FROM master_references ORDER BY "
+            "CASE tier WHEN 'Platform Mentor' THEN 0 WHEN 'Tier 1' THEN 1 "
+            "WHEN 'Contest Winner' THEN 2 WHEN 'Tier 2' THEN 3 ELSE 4 END, "
+            "name ASC"
+        )).fetchall()
+        _total = len(_rows)
+        _last_refresh = db.session.execute(db.text(
+            "SELECT MAX(last_refreshed_at) FROM master_references WHERE last_refreshed_at IS NOT NULL"
+        )).scalar()
+        _days_since = None
+        if _last_refresh:
+            _days_since = (datetime.utcnow() - _last_refresh).days
+        return jsonify({
+            'ok': True,
+            'total': _total,
+            'days_since_refresh': _days_since,
+            'stale': (_days_since is None or _days_since > 21),
+            'refs': [
+                {
+                    'id': r.id,
+                    'name': r.name,
+                    'genre_tags': r.genre_tags,
+                    'region': r.region or '',
+                    'tier': r.tier,
+                    'known_for': r.known_for or '',
+                    'reference_when': r.reference_when or '',
+                    'is_active': r.is_active,
+                    'added_by': r.added_by or 'seed',
+                }
+                for r in _rows
+            ]
+        })
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+
+@app.route('/admin/master-references/suggest', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_references_suggest():
+    """
+    POST /admin/master-references/suggest
+    Fires Sonnet call in background thread. Returns job_id immediately.
+    Frontend polls /admin/master-references/suggest/status?job=<id> for result.
+    Session 210: async to avoid gunicorn 30s worker timeout.
+    """
+    import json as _sugj
+    import urllib.request as _sugur
+    import threading as _sugt
+    import uuid as _suguuid
+
+    genre = request.form.get('genre', '').strip()
+    # Support comma-separated genre groups e.g. 'Wildlife,Nature,Macro'
+    if genre and ',' in genre:
+        genres_to_refresh = [g.strip() for g in genre.split(',') if g.strip()]
+    elif genre:
+        genres_to_refresh = [genre]
+    else:
+        genres_to_refresh = [
+            'Wildlife', 'Street', 'Documentary', 'Landscape', 'Nature',
+            'Macro', 'Sports', 'Astrophotography', 'Creative', 'Architecture',
+            'Drone', 'Fashion', 'Wedding', 'People'
+        ]
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return jsonify({'ok': False, 'message': 'API key not set'}), 500
+
+    job_id = str(_suguuid.uuid4())[:8]
+
+    # Store job status in site_settings table (already exists, key-value store)
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+            "ON CONFLICT (key) DO UPDATE SET value = :v"
+        ), {'k': f'mr_suggest_job_{job_id}', 'v': '{"status":"running"}'})
+        db.session.commit()
+    except Exception:
+        pass
+
+    def _run_suggest():
+        with app.app_context():
+            import json as _bj
+            import urllib.request as _bur
+            genres_str = ', '.join(genres_to_refresh)
+            try:
+                _prompt = (
+                    'For the ' + genres_str + ' genre in photography, list the top 8 world-level'
+                    ' and top 8 Indian photographers. Return ONLY a valid JSON array, no markdown: '
+                    '[{"genre": "GENRE", "photographers": [{"name": "Full Name",'
+                    ' "region": "Country", "tier": "Tier 1 or Tier 2",'
+                    ' "known_for": "one sentence about what they are known for",'
+                    ' "reference_when": "the specific situation where they are the right reference",'
+                    ' "do_not_reference": "genres where this is the wrong match"}]}]'
+                    ' Tier 1 = NatGeo/Magnum/WPP level. Tier 2 = regionally acclaimed.'
+                    ' Include recent award winners. Only JSON, nothing else.'
+                )
+                _payload = _bj.dumps({
+                    'model': 'claude-sonnet-4-6',
+                    'max_tokens': 4000,
+                    'messages': [{'role': 'user', 'content': _prompt}]
+                }).encode()
+                _req = _bur.Request(
+                    'https://api.anthropic.com/v1/messages',
+                    data=_payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'x-api-key': api_key,
+                        'anthropic-version': '2023-06-01',
+                    },
+                    method='POST'
+                )
+                with _bur.urlopen(_req, timeout=45) as _resp:
+                    _result = _bj.loads(_resp.read().decode())
+                _text = (_result.get('content') or [{}])[0].get('text', '[]')
+                _text = _text.strip().lstrip('`').replace('json\n', '').rstrip('`').strip()
+                _suggestions = _bj.loads(_text)
+                if not isinstance(_suggestions, list):
+                    _suggestions = [_suggestions]
+                app.logger.info(f'[master_ref_suggest] job={job_id} Sonnet returned {len(_suggestions)} genres')
+                db.session.execute(db.text(
+                    "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+                    "ON CONFLICT (key) DO UPDATE SET value = :v"
+                ), {'k': f'mr_suggest_job_{job_id}',
+                    'v': _bj.dumps({'status': 'done', 'suggestions': _suggestions})})
+                db.session.commit()
+            except Exception as _be:
+                app.logger.error(f'[master_ref_suggest] job={job_id} failed: {_be}')
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+                        "ON CONFLICT (key) DO UPDATE SET value = :v"
+                    ), {'k': f'mr_suggest_job_{job_id}',
+                        'v': _bj.dumps({'status': 'error', 'message': str(_be)[:200]})})
+                    db.session.commit()
+                except Exception:
+                    pass
+
+    _sugt.Thread(target=_run_suggest, daemon=True).start()
+    return jsonify({'ok': True, 'job_id': job_id, 'message': 'Sonnet is working… check back in 30 seconds.'})
+
+
+@app.route('/admin/master-references/suggest/status', methods=['GET'])
+@login_required
+@admin_required
+def admin_master_references_suggest_status():
+    """Poll for suggest job result. Session 210."""
+    import json as _stj
+    job_id = request.args.get('job', '').strip()
+    if not job_id:
+        return jsonify({'ok': False, 'message': 'No job_id'}), 400
+    try:
+        row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = :k"
+        ), {'k': f'mr_suggest_job_{job_id}'}).fetchone()
+        if not row:
+            return jsonify({'ok': False, 'status': 'not_found'}), 404
+        data = _stj.loads(row[0])
+        if data.get('status') == 'done':
+            # Clean up job key
+            db.session.execute(db.text(
+                "DELETE FROM site_settings WHERE key = :k"
+            ), {'k': f'mr_suggest_job_{job_id}'})
+            db.session.commit()
+        return jsonify({'ok': True, **data})
+    except Exception as _e:
+        return jsonify({'ok': False, 'message': str(_e)}), 500
+
+
+@app.route('/admin/master-references/approve', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_references_approve():
+    """
+    POST /admin/master-references/approve
+    body: entries=JSON array of photographer dicts
+    Writes approved entries to master_references table.
+    Session 210.
+    """
+    import json as _apj
+    raw = request.form.get('entries', '[]')
+    try:
+        entries = _apj.loads(raw)
+    except Exception:
+        return jsonify({'ok': False, 'message': 'Invalid JSON'}), 400
+
+    added = 0
+    skipped = 0
+    for e in entries:
+        name = (e.get('name') or '').strip()
+        if not name:
+            continue
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO master_references "
+                "(name, genre_tags, region, tier, known_for, reference_when, do_not_reference, "
+                "is_platform_mentor, last_refreshed_at, added_by) "
+                "VALUES (:n, :gt, :r, :t, :kf, :rw, :dnr, FALSE, NOW(), 'admin_refresh') "
+                "ON CONFLICT DO NOTHING"
+            ), {
+                'n':   name,
+                'gt':  e.get('genre_tags') or e.get('genre', ''),
+                'r':   e.get('region', ''),
+                't':   e.get('tier', 'Tier 2'),
+                'kf':  e.get('known_for', ''),
+                'rw':  e.get('reference_when', ''),
+                'dnr': e.get('do_not_reference', ''),
+            })
+            added += 1
+        except Exception as _ae:
+            app.logger.warning(f'[master_ref_approve] {name}: {_ae}')
+            skipped += 1
+
+    db.session.commit()
+    _log_admin_action('master_ref_refresh', 'system', 0, {
+        'added': added, 'skipped': skipped,
+        'genres': list({e.get('genre_tags','') for e in entries})
+    })
+    return jsonify({'ok': True, 'added': added, 'skipped': skipped,
+                    'message': f'{added} photographers added to reference library.'})
+
+
+@app.route('/admin/master-references/<int:ref_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def admin_master_reference_toggle(ref_id):
+    """Toggle is_active on a master reference entry. Session 210."""
+    try:
+        db.session.execute(db.text(
+            "UPDATE master_references SET is_active = NOT is_active WHERE id = :rid"
+        ), {'rid': ref_id})
+        db.session.commit()
+        _new_state = db.session.execute(
+            db.text("SELECT is_active FROM master_references WHERE id = :rid"), {'rid': ref_id}
+        ).scalar()
+        return jsonify({'ok': True, 'is_active': _new_state})
+    except Exception as _e:
+        db.session.rollback()
+        return jsonify({'ok': False, 'message': str(_e)}), 500
 
 
 @app.route('/admin/fix-beta-plans', methods=['POST'])
@@ -18292,6 +21000,9 @@ def admin_flag_image(image_id):
     img.score          = 0.0
     img.tier           = 'Rookie'
     db.session.commit()
+    _log_admin_action('flag_image', 'image', image_id, {
+        'asset_name': img.asset_name, 'reason': reason, 'user_id': img.user_id
+    })
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
@@ -21941,8 +24652,8 @@ def api_create_payment():
         return jsonify({'error': 'Payment system not available'}), 503
 
     display_prices = {
-        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
-        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 100},
+        'camera': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 200},
+        'mobile': {'monthly': 200, 'halfyearly': 2500, 'annual': 4000, 'play': 200},
     }
     plan_ids = {
         'camera': {
@@ -21955,7 +24666,7 @@ def api_create_payment():
         },
     }
 
-    amount  = display_prices[track].get(plan, 100)
+    amount  = display_prices[track].get(plan, 200)
     plan_id = plan_ids[track].get(plan, '') if plan not in ('monthly', 'play') else None
 
     try:
@@ -22108,7 +24819,7 @@ def subscribe_confirm():
 
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
 
-    if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual'):
+    if track not in ('camera', 'mobile') or plan not in ('monthly', 'halfyearly', 'annual', 'play'):
         flash('Invalid payment details.', 'error')
         return redirect(url_for('pricing'))
 
@@ -22131,6 +24842,29 @@ def subscribe_confirm():
             db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
             {'uid': current_user.id}
         )
+
+        # play plan — give 100 more evaluations from current position.
+        # Images are preserved — user keeps their history.
+        # We extend the gate by setting referral_bonus_uploads so that:
+        #   FREE_IMAGE_LIMIT + referral_bonus_uploads = current_haiku_used + 100
+        if plan == 'play':
+            try:
+                _current_used = int(db.session.execute(
+                    db.text(
+                        "SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try IS TRUE) "
+                        "+ (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try IS TRUE)"
+                    ),
+                    {'uid': current_user.id}
+                ).scalar() or 0)
+                _new_bonus = max(0, _current_used + 100 - FREE_IMAGE_LIMIT)
+                db.session.execute(
+                    db.text("UPDATE users SET referral_bonus_uploads = :bonus WHERE id = :uid"),
+                    {'bonus': _new_bonus, 'uid': current_user.id}
+                )
+                app.logger.info(f'[subscribe_confirm] play plan: user {current_user.id} used={_current_used} new_bonus={_new_bonus} new_limit={FREE_IMAGE_LIMIT + _new_bonus}')
+            except Exception as _play_e:
+                app.logger.warning(f'[subscribe_confirm] play bonus set failed: {_play_e}')
+
         db.session.commit()
 
         # Referral conversion points
@@ -22154,6 +24888,9 @@ def subscribe_confirm():
         _track_labels = {'camera': 'Camera League', 'mobile': 'Mobile League'}
         _send_subscription_confirmation(current_user, track, plan)
         session['just_subscribed'] = track
+        if plan == 'play':
+            flash('Your 100 evaluations are ready. Fresh start — upload your first photograph.', 'success')
+            return redirect(url_for('try_welcome'))
         flash(f'Welcome to {_track_labels.get(track, track.title())}. Your membership is active.', 'success')
         return redirect(url_for('dashboard'))
 
@@ -26149,28 +28886,8 @@ def _send_scorecard_email(img, user):
     except Exception:
         pass
 
-    # UAT notice
+    # UAT notice — removed Session 205. Block was stale, all UAT users treated as regular users.
     _uat_html = ''
-    if _is_uat:
-        _uat_html = (
-            '<tr><td style="padding:0 0 14px;">'
-            '<div style="border-radius:6px;overflow:hidden;border:1.5px solid #E6B800;">'
-            '<div style="background:#E6B800;padding:9px 16px;">'
-            '<span style="font-size:11px;letter-spacing:2px;color:#2a1800;'
-            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
-            'UAT access \u2014 closing 15 August 2026</span></div>'
-            '<div style="background:#FEF6E4;padding:14px 16px;">'
-            '<p style="margin:0 0 12px;font-size:14px;color:#4A4840;line-height:1.8;">'
-            'Your UAT access closes on 15 August. Your photographs, evaluations and '
-            'standing remain on record permanently \u2014 nothing is lost. '
-            'To continue uploading after 15 August, subscribe before that date.</p>'
-            f'<a href="{_site}/pricing" style="display:inline-block;background:#0F1F3D;'
-            'color:#C8A84B;font-family:monospace;font-size:12px;font-weight:700;'
-            'letter-spacing:1.5px;text-transform:uppercase;padding:12px 20px;'
-            'text-decoration:none;border-radius:4px;">'
-            'Subscribe \u2014 \u20b92,000/year \u2192</a>'
-            '</div></div></td></tr>'
-        )
 
     # Location
     _loc_html = ''
@@ -29689,9 +32406,9 @@ def send_welcome_email(user):
         'Award. Eight tiers, the top jury-reviewed:\n'
         'Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
         'Consistency wins. One great photograph isn\'t enough.\n'
-        'Your first three evaluations are free - plenty to see how this works. When you\'re ready '
+        'Your first ten evaluations are free - plenty to see how this works. When you\'re ready '
         'to chase that standing, enter Weekly Assignments, or keep shooting past those first '
-        'three, that\'s when you subscribe.\n'
+        'ten, that\'s when you subscribe.\n'
         'See plans: ' + pricing_url + '\n\n'
 
         'WHAT AWAITS YOU\n'
@@ -30172,6 +32889,170 @@ def admin_release_weekly_results(week_ref):
 # Admin — Subscription Invitation Broadcast
 # Sends to all free users (is_subscribed=FALSE) when triggered manually
 # ---------------------------------------------------------------------------
+
+
+# ── Session 208 — Newsletter Emailer Dashboard ──────────────────────────────
+@app.route('/admin/emailer', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_emailer():
+    """
+    GET  /admin/emailer — audience-targeted newsletter composer.
+    POST /admin/emailer — send newsletter to selected audience.
+    Audiences: sonnet (paid only), haiku (free only), both, custom (manual emails).
+    Logs every send to admin_sent_emails with send_type='newsletter'.
+    Session 208.
+    """
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+
+    # Audience counts for display
+    _sonnet_count = User.query.filter_by(is_subscribed=True, is_active=True).count()
+    _haiku_count = db.session.execute(db.text(
+        "SELECT COUNT(DISTINCT user_id) FROM images WHERE is_haiku_try IS TRUE"
+    )).scalar() or 0
+
+    if request.method == 'GET':
+        # Last 10 newsletters sent
+        _recent = db.session.execute(db.text(
+            "SELECT subject, send_type, sent_at, "
+            "COUNT(*) as recipient_count, "
+            "SUM(CASE WHEN success THEN 1 ELSE 0 END) as success_count "
+            "FROM admin_sent_emails "
+            "WHERE send_type = 'newsletter' "
+            "GROUP BY subject, send_type, sent_at "
+            "ORDER BY sent_at DESC LIMIT 10"
+        )).fetchall()
+        return render_template('admin_emailer.html',
+            sonnet_count=_sonnet_count,
+            haiku_count=_haiku_count,
+            recent_sends=_recent,
+        )
+
+    # POST — send the newsletter
+    _audience  = request.form.get('audience', 'sonnet')
+    _subject   = request.form.get('subject', '').strip()
+    _body_text = request.form.get('body', '').strip()
+    _custom_emails = [e.strip() for e in request.form.get('custom_emails', '').split(',') if e.strip()]
+    _preview   = request.form.get('preview') == '1'
+
+    if not _subject or not _body_text:
+        flash('Subject and body are required.', 'error')
+        return redirect(url_for('admin_emailer'))
+
+    # Build recipient list
+    _recipients = []
+    if _audience == 'sonnet':
+        _rows = User.query.filter_by(is_subscribed=True, is_active=True).all()
+        _recipients = [(u.id, u.email, u.full_name or u.username or 'Photographer') for u in _rows]
+    elif _audience == 'haiku':
+        _rows = db.session.execute(db.text(
+            "SELECT DISTINCT u.id, u.email, u.full_name, u.username "
+            "FROM users u JOIN images i ON i.user_id = u.id "
+            "WHERE i.is_haiku_try IS TRUE AND u.is_active = TRUE"
+        )).fetchall()
+        _recipients = [(r.id, r.email, r.full_name or r.username or 'Photographer') for r in _rows]
+    elif _audience == 'both':
+        _rows = db.session.execute(db.text(
+            "SELECT DISTINCT u.id, u.email, u.full_name, u.username "
+            "FROM users u "
+            "WHERE u.is_active = TRUE "
+            "AND (u.is_subscribed = TRUE OR EXISTS "
+            "  (SELECT 1 FROM images i WHERE i.user_id = u.id AND i.is_haiku_try IS TRUE))"
+        )).fetchall()
+        _recipients = [(r.id, r.email, r.full_name or r.username or 'Photographer') for r in _rows]
+    elif _audience == 'custom':
+        _recipients = [(None, e, e.split('@')[0]) for e in _custom_emails]
+
+    if not _recipients:
+        flash('No recipients found for this audience.', 'warning')
+        return redirect(url_for('admin_emailer'))
+
+    if _preview:
+        # Return preview — show first recipient's email
+        _name = _recipients[0][2]
+        _html = _build_newsletter_html(_name, _subject, _body_text, _site)
+        return render_template('admin_emailer.html',
+            sonnet_count=_sonnet_count,
+            haiku_count=_haiku_count,
+            recent_sends=[],
+            preview_html=_html,
+            preview_recipient=_recipients[0][1],
+            recipient_count=len(_recipients),
+            subject=_subject,
+            body=_body_text,
+            audience=_audience,
+        )
+
+    # Send to all recipients
+    _sent = 0; _failed = 0
+    import json as _nej
+    for _uid, _email, _name in _recipients:
+        _html = _build_newsletter_html(_name, _subject, _body_text, _site)
+        _text = 'Hi ' + _name + ',\n\n' + _body_text + '\n\n—\nShutter League · support@shutterleague.com'
+        _ok = send_email(_email, _subject, _html, _text)
+        if _ok:
+            _sent += 1
+        else:
+            _failed += 1
+        try:
+            db.session.execute(db.text(
+                "INSERT INTO admin_sent_emails "
+                "(admin_id, recipient_user_id, recipient_email, subject, body, send_type, success) "
+                "VALUES (:aid, :uid, :email, :subject, :body, 'newsletter', :ok)"
+            ), {
+                'aid': current_user.id,
+                'uid': _uid,
+                'email': _email,
+                'subject': _subject,
+                'body': _body_text[:2000],
+                'ok': _ok,
+            })
+            db.session.commit()
+        except Exception as _le:
+            db.session.rollback()
+            app.logger.warning(f'[admin_emailer] log insert failed: {_le}')
+
+    _log_admin_action('newsletter_send', 'broadcast', 0, {
+        'audience': _audience,
+        'subject': _subject,
+        'sent': _sent,
+        'failed': _failed,
+        'recipient_count': len(_recipients),
+    })
+
+    flash(f'Newsletter sent — {_sent} delivered, {_failed} failed.', 'success' if _failed == 0 else 'warning')
+    return redirect(url_for('admin_emailer'))
+
+
+def _build_newsletter_html(name, subject, body_text, site):
+    """Build the Shutter League newsletter HTML wrapper around plain body text."""
+    # Convert newlines to <p> tags
+    _paras = ''.join(
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">{p.strip()}</p>'
+        for p in body_text.split('\n') if p.strip()
+    )
+    return (
+        '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F5F0E8;">'
+        '<div style="background:#1A2744;padding:20px 32px;">'
+        '<p style="color:#C8A84B;font-family:Courier New,monospace;font-weight:700;font-size:15px;letter-spacing:3px;margin:0;text-transform:uppercase;">SHUTTER LEAGUE</p>'
+        '<p style="color:rgba(200,168,75,0.6);font-size:12px;margin:4px 0 0;letter-spacing:1px;">Making Images Matter</p>'
+        '</div>'
+        '<div style="padding:32px;">'
+        f'<h2 style="font-size:20px;font-weight:600;color:#1A1A18;margin:0 0 20px;line-height:1.3;">{subject}</h2>'
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {name},</p>'
+        f'{_paras}'
+        f'<p style="font-size:16px;color:#1A1A18;margin:24px 0 0;line-height:1.7;">Warm regards,<br><strong>Shutter League</strong></p>'
+        '</div>'
+        '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+        '<p style="color:#888;font-size:13px;margin:0;">Shutter League · support@shutterleague.com · '
+        f'<a href="{site}" style="color:#888;">shutterleague.com</a></p>'
+        '<p style="color:#aaa;font-size:12px;margin:6px 0 0;">You are receiving this as a Shutter League member. '
+        f'<a href="{site}/unsubscribe" style="color:#aaa;">Manage email preferences</a></p>'
+        '</div>'
+        '</div>'
+    )
+# ──────────────────────────────────────────────────────────────────────────────
+
 
 @app.route('/admin/broadcast/subscription-invite', methods=['GET', 'POST'])
 @login_required
@@ -31811,12 +34692,430 @@ def _try_calibration_line(genre):
         f'ordinary subject belongs in the 5s and 6s. The figures above are not '
         f'a floor to stay above — they describe a real distribution with real '
         f'photographs at every level, including the bottom.\n\n'
-        f'DIMENSION AVERAGES across all 311 evaluated photographs:\n'
-        f'  dod 6.85 | disruption 6.70 | dm 6.96 | wonder 7.83 | aq 8.23\n'
-        f'These are AVERAGES. Roughly half of all photographs score below each '
-        f'of them on each dimension.\n'
+        f'DIMENSION AVERAGES — IMPORTANT: these figures are from the pre-calibration engine\n'
+        f'and are being updated. The AQ average was inflated by floors that have since been removed.\n'
+        f'Use the NAMED ANCHORS above (Bhopal 9.5, horseman 8.1, swallow 6.3) as your reference —\n'
+        f'not these historical averages. AQ 7.0–7.5 is a healthy average for well-executed work.\n'
+        f'AQ above 8.0 requires a stranger to feel a specific nameable emotion — not just admire the craft.\n'
     )
 
+
+
+
+def _try_genre_context(genre):
+    """
+    Session 211v2: Genre-specific scoring context ported directly from
+    the Sonnet auto_score.py GENRE_CONTEXT dict.
+    Same rubric language the paid engine uses — now injected into Haiku.
+    Falls back to default for unknown genres.
+    """
+    _HAIKU_GENRE_CONTEXT = {
+        'Wildlife': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"            "DoD INTELLIGENCE WEIGHT for Wildlife: Situational 40% · Technical 40% · Intelligence 20%.\n"            "Key principles to look for: Ma (space given to animal), Point of View (eye-level = intimacy), Figure/Ground (background chosen, not accepted), Gestalt Proximity (two subjects = group composition).\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles does NOT lift DM, VD, WF, or AQ. "
+            "Each scores independently. Score DoD first, then each dim from scratch.\n"
+            "WILDLIFE: VD GUIDES (not hard floors): small bird at peak wing-spread "
+            "with symmetric feather geometry against bokeh = VD 7.0–7.5 "
+            "(only 7.5–8.0 if bokeh is truly exceptional AND symmetry perfect). "
+            "Lion/big cat cubs alert in golden light = VD 7.0–7.5. "
+            "Two juvenile animals simultaneously alert/looking at camera = VD 7.0–7.5. "
+            "DOD — MODERN AF TECHNOLOGY ADJUSTMENT:\n"
+            "Subject-detect AF (Sony Animal Eye, Canon R EyeAF, Nikon Z, OM System) "
+            "tracks birds automatically. Photographer’s difficulty is ACCESS and POSITIONING, "
+            "not focus execution.\n"
+            "Sharp bird on modern mirrorless with subject-detect: DOD 7.0–7.8. "
+            "Older body / manual or zone AF: DOD 8.0–8.5. "
+            "Unknown body: default DOD 7.5 for sharp bird-in-flight. "
+            "Access, habitat proximity, and exposure difficulty still score fully.\n"
+            "JUVENILE WILDLIFE PROXIMITY — APPLY ACCESS CONTEXT:\n"
+            "Masai Mara, Serengeti, Kruger, Amboseli = established safari destinations. "
+            "Professional guides position vehicles at optimal distance. "
+            "Hundreds of photographers per month achieve this shot. "
+            "Vehicle-based safari in known tourist parks = DOD 7.0–7.5. Never 8.0+.\n"
+            "DOD 8.0+ only: on foot in habitat, remote location requiring multi-day trek, "
+            "or access not available to general tourists.\n"
+"AQ — WILDLIFE CALIBRATED ANCHORS (use these exact reference points): "
+            "Swallow landing, wings spread, colourful bokeh = AQ 6.3. "
+            "Craft admiration is NOT a human emotion. The viewer admires the precision. "
+            "They do not feel something specific in their chest. AQ 6.2–6.5 for bird craft. Never above 6.5. "
+            "Two lion cubs alert on log (Masai Mara safari) = AQ 6.7. "
+            "Tenderness is real but familiar — the most common wildlife emotion. Every safari produces this. "
+            "CSI applies: AQ 6.5–7.2 for juvenile wildlife. Not higher. "
+            "Reserve AQ 8.0+ for images where a stranger feels a specific nameable emotion — not just admires execution.\n"
+"WF — BEHAVIOURAL RARITY LADDER (birds, adult mammals, single subject):\n"
+            "  Common behaviour (landing, perching, walking, grazing): WF 5.5–6.5. "
+            "  Excellent execution of common behaviour: WF 6.5–7.0. "
+            "  Uncommon behaviour (courtship, display, alarm, species interaction): WF 6.5–7.5. "
+            "  Rare behaviour (predation, prey visible, conflict, feeding young): WF 7.5–8.5.\n"
+            "WF — JUVENILE/FAMILY (separate signal — score tenderness directly):\n"
+            "  Two or more juveniles in natural light with mutual awareness: WF 7.0–8.0. "
+            "  Alert both subjects: WF 7.2–7.8. Physical contact: WF 7.5–8.2. No minimum.\n"
+            "DM — BIRDS: BURST MODE IS THE DEFAULT ASSUMPTION. "
+            "Modern cameras shoot 20–30fps — peak-wing frames are burst-selected, not timed. "
+            "DEFAULT (assume unless EXIF/context proves single-frame): DM 6.5–7.5. "
+            "Single-frame / deliberate manual timing (confirmed): DM 8.0–9.0. "
+            "Unknown frame rate: DM 7.0–7.5. "
+            "DO NOT score DM 8.0+ for a bird peak-wing frame without evidence of single-frame discipline. "
+            "DM — MAMMALS ACTIVE CONTACT (playing, wrestling, grooming, nursing): DM 7.0–8.5. "
+            "DM — MAMMALS ALERT/AWARE:\n"
+            "SINGLE subject alert/resting: DM 6.0–6.5. No simultaneous peak.\n"
+            "TWO SUBJECTS simultaneously alert, looking at camera at same instant: "
+            "DM 7.0–7.5. Getting both juvenile subjects at peak alertness simultaneously "
+            "is genuinely unrepeatable — one looks away, the moment is gone. "
+            "Do NOT apply the single-subject 6.5 ceiling to two-subject simultaneous alert. "
+            "The dual-peak IS the decisive moment.\n"
+            "Captive or hide-shot animals: penalise DOD and Wonder. "
+            "ICM/PANNING: intentional blur = deliberate technique, do NOT penalise."
+        ),
+        'Street': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
+            "DoD INTELLIGENCE WEIGHT for Street: Situational 35% · Technical 25% · Intelligence 40%.\n"            "Key principles: Leading Lines (corridor, street, architecture guiding the eye), Depth/Layering (monks at different distances = three planes), Gestalt Continuation (eye follows corridor beyond frame), Gestalt Proximity/Similarity (robes = visual group), Seijaku (stillness of monks against geometry = active quiet), Diagonal Tension (architecture or figures creating energy).\n"
+            "STREET VD GUIDES (not hard floors): monks/figures silhouetted in rich "
+            "coloured environment with graphic architecture and directional light = VD 7.0–7.8. "
+            "Athletic/physical action at peak moment = VD 7.0–7.8 (even if filed as Street). "
+            "Street portrait with direct eye contact = VD 6.5–7.5. "
+            "Rich cultural scene with depth = VD 6.0–7.0. "
+            "NEVER below 6.0 for street image with clear visual impact. "
+            "WF ANCHORS: Tibetan monks, monks in monastery, spiritual figures in authentic "
+            "closed environment = WF 8.0–8.5 (ACCESS WONDER + CULTURAL WONDER). "
+            "Most viewers will never be inside a Tibetan monastery. Score it. "
+            "Three Wonder signals — score whichever is strongest: "
+            "EYE WONDER (compositional find): 8-9. "
+            "ACCESS WONDER (inside community that resists cameras): 8.0-8.5. "
+            "CULTURAL WONDER (world most viewers cannot enter): 7.5-8.5. "
+            "VD AND WF ARE INDEPENDENT — CRITICAL: high cultural wonder does NOT "
+            "imply high visual drama. A calm monastery corridor with monks in robes "
+            "has high WF (access/cultural wonder) but moderate VD (7.0–7.8). "
+            "VD scores ONLY the geometric composition, tonal contrast, and light quality. "
+            "Score VD on what the eye sees in 2 seconds, not on what the image means. "
+            "Do NOT push VD above 8.0 because WF is high. "
+            "DM = layered variables peaking simultaneously. "
+            "DOD — TWO TIERS OF DIFFICULTY, score the correct one:\n"
+            "  CULTURAL ACCESS (monastery, closed community, private ceremony, "
+            "  backstage, restricted zone): DOD 7.0–7.5. Access is the difficulty — "
+            "  not physical or environmental conditions. "
+            "  A monk corridor in natural light = DOD 7.0–7.5, not 7.8+.\n"
+            "  PHYSICAL / ENVIRONMENTAL (extreme weather, dangerous location, "
+            "  hostile crowd, underground/underwater, darkness): DOD 7.5–8.5. "
+            "  Both access AND physical difficulty compound: DOD 8.0–8.5.\n"
+            "Do NOT score DOD 8.0 for cultural access alone without physical difficulty. "
+            "Over-processed or HDR: penalise VD to 6.0 max."
+        ),
+        'Landscape': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
+            "DoD INTELLIGENCE WEIGHT for Landscape: Situational 25% · Technical 25% · Intelligence 50%.\n"            "Key principles: Depth/Layering (foreground-midground-sky as three distinct planes), Diagonal Tension (light shafts, mountain ridges creating energy), Yugen (storm light creating profound mystery beneath the surface — name it), Ma (the space in the landscape IS the composition), Gestalt Continuation (mountain silhouettes lead eye beyond frame), Colour Relationship (storm palette, warm/cool contrast).\n"
+            "LANDSCAPE VD GUIDES (not hard floors): landscape with exceptional golden/storm/"
+            "dramatic light = VD 7.0–8.0. Long exposure water or cloud = VD 7.0–7.8. "
+            "Strong graphic composition (leading lines, reflection, symmetry) = VD 6.5–7.5. "
+            "OVERALL: a visually compelling landscape with dramatic light scores 7.5–8.5 "
+            "regardless of DM. Do NOT score a compelling landscape below 7.0. "
+            "When DM is low, VD and WF carry the image — they are INDEPENDENT from DM. "
+            "DM — WHAT COUNTS AS TRANSIENT (score 7.0–8.0): storm light, burning sky, "
+            "golden shafts that lasted minutes, fog at precise level, moon/sun at geometric "
+            "position, moving subject at peak. "
+            "AQ — LANDSCAPE SCALE:\n"
+            "Storm light / burning sky / volumetric rays = AQ 7.8–8.2 (awe, peace, presence). "
+            "Image that transports viewer to the place = AQ 8.0–8.5. "
+            "Pleasant landscape in good light = AQ 7.0–7.5. "
+            "CSI reduces WF (wonder at image type) NOT AQ (specific feeling created). "
+            "Storm light creates awe/peace regardless of genre saturation — score it.\n"
+"DM — WHAT IS STATIC (ceiling 6.5): good light on a mountain that lasted all "
+            "morning, even overcast, generic golden hour with no peak moment. "
+            "Dramatic storm light IS a transient event — score DM 7.0–7.5, not 5.5. "
+            "ISOLATION RULE EXCEPTION: storm light, burning sky, fog events ARE the "
+            "decisive moment in Landscape. Score DM 7.0–7.5 regardless of DoD "
+            "intelligence assessment. Do not suppress this DM for landscape.\n"
+            "WF ANCHORS — MANDATORY:\n"
+            "  Dramatic storm light, volumetric rays, burning sky = WF 7.0–8.0. "
+            "  Score where in that range based on emotional force: is it presence/peace "
+            "  (7.0–7.5) or genuine awe at something unrepeatable (7.5–8.0)?\n"
+            "  WF 8.0+ only when the image transforms the genre. No minimum for storm light.\n"
+            "CSI (Cultural Saturation): mountain + storm light is a saturated subject. "
+            "Reference standard is best-in-class: Adams = WF 9.0. "
+            "An excellent but non-transformative mountain landscape = WF 7.5–8.0 ceiling. "
+            "Score WF against the history of great landscape photography, "
+            "not against the audience’s phone camera.\n"
+            "DOD: remote access, extreme weather, pre-dawn scores 7+."
+        ),
+        'Astrophotography': (
+            "ASTRO: DOD anchored by dark site access, weather, technical execution. "
+            "Single frame Milky Way from accessible site: DOD 5-6. "
+            "Multi-hour tracked exposure at remote dark site: DOD 7-8. "
+            "Aurora at peak activity, remote location: DOD 8-9. "
+            "DM = shutter timing for aurora peak, star trails vs frozen stars (deliberate choice). "
+            "Wonder = revealing something invisible to naked eye — score generously for genuine revelation. "
+            "Check EXIF: 500-rule compliance for frozen stars. Trailing stars without intent: penalise DM."
+        ),
+        'Documentary': (
+            "DOCUMENTARY: Access and risk are primary DOD signals. "
+            "A technically imperfect image with real truth scores higher than a perfect staged one. "
+            "DM = the moment that contains the whole story in one frame. "
+            "Wonder = showing a world or condition most viewers will never see. "
+            "AQ dominant — emotional truth over technical polish. "
+            "Staged or re-enacted scenes: penalise DOD and AQ significantly."
+        ),
+        'Macro': (
+            "MACRO: DOD = revealing what is invisible to the naked eye. "
+            "Studio/controlled macro: DOD 5-6. Field handheld macro: DOD 7-8. "
+            "Wonder = the revelation — does this image show something the viewer has never seen at this scale? "
+            "DM = the moment of sharpest focus on the decisive detail. "
+            "Diffraction softness from excessive f-stop: penalise technically."
+        ),
+        'Wedding': (
+            "WEDDING: AQ dominant — emotional connection between subjects is primary. "
+            "DM = the unrepeatable emotional instant, not the posed moment. "
+            "DOD is generally low (photographer was invited). "
+            "Wonder = genuine unguarded emotion that transcends the event. "
+            "Staged or posed shots: DM 4-5. Genuine candid peak: DM 8+."
+        ),
+        'Maternity': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
+            "DoD INTELLIGENCE WEIGHT for Maternity: Situational 20% · Technical 30% · Intelligence 50%.\n"            "Key principles: Kanso (reduction to pure silhouette form — highest elimination discipline), Figure/Ground (total subject-background separation IS the technical act — positioning + exposure + light created this), Gestalt Closure (viewer completes the human form from silhouette), Mono no aware (impermanence of pregnancy — the before and after — name it), Light Direction (rim or backlit — the light relationship IS the DoD).\n"
+            "MATERNITY VD GUIDES: pregnancy silhouette backlit or rim-lit = VD 6.5–7.5. "
+            "Portrait with strong directional light = VD 6.0–7.0. "
+            "Below 5.5 only for failed exposure or framing. "
+            "WF EMOTIONAL WONDER: if the image makes a stranger feel awe, tenderness, "
+            "anticipation, or love in one word — score WF 6.5–8.5 based on intensity. "
+            "AQ dominant (40%+). "
+            "DM CEILING — HARD RULE: posed and constructed maternity silhouette = DM 5.0–6.0 MAX. "
+            "A posed silhouette is a CREATED IMAGE, not a caught moment. The form is built, "
+            "not witnessed. Post-processing visible further confirms this is created, not candid. "
+            "NEVER score DM above 6.5 for a visibly posed maternity silhouette. "
+            "DM 7.0+ requires GENUINE UNGUARDED moment — real connection, candid expression.\n"
+            "WF AND AQ ARE INDEPENDENT OF DM — CRITICAL: "
+            "a low DM (posed/created) does NOT lower WF or AQ. "
+            "The silhouette FORM creates powerful emotion regardless of how it was made.\n"
+            "WF for maternity silhouette: score the specific emotion directly. "
+            "Anticipation, tenderness, love — if nameable in one word: WF 7.5–8.5. "
+            "A well-executed natural light silhouette with strong emotional connection: WF 8.0–8.3. "
+            "Do NOT apply a floor. Score what the emotional content actually delivers.\n"
+            "AQ for maternity silhouette: 7.8–8.5 depending on emotional precision. "
+            "Natural sunlight silhouette where form creates Love/anticipation/tenderness "
+            "in a stranger: AQ 8.2–8.5 (genuine specific emotion). "
+            "Studio silhouette with pleasant execution but no strong emotional peak: "
+            "AQ 7.5–7.8. AQ is not automatic at 8.0+ for maternity — score the emotion.\n"
+            "DOD — MATERNITY: lighting execution IS the technical difficulty. "
+            "NATURAL SUNLIGHT SILHOUETTE (outdoors, no controlled light): DOD 7.5–8.0. "
+            "No control over light quality or direction. Exposure for rim light "
+            "without blowing the background. Expression timing under changing light. "
+            "Compositional decision: exact position, Kanso reduction, Figure/Ground separation. "
+            "All simultaneous. This is harder than studio. Score DOD 7.5–8.0.\n"
+            "STUDIO / CONTROLLED LIGHT silhouette: DOD 6.5–7.5. "
+            "Controlled but still requires lighting precision. "
+            "DOD 5.0–6.0 only for technically unremarkable execution. "
+            "Do NOT default to low DOD — lighting execution IS the craft."
+        ),
+        'Family': (
+            "FAMILY: AQ and DM dominant. "
+            "Genuine unguarded family interaction scores higher than posed groups. "
+            "DM = the moment of real connection. "
+            "Wonder = showing family truth most viewers recognise but rarely see documented."
+        ),
+        'People': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
+            "DoD INTELLIGENCE WEIGHT for People: Situational 15% · Technical 30% · Intelligence 55%.\n"            "Key principles: Light Direction (specific quality/direction on face — Rembrandt/split/rim/butterfly — IS the primary compositional act), Figure/Ground (subject reads against background by deliberate exposure + positioning), Wabi-sabi (image honours the real face, imperfection as beauty — not corrected), Seijaku (contemplative stillness as active subject), Negative Space (deliberate space giving subject weight), Ma (space around the subject is not empty — it is the composition).\n"
+            "CONTEST EDITING — PEOPLE/PORTRAIT IS STRICT: permitted edits are contrast, "
+            "highlights, shadows, colour temperature, dodge/burn, crop. "
+            "Painterly skin, pastel rendering, background smoothed beyond optical bokeh, "
+            "canvas/watercolour texture = should be filed as Creative, not People. "
+            "When detected: DoD -0.5 to -0.8, VD -0.5 to -1.0, AQ -0.3 to -0.5. "
+            "Total cap 7.5 when painterly processing is dominant character of image.\n"
+"PEOPLE/PORTRAIT VD GUIDES: portrait with direct engaged gaze = VD 6.5–7.5. "
+            "Looking-away or introspective portrait with strong light = VD 7.0–7.5. "
+            "Soft ambient portrait (child under blossoms): VD 6.0–7.0. "
+            "Below 6.0 only for clearly out-of-focus or technically failed portrait. "
+            "Above floor: strong directional light adds 0.5–1.0; graphic framing adds 0.5. "
+            "VD CEILING FOR QUIET/INTIMATE IMAGES: soft pastel light, child subject, "
+            "gentle scene with no visual tension or high contrast = VD 6.0–7.0 MAX. "
+            "Beautiful colour and soft bokeh is NOT high visual drama. "
+            "VD measures tension, contrast, and geometric impact — not beauty alone. "
+            "A child under cherry blossoms in soft pink light: VD 6.0–6.8. "
+            "Do NOT score VD 8.0 for a quiet intimate scene regardless of AQ or WF. "
+            "DOD: studio cooperative portrait = 5.5–6.5. Environmental/stranger = 6.5–7.5. "
+            "Do NOT penalise studio portraits on DOD. "
+            "DM: posed and holding still = 5.5–6.5. Genuine unguarded expression = 7.5–8.5. "
+            "Private introspective moment caught without subject's awareness = DM 7.0–7.5. "
+            "WF EMOTIONAL WONDER: if you can name the emotion in one word (dignity, grief, "
+            "defiance, tenderness, joy, melancholy, contemplation): score WF 6.5–9.0 "
+            "based on how precisely and intensely that emotion is delivered. No minimum. "
+            "A portrait where the subject is looking away in private thought — melancholy, "
+            "contemplation, beauty — score WF 6.5–8.0 based on emotional intensity. "
+            "AQ dominant (48%). Catchlight in the eye expected at 7+. "
+            "WF FOR PEOPLE — TWO TIERS (score emotion directly, no floors):\n"
+            "  QUIET / INTIMATE (child, contemplative, soft natural light): "
+            "  WF 6.0–7.5. Warmth and gentleness, not arrest. No minimum.\n"
+            "  RECOGNITION WONDER (uninhibited laughter, raw grief, elderly dignity): "
+            "  WF 7.5–9.0. Score the intensity. A child under blossoms = quiet. "
+            "  An elderly woman laughing with broken teeth = recognition wonder."
+        ),
+        'Nature': (
+            "NATURE: GENRE REDIRECT — if a human is the PRIMARY subject (child reaching "
+            "for blossoms, person in nature as the emotional centre), score as PEOPLE/FAMILY "
+            "not Nature. Nature = natural world is the subject, human presence is incidental. "
+            "VD HARD FLOORS (minimums): child under cherry blossoms in soft pink light "
+            "with bokeh = VD 7.0 MINIMUM. NEVER below 6.0 for genuinely beautiful "
+            "natural light or colour. "
+            "DM CEILING: static natural scene = DM 5.0–6.5 max. Score DM on the natural "
+            "process, not visual beauty. "
+            "Wonder = revealing ecological truth most viewers have never witnessed. "
+            "DOD = access and conditions — remote, extreme, rare seasonal event."
+        ),
+        'Fashion': (
+            "FASHION: VD dominant — the image must stop the viewer. "
+            "DOD = production value, location access, lighting complexity. "
+            "DM = the moment where garment, model energy, and light peak together. "
+            "Over-retouched or plastic skin: penalise AQ. "
+            "Editorial fashion that tells a story scores higher than catalogue."
+        ),
+        'Architecture': (
+            "ARCHITECTURE: VD dominant — geometric precision and unexpected viewpoint. "
+            "DM = light condition that transforms the structure (dawn, dusk, storm). "
+            "DOD = access to restricted structures or extreme conditions. "
+            "Distortion correction expected at 7+. Uncorrected keystoning: penalise VD."
+        ),
+        'Drone': (
+            "DRONE: Apply REVELATION TEST — does the aerial perspective show something "
+            "impossible to see from ground level? If yes: VD 8+. If no: VD 5-6. "
+            "DOD = permit access, weather, technical execution at altitude. "
+            "Wonder = geometric revelation, scale, pattern invisible from ground. "
+            "Generic aerial of famous landmark: Wonder 5-6. "
+            "Unique perspective revealing hidden geometry: Wonder 8+."
+        ),
+        'Sports': (
+            "SPORTS: DM dominant — the decisive peak of action. "
+            "DOD = access to restricted venues, physical positioning at risk. "
+            "Wonder = capturing the peak that even spectators missed. "
+            "EMOTIONAL WONDER: peak athletic moment with immediate emotional response "
+            "SPORT/ACTION CSI: athletic victory/triumph is the most common sports emotion. "
+            "WF 6.5–7.5 for standard excellent sports action. "
+            "WF 7.5–8.5 only for extraordinary human drama beyond the sport: "
+            "face of defeat, injury, protest, rivals in connection. "
+            "BLOWN HIGHLIGHTS: if subject highlights are blown, reduce WF 0.3–0.5 AND DoD 0.5–1.0. "
+            "Blown highlights on subject skin/face = exposure failure = technical DoD penalty. "
+            "Blown highlights also reduce VD 0.3–0.5 (tonal collapse weakens impact). "
+            "Score WF on whether the image stops a non-sports viewer. No minimum.\n"
+            "AQ FOR SPORT: Victory/triumph = AQ 7.0–7.5 (most common sports emotion). "
+            "Specific non-generic emotion (pain at loss, relief, record-face) = AQ 7.5–8.0. "
+            "Emotion a non-sports viewer recognises and feels = AQ 8.0+. "
+            "Blown highlights further reduce AQ 0.3–0.5.\n"
+            "Motion blur on moving subject acceptable if intentional. "
+            "Clean background separation expected at 7+."
+        ),
+        'Creative': (
+            "DoD = THREE COMPONENTS: Situational (where/how hard to be there) + Technical (did the camera do what was asked) + Photographic Intelligence (did the photographer SEE and apply principles).\n"            "Before scoring DoD: identify which principles are actively present as DECISIONS, not accidents.\n"            "Classical: Rule of Thirds, Leading Lines, Negative Space, Diagonal Tension, Depth/Layering, Frame-within-Frame, Point of View, Colour Relationship, Simplicity/Elimination, Light Direction.\n"            "Japanese: Ma (negative space as presence), Kanso (elimination as discipline), Wabi-sabi (imperfection as beauty), Mono no aware (transience), Seijaku (active stillness), Fukinsei (deliberate asymmetry), Datsuzoku (breaking convention), Yugen (mystery beneath surface).\n"            "Gestalt: Figure/Ground (subject reads against background by deliberate choice — present in every strong image), Closure (viewer completes what is suggested), Continuation (eye led beyond frame), Proximity (grouping is composition), Common Fate (direction of energy).\n"            "Scoring: 3+ principles from different families applied with precision = +1.5 DoD. 2 principles = +1.0. 1 principle = +0.5. None evident = situational + technical only.\n"            "In evaluation: when DoD > 7.5, NAME the specific principle. Not 'strong composition' — say which principle and how it was applied.\n"
+            "ISOLATION RULE — MANDATORY: Photographic Intelligence scores DoD ONLY. "
+            "Finding principles in an image does NOT lift DM, VD, WF, or AQ. "
+            "Each dimension scores independently on its own criteria: "
+            "DM = unrepeatable instant (image alone). VD = stops the eye in 2s. "
+            "WF = which wonder signal. AQ = specific named feeling. "
+            "A child with Ma present still has DM 5.5–6.5 — not a decisive moment. "
+            "A Fine Art image with Datsuzoku still has WF 7.0–7.8 — Fine Art ceiling applies. "
+            "Score DoD using three components. Then score each other dimension from scratch.\n"
+            "DoD INTELLIGENCE WEIGHT for Creative: Situational 10% · Technical 35% · Intelligence 55%.\n"            "Key principles: Datsuzoku (breaking convention — the unconventional treatment IS the intelligence), Fukinsei (asymmetry as deliberate statement — subject not where expected), Gestalt Closure (viewer completes what is suggested — suggestion over statement), Kanso (reduction to the essential — what remains when everything else is removed), Wabi-sabi (imperfection and incompleteness as the aesthetic, not a flaw).\n"
+            "CREATIVE: VD dominant — intentional rule-breaking scores higher than accidental. "
+            "Assume ALL compositional unconventionality is deliberate. "
+            "AQ = emotional or conceptual resonance, not technical sharpness. "
+            "Over-processing that serves the concept: acceptable. "
+            "IDENTIFY THE SUB-TYPE BEFORE SCORING:\n"
+            "  DANCE / MOVEMENT / PERFORMANCE: body at peak geometric expression in "
+            "directional light. Form + light + motion must all peak together.\n"
+            "  VD 8.0–8.2 = good dance frame. VD 8.3–8.5 = exceptional.\n"
+            "  NAMED ANCHOR — in-camera ICM dance (BW Spider honourable mention): "
+            "Multiple exposures as ONE FRAME in-camera, not edited in post. "
+            "DoD 8.5 | DM 8.1 | WF 8.1 | AQ 8.3 | VD 8.4. "
+            "Score new dance/ICM images above or below this anchor.\n"
+            "  WF for Dance: technique-wonder is a legitimate WF signal. "
+            "ICM/multiple-exposure creates visual magic the viewer cannot explain. "
+            "WF 7.8–8.3 for accomplished dance/movement work.\n"
+            "  DANCE DOD — COMPOUNDING DIFFICULTY: live performance = no reshoot, "
+            "no direction, no second chance. The photographer must simultaneously: "
+            "anticipate peak body geometry (lasts <0.1s), hold correct exposure for "
+            "fast-moving subject in directional stage light that shifts every second, "
+            "frame the background, and time the release. "
+            "All four constraints compound. DOD 8.0–8.5 for dance in live performance. "
+            "DOD 7.0–7.5 only for studio/rehearsal with controlled light and repeatable movement.\n"
+            "  FINE ART / ABSTRACT / CONCEPTUAL: concept strength + execution quality. "
+            "Strong concept + excellent execution: 7.8–8.2. "
+            "Strong concept + competent execution: 7.5–7.8. "
+            "Competent execution, weak concept: 7.2–7.5. "
+            "Do NOT apply Dance VD floor to Fine Art — different sub-type.\n"
+            "  FINE ART VD CEILING: concept-driven images where geometric impact "
+            "is not the primary statement: VD 7.0–7.8 MAX. "
+            "VD 8.0+ requires strong compositional tension or graphic impact independently. "
+            "A beautiful Fine Art concept with moderate visual tension = VD 7.2–7.5. "
+            "Do NOT push VD above 7.8 for Fine Art because the concept is strong.\n"
+            "  FINE ART WF CEILING: concept-driven images cap WF at 7.0–7.5. "
+            "Post-processing work without field craft: WF 6.5–7.0. "
+            "Strong concept with genuine in-field photographic intelligence: WF 7.0–7.5. "
+            "Only concept that stops a non-specialist and creates named emotion: WF 7.5–8.0. "
+            "The AQ/WF coherence rule does NOT override this ceiling for Fine Art.\n"
+            "  FINE ART VD CEILING: post-processing-led images VD 7.0–7.5. "
+            "Field-craft-led Fine Art with genuine compositional intelligence: VD 7.5–8.0.\n"
+            "  ICM / PANNING / BLUR / MINIMALIST / GRAPHIC: technique on DOD, "
+            "pattern and colour on VD, emotional register on AQ.\n"
+            "Under-scoring Creative because it looks 'different' is the most common error."
+        ),
+        'default': (
+            "Score using genre-appropriate criteria. Reward artistic intent, "
+            "technical mastery relative to the genre, and emotional resonance. "
+            "CRITICAL — VD AND DM ARE INDEPENDENT: VD scores the initial visual impact "
+            "(what stops the eye in 2 seconds). DM scores the specific unrepeatable instant "
+            "(whether the photographer was at the right millisecond). A high VD does NOT "
+            "imply a high DM. Score them separately.\n"
+            "TITLE/DESCRIPTION READING: Before scoring WF and AQ, read the photographer's "
+            "title as witness testimony. 'Sunflower' for an elderly woman's portrait = the "
+            "photographer saw the sunflower in her. Score WF accordingly. 'A Silent Crow' "
+            "= something is wrong with the bird. That wrongness is the story.\n"
+            "RECOGNITION WONDER — WF 8.0–9.5: A face so alive with genuine emotion that a "
+            "stranger stops in a gallery. Uninhibited laughter. Weathered face full of joy. "
+            "A child's emotion so complete it is physically felt. The beauty the world walks "
+            "past — elderly, broken-toothed, wrinkled — when the photographer saw the dignity "
+            "and made it visible. Do NOT require rarity of subject. The seeing is rare, not "
+            "the subject. CONFIRMED BY LOUVRE: elderly Indian woman with broken teeth smiling "
+            "in sunflower field = WF 9.0. A child laughing so hard she covers her eyes = WF 9.0.\n"
+            "WF/AQ: score each independently. Gap > 2.0 is a scoring error — "
+            "close the gap minimally if exceeded. No floors. No propping.\n"
+            "STORY SIGNAL: narrative arc (two subjects in relationship, figure in cultural "
+            "world, gesture implying before/after) lifts WF 0.3–0.5. "
+            "Named triggers: maternity silhouette=8.0+, two young animals=7.8+, "
+            "monks together=8.0+, child reaching=7.8+, lone figure of courage=8.0+."
+        ),
+    }
+
+    return _HAIKU_GENRE_CONTEXT.get(genre, _HAIKU_GENRE_CONTEXT['default'])
 
 def _generate_haiku_sherpa(user_id):
     """
@@ -32191,7 +35490,7 @@ Return ONLY valid JSON, no markdown:
         _payload = _sj.dumps({
             'model': _HAIKU_MODEL,
             'max_tokens': 1200,
-            'temperature': 0.3,
+            'temperature': 0,
             'messages': [{'role': 'user', 'content': _prompt}]
         }).encode()
 
@@ -32395,11 +35694,14 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
                 f"Do NOT use the phrase 'consistent strength' or 'that thread runs through'. "
                 f"Vary the structure each time — sometimes name the photographs, sometimes name the pattern, "
                 f"sometimes note the progression, sometimes ask a quiet question. "
-                f"Examples of register (do not copy verbatim): "
+                f"CRITICAL: The phrase 'You keep finding the feeling before you find the frame' "
+                f"has already appeared on a previous scorecard for this photographer. "
+                f"DO NOT use it again. It must not appear in this impression field. "
+                f"Examples of register (do not copy verbatim, use only once per photographer): "
                 f"'Three very different subjects — and in each one, the emotional weight lands.' / "
-                f"'You keep finding the feeling before you find the frame.' / "
                 f"'There is something you do with atmosphere that we are beginning to recognise.' / "
-                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' "
+                f"'Each photograph you have shown us has made the viewer feel something. That is not an accident.' / "
+                f"'The thread across these images is not subject — it is the feeling you arrive with.' "
                 f"Then continue with 1-2 sentences specific to THIS photograph."
             )
         elif _n == 1 and _consistent_strength_name:
@@ -32434,29 +35736,663 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
         return ''
 
 
+
+def _haiku_species_research(species_name, api_key, genre='Wildlife'):
+    """
+    Session 211v2: Wikipedia species lookup for Haiku Wildlife evals.
+    Mirrors the Sonnet species_research() pipeline in auto_score.py.
+    Step 1: Wikipedia REST API (free, no key, no billing)
+    Step 2: Haiku distil call to extract structured facts
+    Returns: context string to inject into scoring prompt, or empty string.
+    Only fires for Wildlife/Nature genre. Falls back silently.
+    """
+    import urllib.request as _wur
+    import urllib.parse as _wup
+    import json as _wj
+
+    if not species_name or not species_name.strip():
+        return ''
+    if genre not in ('Wildlife', 'Nature', 'Birds', 'Bird Photography'):
+        return ''
+
+    try:
+        # Step 1: Wikipedia extract
+        _wiki_params = _wup.urlencode({
+            'action': 'query', 'prop': 'extracts',
+            'explaintext': '1', 'exsectionformat': 'plain',
+            'titles': species_name.strip(), 'format': 'json', 'redirects': '1',
+        })
+        _wiki_req = _wur.Request(
+            f'https://en.wikipedia.org/w/api.php?{_wiki_params}',
+            headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0 (wildlife scoring; contact@shutterleague.com)'},
+        )
+        with _wur.urlopen(_wiki_req, timeout=8) as _wr:
+            _wiki_data = _wj.loads(_wr.read().decode())
+        _pages = _wiki_data.get('query', {}).get('pages', {})
+        _wiki_text = ''
+        for _pg in _pages.values():
+            _t = _pg.get('extract', '')
+            if _t and not _pg.get('missing'):
+                _wiki_text = _t
+                break
+
+        if not _wiki_text:
+            # Fallback: search
+            _search_params = _wup.urlencode({
+                'action': 'query', 'list': 'search',
+                'srsearch': species_name, 'format': 'json', 'srlimit': '2',
+            })
+            _search_req = _wur.Request(
+                f'https://en.wikipedia.org/w/api.php?{_search_params}',
+                headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0'},
+            )
+            with _wur.urlopen(_search_req, timeout=8) as _sr:
+                _search_data = _wj.loads(_sr.read().decode())
+            _results = _search_data.get('query', {}).get('search', [])
+            if _results:
+                _top = _results[0].get('title', '')
+                _search_params2 = _wup.urlencode({
+                    'action': 'query', 'prop': 'extracts',
+                    'explaintext': '1', 'titles': _top,
+                    'format': 'json', 'redirects': '1',
+                })
+                _req2 = _wur.Request(
+                    f'https://en.wikipedia.org/w/api.php?{_search_params2}',
+                    headers={'User-Agent': 'ShutterLeague-HaikuEngine/1.0'},
+                )
+                with _wur.urlopen(_req2, timeout=8) as _r2:
+                    _d2 = _wj.loads(_r2.read().decode())
+                for _pg2 in _d2.get('query', {}).get('pages', {}).values():
+                    _t2 = _pg2.get('extract', '')
+                    if _t2 and not _pg2.get('missing'):
+                        _wiki_text = _t2
+                        break
+
+        if not _wiki_text:
+            return ''
+
+        # Step 2: Haiku distil — extract structured facts
+        _distil_prompt = (
+            f"You are a wildlife photography expert. Based on this Wikipedia extract "
+            f"about '{species_name}', extract ONLY these facts as JSON:\n"
+            f"- global_range: one sentence on native geographic range\n"
+            f"- population_status: IUCN status and trend if mentioned\n"
+            f"- wild_behaviour_known: true or false — is wild behaviour well-documented?\n"
+            f"- captive_common: true or false — commonly photographed in captivity or at hides?\n"
+            f"- rarity_note: one sentence on rarity and documentation scarcity for wildlife photographers\n"
+            f"- photo_difficulty: one sentence on difficulty of photographing in the wild\n\n"
+            f"Wikipedia extract (first 3000 chars):\n{_wiki_text[:3000]}\n\n"
+            f"Respond ONLY with valid JSON. No preamble. No markdown."
+        )
+        _distil_payload = _wj.dumps({
+            'model': _HAIKU_MODEL,
+            'max_tokens': 300,
+            'temperature': 0,
+            'messages': [{'role': 'user', 'content': _distil_prompt}]
+        }).encode()
+        _distil_req = _wur.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=_distil_payload,
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+            },
+            method='POST'
+        )
+        with _wur.urlopen(_distil_req, timeout=30) as _dr:
+            _distil_raw = _wj.loads(_dr.read().decode())
+        _distil_text = ''.join(
+            b.get('text', '') for b in (_distil_raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+        # Strip markdown fences
+        import re as _re
+        _distil_text = _re.sub(r'```json|```', '', _distil_text).strip()
+        _facts = _wj.loads(_distil_text)
+
+        # Step 3: Build context block
+        _lines = [
+            '',
+            'SPECIES RESEARCH — VERIFIED FROM WIKIPEDIA (ground truth — do not contradict):',
+            f'Species: {species_name}',
+        ]
+        if _facts.get('global_range'):
+            _lines.append(f'Global range: {_facts["global_range"]}')
+        if _facts.get('population_status'):
+            _lines.append(f'IUCN / population: {_facts["population_status"]}')
+        if _facts.get('photo_difficulty'):
+            _lines.append(f'Photography difficulty: {_facts["photo_difficulty"]}')
+        if _facts.get('rarity_note'):
+            _lines.append(f'Documentation rarity: {_facts["rarity_note"]}')
+
+        _captive = _facts.get('captive_common')
+        _behav   = _facts.get('wild_behaviour_known')
+
+        _lines.append('')
+        _lines.append('SCORING ADJUSTMENTS FROM SPECIES RESEARCH:')
+        if _captive is False and _behav is False:
+            _lines.append(f'- {species_name} is rarely photographed wild; wild behaviour poorly documented.')
+            _lines.append('- Wonder MUST credit documentation rarity. DOD MUST reflect wild access difficulty.')
+            _lines.append('- species_note MUST name this rarity explicitly — most viewers have never seen this.')
+        elif _captive is True:
+            _lines.append(f'- {species_name} is commonly photographed in captivity or at hides.')
+            _lines.append('- If captive context confirmed: penalise DOD and Wonder accordingly.')
+            _lines.append('- If wild context confirmed: state this — wild documentation is rarer.')
+        elif _behav is False:
+            _lines.append(f'- Wild behaviour of {species_name} is poorly documented.')
+            _lines.append('- Behavioural documentation Wonder must score higher than well-documented species.')
+        _lines.append('')
+
+        app.logger.info(f'[haiku_species_research] {species_name}: captive={_captive} behav={_behav}')
+        return '\n'.join(_lines)
+
+    except Exception as _sre:
+        app.logger.debug(f'[haiku_species_research] {species_name} failed (non-fatal): {_sre}')
+        return ''
+
+
+# ── Session 213 — TWO-CALL ARCHITECTURE ─────────────────────────────────────
+# Pre-call: lightweight vision identify before scoring prompt is built.
+# Engine receives facts, not questions. Master reference and DOD anchors
+# come from Python dicts, not engine choice.
+# Cost: ~₹0.02 per call extra. Eliminates all master reference bans permanently.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_HAIKU_VISION_SYSTEM = (
+    "You are a visual analyst. Describe exactly what you see in the photograph. "
+    "Do NOT score, evaluate, or give feedback. Do NOT infer — only describe what is "
+    "clearly visible. If something is ambiguous, say so. "
+    "Respond ONLY with valid JSON. No preamble, no markdown fences. "
+    "Never use a literal double-quote inside a string value — use single quotes instead."
+)
+
+_HAIKU_VISION_PROMPT = (
+    "Examine this photograph. Answer each question based only on what you can see.\n\n"
+    "1. What is the PRIMARY subject? (e.g. 'Pelican', 'Tiger', 'Butterfly', 'Person', 'Landscape')\n"
+    "2. Which subject group does it belong to?\n"
+    "   A=water_bird, B=aerial_raptor, C=ground_mammal, D=primate, "
+    "E=aquatic_marine, F=macro_invertebrate, G=urban_wildlife, H=human, I=landscape_nature, J=other\n"
+    "   CRITICAL: If a reflection is visible below the animal, it is AT water — group A not B.\n"
+    "3. What is the environment? (e.g. 'dark still water', 'open sky', 'forest floor', 'urban street')\n"
+    "4. What specific behaviour is happening? "
+    "(e.g. 'wings spread drying on water', 'thermal soaring', 'prey in talons', 'resting portrait')\n"
+    "5. Is the primary subject rendered as a silhouette — shape only, no surface detail visible? yes/no\n"
+    "6. What is the lighting? (backlit/frontlit/sidelit/overcast/low_light_dark_background)\n"
+    "7. How confident are you in the subject identification? (high/medium/low)\n"
+    "   low = silhouette, heavily processed, very small/distant subject\n\n"
+    "Return this exact JSON:\n"
+    "{\n"
+    "  \"subject_type\": \"<common name of primary subject>\",\n"
+    "  \"subject_group\": \"<single letter: A/B/C/D/E/F/G/H/I/J>\",\n"
+    "  \"environment\": \"<brief environment description>\",\n"
+    "  \"behaviour\": \"<specific behaviour name>\",\n"
+    "  \"is_silhouette\": <true|false>,\n"
+    "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
+    "  \"confidence\": \"<high|medium|low>\"\n"
+    "}"
+)
+
+
+def _try_vision_analyse(img_b64):
+    """
+    Session 213 — TWO-CALL ARCHITECTURE: Lightweight pre-call.
+    ~500 token prompt + image. Identifies subject before scoring prompt is built.
+    Returns: {subject_type, subject_group, environment, behaviour, is_silhouette,
+              lighting, confidence}
+    Falls back to empty dict on any failure — scoring proceeds without it.
+    Cost: ~₹0.02 per call. Eliminates all master reference bans permanently.
+    """
+    import urllib.request as _ur
+    import json as _json
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        app.logger.error('[haiku_vision] ANTHROPIC_API_KEY not set')
+        return {}
+
+    payload = _json.dumps({
+        'model': _HAIKU_MODEL,
+        'max_tokens': 300,
+        'temperature': 0,
+        'system': _HAIKU_VISION_SYSTEM,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {
+                'type': 'base64', 'media_type': 'image/jpeg', 'data': img_b64
+            }},
+            {'type': 'text', 'text': _HAIKU_VISION_PROMPT}
+        ]}]
+    }).encode()
+
+    req = _ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type':      'application/json',
+            'x-api-key':         api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with _ur.urlopen(req, timeout=25) as resp:
+            raw = _json.loads(resp.read().decode('utf-8'))
+        text = ''.join(
+            b.get('text', '') for b in (raw.get('content') or [])
+            if b.get('type') == 'text'
+        ).strip()
+        import re as _re
+        text = _re.sub(r'```json|```', '', text).strip()
+        if not text:
+            app.logger.warning('[haiku_vision] empty response — scoring continues without pre-call')
+            return {}
+        result = _json.loads(text)
+        app.logger.info(
+            f'[haiku_vision] group={result.get("subject_group","?")} '
+            f'subject={result.get("subject_type","?")} '
+            f'behaviour={result.get("behaviour","?")} '
+            f'silhouette={result.get("is_silhouette","?")} '
+            f'confidence={result.get("confidence","?")}'
+        )
+        return result
+    except _json.JSONDecodeError as _je:
+        app.logger.warning(f'[haiku_vision] JSON parse failed ({_je}) — scoring continues without pre-call')
+        return {}
+    except Exception as _e:
+        app.logger.warning(f'[haiku_vision] failed ({type(_e).__name__}: {_e}) — scoring continues without pre-call')
+        return {}
+
+
+def _pick_master_haiku(subject_group, environment, genre):
+    """
+    Session 213 — Python dict lookup. Engine never chooses master reference.
+    Returns: (master_name, why_template_hint)
+    why_template_hint is a brief string to help the engine write master_why correctly.
+    Falls back to None so _try_run_haiku falls through to DB library path.
+    """
+    _g = (subject_group or '').strip().upper()
+    _env = (environment or '').lower()
+    _genre = (genre or '').lower()
+
+    # ── Group A: Water birds ─────────────────────────────────────────────────
+    if _g == 'A':
+        # Flamingos → Salgado
+        if 'flamingo' in _env:
+            return ('Sebastiao Salgado',
+                    'Salgado photographed flamingo colonies at scale — vast formations '
+                    'as a single living texture. You are still working the individual bird.')
+        # Dark water / night / low light → Munier
+        if any(w in _env for w in ('dark', 'night', 'low light', 'dusk', 'dawn', 'still water')):
+            return ('Vincent Munier',
+                    'Munier waits for the animal to become inseparable from its environment. '
+                    'You have the bird — you have not yet dissolved it into the water.')
+        # Default water bird → Laman
+        return ('Tim Laman',
+                'Laman built proximity to water birds through sustained field presence. '
+                'You are shooting from the distance the bird will tolerate, not the distance that fills the frame.')
+
+    # ── Group B: Aerial raptors ──────────────────────────────────────────────
+    if _g == 'B':
+        if any(w in _env for w in ('fire', 'smoke', 'burn', 'wildfire')):
+            return ('Charlie Hamilton James',
+                    'Hamilton James positioned at fire-line level so the raptor reads against smoke. '
+                    'You are shooting from distance where fire and sky compete.')
+        return ('Nick Nichols',
+                'Nichols tracked raptors over sustained field seasons to reach the peak behavioural moment. '
+                'You have the bird in frame — you have not yet reached its peak act.')
+
+    # ── Group C: Ground mammals ──────────────────────────────────────────────
+    if _g == 'C':
+        _subj = _env  # environment often carries species hint
+        if any(w in _subj for w in ('tiger', 'leopard', 'snow leopard')):
+            return ('Steve Winter',
+                    'Winter spent years on the same individuals to reach proximity without habituation. '
+                    'You have the cat in frame — you do not yet have its intention.')
+        if any(w in _subj for w in ('elephant', 'rhino', 'hippo')):
+            return ('Nick Nichols',
+                    'Nichols worked inside forest elephant family groups over decades. '
+                    'You have the animal — you have not yet entered its world.')
+        # Default big cat / predator
+        return ('Steve Winter',
+                'Winter stayed with the same territory for years to find the moment the predator committed. '
+                'You have the animal — you are still waiting for its decision.')
+
+    # ── Group D: Primates ────────────────────────────────────────────────────
+    if _g == 'D':
+        return ('Frans Lanting',
+                'Lanting held his position until the primate stopped performing for the lens. '
+                'You have the expression — you have not yet disappeared from the frame.')
+
+    # ── Group E: Aquatic / Marine ────────────────────────────────────────────
+    if _g == 'E':
+        return ('Paul Nicklen',
+                'Nicklen entered the water column to find the angle the surface photographer never reaches. '
+                'You are shooting from the boundary — Nicklen crossed it.')
+
+    # ── Group F: Macro / Invertebrate ───────────────────────────────────────
+    if _g == 'F':
+        return ('Piotr Naskrecki',
+                'Naskrecki works at subject magnification levels that reveal structure invisible to the naked eye. '
+                'You are close — you are not yet at the scale where the hidden world opens.')
+
+    # ── Group G: Urban wildlife ──────────────────────────────────────────────
+    if _g == 'G':
+        if any(w in _env for w in ('leopard', 'tiger', 'elephant')):
+            return ('Baiju Patil',
+                    'Patil documents large predators inside Indian cities — he builds trust with the local '
+                    'community to reach access no visiting photographer can get. '
+                    'You found the animal. He finds the story behind why it is there.')
+        return ('Charlie Hamilton James',
+                'Hamilton James follows animals into the human boundary where no wildlife photographer expects to go. '
+                'You have the animal in a human context — you have not yet made the human context the point.')
+
+    # ── Groups H/I/J: Human/landscape/other — no override, fall through to DB ─
+    return (None, '')
+
+
+def _build_dod_anchors(subject_group, behaviour):
+    """
+    Session 213 — Python dict. Returns correct DOD scale text for injection.
+    Session 216 — Now includes STEP 3 (DM peaks) and STEP 4 (WF anchors) per group.
+    STEP 3 + STEP 4 removed from _TRY_HAIKU_PROMPT static block (Rule 36 complete).
+    Taxonomy block in _TRY_HAIKU_PROMPT still present (STEP 0-2 + group definitions).
+    """
+    _g = (subject_group or '').strip().upper()
+    _b = (behaviour or '').lower()
+
+    _ANCHORS = {
+        'A': (
+            "GROUP A — WATER BIRDS. DOD scale for this subject:\n"
+            "  5-6: Bird standing or swimming in daylight, standard conditions\n"
+            "  6-7: Colonial behaviour, feeding sequence, coordinated flock movement\n"
+            "  7-8: Specific light condition (dawn/dusk), reflection intact, precise moment within behaviour\n"
+            "  8-8.5: Night or low-light, still dark water, perfect reflection\n"
+            "  8.5-9: Rare behaviour (mid-air prey catch, pelican cooperative fishing, flamingo courtship peak)\n"
+            "LANGUAGE RULE: NEVER use raptor/soaring/thermal soaring/stooping/predatory diving/"
+            "in-flight/stark white line for a water bird. Wings spread at water = displaying/drying/landing.\n"
+            "DM PEAKS (Group A): wing symmetry at maximum spread, reflection perfectly mirrored, "
+            "catch moment with fish visible, the one frame where posture and geometry align. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group A): Rarely the species — usually the LIGHT, REFLECTION, and GEOMETRY. "
+            "A pelican on still dark water at night with perfect symmetry = WF 8+ because the image reveals "
+            "a relationship between the bird and its environment that 99% of viewers have never witnessed. "
+            "Colonial behaviour, coordinated feeding, or a water bird in conditions that reveal its "
+            "environment = WF 7-8."
+        ),
+        'B': (
+            "GROUP B — AERIAL RAPTORS. DOD scale for this subject:\n"
+            "  5-6: Generic soaring in good light\n"
+            "  6-7: Bird in flight with good tracking, hunting scan from perch\n"
+            "  7-8: Active hunt with prey visible, raptor at fire following insects\n"
+            "  8-9: Stoop at prey contact, kill moment, raptor inside active wildfire\n"
+            "  9+: Fewer than 50 documented photographs of this specific behaviour globally\n"
+            "DM PEAKS (Group B): stoop at full extension before contact, prey visible in talon or beak, "
+            "the moment before territory display collapses. Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group B): Predatory behaviour most humans never witness. "
+            "Generic soaring = WF 5-6. Active hunt at fire line = WF 8-9. "
+            "The wonder is the danger, the intelligence, the behaviour."
+        ),
+        'C': (
+            "GROUP C — GROUND MAMMALS. DOD scale for this subject:\n"
+            "  5-6: Animal resting, grazing, walking in daylight reserve\n"
+            "  6-7: Alert posture, herd interaction, social behaviour\n"
+            "  7-8: Active stalk, courtship display\n"
+            "  8-9: Kill moment or prey contact, birth, rare foraging in extreme conditions\n"
+            "  9+: Behaviour documented fewer than 50 times globally\n"
+            "DM PEAKS (Group C): the half-second before contact in a predatory charge, "
+            "maximum stalk crouch, kill moment, mother-calf peak interaction. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group C): Behaviour that reveals the animal's inner life — "
+            "stalking patience, kill precision, social bonds. Portrait of resting animal = WF 5. "
+            "Active predation with prey readable = WF 8-9."
+        ),
+        'D': (
+            "GROUP D — PRIMATES. DOD scale for this subject:\n"
+            "  5-6: Grooming, resting, common social interaction\n"
+            "  6-7: Infant care, play behaviour, foraging\n"
+            "  7-8: Territorial conflict, tool use, dominance display\n"
+            "  8-9: Rare behaviour — coalition formation, deceptive behaviour, wild unhabituated individual\n"
+            "DM PEAKS (Group D): the instant of expression that communicates intelligence — "
+            "tool use gesture, the exact moment of reconciliation, infant's first independent act. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group D): The degree to which the image reveals primate intelligence. "
+            "Grooming = WF 5. Tool use, deceptive behaviour, coalition = WF 8."
+        ),
+        'E': (
+            "GROUP E — AQUATIC / MARINE. DOD scale for this subject:\n"
+            "  6-7: Dolphin bow-riding, sea turtle swimming, fish school\n"
+            "  7-8: Cetacean breach, hunting sequence, crocodilian ambush\n"
+            "  8-9: Prey contact underwater, whale cooperative hunting, rare species documentation\n"
+            "DM PEAKS (Group E): breach at full airborne extension, prey contact underwater, "
+            "maximum density of a shoaling event with predator visible. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group E): The revelation of an underwater world inaccessible to 99% of viewers. "
+            "Any clear underwater frame = WF floor 7. Rare species or behaviour = WF 8-9."
+        ),
+        'F': (
+            "GROUP F — MACRO / INVERTEBRATE. DOD scale for this subject:\n"
+            "  5-6: Common insect or frog in standard conditions\n"
+            "  6-7: Behavioural moment — feeding, mating, display\n"
+            "  7-8: Rare species, handheld field macro of live behavioural moment\n"
+            "  8-9: Snake predation, spider at prey-contact, rare species in behaviour\n"
+            "DM PEAKS (Group F): strike at prey contact, mating posture locked, "
+            "emergence from chrysalis, spider at precise web-tension moment. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group F): What the image reveals that the naked eye cannot see — "
+            "structure, behaviour complexity, the hidden world of small animals. "
+            "Common insect = WF 5. Rare species or behaviour rarely documented = WF 7-8."
+        ),
+        'G': (
+            "GROUP G — URBAN WILDLIFE. DOD floor elevated by urban context:\n"
+            "  Leopard or large predator in city = DOD 8.5+ baseline.\n"
+            "  The contrast of wild creature in human environment IS the difficulty signal.\n"
+            "  Do not score urban wildlife on the same scale as reserve photography.\n"
+            "DM PEAKS (Group G): the moment the wild animal and the human environment are both "
+            "legible in the same frame — animal mid-action, human context unmistakable. "
+            "Pre-position = higher DM. Reaction = lower DM.\n"
+            "WONDER FACTOR (Group G): The contrast of wildness in a human space IS the wonder. "
+            "A leopard crossing a lit road is inherently WF 8 — viewers understand immediately "
+            "what they are seeing and why it is extraordinary."
+        ),
+    }
+
+    anchor = _ANCHORS.get(_g, '')
+
+    # Universal WF rule — appended when a known group is matched
+    _wf_universal = ''
+    if anchor:
+        _wf_universal = (
+            "\nWONDER UNIVERSAL RULE: Rare behaviour that most viewers will not recognise as rare "
+            "is still rare — score WF on what is ACTUALLY HAPPENING, not on whether "
+            "the viewer will understand it immediately."
+        )
+
+    # Silhouette / deliberate transformation note
+    _sil_note = ''
+    if any(w in _b for w in ('silhouette', 'backlit', 'shape only')):
+        _sil_note = (
+            "\nDELIBERATE TRANSFORMATION: Subject is rendered as silhouette. "
+            "If deliberate — clean exposure within dark field, geometric intent — "
+            "the silhouette IS the photograph. Never name species clarity or subject "
+            "visibility as the gap for a deliberate silhouette."
+        )
+
+    return anchor + _wf_universal + _sil_note
+
+
+# ── End Session 213 two-call helpers ─────────────────────────────────────────
+
 _TRY_HAIKU_PROMPT = (
     "You are the Shutter League DDI evaluation engine. Evaluate this photograph on "
     "five dimensions. Each dimension is scored 0.0-10.0 (one decimal place).\n\n"
 
     "DIMENSIONS AND WHAT EACH SCORE MEANS:\n\n"
 
-    "1. dod - Depth of Difficulty: how hard was it to make this photograph? "
-    "Right time, right place, right conditions, physical effort.\n"
-    "   9.0-9.5  Extraordinary access, conditions or physical achievement. Rare.\n"
-    "   8.0-8.9  Sharp subject AND deliberate technique simultaneously, or "
-    "difficult conditions handled well.\n"
-    "   7.5-8.5  Deliberate in-camera technique (intentional camera movement, long exposure, panning, multiple exposure, infrared) that requires precise execution and control. The harder the technique is to execute consistently, the higher the score. A well-controlled technique that most photographers could not replicate belongs here.\n"
-    "   6.5-7.9  Skilled single technique, or conditions requiring real patience.\n"
-    "   5.0-6.4  Competent capture in ordinary conditions.\n"
-    "   Below 5  Anyone standing there could have made this frame.\n\n"
+    "1. dod - Depth of Difficulty: how hard was it to make this photograph?\n"
+    "DOD is the FULL STACK of what the photographer had to know, see, and decide. "
+    "It is not just how hard the location was to reach. It includes every layer of "
+    "knowledge and execution that most photographers do not have.\n\n"
 
-    "2. vd - Visual Disruption: does this image stop the viewer? "
-    "Compositional decisions that break expectation.\n"
-    "   9.0-9.5  A compositional decision almost no photographer would have made.\n"
-    "   8.0-8.9  Strong deliberate construction with clean separation.\n"
-    "   6.5-7.9  Considered composition, but within convention.\n"
-    "   5.0-6.4  Competent framing, no surprise.\n"
-    "   Below 5  Centred, expected, or accidental.\n\n"
+    "THE FIVE LAYERS OF DOD — score the highest layer the photographer demonstrates:\n\n"
+
+    "LAYER 1 — FIELD DIFFICULTY (access, conditions, physical effort)\n"
+    "   9.0-9.5  Extraordinary access almost no photographer can achieve — active "
+    "wildfire, war zone, extreme altitude, rare species in wild behaviour\n"
+    "   8.0-8.9  Difficult conditions requiring sustained field effort — darkness, "
+    "weather, dangerous proximity, remote terrain, rare timing\n"
+    "   6.5-7.9  Conditions requiring patience and planning — early morning, "
+    "reserved location, unpredictable subject\n"
+    "   5.0-6.4  Ordinary accessible conditions — public place, daylight, "
+    "no special access required\n"
+    "   Below 5  Anyone standing there with a camera could have made this frame\n\n"
+
+    "LAYER 2 — COMPOSITIONAL KNOWLEDGE (the photographer knew a visual principle "
+    "and deployed it deliberately)\n"
+    "This is the most under-scored layer. A photographer who applies a compositional "
+    "principle that most photographers do not know exists has demonstrated real difficulty. "
+    "Score 7.5-8.5 when the image shows deliberate application of:\n"
+    "   Japanese aesthetics:\n"
+    "   - Ma (間): deliberate emptiness as subject — knowing when to leave space is "
+    "harder than filling it. Most photographers fight empty space; this one used it.\n"
+    "   - Wabi-sabi: finding beauty in imperfection, asymmetry, transience — using "
+    "a crack, a fade, an incomplete moment as the point, not despite it\n"
+    "   - Mono no aware: the feeling of things passing — capturing the pathos of "
+    "a moment that is already leaving\n"
+    "   Western compositional principles (deployed deliberately, not accidentally):\n"
+    "   - Fibonacci spiral / divine proportion — subject placed at the eye of the spiral\n"
+    "   - Rembrandt triangle / chiaroscuro — one triangle of light on the shadow side "
+    "of a face, or classical light-from-darkness structure\n"
+    "   - Gestalt continuation — the eye is led through the frame by a line or curve "
+    "the photographer placed deliberately\n"
+    "   - Gestalt closure — the photographer left something incomplete and the viewer's "
+    "mind completes it, creating engagement\n"
+    "   - Rule of odds — three subjects, five elements, deliberately asymmetric grouping\n"
+    "   Indian visual traditions:\n"
+    "   - Layered narrative planes — foreground, middle, background each carry "
+    "separate narrative, read simultaneously\n"
+    "   - Symbolic colour — colour chosen for meaning, not just aesthetics\n"
+    "   - Community as texture — the crowd as a compositional element with its own rhythm\n"
+    "   American documentary tradition:\n"
+    "   - Deliberate flatness — Walker Evans / Garry Winogrand non-composition: "
+    "the difficulty of NOT composing, letting the subject fill the frame honestly\n"
+    "   - Street geometry — using architectural lines, shadows, and reflections as "
+    "compositional structure the photographer found, not placed\n"
+    "   Score 8.0+ when the compositional principle is rare — most photographers "
+    "would not know to apply it, let alone execute it correctly\n\n"
+
+    "LAYER 3 — LIGHT RECOGNITION AND USE\n"
+    "Seeing and capturing light that most photographers walk past:\n"
+    "   8.5-9.0  Selective ambient light — subject lit, background not, through a "
+    "specific brief angle of natural light. Cannot be manufactured. Cannot be repeated.\n"
+    "   8.0-8.5  Chiaroscuro — deep shadow and bright light used as compositional "
+    "structure, not just as exposure conditions\n"
+    "   7.5-8.0  Shadow as subject — the cast shadow tells the story, not the object\n"
+    "   7.0-7.5  Colour temperature contrast — mixing artificial and natural light "
+    "deliberately, holding both without losing either\n"
+    "   6.5-7.0  Golden/blue hour used compositionally — not just present at the "
+    "right time, but positioned and framed for the specific quality of that light\n"
+    "   5.0-6.5  Competent exposure management in available light\n\n"
+
+    "LAYER 4 — TECHNICAL EXECUTION\n"
+    "In-camera technique requiring precise control:\n"
+    "   8.0-8.5  ND filter, ICM, long exposure, panning, multiple exposure, infrared "
+    "— executed with precision and creative intent\n"
+    "   7.5-8.0  Technique that most photographers attempt and most fail at — "
+    "handheld field macro, fast-moving subject tracking in difficult conditions\n"
+    "   6.5-7.5  Single deliberate technique executed competently\n\n"
+
+    "LAYER 5 — POST-PROCESSING VISION\n"
+    "Seeing the finished image before making it, and executing that transformation:\n"
+    "   8.0-8.5  Complete tonal transformation — monochrome conversion, selective "
+    "exposure isolation, manufactured darkness — that most photographers would not "
+    "conceive for this subject\n"
+    "   7.5-8.0  Deliberate post-processing decision that changes the meaning of "
+    "the image, not just its appearance\n\n"
+
+    "MOBILE TRACK DOD — SEPARATE SCALE:\n"
+    "If the photographer is on MOBILE TRACK (smartphone), apply this adjusted scale. "
+    "A phone photographer demonstrating compositional knowledge or light recognition "
+    "is achieving MORE difficulty relative to their tool than a camera photographer "
+    "doing the same. DOD for mobile must account for what the phone cannot do:\n"
+    "   Phone-specific DOD signals that raise the score:\n"
+    "   - Clean background separation WITHOUT bokeh — the photographer moved "
+    "physically to isolate the subject, not used aperture\n"
+    "   - Clutter awareness — the photographer recognised and eliminated competing "
+    "elements that a phone cannot blur out. A cluttered background on a phone image "
+    "is a DOD failure. A clean background is a DOD achievement.\n"
+    "   - Proximity as zoom — the photographer got physically close rather than "
+    "zooming digitally, preserving image quality\n"
+    "   - Compositional knowledge applied — a phone photographer who uses Ma, "
+    "Rembrandt light, or deliberate negative space has done something technically "
+    "harder than a camera photographer doing the same, because they had fewer tools\n"
+    "   - Timing without continuous burst — phone burst modes are limited; "
+    "the photographer had to anticipate, not react\n"
+    "   - Light management without manual controls — finding and using the right "
+    "light when you cannot set aperture or control depth of field\n"
+    "   Phone-specific DOD ceiling: phone images cannot achieve DOD 9.0+ unless "
+    "field conditions are extraordinary (wildfire, rare access). The technical "
+    "ceiling is lower. But DOD 7.5-8.5 is achievable on a phone through "
+    "compositional knowledge, light recognition, and proximity discipline.\n\n"
+
+    "CAPTURE + EDIT = ONE DECISION, NOT TWO:\n"
+    "Do NOT split DOD into in-camera and post-processing and score only the weaker half. "
+    "The total vision — what the photographer saw, captured, and completed — is the difficulty. "
+    "If the narrative says 'a vision most photographers would not conceive,' the score must be 7.5+.\n\n"
+
+    "BACKGROUND CLUTTER — DOD SIGNAL FOR ALL TRACKS:\n"
+    "A cluttered background is a DOD failure the photographer could have controlled. "
+    "A clean background — achieved through positioning, angle, proximity, or timing "
+    "rather than aperture — is a DOD achievement. Name this explicitly in dim_obs_dod "
+    "when it is visible. A phone photographer with a clean background worked harder "
+    "than a camera photographer who blurred it with f/1.4.\n\n"
+
+    "2. vd - Visual Disruption: how far does this image depart from the conventional "
+    "treatment of its subject — evaluated against the global photographic database "
+    "of 5 billion images shared daily. The question is not whether the composition "
+    "is original. The question is whether a viewer scrolling Instagram has ever seen "
+    "this before. A red apple is known. A blue apple stops the scroll.\n"
+    "   9.0-9.5  A visual experience almost no photographer would ever be present for "
+    "or capable of constructing. The image cannot exist without extreme access, "
+    "rare behaviour, or a compositional decision that defies the genre entirely.\n"
+    "   8.0-8.9  The photographer was inside the event rather than observing it. "
+    "Being physically present in danger, inside active chaos, at the edge of a "
+    "wildfire — this changes the visual language entirely. Score 8.0-9.0 when the "
+    "vantage itself is unrepeatable. Also: rare behaviour the viewer has never "
+    "witnessed scores here — the blue apple rule.\n"
+    "   6.5-7.9  Considered composition, unconventional framing, or a subject "
+    "treatment that departs from convention — but from a standard vantage.\n"
+    "   5.0-6.4  Competent framing. Follows the expected treatment. Centred subject, "
+    "horizontal fire line, obvious placement — what any photographer would frame.\n"
+    "   Below 5  Expected, accidental, or actively conventional.\n"
+    "DELIBERATE TRANSFORMATION — APPLIES TO ALL GENRES:\n"
+    "Before scoring VD, ask whether the image is a deliberate tonal or tonal/colour "
+    "transformation. This applies to street, portrait, landscape, wildlife, documentary "
+    "— any genre where the photographer has chosen to isolate, abstract, or transform.\n"
+    "SIGNS OF DELIBERATE TRANSFORMATION (any genre):\n"
+    "  — Subject cleanly exposed within a crushed or dark field\n"
+    "  — Monochrome conversion where colour would have been conventional\n"
+    "  — Silhouette with strong geometric intent (bilateral symmetry, diagonal, negative space)\n"
+    "  — High-contrast isolation of one element against an eliminated background\n"
+    "  — ND filter or post-processing used to manufacture darkness or stillness\n"
+    "  — Street: figure in silhouette against a bright wall or window\n"
+    "  — Portrait: contre-jour with rim light only, face in shadow\n"
+    "  — Landscape: ridge line isolated against a blown-out or crushed sky\n"
+    "SIGNS OF TECHNICAL FAILURE: subject underexposed without intent; framing accidental; "
+    "no geometric logic; muddy tones with no separation.\n"
+    "When transformation is deliberate: the silhouette or monochrome IS the photograph. "
+    "Score VD on the rarity and boldness of the transformation — not on whether the "
+    "subject is identifiable. A deliberate transformation that most photographers "
+    "would not conceive of or execute belongs at 8.0-8.9. "
+    "The gap, if any, is what would make the transformation MORE powerful — "
+    "stronger geometry, more decisive negative space, a more expressive posture — "
+    "NEVER what would reverse it. Never name subject visibility, species clarity, "
+    "face recognition, or 'lack of detail' as the gap on a deliberate silhouette.\n"
+    "CRITICAL FOR WILDLIFE: If the behaviour in the frame is genuinely rare — "
+    "documented fewer than 100 times globally, or behaviour most humans have never "
+    "witnessed — score VD on the rarity of WHAT IS BEING SHOWN, not how it is "
+    "framed. The blue apple principle: the subject itself IS the disruption. "
+    "Do NOT penalise for centred composition when the content is rare.\n\n"
 
     "3. dm - Decisive Moment: was the trigger pulled at the right moment? "
     "Behaviour, expression, peak action, geometric alignment.\n"
@@ -32469,28 +36405,31 @@ _TRY_HAIKU_PROMPT = (
     "   Below 5  Moment missed.\n\n"
 
     "4. wf - Wonder Factor: does this image make you feel something? "
-    "Emotional resonance, awe, curiosity.\n"
-    "   9.5+     World Press Photo, IPA, Sony World Photography winner level. "
-    "Award this only for work of that standard.\n"
-    "   9.0-9.4  A singular find. The photograph could only exist because this "
-    "photographer was there and saw it.\n"
-    "   8.0-8.9  The discovery is complete and not easily repeated.\n"
-    "   6.5-7.9  Pleasing, atmospheric, but the find is available to others.\n"
-    "   5.0-6.4  Pleasant. Does not linger.\n"
+    "Emotional resonance, awe, curiosity. TWO PATHS TO HIGH WF — score the HIGHEST:\n"
+    "   PATH 1 — DISCOVERY: the photograph reveals something the viewer could not have "
+    "found themselves. A compositional find, rare access, cultural world most cannot enter, "
+    "technical achievement that reveals the invisible.\n"
+    "   PATH 2 — RECOGNITION: the image shows a human truth so universal and genuine "
+    "that a stranger stops involuntarily. A face so alive with joy, dignity, grief, or "
+    "wonder that it is immediately and specifically felt. The beauty the world walks past "
+    "— weathered skin, broken teeth, uninhibited laughter — when the photographer stopped "
+    "and made it visible. RECOGNITION does not require rarity of subject. The SEEING is "
+    "rare. An elderly woman with broken teeth laughing in a sunflower field = WF 9.0 "
+    "(Louvre confirmed). A child laughing so hard she covers her eyes = WF 9.0. "
+    "A small child's pure wonder. A private human moment caught unguarded.\n"
+    "   9.5+     World Press Photo, IPA, Sony World Photography winner level.\n"
+    "   9.0-9.4  Singular find OR recognition wonder that stops any stranger.\n"
+    "   8.0-8.9  Discovery complete and not easily repeated, OR strong recognition wonder.\n"
+    "   7.0-7.9  Clear emotional signal — nameable in one word by a stranger.\n"
+    "   5.0-6.9  Pleasant but does not linger. Generic scene, no specific feeling.\n"
     "   Below 5  Nothing beyond the record.\n"
-    "   8.0-8.5  Deliberate technique that transforms a subject into something "
-    "the viewer could not have found without the photographer's intervention — "
-    "ICM that creates a colour field, long exposure that turns water to silk, "
-    "abstraction that reveals hidden structure. Test: could the viewer have "
-    "arrived at this vision themselves? If the answer is no, score 8.0-8.5.\n"
-    "   WONDER IS THE MOST OVER-SCORED DIMENSION BY A LARGE MARGIN. Measured "
-    "against the full engine it is where free evaluations drift highest, and it "
-    "carries the heaviest weight in most interest areas. A striking colour, a "
-    "dramatic sky, or a charismatic animal alone is NOT Wonder. "
-    "Wonder is whether the photograph reveals something the viewer could not "
-    "have found themselves. A well-made photograph of an ordinary scene scores "
-    "4-6 here. Before awarding 7 or above, name what is actually being revealed. "
-    "If you cannot name it in one clause, score below 6.\n\n"
+    "   ANTI-INFLATION (applies to Discovery path only, NOT Recognition path): "
+    "A striking colour, dramatic sky, or charismatic animal ALONE is not Wonder. "
+    "A well-made photograph of an ordinary scene with no specific emotional signal "
+    "scores 4-6. BUT: if the image produces a specific nameable feeling in a stranger "
+    "(joy, tenderness, awe, grief) — that IS Wonder regardless of subject rarity. "
+    "Before awarding 7+, either name what is being discovered OR name the emotion "
+    "a stranger would feel. If you can do either: score 7+.\n\n"
 
     "5. aq - Affective Quotient: is there soul in this frame? "
     "The intangible quality that makes it memorable.\n"
@@ -32505,7 +36444,151 @@ _TRY_HAIKU_PROMPT = (
     "   5.0-6.4  Technically resolved, emotionally quiet.\n"
     "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
 
+    "SCORE BAND REFERENCE — USE THIS WHEN WRITING DIMENSION OBSERVATIONS:\n"
+    "   5-6  Competent. Present in the work but not yet a conscious strength.\n"
+    "   6-7  Developing. Aware of it, but not yet in control of it.\n"
+    "   7-8  Strong, above average. The gap to the next level is one specific decision.\n"
+    "   8-9  Exceptional. A clear creative decision most photographers wouldn't make.\n"
+    "   9+   Rare. Award-level. The standard almost no one reaches.\n"
+    "When you write a dim_obs for a dimension scoring in the 7-8 band, name WHAT THAT ONE "
+    "SPECIFIC DECISION IS that separates 7-8 from 8+. Do not write 'strong work.' "
+    "Write what 8.0 would require for THIS image.\n\n"
+
     "INTEREST AREA: {genre}\n\n"
+
+    "GENRE SCORING CONTEXT:\n"
+    "{genre_context}\n\n"
+
+    "{verified_subject}\n\n"
+
+    "WILDLIFE GENRE — MANDATORY PRE-SCORE READ (applies to every Wildlife image):\n"
+    "Before scoring any dimension, complete Steps 0-4 in order. Do not skip to scoring. "
+    "9 out of 10 photographers will not caption or explain. The image must be read cold.\n\n"
+
+    "STEP 0 — IDENTIFY THE SUBJECT GROUP. THIS CONTROLS EVERYTHING THAT FOLLOWS.\n"
+    "Before reading the behaviour, commit to one of these seven subject groups. "
+    "The group determines which DOD, DM, and WF anchors apply.\n\n"
+    "GROUP A — WATER BIRDS: pelicans, herons, egrets, cormorants, spoonbills, storks, "
+    "flamingos, swans, ducks, grebes, coots, moorhens, kingfishers at water, jacanas. "
+    "IDENTIFICATION: large body adapted to water, webbed feet or long wading legs, "
+    "bill shaped for fish/filter-feeding, typically found at or near water surface. "
+    "CRITICAL RULE: Water birds do NOT thermal-soar or stoop like raptors. "
+    "A REFLECTION visible below the bird is definitive proof it is AT or NEAR water, "
+    "not airborne over land. If reflection is present: Group A, not Group B.\n\n"
+    "GROUP B — AERIAL RAPTORS: eagles, hawks, falcons, kites, harriers, ospreys, owls "
+    "in flight. IDENTIFICATION: hooked beak, talons adapted for prey capture, "
+    "typically seen in open sky, thermal columns, or over grassland/forest canopy. "
+    "CRITICAL RULE: Thermal soaring applies here, NOT to water birds. "
+    "Active hunt (stoop, prey contact) = DOD 8-9. Generic soaring = DOD 5-6.\n\n"
+    "GROUP C — GROUND MAMMALS: tigers, leopards, lions, elephants, rhinos, deer, "
+    "wild dogs, hyenas, wolves, bears, jackals, wild boar, smaller cats. "
+    "IDENTIFICATION: four-legged terrestrial mammal, fur-covered body.\n\n"
+    "GROUP D — PRIMATES: monkeys, apes, langurs, macaques, gibbons. "
+    "IDENTIFICATION: forward-facing eyes, opposable digits, social group behaviour.\n\n"
+    "GROUP E — AQUATIC / MARINE: dolphins, whales, sharks, rays, sea turtles, "
+    "fish schools, crocodilians at water, otters. IDENTIFICATION: aquatic or "
+    "semi-aquatic body plan, photographed in or at water for an aquatic subject.\n\n"
+    "GROUP F — MACRO / INVERTEBRATE: insects, spiders, frogs, snakes, lizards, "
+    "beetles, butterflies, bees. IDENTIFICATION: small subject, often requires "
+    "close focus. Frogs/snakes = reptile-amphibian, not mammal.\n\n"
+    "GROUP G — URBAN WILDLIFE: wild animal photographed in a clearly human-built "
+    "environment. IDENTIFICATION: roads, buildings, vehicles, artificial light visible. "
+    "Urban context raises DOD automatically — leopard in city = DOD 8.5+.\n\n"
+    "COMMIT TO ONE GROUP NOW. Write the group letter internally. All scoring that "
+    "follows must be consistent with that group. If the animal could be Group A or "
+    "Group B, check for a water reflection — presence = Group A, absence = Group B.\n"
+    "GROUP A LANGUAGE BAN: Once committed to Group A (water bird), the following "
+    "words are BANNED from every field in the output — takeaway, impression, "
+    "dim_obs_dod, dim_obs_vd, dim_obs_dm, dim_obs_wf, dim_obs_aq, "
+    "what_next, conclusion, imagine, tech_read, visual_flow, all of them: "
+    "'raptor', 'soaring', 'soaring bird', 'thermal soaring', 'stooping', "
+    "'predatory diving', 'prey strike', 'hunting dive', 'in flight', "
+    "'bird in flight', 'stark white line', 'pure geometry'. "
+    "Water birds do not soar on thermals, stoop, or dive like raptors. "
+    "A water bird with wings spread on water is NOT 'in flight' — it is "
+    "displaying, drying, or landing. Never describe a GROUP A bird as "
+    "'soaring', 'in flight', or 'a bird in flight' — these are raptor behaviours. "
+    "If any of these words appear in your output for a Group A image, you have "
+    "made a subject-group error. Stop and rewrite every affected field.\n\n"
+
+    "STEP 1 — READ THE ANIMAL. COMMIT TO ONE BEHAVIOUR NAME.\n"
+    "Now that you have the subject group, read the specific behaviour. "
+    "Identify: posture, direction of movement or attention, relationship to environment. "
+    "These three things name the behaviour. Do not name the environment first.\n\n"
+    "GROUP A BEHAVIOUR READS:\n"
+    "  Wings spread + reflection below = displaying, drying wings, or landing — NOT soaring\n"
+    "  Head submerged = filter-feeding or fishing — NOT drowning\n"
+    "  Standing on water edge at night + reflection + dark background = "
+    "precision low-light water photography — DOD 8.5+\n"
+    "  Bird in coordinated flock on water at dawn = colonial behaviour — DOD 7-8\n"
+    "  Pelican/cormorant with wings fully spread at rest = drying posture — DM on symmetry\n\n"
+    "GROUP B BEHAVIOUR READS:\n"
+    "  Bird flying TOWARD fire = foraging/hunting fire insects — NOT fleeing\n"
+    "  Bird flying AWAY from fire = escaping\n"
+    "  Wings folded, diving steeply = stooping on prey — DM at contact point\n"
+    "  Circling slowly, wings fully extended = thermal soaring — DOD 5-6, repeatable\n"
+    "  Perched, head rotated = hunting scan — DM on the alert moment\n\n"
+    "GROUP C BEHAVIOUR READS:\n"
+    "  Crouching, ears flat, eyes fixed forward = active stalk — DOD 8, not resting\n"
+    "  Trunk raised toward another animal = communicating or threatening\n"
+    "  Lying down, eyes closed = resting — DOD 5-6\n"
+    "  Running with mouth open toward prey = active pursuit — DOD 8-9\n\n"
+    "GROUP F BEHAVIOUR READS:\n"
+    "  Snake coiled around prey = mid-constriction, peak predatory moment\n"
+    "  Frog with throat inflated = calling — DM on the display moment\n"
+    "  Spider at web centre = ambush position — DM on the geometric alignment\n\n"
+    "CRITICAL: Once you commit to a behaviour name, use it consistently across ALL "
+    "five dimensions, takeaway, impression, what_next, and conclusion. "
+    "Contradicting yourself across dimensions is a scoring error.\n\n"
+
+    "STEP 2 — DOD ANCHORS BY SUBJECT GROUP.\n"
+    "Apply the DOD scale specific to your group. Do not use the generic scale.\n\n"
+    "GROUP A — WATER BIRDS:\n"
+    "  5-6: Bird standing or swimming in daylight, standard conditions\n"
+    "  6-7: Colonial behaviour, feeding sequence, coordinated flock movement\n"
+    "  7-8: Specific light condition (dawn/dusk), reflection intact, "
+    "        precise moment within a behavioural sequence\n"
+    "  8-8.5: Night or low-light, still dark water, perfect reflection — "
+    "          positioning + timing + darkness + stillness all converging\n"
+    "  8.5-9: Rare behaviour (mid-air prey catch for a heron, pelican cooperative "
+    "          fishing, flamingo courtship dance at peak) — documented rarely\n\n"
+    "GROUP B — AERIAL RAPTORS:\n"
+    "  5-6: Generic soaring in good light — any patient photographer can get this\n"
+    "  6-7: Bird in flight with good tracking, hunting scan from perch\n"
+    "  7-8: Active hunt with prey visible, or raptor at fire following insects\n"
+    "  8-9: Stoop at prey contact, kill moment, raptor inside active wildfire "
+    "        (CHJ/Baiju Patil territory)\n"
+    "  9+: Fewer than 50 documented photographs of this specific behaviour globally\n\n"
+    "GROUP C — GROUND MAMMALS:\n"
+    "  5-6: Animal resting, grazing, walking in daylight reserve\n"
+    "  6-7: Alert posture, herd interaction, social behaviour\n"
+    "  7-8: Active stalk (predator crouching, advancing), courtship display\n"
+    "  8-9: Kill moment or prey contact, birth, rare foraging in extreme conditions\n"
+    "  9+: Behaviour documented fewer than 50 times globally\n\n"
+    "GROUP D — PRIMATES:\n"
+    "  5-6: Grooming, resting, common social interaction\n"
+    "  6-7: Infant care, play behaviour, foraging\n"
+    "  7-8: Territorial conflict, tool use, dominance display\n"
+    "  8-9: Rare behaviour — coalition formation, deceptive behaviour, "
+    "        wild unhabituated individual at portrait proximity\n\n"
+    "GROUP E — AQUATIC / MARINE:\n"
+    "  6-7: Dolphin bow-riding, sea turtle swimming, fish school\n"
+    "  7-8: Cetacean breach, hunting sequence, crocodilian ambush\n"
+    "  8-9: Prey contact underwater, whale cooperative hunting, "
+    "        rare species in situ documentation\n\n"
+    "GROUP F — MACRO / INVERTEBRATE:\n"
+    "  5-6: Common insect or frog in standard conditions\n"
+    "  6-7: Behavioural moment — feeding, mating, display\n"
+    "  7-8: Rare species, handheld field macro of live behavioural moment\n"
+    "  8-9: Snake predation, spider at prey-contact, rare species in behaviour\n\n"
+    "GROUP G — URBAN WILDLIFE:\n"
+    "  Urban context raises floor: leopard or large predator in city = DOD 8.5+ baseline. "
+    "  The contrast of wild creature in human environment IS the difficulty signal. "
+    "  Do not score urban wildlife on the same scale as reserve photography.\n\n"
+
+    "WONDER UNIVERSAL RULE: Rare behaviour that most viewers will not recognise as rare "
+    "is still rare — score WF on what is ACTUALLY HAPPENING, not on whether "
+    "the viewer will understand it immediately.\n\n"
 
     "PLATFORM CALIBRATION - THIS IS THE STANDARD YOU ARE SCORING AGAINST:\n"
     "{calibration}\n"
@@ -32522,6 +36605,14 @@ _TRY_HAIKU_PROMPT = (
     "least 2.0 below your highest. Writing that a photograph lacks a decisive "
     "moment and then scoring Decisive Moment 6.1 is a contradiction. If the "
     "fault is real enough to name, it is real enough to score.\n"
+    "- NARRATIVE-SCORE AGREEMENT — BIDIRECTIONAL: The agreement rule works in "
+    "both directions. If your dim_obs says the photographer made 'a decision "
+    "most photographers would not conceive', 'a vision few could execute', or "
+    "'requires skill beyond ordinary capture' — the score for that dimension "
+    "MUST be 7.5 minimum. Writing that something requires exceptional vision "
+    "and then scoring it 7.2 is the same contradiction in reverse. "
+    "Read your dim_obs before finalising each score. If the language is "
+    "exceptional, the number must be exceptional too.\n"
     "- Do NOT default to the middle or the top of any band. A band of 8.0-8.9 "
     "means some photographs score 8.0 and some score 8.9. Choose honestly.\n"
     "- Use the whole scale. Scores of 4 and 5 are ordinary, not insults. Most "
@@ -32535,59 +36626,501 @@ _TRY_HAIKU_PROMPT = (
     "- Do not inflate to be encouraging. An honest 6.4 is more useful to a "
     "photographer than a generous 8.2.\n\n"
 
+    "DIMENSION REASONING — MANDATORY FOR ALL FIVE:\n"
+    "For each dimension you score, you must write one clause explaining WHY this specific "
+    "image lands where it does in that dimension. Not what the dimension measures — "
+    "what THIS IMAGE does or fails to do within it. Your five scores and five dim_obs "
+    "clauses must agree exactly. Each dim_obs must be one sentence, max 35 words, "
+    "plain English, no jargon.\n"
+    "Example for Wonder Factor 7.8 on a wildlife image:\n"
+    "  dim_obs_wf: 'The raptor hunting behaviour is genuinely rare, but the bird is "
+    "centred — the composition follows where anyone standing there would have pointed; "
+    "at 8.5 the geometry would be yours, not the scene\\'s.'\n"
+    "Write all five before writing the takeaway.\n\n"
+
     "TAKEAWAY:\n"
     "Write exactly one sentence (max 30 words) that names the single most "
-    "important insight about this photograph. Name the specific dimension "
-    "that most defines or limits this image and say precisely why. "
-    "Be direct. Do not use the word score.\n\n"
+    "important insight about this photograph. "
+    "RULES:\n"
+    "- NEVER use dimension code names: never say AQ, VD, DM, WF, DOD, "
+    "  Affective Quotient, Visual Disruption, Decisive Moment, Wonder Factor, "
+    "  Depth of Difficulty. Use plain English: emotional truth, composition, "
+    "  timing, rarity, difficulty.\n"
+    "- Lead with what is STRONG, then name the one gap. "
+    "  Never open with a negative or a limitation.\n"
+    "- Sherpa tone: warm, specific, direct. Not clinical. Not rubric language.\n"
+    "- DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette, "
+    "  monochrome conversion, or high-contrast isolation — NEVER name subject "
+    "  visibility, species clarity, face recognition, or lack of detail as the gap. "
+    "  The photographer chose to withhold that information. Name instead what would "
+    "  make the transformation stronger: proximity, posture, geometry, light edge. "
+    "  This rule applies across ALL genres — street, portrait, landscape, wildlife.\n"
+    "- IMAGE-SPECIFIC RULE — CRITICAL: The takeaway must name something specific "
+    "  to THIS image — a specific visible element, a specific gesture, a specific "
+    "  relationship between two things in the frame. It must not be a sentence that "
+    "  could apply to any photograph of the same subject.\n"
+    "  BANNED PHRASES — never use these or structural variants of them "
+    "IN ANY FIELD including dim_obs_dod, dim_obs_vd, dim_obs_dm, dim_obs_wf, dim_obs_aq:\n"
+    "  'one half-second away from the frame'\n"
+    "  'the peak of [X] is one half-second away'\n"
+    "  'a fraction of a second from'\n"
+    "  'just outside the frame's temporal centre'\n"
+    "  'one frame away'\n"
+    "  'the stillness before it'\n"
+    "  'not quite caught'\n"
+    "  'almost visible, but not quite'\n"
+    "  'a half-second earlier'\n"
+    "  'a half-second later'\n"
+    "  'strike completion' (say instead: the prey visible in the talons)\n"
+    "  'peak extension' (say instead: wings fully spread, talons fully open)\n"
+    "  These are vague proximity phrases that tell the photographer nothing specific. "
+    "  If timing or a specific moment is the gap, name the EXACT GESTURE OR ELEMENT "
+    "  that was needed — not that it was missed by a small margin. "
+    "  This ban applies to ALL output fields — takeaway, impression, every dim_obs, "
+    "  strength_obs, next_leap_obs, what_next, imagine, conclusion.\n"
+    "- VARIED EXAMPLES — note how each names something specific to that image:\n"
+    "  Wildlife silhouette: 'The geometry here is extraordinary — the gap is "
+    "  proximity: tighter framing would collapse the void into something suffocating.'\n"
+    "  Child in rain: 'The backlighting and solitude are genuine — the gap is the "
+    "  umbrella's arc: it should frame the child, not compete with the spine.'\n"
+    "  Street seated child: 'The observation is real — the gap is the child's gaze: "
+    "  the frame needs the moment the eyes lift, not the stillness before it.'\n"
+    "  Fire and raptor: 'Being inside the fire line is the rarity — the gap is "
+    "  the eye: the raptor reads against sky, not smoke.'\n"
+    "Each of these names a specific visible element. Never write a generic sentence.\n"
+    "Be direct. Do not use the word score. Max 30 words.\n\n"
 
-    "IMPRESSION:\n"
+"IMPRESSION:\n"
     "2-3 sentences. Warm, specific, Sherpa tone — a senior photographer speaking "
-    "to someone they respect. If PHOTOGRAPHER HISTORY is provided above, open with "
-    "one sentence acknowledging what you have seen from them before, then move to "
-    "this photograph. If no history, open directly on this photograph. "
-    "Name what is genuinely strong. Do not use jargon. Do not use dimension names. "
-    "Do not mention the score. Max 60 words.\n\n"
+    "to someone they respect. Name what is genuinely strong in this specific frame. "
+    "Do NOT mention vantage, composition critique, or what to do next — those belong "
+    "in what_next. Do NOT repeat any observation that will appear in what_next or conclusion. "
+    "Do not use jargon. Do not use dimension names. Do not mention the score. Max 60 words.\n\n"
 
-    "STRENGTH AND NEXT LEAP:\n"
+"STRENGTH AND NEXT LEAP:\n"
     "strength_name: The plain-English name of the strongest dimension "
     "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
     "'Depth of Difficulty', 'Authentic Quality').\n"
-    "strength_obs: One sentence (max 30 words) explaining specifically what "
+    "strength_obs: One sentence (max 35 words) explaining specifically what "
     "is working in this dimension for THIS photograph. Concrete. No jargon.\n"
     "next_leap_name: The plain-English name of the weakest dimension.\n"
-    "next_leap_obs: One sentence (max 30 words) explaining specifically what "
-    "is limiting this dimension for THIS photograph. Honest. No jargon.\n\n"
+    "next_leap_obs: One sentence (max 35 words) explaining specifically what "
+    "is limiting this dimension for THIS photograph. Name the one decision that "
+    "would move it into the next band. Honest. No jargon. "
+    "DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette, "
+    "monochrome, or high-contrast isolation in ANY genre — the gap must describe "
+    "what strengthens the transformation, never what reverses it. "
+    "Never write: 'more detail would help', 'subject visibility limits this', "
+    "'species is unclear', 'face is not readable'. These reverse the photographer's "
+    "decision. Write instead: what posture, proximity, or geometric decision would "
+    "make this transformation hit harder.\n\n"
+
+    "MASTER REFERENCE — HOW TO CHOOSE:\n"
+    "Match on SUBJECT and BEHAVIOUR first. This is the only rule that matters.\n"
+    "Subject = the animal or thing in the frame. Behaviour = what it is doing.\n"
+    "Never match on visual style, career reputation, or general approach to photography.\n\n"
+    "MATCHING HIERARCHY — follow in order:\n"
+    "1. Same species or taxonomic group in the same type of situation\n"
+    "   Raptor at wildfire → wildlife photographer known for birds of prey or fire ecology\n"
+    "   Flamingo feeding → wildlife photographer known for wading birds or wetland behaviour\n"
+    "   Tiger stalking → wildlife photographer known for big cat predation\n"
+    "   Elephant herd → wildlife photographer known for elephant social behaviour\n"
+    "   Marine animal → underwater or coastal wildlife specialist\n"
+    "2. Same environment if species match is unavailable\n"
+    "3. Same dimension gap — photographer who solved the specific weakness in this image\n\n"
+    "CRITICAL: A photographer who shoots large mammals in African drought is NOT a match "
+    "for a raptor at an Indian wildfire. A camera-trap big cat photographer is NOT a match "
+    "for a bird in flight. Do not use fame, geographic proximity, or general reputation "
+    "as a substitute for subject and behaviour match.\n\n"
+    "MANDATORY SUBJECT OVERRIDES -- these override every other matching rule:\n"
+    "- If the image shows a RAPTOR (hawk, kite, eagle, owl, falcon) near or at FIRE/SMOKE/BURN: "
+    "  MUST pick Charlie Hamilton James or Baiju Patil. "
+    "  Steve Winter = big cats only. Nick Brandt = African mammals only. "
+    "  Never pick either for raptors. Never.\n"
+    "- If the image shows a WATER BIRD (pelican, heron, egret, stork, flamingo, cormorant, "
+    "  spoonbill, swan, duck, grebe, kingfisher): "
+    "  MUST pick Vincent Munier, Tim Laman, or Sebastiao Salgado (flamingos). "
+    "  Nick Brandt = African land mammals ONLY — never for water birds, never for birds. "
+    "  David Yarrow = large African mammals and human subjects — never for birds or water birds. "
+    "  Brandt and Yarrow do not photograph birds. Do not pick either for any bird image.\n"
+    "- Tiger, leopard, snow leopard: Steve Winter or Nick Nichols.\n"
+    "- Indian bird behaviour (any species): prefer Baiju Patil, Kalyan Varma, Aishwarya Sridhar.\n"
+    "- Indian street/documentary: Raghu Rai, Vineet Vohra, GMB Akash.\n\n"
+    "If the library has no precise match, pick the closest subject match. "
+    "Never pick a famous name that does not match the subject.\n\n"
+    "For Indian wildlife subjects, prefer Indian or South Asian photographers from the "
+    "library when they match the subject.\n\n"
+
+    "REFERENCE LIBRARY for {genre}:\n"
+    "{master_library}\n\n"
+
+    "ABSOLUTE RULE: Use only names from the library above. Never invent a photographer. "
+    "If uncertain between two names, pick the one whose work most closely matches "
+    "the SUBJECT of this specific image, not the visual style.\n\n"
+
+    "master_name: Exactly one name from the library above.\n"
+    "master_why: Maximum 25 words. One sentence only. "
+    "State the specific physical decision this master made in the same type of situation "
+    "that this photographer has not yet made. "
+    "Format: [Master] [specific action]. You [what photographer hasn't done]. "
+    "Example: 'Hamilton James positioned at fire-line level so the raptor's eye reads against smoke. "
+    "You are shooting from distance where both fire and sky compete.' "
+    "25 words maximum — if you cannot fit it, cut words, do not extend.\n\n"
+
+"{history_context}\n\n"
+
+    "PHOTOGRAPHER CONTEXT:\n"
+    "{photographer_context}\n\n"
+
+    "CRITICAL INSTRUCTION ON PHOTOGRAPHER CONTEXT:\n"
+    "If photographer context is provided above, use it ONLY to:\n"
+    "1. Recalibrate your DOD score — rare access, rare behaviour, or extreme "
+    "physical conditions the image cannot show change the difficulty ceiling.\n"
+    "2. Tell them what the world's best photographers did differently in this "
+    "same situation — specific, named, concrete.\n"
+    "3. Name what the frame reveals that the photographer could not see from "
+    "inside the moment — something they did not already know.\n"
+    "NEVER repeat or summarise what the photographer told you. "
+    "NEVER validate their context by echoing it. "
+    "Respond to it — go beyond it. The photographer already knows what they told you.\n\n"
 
     "WHAT NEXT:\n"
-    "One actionable instruction the photographer can carry to their next session. "
-    "Device-aware if format is known. If the same gap appears in history, name "
-    "the pattern directly — what to watch for, not what to fix abstractly. "
-    "Plain English. No jargon. Max 80 words.\n\n"
+    "This is the Sherpa speaking directly to the photographer. "
+    "For Wildlife images: name one specific next shot. Not a general direction. "
+    "A specific vantage, a specific moment within the behaviour sequence to wait for, "
+    "a specific proximity. The photographer knows this location and this subject -- "
+    "tell them exactly what to go back and get. "
+    "Name what the master reference photographer did differently in this type of situation: "
+    "the physical decision -- proximity, angle, height, which moment in the behaviour sequence. "
+    "Then name the one thing to change -- not 'get closer' but 'get level with the fire line "
+    "so the bird's eye reads against smoke, not sky.' "
+    "For all genres: if the same gap appears in their history, name the pattern directly -- "
+    "not 'work on composition' but 'you arrive at scenes and document them -- "
+    "the next frame needs you to decide where the viewer enters before you press the shutter.' "
+    "TONE RULE -- CRITICAL: Never instruct the photographer to return to a location or "
+    "go back for a shot as if they can command the moment. Nature is dynamic. "
+    "Streets change. Festivals happen once a year. "
+    "Use ONLY possibility language: 'if this moment comes again', "
+    "'the next time conditions align', 'when the fire returns', "
+    "'if you find yourself at this festival again'. "
+    "BANNED phrases: 'return to', 'go back', 'come back', 'revisit'. "
+    "If any banned phrase appears in your what_next, rewrite it. "
+    "Plain English. No dimension codes. No jargon.\n"
+    "STRUCTURE: what_next has two parts — do not mix them:\n"
+    "Part 1 (Next time — field/positioning advice): what to do differently "
+    "if this scene occurs again. Possibility language only.\n"
+    "Part 2 (Right now — edit/crop advice): what the photographer can do "
+    "to this image today in post-processing. Specific, achievable.\n"
+    "HARD LIMIT: 120 words maximum. Count carefully. Truncate if needed. "
+    "A 120-word what_next is better than a truncated 200-word one. "
+    "If you run out of tokens, this field suffers most — keep it tight.\n\n"
 
-    "MASTER REFERENCE:\n"
-    "master_name: One photographer whose body of work is most relevant to this "
-    "image's strengths or genre. A real, well-known name. Not generic.\n"
-    "master_why: One sentence (max 25 words) connecting their work to what "
-    "this photographer is doing or reaching toward.\n\n"
+    "COMPOSITION INFERENCE -- inject into what_next when relevant:\n"
+    "If subject is centred: name the compositional principle that would lift this. "
+    "Do not say 'use rule of thirds.' Say: 'The golden spiral is already in this scene -- "
+    "the flame line is the curve, the raptor is the eye. Right now both compete for centre. "
+    "Shift the bird to the upper-right third and the geometry resolves itself.' "
+    "Name the principle (diagonal tension, negative space, golden spiral, triangular "
+    "composition, leading line, frame within frame) and show how it applies to THIS image.\n"
+    "If the image has strong diagonal potential: name it explicitly. "
+    "If the image would benefit from Japanese minimalism (ma -- negative space as subject): name it. "
+    "If the image has Rembrandt-style light: name it and what it does. "
+    "If complementary colours are at play (orange flame / blue smoke): name them. "
+    "Name one principle maximum. Make it specific to this image.\n\n"
 
-    "{history_context}\n\n"
+    "9+ GAP ANALYSIS -- always include at end of what_next:\n"
+    "To reach 9+ on this image, two things would need to align: "
+    "[plain English gap 1] and [plain English gap 2]. "
+    "Name what that frame would have looked like: specific, visual, concrete. "
+    "Example: 'At 9+: the eye of the bird reads against the smoke wall and the "
+    "flame forms a diagonal behind the stoop. That frame exists -- go back for it.' "
+    "This is the most important sentence on the scorecard. Make it specific.\n\n"
+"IMAGINE:\n"
+    "This is the most important field on the scorecard. "
+    "Write one paragraph. Second person. Present tense. "
+    "Paint the specific 9+ version of this photograph -- the image this moment "
+    "was reaching toward but did not yet fully become. "
+    "Not what went wrong. Not what to fix. What the extraordinary frame looks like "
+    "-- if conditions align, if nature cooperates, if the moment comes again.\n"
+    "TONE RULES:\n"
+    "This is a POSSIBILITY, not a directive. Nature is dynamic. Streets change. "
+    "Moments are not repeatable on demand. NEVER say go back for it or return to "
+    "this location as if the photographer can command the moment. "
+    "Use language like: imagine if / the frame that could exist / "
+    "if this moment comes again / there is a version of this image where.\n"
+    "CAMERA TRACK: If photographer is on MOBILE track -- never describe a frame "
+    "that requires telephoto reach, wide aperture bokeh, or equipment a phone "
+    "cannot achieve. Imagine within phone constraints: proximity, angle, timing, "
+    "light -- not lens choice.\n"
+    "Do NOT give location advice here. That belongs in what_next.\n"
+    "Use the actual elements in this image -- same subject, same behaviour -- "
+    "but describe the frame where everything aligns. "
+    "Name colour, light, proximity, posture, background. Sensory and specific.\n"
+    "Example camera track wildlife: "
+    "Imagine the bird tighter in the frame -- one eye lit by the fire glow, "
+    "wings spread mid-stoop, talons reaching for prey rising from the smoke. "
+    "Behind it: not sky but a wall of green-grey smoke, the fire line a diagonal "
+    "below. The raptor becomes a phoenix -- ancient, purposeful, hunting inside "
+    "the chaos. There is a version of this image where that is the frame.\n"
+    "Example mobile track street: "
+    "Imagine two steps closer -- the face filling the frame, the market chaos "
+    "compressed into colour behind. The gesture that is happening right now but "
+    "too small to read. If you were there again, that is the photograph.\n"
+    "Max 80 words. No jargon. No dimension names. Pure vision.\n\n"
+
+"CONCLUSION:\n"
+    "Written in the voice of the platform, not the engine. "
+    "ALWAYS address the photographer directly as YOU -- never as 'this photographer' or "
+    "'the photographer'. First person address only. Sherpa tone -- warm, personal, direct. "
+    "Do NOT repeat any observation already made in impression, what_next, or master_why. "
+    "This section says one thing only: what this photograph tells us about YOU, "
+    "and that we want to see more. "
+    "If PHOTOGRAPHER HISTORY is empty (eval 1): "
+    "2-3 sentences. What does this one image reveal about how YOU see? "
+    "Then invite the next photograph. "
+    "LEAGUE MENTION RULE: Check the tier you calculated. "
+    "If tier is Master, Grandmaster, or Legend (score 8.0+): add this sentence: "
+    "'An image at this level belongs in the League of Photographers -- "
+    "where it earns a world standing calibrated against every photographer on the platform.' "
+    "If tier is Maverick, Craftsman, Shooter, Contender, or Rookie (score below 8.0): "
+    "do NOT add this sentence. Do NOT mention the League in the conclusion at all. "
+    "The League career statement appears elsewhere on the page -- do not duplicate it.\n"
+    "Close with this exact sentence: 'The standard we are measuring against was built from "
+    "hundreds of blind calibrations -- not preference, not taste -- what makes an image hold attention, "
+    "create feeling, and outlast the five seconds it gets on a feed.' "
+    "Do not mention upgrading. Do not mention pricing. Max 90 words.\n"
+    "If PHOTOGRAPHER HISTORY has prior images (eval 2+): "
+    "Name the pattern across their work — one strength, one gap — in 2 sentences. "
+    "Do not say what they should do next. That is in what_next. Max 50 words.\n\n"
+
+"CAMERA DATA CONTEXT:\n"
+    "{exif_context}\n"
+    "If camera data is provided, use it in tech_read for gear-specific observations.\n\n"
+
+    "SHUTTER SPEED AND DECISIVE MOMENT — WILDLIFE:\n"
+    "A still frame cannot tell you whether the animal was moving. "
+    "Use shutter speed as the primary signal for DM on Wildlife images.\n\n"
+    "RULE 1 — WHEN EXIF SHUTTER SPEED IS AVAILABLE:\n"
+    "Fast shutter (1/500s or faster): the photographer was shooting for motion. "
+    "Even if the animal appears static in the frame, fast shutter means anticipation — "
+    "the photographer positioned and timed for potential movement. "
+    "Do NOT score DM low on the basis that the subject 'appears at rest'. "
+    "Score DM on whether the frame captures the animal at its most intentional, alert, "
+    "or decisive posture — ears forward, gaze locked, body coiled. "
+    "A tiger at 1/1000s with direct gaze and alert posture = DM 6.5-7.5, not 5.1.\n"
+    "Slow shutter (1/100s or slower on a Wildlife subject): the photographer accepted "
+    "a static subject. Score DM on posture and moment quality within that stillness.\n\n"
+    "RULE 2 — WEIGHT THE PRE-CALL BEHAVIOUR STRING:\n"
+    "The vision pre-call has already identified the subject behaviour. "
+    "If the verified_subject block says 'walking', 'mid-stride', 'stalking', 'alert scanning', "
+    "or any active behaviour — trust that read. Do not override it with 'subject appears at rest' "
+    "based on the still frame alone. The pre-call saw the same image and committed to a behaviour.\n\n"
+    "RULE 3 — WHEN NO EXIF AND BEHAVIOUR IS AMBIGUOUS:\n"
+    "If no shutter speed is available AND the subject could be frozen-motion OR genuinely static, "
+    "do not make a confident low DM call. Instead: score DM on the quality of the posture, "
+    "gaze, and geometry — and note in dim_obs_dm: 'No shutter data — if this was a frozen "
+    "moment of movement, the timing reads as [stronger/weaker]; scored on visible posture.' "
+    "Never penalise a photographer for a moment you cannot verify was static.\n\n"
+
+    "SPECIES NOTE (Wildlife only, blank for all other genres):\n"
+    "species_note: CONSERVATIVE IDENTIFICATION ONLY.\n"
+    "RETURN BLANK (empty string) in ANY of these situations:\n"
+    "- The subject is a silhouette with no visible distinguishing features\n"
+    "- The image is backlit, underexposed, or in low contrast\n"
+    "- The species cannot be identified with HIGH confidence from visible features\n"
+    "- The subject could be more than one species\n"
+    "- You are guessing\n"
+    "ONLY populate species_note when ALL of these are true:\n"
+    "1. The species is clearly identifiable from visible physical features "
+    "(plumage pattern, beak shape, body structure — NOT silhouette alone)\n"
+    "2. You are confident enough to stake the platform's credibility on this identification\n"
+    "3. The ecological fact you state is verifiable and accurate\n"
+    "A wrong species identification destroys platform trust immediately. "
+    "Blank is always safer than wrong. When in doubt: blank.\n"
+    "If confident: one sentence, species name + one verified ecological fact. Max 40 words.\n"
+    "SILHOUETTE RULE — CRITICAL: When species_note is blank because the subject is "
+    "rendered as silhouette, do NOT name species clarity as a gap in the takeaway, "
+    "next_leap_obs, or anywhere else on the scorecard. "
+    "A silhouette is a compositional choice, not a failure. "
+    "The photographer chose to withhold species detail in favour of geometry, "
+    "negative space, or emotional atmosphere. Naming species clarity as the gap "
+    "tells the photographer to reverse their creative decision. Never do this. "
+    "If the image is a deliberate silhouette, the gap (if any) is: "
+    "what would make the transformation MORE powerful — closer proximity, "
+    "stronger bilateral symmetry, a more distinctive posture — not species visibility.\n\n"
+
+
+    "TECHNICAL READ:\n"
+    "tech_read: One paragraph, max 60 words. Before scoring, examine technically: "
+    "(1) Is the primary subject sharp, soft, or affected by conditions beyond the "
+    "photographer's control -- heat shimmer, rain, atmospheric haze, motion blur? "
+    "Name the cause, not just the effect. Defend the photographer where conditions "
+    "caused limitations they could not avoid. "
+    "(2) Is exposure balanced or compromised -- highlight clipping, shadow crush? "
+    "CRITICAL: If the subject is cleanly exposed within a dark or black background, "
+    "this is almost certainly a deliberate post-processing or ND filter decision — "
+    "NOT a night shot, NOT underexposure. Do NOT describe it as 'correctly metered "
+    "for dark conditions' or 'nocturnal.' Say instead: the darkness is manufactured "
+    "— shadows crushed in post or ND filter used to isolate the subject. "
+    "Do NOT infer time of day from background darkness alone. Dark background "
+    "does not mean night. A subject lit against black could be midday with an ND filter "
+    "or post-processed contrast. Only state nocturnal if EXIF time confirms it or "
+    "the photographer stated it. "
+    "(3) If camera data is provided, make one gear-specific observation: "
+    "was the focal length appropriate, was the shutter speed sufficient, "
+    "what does the ISO tell us about conditions? "
+    "Tone: precise and fair -- the voice of a senior editor examining a contact sheet.\n\n"
+
+    "VISUAL FLOW AND COMPOSITIONAL WASTE:\n"
+    "visual_flow: One sentence only. Where does the viewer's eye enter the frame "
+    "and where does it travel? Name the specific element that draws the eye in and "
+    "where it exits or rests. If there is dead space -- foreground, edge, or sky "
+    "that adds no information -- name it in the same sentence. "
+    "Example: Eye enters along the flame line from lower left, meets the raptor at "
+    "centre-right, then rises into the smoke canopy -- the lower 12 percent of the "
+    "frame is dark foreground that adds no narrative; cropping it tightens the energy. "
+    "Max 40 words.\n\n"
+
+    "AWARD CONTEXT:\n"
+    "award_context: Three tiers based on overall score. Never name specific award bodies or brands.\n"
+    "SCORE BELOW 8.5: Use this exact sentence: The League of Photographers features "
+    "genuinely international work -- images that stand a chance for recognition, earn "
+    "income through commissioned work, sales and print editions, and be featured in "
+    "exhibitions, grants and awards.\n"
+    "SCORE 8.5 to 8.9: One sentence. Must start with EXACTLY 'At 8.5+' — not 8.0+, "
+    "not 8.4+, not 8.6+. Always 8.5+. Say: At 8.5+ your work is ready for serious "
+    "[genre] photography awards and the League of Photographers -- where images at this "
+    "level earn income through commissions, print sales, and exhibition placement. "
+    "Replace [genre] with the actual genre.\n"
+    "SCORE 9.0 and above: One sentence. Must start with EXACTLY 'At 9.0+'. "
+    "Say: At this level your [genre] work stands "
+    "among the best on the platform -- the League of Photographers opens doors to "
+    "major awards, commissions, gallery exhibitions, and grant opportunities. "
+    "Replace [genre] with the actual genre.\n"
+    "THRESHOLD RULE: The number after 'At' must be exactly 8.5 or 9.0. "
+    "Never write 8.0+, 8.2+, 8.4+, 8.6+, 8.8+, or any other number. "
+    "Only 8.5+ or 9.0+. If the score is 8.22, it is below 8.5 — use the first tier. "
+    "If the score is 8.51, it is above 8.5 — use the second tier starting with 'At 8.5+'.\n"
+    "ABSOLUTE RULE: Never name Sanctuary Asia, World Press Photo, NHM, Sony, "
+    "Nature inFocus, India Press Photo, or any award body. Genre name only for 8.5+. "
+    "One sentence per tier. Max 40 words.\n\n"
+
+
+    "EDIT TIPS:\n"
+    "edit_tips: 2-3 specific post-processing suggestions for THIS image only. "
+    "CRITICAL FORMAT — each tip must use NEWLINES, not pipe characters. "
+    "Use this exact structure with line breaks between sections:\n"
+    "WHAT: [what to do]\n"
+    "WHY: [why it helps this specific image]\n"
+    "HOW: [specific Lightroom tool or technique]\n"
+    "\n"
+    "WHAT: [next tip]\n"
+    "WHY: [why]\n"
+    "HOW: [how]\n"
+    "\n"
+    "STRICT RULE: Every WHY must be preceded by a WHAT in the same tip block. "
+    "Every HOW must be preceded by a WHY. "
+    "Never write two WHYs in a row. Never write a WHY without a WHAT before it. "
+    "Each tip block must have exactly one WHAT, one WHY, and one HOW — in that order.\n"
+    "Example (correct — three complete tip blocks):\n"
+    "WHAT: Crop 10-12 percent off the bottom\n"
+    "WHY: Dark foreground adds no narrative and pulls the frame bottom-heavy\n"
+    "HOW: Use 4:5 ratio, anchor the bird at the lower-right third, ensure flame line forms a clean diagonal\n"
+    "\n"
+    "WHAT: Sharpen subject only\n"
+    "WHY: The eye and talons need to be the sharpest thing in the frame\n"
+    "HOW: Mask the bird precisely, apply Texture plus 20, Clarity plus 10 inside mask only\n"
+    "\n"
+    "WHAT: Warm the smoke slightly\n"
+    "WHY: Orange-grey smoke creates colour harmony with the flame; cool smoke feels flat\n"
+    "HOW: In the smoke zone, increase Temperature plus 200-300K using a mask\n"
+    "\n"
+    "DO NOT use pipe characters (|) anywhere in edit_tips. "
+    "WHAT, WHY, HOW must each be on their own line. "
+    "Each complete tip separated by a blank line. Specific to THIS image. Max 120 words total.\n\n"
+
+    "{stability_anchor}\n\n"
+
+    "LANGUAGE RULE — APPLIES TO EVERY FIELD IN THE OUTPUT:\n"
+    "This scorecard is read by working photographers, not critics or academics. "
+    "Every sentence must pass this test: would a photographer who has been shooting "
+    "for two years understand this immediately, without stopping to ask what it means?\n\n"
+    "If the answer is no, rewrite it in plain English.\n\n"
+    "BANNED WORDS AND PHRASES — never use these anywhere in the output:\n"
+    "TEMPLATE OPENER BAN: 'You keep finding the feeling before you find the frame' — "
+    "this phrase is banned from ALL output fields. It has appeared too many times "
+    "and reads as a template. Never use it. Not in impression, not in what_next, "
+    "not anywhere. Find a specific observation about THIS photographer's THIS image.\n"
+    "MASTER NAME IN WHAT_NEXT BAN: Never name the master reference photographer "
+    "in the what_next field. The photographer reads what_next before the master section. "
+    "Do not say 'This is Sugimoto territory' or 'Munier would tighten the frame' in what_next. "
+    "Save the master name for the master_why field only.\n"
+    "PROXIMITY CONTRADICTION BAN: If the gap is proximity (get closer), "
+    "do NOT say 'tighter framing would collapse the void into something suffocating' "
+    "in the same scorecard. Suffocating language applies only to the Vision section "
+    "(what the 9+ version looks like) — never as the description of the gap consequence. "
+    "The gap consequence should say what GETTING CLOSER achieves, not what it destroys.\n"
+    "Timing jargon: 'half-second away', 'one half-second', 'temporal centre', "
+    "'execution window', 'decisive window', 'peak of absorption', 'peak of the arc', "
+    "'fractional shift' (say: move the bird slightly left/right)\n"
+    "Composition jargon: 'bilateral symmetry' (say: the bird and its reflection are "
+    "mirror images), 'bilateral perfection' (say: the wings are perfectly even on both sides), "
+    "'compositional tension' (say: the eye doesn't know where to go), "
+    "'negative space as subject' (say: the emptiness around the subject is what you see "
+    "first), 'triangular composition', 'leading line', 'frame within frame', "
+    "'diagonal tension' (say: the line pulls the eye from corner to corner)\n"
+    "Critic language: 'reads against' (say: appears in front of / stands out from), "
+    "'resolves' (say: comes together / becomes clear), 'sits in the frame' "
+    "(say: is placed / appears), 'the geometry is yours' (say: the composition is "
+    "a decision only you would make), 'emotional register' (say: the feeling this "
+    "creates), 'affective quality' (say: what it makes you feel)\n"
+    "Dimension names leaking through: Never say 'emotional register', 'affective', "
+    "'wonder', 'disruption', 'decisive' in copy — these are dimension names in disguise\n\n"
+    "REPLACEMENT RULE — say what it looks like or what to do:\n"
+    "Instead of: 'the bilateral symmetry creates compositional tension'\n"
+    "Say: 'the bird and its reflection are perfect mirror images — the frame holds "
+    "you at the centre and won't let you look away'\n\n"
+    "Instead of: 'the peak of absorption is one half-second away'\n"
+    "Say: 'you needed to wait for the child to completely forget the camera'\n\n"
+    "Instead of: 'the execution window for this technique is narrow'\n"
+    "Say: 'this is hard to pull off — most attempts look blurry or accidental'\n\n"
+    "Instead of: 'the subject reads against a neutral background'\n"
+    "Say: 'the subject stands out clearly because nothing behind it competes'\n\n"
+    "Instead of: 'diagonal tension pulls the viewer through the frame'\n"
+    "Say: 'the angle of the line drags your eye from one corner to the other'\n\n"
+    "THE SHERPA TEST: Before writing any sentence, ask — would a Sherpa guiding "
+    "someone up a mountain say this? A Sherpa says: 'rest here, the next section "
+    "is steep, you'll need both hands.' A Sherpa does not say: 'the vertical "
+    "trajectory presents an execution window requiring bilateral limb engagement.' "
+    "Write like the first. Never like the second.\n\n"
 
     "Return ONLY valid JSON, nothing else, no markdown:\n"
     "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
+    "\"dim_obs_dod\": \"<one sentence>\", "
+    "\"dim_obs_vd\": \"<one sentence>\", "
+    "\"dim_obs_dm\": \"<one sentence>\", "
+    "\"dim_obs_wf\": \"<one sentence>\", "
+    "\"dim_obs_aq\": \"<one sentence>\", "
     "\"takeaway\": \"<one sentence>\", "
     "\"impression\": \"<2-3 sentences>\", "
     "\"strength_name\": \"<dimension name>\", "
     "\"strength_obs\": \"<one sentence>\", "
     "\"next_leap_name\": \"<dimension name>\", "
     "\"next_leap_obs\": \"<one sentence>\", "
-    "\"what_next\": \"<max 80 words>\", "
     "\"master_name\": \"<photographer name>\", "
-    "\"master_why\": \"<one sentence>\"}"
+    "\"master_why\": \"<one sentence>\", "
+    "\"what_next\": \"<max 120 words>\", "
+    "\"conclusion\": \"<max 70 words>\", "
+    "\"species_note\": \"<one sentence or blank>\", "
+    "\"tech_read\": \"<max 60 words>\", "
+    "\"visual_flow\": \"<one sentence>\", "
+    "\"award_context\": \"<one sentence or blank>\", "
+    "\"edit_tips\": \"<max 120 words>\", "
+    "\"imagine\": \"<max 80 words>\"}" 
 )
 
 
-def _try_run_haiku(image_id, img_b64, genre, user_id=None):
+def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=None):
     """
     Single Haiku call: all 10 DDI fields per Session 186 handoff spec.
     181.15: expanded from 6 fields (dod/vd/dm/wf/aq/takeaway) to 10 fields.
@@ -32609,16 +37142,270 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
         with app.app_context():
             _history_ctx = _get_haiku_history_context(user_id, exclude_image_id=image_id)
 
+    # Session 211v3: fetch user context — camera track + city for advisory calibration
+    _camera_track = 'camera'  # default
+    _user_city = ''
+    if user_id:
+        try:
+            with app.app_context():
+                _urow = db.session.execute(db.text(
+                    'SELECT subscription_track, city FROM users WHERE id = :uid'
+                ), {'uid': user_id}).fetchone()
+                if _urow:
+                    _camera_track = (_urow[0] or 'camera')
+                    _user_city = (_urow[1] or '').strip()
+        except Exception as _ue:
+            app.logger.debug(f'[try_haiku] user context fetch non-fatal: {_ue}')
+
     # SL-181.1: genre placeholder plus platform calibration anchors
     # 181.15: also inject history context
+    # Session 210: inject photographer context — engine must respond to it, never mirror it
+    _ctx_block = ''
+    # Build photographer context block — includes camera track, city, and any notes
+    _ctx_parts = []
+    if photographer_context and photographer_context.strip():
+        _ctx_parts.append(
+            f'The photographer provided this context about the image:\n'
+            f'"{photographer_context.strip()}"\n'
+            f'Use this ONLY to recalibrate DOD and to tell them what they don\'t already know.'
+        )
+    # Camera track — changes advisory language fundamentally
+    if _camera_track == 'mobile':
+        _ctx_parts.append(
+            'CAMERA TRACK: MOBILE PHOTOGRAPHER.\n'
+            'This image was shot on a smartphone, not a dedicated camera.\n\n'
+            'WHAT TO LOOK FOR AND SCORE (mobile-specific DOD signals):\n'
+            '- Background clutter: a phone cannot blur out distractions with aperture. '
+            'If the background is clean, the photographer moved, repositioned, or chose '
+            'an angle deliberately. Name this in dim_obs_dod — it is a real achievement. '
+            'If the background is cluttered, name it as the gap — the photographer could '
+            'have moved to fix it.\n'
+            '- Physical proximity as zoom: if the subject is large in frame, the '
+            'photographer got close rather than zooming digitally. That is commitment.\n'
+            '- Light use without manual controls: the photographer found good light '
+            'when they could not set aperture or shutter. Name the light they found.\n'
+            '- Timing discipline: phone burst modes are limited. A peak moment '
+            'captured on mobile required anticipation, not reaction.\n'
+            '- Compositional knowledge: a phone photographer who uses Ma, Rembrandt '
+            'light, negative space, or deliberate framing has achieved more difficulty '
+            'relative to their tool than a camera user doing the same.\n\n'
+            'ADVISORY RULES (what NOT to suggest):\n'
+            '- NEVER suggest telephoto or tele lens — phone cameras cannot do this\n'
+            '- NEVER suggest shooting wide open aperture — phones have fixed aperture\n'
+            '- NEVER suggest RAW capture as if it requires a camera body\n'
+            '- NEVER suggest ND filters as primary technique advice\n'
+            '- DO suggest: move closer physically instead of zooming\n'
+            '- DO suggest: find cleaner backgrounds by moving position\n'
+            '- DO suggest: computational photography strengths (portrait mode, night mode)\n'
+            '- DO suggest: timing — wait for the moment, then shoot\n'
+            '- DO suggest: light — phone cameras reward good natural light more than '
+            'cameras do because you cannot compensate with aperture\n\n'
+            'TONE: A phone photographer may not know they had compositional options. '
+            'The scorecard must teach them something they did not know — not just '
+            'confirm what they did. The most valuable sentence for a mobile photographer '
+            'is: "You could have moved two steps left and the wall behind would have '
+            'disappeared — the subject would have stood against open sky instead." '
+            'Specific. Achievable. Does not require new equipment.'
+        )
+    else:
+        _ctx_parts.append('CAMERA TRACK: CAMERA (DSLR/Mirrorless). '
+                          'Full advisory range available — lens choice, aperture, focal length.')
+    # Location context
+    if _user_city:
+        _ctx_parts.append(
+            f'PHOTOGRAPHER LOCATION: {_user_city}.\n'
+            'Use this for location-aware advisory ONLY when relevant — '
+            'nearby locations, seasonal windows, accessible environments for this city. '
+            'NEVER give generic location advice. NEVER say "go to [location] which is X minutes away." '
+            'If you do not know specific locations near this city, do not invent them.'
+        )
+    if _ctx_parts:
+        _ctx_block = '\n\n'.join(_ctx_parts)
+
+    # Session 213: Pre-call — identify subject before building scoring prompt
+    # Engine receives facts, not questions. Master + DOD anchors come from Python.
+    app.logger.info(f'[try_haiku] pre-call starting image={image_id} genre={genre}')
+    _vision = _try_vision_analyse(img_b64)
+    app.logger.info(f'[try_haiku] pre-call complete image={image_id} vision_ok={bool(_vision)}')
+    _v_group    = _vision.get('subject_group', '')     # A/B/C/D/E/F/G/H/I/J
+    _v_subject  = _vision.get('subject_type', '')
+    _v_env      = _vision.get('environment', '')
+    _v_behaviour= _vision.get('behaviour', '')
+    _v_sil      = _vision.get('is_silhouette', False)
+    _v_conf     = _vision.get('confidence', '')        # high/medium/low
+
+    # Build VERIFIED SUBJECT block — injected into prompt as ground truth
+    # Species_note gate: only fire when confidence is high and not silhouette
+    _verified_subject_block = ''
+    if _vision:
+        _vs_lines = ['VERIFIED SUBJECT (identified by pre-call vision analysis — do not contradict):']
+        if _v_subject:
+            _vs_lines.append(f'Primary subject: {_v_subject}')
+        if _v_group:
+            _vs_lines.append(f'Subject group: {_v_group}')
+        if _v_behaviour:
+            _vs_lines.append(f'Behaviour: {_v_behaviour}')
+        if _v_env:
+            _vs_lines.append(f'Environment: {_v_env}')
+        if _v_sil:
+            _vs_lines.append(
+                'IS SILHOUETTE: yes — subject rendered as shape only. '
+                'Do NOT name species clarity or subject visibility as the gap. '
+                'The silhouette IS the photograph if deliberate.'
+            )
+        if _v_conf == 'low':
+            _vs_lines.append(
+                'Confidence: LOW — subject may be silhouette, small, or distant. '
+                'Do not name species in species_note. Return blank species_note.'
+            )
+        # Inject group-specific DOD anchors
+        _dod_anchor = _build_dod_anchors(_v_group, _v_behaviour)
+        if _dod_anchor:
+            _vs_lines.append('')
+            _vs_lines.append(_dod_anchor)
+        _verified_subject_block = '\n'.join(_vs_lines)
+
+    # Session 213: Master reference — Python dict first, DB library as fallback
+    # Engine cannot choose master reference for wildlife groups A-G
+    _python_master_name, _python_master_hint = _pick_master_haiku(_v_group, _v_env, genre)
+
+    # Session 210: build master reference library from DB for this genre
+    # Used as fallback when Python dict returns None (non-wildlife genres)
+    _master_lib_lines = []
+    try:
+        with app.app_context():
+            _ref_rows = db.session.execute(db.text(
+                'SELECT name, region, tier, known_for, reference_when '
+                'FROM master_references '
+                'WHERE is_active = TRUE AND genre_tags ILIKE :pat '
+                'ORDER BY is_platform_mentor DESC, '
+                'CASE tier WHEN \'Platform Mentor\' THEN 0 WHEN \'Tier 1\' THEN 1 '
+                'WHEN \'Contest Winner\' THEN 2 WHEN \'Tier 2\' THEN 3 ELSE 4 END, '
+                'RANDOM() LIMIT 15'
+            ), {'pat': f'%{genre or "General"}%'}).fetchall()
+            for _rr in _ref_rows:
+                _origin = f'({_rr.region})' if _rr.region else ''
+                _when = f' Use when: {_rr.reference_when}' if _rr.reference_when else ''
+                _master_lib_lines.append(
+                    f'- {_rr.name} {_origin}: {_rr.known_for or ""}.{_when}'
+                )
+    except Exception as _ml_err:
+        app.logger.warning(f'[try_haiku] master_library query failed (non-fatal): {_ml_err}')
+    _master_lib_fallback = '\n'.join(_master_lib_lines) if _master_lib_lines else (
+        'Raghu Rai, Henri Cartier-Bresson, Paul Nicklen, Steve McCurry, Sebastiao Salgado'
+    )
+
+    # Build final master_lib for prompt injection
+    if _python_master_name:
+        # Python dict won — inject as single override, not a library to choose from
+        _master_lib = (
+            f'MASTER REFERENCE OVERRIDE — USE THIS NAME ONLY:\n'
+            f'- {_python_master_name}\n\n'
+            f'Rationale: {_python_master_hint}\n\n'
+            f'master_name field MUST be: {_python_master_name}\n'
+            f'Do not choose a different name.'
+        )
+        app.logger.info(f'[try_haiku] master override: {_python_master_name} (group={_v_group})')
+    else:
+        # Non-wildlife or unknown group — use DB library
+        # Wildlife safety net: if genre is Wildlife but pre-call returned no group
+        # OR returned a non-wildlife group (I=landscape, J=other, H=human) —
+        # use Munier as safe default. Never let DB library assign a non-wildlife
+        # photographer (street, portrait, landscape) to a Wildlife image.
+        _genre_lower = (genre or '').lower()
+        _non_wildlife_groups = {'H', 'I', 'J', ''}
+        if _genre_lower == 'wildlife' and _v_group in _non_wildlife_groups:
+            _master_lib = (
+                'MASTER REFERENCE OVERRIDE — USE THIS NAME ONLY:\n'
+                '- Vincent Munier\n\n'
+                'Rationale: Munier photographs wildlife and nature in conditions of low '
+                'visibility, atmospheric mood, subject merged with environment. '
+                'Use when primary subject is flora, weather, or animal partially obscured.\n\n'
+                'master_name field MUST be: Vincent Munier\n'
+                'Do not choose a different name.'
+            )
+            app.logger.info(f'[try_haiku] master wildlife fallback: Vincent Munier (group={_v_group!r}, genre=Wildlife)')
+        else:
+            _master_lib = _master_lib_fallback
+
+    # Session 211: fetch EXIF from DB for gear-specific tech read
+    _exif_ctx_block = ''
+    try:
+        with app.app_context():
+            _ex_img = Image.query.get(image_id)
+            if _ex_img:
+                _ex_parts = []
+                if _ex_img.exif_make or _ex_img.exif_model:
+                    _ex_parts.append(' '.join(filter(None, [_ex_img.exif_make, _ex_img.exif_model])))
+                if _ex_img.exif_lens:
+                    _ex_parts.append(_ex_img.exif_lens)
+                if _ex_img.exif_focal_length_35mm:
+                    _ex_parts.append(f'{int(_ex_img.exif_focal_length_35mm)}mm')
+                if _ex_img.exif_aperture_raw:
+                    _ex_parts.append(f'f/{_ex_img.exif_aperture_raw}')
+                if _ex_img.exif_shutter_raw:
+                    _ex_parts.append(str(_ex_img.exif_shutter_raw))
+                if _ex_img.exif_iso_raw:
+                    _ex_parts.append(f'ISO {_ex_img.exif_iso_raw}')
+                if _ex_parts:
+                    _exif_ctx_block = 'CAMERA DATA: ' + '  ·  '.join(_ex_parts)
+    except Exception as _ex_err:
+        app.logger.debug(f'[try_haiku] exif fetch non-fatal: {_ex_err}')
+
+    # Session 212: stability anchor — fetch previous score to reduce ±0.3 drift on rescore
+    # Injects previous score into prompt so engine anchors to it rather than rescoring freely
+    _stability_anchor_block = ''
+    try:
+        with app.app_context():
+            _prev_row = db.session.execute(
+                db.text(
+                    "SELECT score, dod_score, disruption_score, dm_score, "
+                    "wonder_score, aq_score FROM images WHERE id = :iid "
+                    "AND status = 'scored' AND score IS NOT NULL"
+                ),
+                {'iid': image_id}
+            ).fetchone()
+            if _prev_row and _prev_row[0]:
+                _ps = float(_prev_row[0])
+                _pd = float(_prev_row[1]) if _prev_row[1] else None
+                _pv = float(_prev_row[2]) if _prev_row[2] else None
+                _pm = float(_prev_row[3]) if _prev_row[3] else None
+                _pw = float(_prev_row[4]) if _prev_row[4] else None
+                _pa = float(_prev_row[5]) if _prev_row[5] else None
+                _stability_anchor_block = (
+                    f'SCORE STABILITY ANCHOR — THIS IMAGE HAS BEEN SCORED BEFORE:\n'
+                    f'Previous overall score: {_ps:.2f}\n'
+                )
+                if all(x is not None for x in [_pd, _pv, _pm, _pw, _pa]):
+                    _stability_anchor_block += (
+                        f'Previous dimension scores: DOD {_pd:.1f} · VD {_pv:.1f} · '
+                        f'DM {_pm:.1f} · WF {_pw:.1f} · AQ {_pa:.1f}\n'
+                    )
+                _stability_anchor_block += (
+                    f'Your new scores must not drift more than 0.4 from these previous scores '
+                    f'UNLESS you find a clear error in the previous scoring that you can name. '
+                    f'If the previous score was {_ps:.2f} and you would score it {_ps:.2f} ± 0.3, '
+                    f'stay within that range. Score stability is a platform trust requirement. '
+                    f'If you genuinely find a significant error in the previous scoring, '
+                    f'you may correct it — but name the reason in your dim_obs.'
+                )
+    except Exception as _sa_err:
+        app.logger.debug(f'[try_haiku] stability_anchor fetch non-fatal: {_sa_err}')
+
     prompt = (_TRY_HAIKU_PROMPT
               .replace('{genre}', genre or 'General')
+              .replace('{genre_context}', _try_genre_context(genre or 'default'))
               .replace('{calibration}', _try_calibration_line(genre or ''))
-              .replace('{history_context}', _history_ctx))
+              .replace('{history_context}', _history_ctx)
+              .replace('{photographer_context}', _ctx_block)
+              .replace('{master_library}', _master_lib)
+              .replace('{exif_context}', _exif_ctx_block)
+              .replace('{stability_anchor}', _stability_anchor_block)
+              .replace('{verified_subject}', _verified_subject_block))
 
     payload = _json.dumps({
         'model': _HAIKU_MODEL,
-        'max_tokens': 800,
+        'max_tokens': 2800,  # Session 211 v3  # Session 211 v2: expanded for new moat fields  # Session 211: increased from 1000 — 5 dim_obs + conclusion + what_next(120w) requires headroom
         'temperature': 0,
         'messages': [{'role': 'user', 'content': [
             {'type': 'image', 'source': {
@@ -32678,12 +37465,55 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
     takeaway       = (d.get('takeaway')       or '').strip()[:300]
     impression     = (d.get('impression')     or '').strip()[:400]
     strength_name  = (d.get('strength_name')  or '').strip()[:80]
-    strength_obs   = (d.get('strength_obs')   or '').strip()[:200]
+    strength_obs   = (d.get('strength_obs')   or '').strip()[:350]
     next_leap_name = (d.get('next_leap_name') or '').strip()[:80]
-    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:200]
-    what_next      = (d.get('what_next')      or '').strip()[:500]
+    next_leap_obs  = (d.get('next_leap_obs')  or '').strip()[:350]
+    what_next      = (d.get('what_next')      or '').strip()[:900]   # Session 211: 120 words ~700 chars
     master_name    = (d.get('master_name')    or '').strip()[:100]
-    master_why     = (d.get('master_why')     or '').strip()[:200]
+    master_why     = (d.get('master_why')     or '').strip()[:400]
+    # Session 211: per-dimension observations + conclusion
+    dim_obs_dod    = (d.get('dim_obs_dod')    or '').strip()[:350]
+    dim_obs_vd     = (d.get('dim_obs_vd')     or '').strip()[:350]
+    dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:350]
+    dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:350]
+    dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:350]
+    conclusion     = (d.get('conclusion')     or '').strip()[:700]
+    # Session 211 additions
+    species_note   = (d.get('species_note')   or '').strip()[:300]
+    # Session 211v2: Wikipedia enrichment — fires ONLY when engine identifies species confidently
+    # Conservative gate: skip if species_note contains uncertainty language
+    _uncertain_words = ('limited', 'suggest', 'possibly', 'unclear', 'silhouette',
+                        'cannot', 'uncertain', 'unknown', 'unidentified', 'similar',
+                        'likely', 'probable', 'appears to', 'may be', 'could be')
+    _species_confident = (
+        species_note and
+        genre and genre in ('Wildlife', 'Nature', 'Birds', 'Bird Photography') and
+        not any(w in species_note.lower() for w in _uncertain_words)
+    )
+    if _species_confident:
+        try:
+            _wiki_enrichment = _haiku_species_research(species_note, api_key, genre)
+            if _wiki_enrichment and _wiki_enrichment.strip():
+                # Append Wikipedia rarity note to species_note
+                # Extract just the rarity_note line from the context block
+                import re as _sre
+                _rarity_match = _sre.search(r'Documentation rarity: (.+)', _wiki_enrichment)
+                _iucn_match   = _sre.search(r'IUCN / population: (.+)', _wiki_enrichment)
+                _wiki_add = ''
+                if _iucn_match:
+                    _wiki_add += f' IUCN: {_iucn_match.group(1).strip()}.'
+                if _rarity_match:
+                    _wiki_add += f' {_rarity_match.group(1).strip()}'
+                if _wiki_add:
+                    species_note = (species_note.rstrip('.') + '.' + _wiki_add).strip()[:500]
+                    app.logger.info(f'[haiku_wiki] enriched species_note for image={image_id}')
+        except Exception as _we:
+            app.logger.debug(f'[haiku_wiki] enrichment failed (non-fatal): {_we}')
+    tech_read      = (d.get('tech_read')      or '').strip()[:400]
+    visual_flow    = (d.get('visual_flow')    or '').strip()[:350]
+    award_context  = (d.get('award_context')  or '').strip()[:450]
+    edit_tips      = (d.get('edit_tips')      or '').strip()[:900]
+    imagine        = (d.get('imagine')        or '').strip()[:700]
 
     try:
         final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
@@ -32728,6 +37558,20 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 'what_next':     what_next,
                 'master_name':   master_name,
                 'master_why':    master_why,
+                # Session 211: per-dimension observations + conclusion
+                'dim_obs_dod':   dim_obs_dod,
+                'dim_obs_vd':    dim_obs_vd,
+                'dim_obs_dm':    dim_obs_dm,
+                'dim_obs_wf':    dim_obs_wf,
+                'dim_obs_aq':    dim_obs_aq,
+                'conclusion':    conclusion,
+                # Session 211 additions — moat fields
+                'species_note':  species_note,
+                'tech_read':     tech_read,
+                'visual_flow':   visual_flow,
+                'award_context': award_context,
+                'edit_tips':     edit_tips,
+                'imagine':       imagine,
             })
             db.session.commit()
             app.logger.info(
@@ -32746,6 +37590,71 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                     _sht.Thread(target=_run_sherpa, daemon=True).start()
                 except Exception as _she:
                     app.logger.warning(f'[haiku_sherpa] trigger failed (non-fatal): {_she}')
+
+            # Session 210 — Post-eval-1 email: fires when this is the photographer's
+            # first ever Haiku evaluation. Sherpa tone, includes takeaway, pulls to eval 2.
+            # Non-blocking background thread. Never crashes scoring.
+            try:
+                _eval_count = db.session.execute(
+                    db.text(
+                        "SELECT (SELECT COUNT(*) FROM images WHERE user_id=:uid AND is_haiku_try=TRUE) "
+                        "+ (SELECT COUNT(*) FROM upload_history_log WHERE user_id=:uid AND is_haiku_try=TRUE)"
+                    ), {'uid': img.user_id}
+                ).scalar() or 0
+                if int(_eval_count) == 1:
+                    _e1_user = User.query.get(img.user_id)
+                    if _e1_user and _e1_user.email:
+                        _e1_name  = (_e1_user.full_name or _e1_user.username or 'Photographer').split()[0]
+                        _e1_email = _e1_user.email
+                        _e1_score = round(final_score, 2)
+                        _e1_tier  = tier
+                        _e1_take  = takeaway or ''
+                        _e1_site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _e1_result_url = f'{_e1_site}/try/result/{image_id}'
+                        import threading as _e1t
+                        def _send_post_eval1():
+                            with app.app_context():
+                                try:
+                                    send_email(
+                                        to_addresses=[_e1_email],
+                                        subject=f'{_e1_name} — your first evaluation just landed',
+                                        html_body=(
+                                            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                                            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Inter,Arial,sans-serif;">'
+                                            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                            '<tr><td align="center">'
+                                            '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                            '<tr><td style="background:#1A2744;padding:20px 28px 16px;">'
+                                            '<p style="margin:0;font-family:Courier New,monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                                            '</td></tr>'
+                                            '<tr><td style="padding:28px 28px 8px;">'
+                                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 16px;">Hi {_e1_name},</p>'
+                                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 20px;">Your first photograph just came back from the engine. You landed at <strong style="color:#1A2744;">{_e1_score} — {_e1_tier}</strong>.</p>'
+                                            + (f'<div style="border-left:3px solid #C8A84B;padding:14px 18px;background:#FAFAF6;margin:0 0 20px;font-size:16px;line-height:1.75;color:#1A2744;font-style:italic;">{_e1_take}</div>' if _e1_take else '')
+                                            + '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 24px;">Your second photograph will show us whether this was your eye or your position. The engine is watching.</p>'
+                                            f'<a href="{_e1_result_url}" style="display:inline-block;background:#1A2744;color:#C8A84B;font-family:Inter,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 24px;border-radius:3px;text-decoration:none;margin-bottom:28px;">See your full evaluation →</a>'
+                                            '</td></tr>'
+                                            '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                                            f'<p style="margin:0;font-size:15px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; <a href="{_e1_site}" style="color:#C8A84B;">shutterleague.com</a></p>'
+                                            '</td></tr>'
+                                            '</table></td></tr></table></body></html>'
+                                        ),
+                                        text_body=(
+                                            f'Hi {_e1_name},\n\n'
+                                            f'Your first photograph just came back. You landed at {_e1_score} — {_e1_tier}.\n\n'
+                                            + (f'{_e1_take}\n\n' if _e1_take else '')
+                                            + f'Your second photograph will show us whether this was your eye or your position.\n\n'
+                                            f'See your full evaluation: {_e1_result_url}\n\n'
+                                            f'-- Shutter League'
+                                        )
+                                    )
+                                    app.logger.info(f'[post_eval1_email] sent to {_e1_email} user={img.user_id}')
+                                except Exception as _e1_err:
+                                    app.logger.warning(f'[post_eval1_email] failed: {_e1_err}')
+                        _e1t.Thread(target=_send_post_eval1, daemon=True).start()
+            except Exception as _e1_outer:
+                app.logger.warning(f'[post_eval1_email] outer error (non-fatal): {_e1_outer}')
+
             return {
                 'dod': dod, 'vd': vd, 'dm': dm, 'wf': wf, 'aq': aq,
                 'score': round(final_score, 2),
@@ -32759,7 +37668,19 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None):
                 'what_next':     what_next,
                 'master_name':   master_name,
                 'master_why':    master_why,
-            }
+                # Session 211
+                'dim_obs_dod':   dim_obs_dod,
+                'dim_obs_vd':    dim_obs_vd,
+                'dim_obs_dm':    dim_obs_dm,
+                'dim_obs_wf':    dim_obs_wf,
+                'dim_obs_aq':    dim_obs_aq,
+                'conclusion':    conclusion,
+                'species_note':  species_note,
+                'tech_read':     tech_read,
+                'visual_flow':   visual_flow,
+                'award_context': award_context,
+                'edit_tips':     edit_tips,
+                'imagine':       imagine,            }
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'[try_haiku] DB write failed: {e}')
@@ -32810,7 +37731,12 @@ def league_haiku():
                     genre=r[4],
                     thumb_url=r[5],
                     id=r[6],
-                    impression=_a.get('impression', '') or '',
+                    impression=(
+                        _a.get('impression', '') or
+                        _a.get('takeaway', '') or
+                        _a.get('background_check', '') or
+                        _a.get('byline_1', '') or ''
+                    ),
                 ))
             except Exception:
                 pass
@@ -32876,7 +37802,12 @@ def league_haiku():
                 genre=_sr[3],
                 thumb_url=_sr[4],
                 id=_sr[5],
-                impression=_sa.get('impression', '') or _sa.get('takeaway', '') or _sa.get('strength_obs', '') or '',
+                impression=(
+                    _sa.get('impression', '') or
+                    _sa.get('takeaway', '') or
+                    _sa.get('background_check', '') or
+                    _sa.get('byline_1', '') or ''
+                ),
             )
 
         _league  = _build_lh(_league_rows, _lhj)
@@ -33024,10 +37955,25 @@ def try_standing(image_id):
         ), {'uid': _uid, 'yr': _tsdt.now().year}).scalar()
         _best_this_year = float(_best_this_year) if _best_this_year else _score_val
 
-        # ── Audit JSON fields — Sonnet field names ────────────────────────────
-        _impression    = (_audit.get('impression',    '') or '').strip()
-        _strength_obs  = (_audit.get('strength_obs',  '') or '').strip()
-        _next_leap_obs = (_audit.get('next_leap_obs', '') or '').strip()
+        # ── Audit JSON fields — with fallback chain for older Sonnet evaluations ──
+        # Newer Sonnet fields        → Older Sonnet equivalents
+        # impression                 → background_check / byline_1
+        # strength_obs               → byline_2_body / byline_2 (secondary narrative)
+        # next_leap_obs              → hard_truth (gap observation in older schema)
+        _impression    = (
+            (_audit.get('impression',       '') or '').strip()
+            or (_audit.get('background_check', '') or '').strip()
+            or (_audit.get('byline_1',         '') or '').strip()
+        )
+        _strength_obs  = (
+            (_audit.get('strength_obs',  '') or '').strip()
+            or (_audit.get('byline_2_body', '') or '').strip()
+            or (_audit.get('byline_2',     '') or '').strip()
+        )
+        _next_leap_obs = (
+            (_audit.get('next_leap_obs', '') or '').strip()
+            or (_audit.get('hard_truth', '') or '').strip()
+        )
         _master_name   = (_audit.get('master_name',  '') or '').strip()
         _master_why    = (_audit.get('master_why',   '') or '').strip()
 
@@ -33051,16 +37997,26 @@ def try_standing(image_id):
 
         # ── "What this evaluation means" ─────────────────────────────────────
         # = background_check / byline_1 (the "why this image matters" analysis)
-        # + byline_2_body as additional bullets (secondary narrative)
+        # + byline_2_body only when background_check/byline_1 is also present
+        #   (avoids showing byline_2_body twice — it also backs up strength_obs)
         _bgcheck  = (_audit.get('background_check', '') or (_audit.get('byline_1', '') or '')).strip()
         _byline2  = (_audit.get('byline_2_body',    '') or (_audit.get('byline_2',  '') or '')).strip()
         _what_it_means = []
-        for _raw in [_bgcheck, _byline2]:
-            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_raw)])
+        _what_it_means.extend([_strip_md(b) for b in _split_bullets(_bgcheck)])
+        if _bgcheck and _byline2:  # only add byline2 when bgcheck is also present (not a fallback)
+            _what_it_means.extend([_strip_md(b) for b in _split_bullets(_byline2)])
 
         # ── "Your one take-away" ──────────────────────────────────────────────
-        # = transferable_advice (c1 — the actionable photographer's advice)
-        _transferable = (_audit.get('transferable_advice', '') or '').strip()
+        # = transferable_advice (current Sonnet field)
+        # Fallback chain for older evaluations that predate transferable_advice:
+        #   byline_2_body / byline_2 — older Sonnet narrative field
+        #   what_next — Haiku field (similar actionable intent)
+        _transferable = (
+            (_audit.get('transferable_advice', '') or '').strip()
+            or (_audit.get('byline_2_body', '') or '').strip()
+            or (_audit.get('byline_2', '') or '').strip()
+            or (_audit.get('what_next', '') or '').strip()
+        )
         _takeaway_items = [_strip_md(b) for b in _split_bullets(_transferable)]
 
         # ── "What SL saw in your photograph" ─────────────────────────────────
@@ -33147,9 +38103,13 @@ def try_standing(image_id):
         except Exception as _pe:
             app.logger.warning(f'[try_standing] percentile failed: {_pe}')
 
-        _cal_count = 312  # blind calibration count — static display value
+        _cal_count = db.session.execute(db.text("SELECT COUNT(*) FROM calibration_logs")).scalar() or 0
+        _cal_count = f"{_cal_count:,}" if _cal_count > 0 else "hundreds"  # live count
 
     except Exception as _tse:
+        from werkzeug.exceptions import HTTPException as _WKHE
+        if isinstance(_tse, _WKHE):
+            raise  # let 404/403 pass through cleanly — don't swallow as 500
         import traceback as _trtb
         app.logger.error(f'[try_standing] image_id={image_id} unexpected error: {_tse}\n{_trtb.format_exc()}')
         abort(500)
@@ -33253,11 +38213,57 @@ def try_sample():
             master_why         = _sm_audit.get('master_why', ''),
             evals_used         = 1,
             evals_remaining    = 9,
+            evals_limit        = FREE_IMAGE_LIMIT,
             milestone_strength = '',
             is_sample          = True,
         )
     except Exception as _sme:
         app.logger.warning(f'[try_sample] failed: {_sme}')
+        return redirect(url_for('pricing'))
+
+
+@app.route('/try/sample/sonnet')
+def try_sample_sonnet():
+    """
+    GET /try/sample/sonnet — Public sample Sonnet (League) evaluation for pricing page.
+    Session 205: Shows a real Sonnet scorecard to anonymous/Haiku visitors.
+    No login required. Pulls best public non-Haiku image. Renders try_standing.html.
+    """
+    # Redirect paid users to their own dashboard
+    from flask_login import current_user as _tss_cu
+    if getattr(_tss_cu, 'is_subscribed', False):
+        return redirect(url_for('standings_public'))
+
+    try:
+        import json as _tssj, re as _tssre
+        from types import SimpleNamespace as _TSSSN
+
+        _tss_row = db.session.execute(db.text("""
+            SELECT i.id, i.score, i.tier, i.genre, i.thumb_url,
+                   i.audit_json, i.asset_name,
+                   i.dod_score, i.disruption_score, i.dm_score,
+                   i.wonder_score, i.aq_score, u.full_name,
+                   u.subscription_track, i.scored_at, i.user_id
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.score >= 8.5
+              AND (i.is_haiku_try IS NOT TRUE)
+              AND i.status = 'scored'
+              AND i.is_public = TRUE
+              AND i.thumb_url IS NOT NULL
+              AND i.audit_json IS NOT NULL
+            ORDER BY i.score DESC
+            LIMIT 1
+        """)).fetchone()
+
+        if not _tss_row:
+            return redirect(url_for('pricing'))
+
+        # Redirect to the real try_standing page for this image
+        return redirect(url_for('try_standing', image_id=_tss_row[0]))
+
+    except Exception as _tsse:
+        app.logger.warning(f'[try_sample_sonnet] failed: {_tsse}')
         return redirect(url_for('pricing'))
 
 
@@ -33318,10 +38324,14 @@ def try_welcome():
     # Haiku free-tier dashboard. Variables passed: evals_remaining, images,
     # milestone_strength, user_hero, league_hero, sherpa_obs, sherpa_nudge,
     # haiku_percentile. Raw SQL throughout per Rule 10.
-    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+    # play plan (₹200) stays in Haiku world — only true Sonnet users go to dashboard
+    if current_user.role != 'admin' and _is_sonnet_user(current_user):
         return redirect(url_for('dashboard'))
 
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
+    # Effective limit = FREE_IMAGE_LIMIT + _bonus.
+    # play plan sets referral_bonus_uploads at purchase so limit = used_at_purchase + 100.
+    _plan = getattr(current_user, 'subscription_plan', None) or ''
     try:
         _FIL = FREE_IMAGE_LIMIT
     except Exception:
@@ -33499,13 +38509,15 @@ def try_welcome():
     _aq_insight        = None
     _tier_insight      = None
     _master_insight    = None
+    _master_name_dash  = ''  # Session 210: master_name from latest image for link
+    _master_why_dash   = ''
     try:
         import json as _saj
         _sadv_row = db.session.execute(
             db.text("SELECT mentor_advice_json FROM users WHERE id = :uid"),
             {'uid': current_user.id}
         ).fetchone()
-        if _sadv_row and _sadv_row[0]:
+        if _sadv_row and _sadv_row[0] and evals_used > 0:  # SL-204: never show Sherpa for users with 0 uploads
             _sadv = _saj.loads(_sadv_row[0])
             _sherpa_obs         = _sadv.get('observation', '').strip() or None
             _sherpa_nudge       = _sadv.get('nudge', '').strip() or None
@@ -33515,6 +38527,17 @@ def try_welcome():
             _aq_insight         = _sadv.get('aq_insight', '').strip() or None
             _tier_insight       = _sadv.get('tier_insight', '').strip() or None
             _master_insight     = _sadv.get('master_insight', '').strip() or None
+        # Session 210: pull master_name + master_why from latest scored image audit_json
+        if _images:
+            _latest_audit_row = db.session.execute(
+                db.text("SELECT audit_json FROM images WHERE user_id=:uid AND is_haiku_try=TRUE "
+                        "AND status='scored' ORDER BY id DESC LIMIT 1"),
+                {'uid': current_user.id}
+            ).fetchone()
+            if _latest_audit_row and _latest_audit_row[0]:
+                _la = _saj.loads(_latest_audit_row[0])
+                _master_name_dash = (_la.get('master_name') or '').strip()
+                _master_why_dash  = (_la.get('master_why')  or '').strip()
     except Exception as _sae:
         app.logger.warning(f'[try_welcome] sherpa_obs fetch failed: {_sae}')
 
@@ -33564,6 +38587,35 @@ def try_welcome():
             )
     except Exception as _uhe:
         app.logger.warning(f'[try_welcome] user_hero failed: {_uhe}')
+
+    # Latest image — most recent upload, used as hero photo on dashboard
+    # Separate from user_hero (best score) — hero photo should feel current
+    _latest_image = None
+    try:
+        _li_row = db.session.execute(db.text("""
+            SELECT id, thumb_url, score, tier, genre, width, height
+            FROM images
+            WHERE user_id = :uid
+              AND is_haiku_try IS TRUE
+              AND status = 'scored'
+              AND thumb_url IS NOT NULL
+              AND score IS NOT NULL
+            ORDER BY scored_at DESC NULLS LAST
+            LIMIT 1
+        """), {'uid': current_user.id}).fetchone()
+        if _li_row:
+            from types import SimpleNamespace as _LISN
+            _liw = int(_li_row[5]) if _li_row[5] else 0
+            _lih = int(_li_row[6]) if _li_row[6] else 0
+            _latest_image = _LISN(
+                id        = _li_row[0],
+                thumb_url = _li_row[1],
+                score     = float(_li_row[2]),
+                tier      = _li_row[3],
+                genre     = _li_row[4] or '',
+            )
+    except Exception as _lie:
+        app.logger.warning(f'[try_welcome] latest_image failed: {_lie}')
 
     # League hero — Grandmaster/Legend only, for sidebar standard panel
     _league_hero = None
@@ -33747,9 +38799,12 @@ def try_welcome():
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
         limit              = _FIL + _bonus,
+        play_plan          = (_plan == 'play'),
+        play_exhausted     = (_plan == 'play' and evals_used >= (FREE_IMAGE_LIMIT + _bonus)),
         images             = _images,
         milestone_strength = _milestone_strength,
         hero_image         = _hero,
+        latest_image       = _latest_image,
         user_hero          = _user_hero,
         league_hero        = _league_hero,
         league_hero_copy   = _gm_copy_pool[(_league_hero.id if _league_hero and getattr(_league_hero, 'id', None) else 0) % len(_gm_copy_pool)],
@@ -33761,6 +38816,9 @@ def try_welcome():
         aq_insight         = _aq_insight,
         tier_insight       = _tier_insight,
         master_insight     = _master_insight,
+        master_name_dash   = _master_name_dash,
+        master_why_dash    = _master_why_dash,
+        all_masters        = ALL_MASTERS,
         visit_count        = _visit_count,
         next_leap_name     = _next_leap_name,
         prev_score         = _prev_score,
@@ -33784,7 +38842,7 @@ def try_page():
     """
     GET /try -- Free user Haiku evaluation page.
     SL 172.1. Registered free users only (@login_required).
-    Quota: FREE_IMAGE_LIMIT = 3 lifetime (total_uploads_ever).
+    Quota: FREE_IMAGE_LIMIT = 10 lifetime (total_uploads_ever).
     """
     from engine.scoring import GENRE_CHOICES
 
@@ -33797,6 +38855,17 @@ def try_page():
         {'uid': current_user.id}
     ).scalar()
     evals_used = int(_haiku_row or 0)
+
+    # play plan exhausted — redirect to dashboard which shows upgrade prompt
+    _plan_try = getattr(current_user, 'subscription_plan', None) or ''
+    _bonus_try = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+    _effective_limit_try = FREE_IMAGE_LIMIT + _bonus_try
+    if evals_used >= _effective_limit_try and current_user.role != 'admin':
+        if _plan_try == 'play':
+            flash('You have used all your evaluations. Upgrade to Sonnet or purchase another 100 to continue.', 'info')
+        else:
+            flash(f'You have used all {FREE_IMAGE_LIMIT} free evaluations.', 'info')
+        return redirect(url_for('try_welcome'))
 
     import json as _json
     from engine.scoring import SUBGENRE_MAP, GENRE_IDS
@@ -33811,6 +38880,7 @@ def try_page():
         'upload.html',           # reuse main upload template — is_trial=True gates differences
         is_trial      = True,
         evals_used    = evals_used,
+        evals_limit   = 100 if (getattr(current_user, 'subscription_plan', None) == 'play') else FREE_IMAGE_LIMIT,
         genres        = GENRE_IDS,
         genre_choices = GENRE_CHOICES,
         subgenre_map  = SUBGENRE_MAP,
@@ -33837,22 +38907,24 @@ def try_upload():
     import io as _io
 
     _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-    # 181.14m: count only genuine Haiku free-try images, not all uploads ever.
-    # total_uploads_ever includes paid Sonnet evaluations and incorrectly
-    # blocked paid subscribers from using their free Haiku quota.
+    # play plan gets 100 more from point of purchase via referral_bonus_uploads.
+    # FREE_IMAGE_LIMIT + _bonus = effective limit for this user.
     # Raw SQL used because is_haiku_try is not yet a mapped ORM column.
     _haiku_row = db.session.execute(
         db.text("SELECT (SELECT COUNT(*) FROM images WHERE user_id = :uid AND is_haiku_try = TRUE) + (SELECT COUNT(*) FROM upload_history_log WHERE user_id = :uid AND is_haiku_try = TRUE)"),
         {'uid': current_user.id}
     ).scalar()
     _lifetime = int(_haiku_row or 0)
+    _effective_limit = FREE_IMAGE_LIMIT + _bonus
 
-    if _lifetime >= (FREE_IMAGE_LIMIT + _bonus) and current_user.role != 'admin':
+    if _lifetime >= _effective_limit and current_user.role != 'admin':
+        _plan_ul = getattr(current_user, 'subscription_plan', None) or ''
         return jsonify({
             'error':   True,
             'message': (
-                f'You have used all {FREE_IMAGE_LIMIT} free evaluations. '
-                'Subscribe now to continue.'
+                f'You have used all {_effective_limit} evaluations. '
+                + ('Upgrade to Sonnet or purchase another 100 to continue.' if _plan_ul == 'play'
+                   else 'Subscribe now to continue.')
             )
         }), 403
 
@@ -33866,6 +38938,10 @@ def try_upload():
     genre = request.form.get('genre', '').strip()
     if not genre:
         return jsonify({'error': True, 'message': 'Please select an interest area.'}), 400
+
+    # Session 210: photographer context from 'subject' field — max 500 chars, never required
+    # The 'subject' field already exists in upload.html — we wire it to the engine here.
+    _photographer_context = (request.form.get('subject', '') or '').strip()[:500]
 
     from engine.scoring import normalise_genre, GENRE_IDS
     genre = normalise_genre(genre)
@@ -33925,7 +39001,7 @@ def try_upload():
 
         # ── Watermark check (Sonnet — same as main /upload route) ────────────
         # Runs before saving to images table — a watermarked image must never
-        # enter the DB or consume one of the user's 3 free evaluations.
+        # enter the DB or consume one of the user's 10 free evaluations.
         _try_api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if _try_api_key and os.path.exists(thumb_path):
             try:
@@ -34020,7 +39096,7 @@ def try_upload():
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
-            asset_name        = filename.rsplit('.', 1)[0][:120],
+            asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-204: read title from form, fall back to filename
             photographer_name = current_user.full_name or current_user.username,
             genre             = genre,
             width             = w,
@@ -34063,17 +39139,45 @@ def try_upload():
 
     _uid_for_thread = current_user.id
 
-    def _haiku_thread(iid, b64, g, uid):
+    def _haiku_thread(iid, b64, g, uid, ctx):
         with app.app_context():
-            _try_run_haiku(iid, b64, g, user_id=uid)
+            _try_run_haiku(iid, b64, g, user_id=uid, photographer_context=ctx)
 
     threading.Thread(
         target=_haiku_thread,
-        args=(image_id, img_b64, genre, _uid_for_thread),
+        args=(image_id, img_b64, genre, _uid_for_thread, _photographer_context),
         daemon=True
     ).start()
 
     return jsonify({'image_id': image_id})
+
+
+@app.route('/try/status/<int:image_id>')
+@login_required
+def try_image_status(image_id):
+    """
+    Session 211: JSON status check for Haiku scorecard polling.
+    Returns {status, score, tier} for the given image.
+    Only accessible by the image owner or admin.
+    """
+    _row = db.session.execute(
+        db.text(
+            "SELECT status, score, tier, user_id FROM images "
+            "WHERE id = :iid AND is_haiku_try = TRUE"
+        ),
+        {'iid': image_id}
+    ).fetchone()
+
+    if not _row:
+        return jsonify({'error': 'not found'}), 404
+    if current_user.role != 'admin' and _row[3] != current_user.id:
+        return jsonify({'error': 'forbidden'}), 403
+
+    return jsonify({
+        'status': _row[0] or 'processing',
+        'score':  float(_row[1]) if _row[1] else None,
+        'tier':   _row[2] or '',
+    })
 
 
 @app.route('/try/result/<int:image_id>')
@@ -34093,6 +39197,17 @@ def try_result(image_id):
     if img.status == 'processing':
         flash('Your evaluation is still being processed. Please wait a moment.', 'info')
         return redirect(url_for('try_page'))
+
+    # If this image was originally a Haiku try but has since been Sonnet-rescored,
+    # redirect to the full scorecard — the Haiku template can't display Sonnet fields.
+    # Detect by checking audit_json source: if not haiku_try, it has full Sonnet data.
+    try:
+        import json as _tr_j
+        _tr_audit = _tr_j.loads(img._audit_json or '{}')
+        if _tr_audit.get('source') != 'haiku_try' and _tr_audit.get('byline_1_body'):
+            return redirect(url_for('image_detail', image_id=image_id))
+    except Exception:
+        pass
 
     percentile_data = {}
     if img.score and img.status == 'scored':
@@ -34123,6 +39238,7 @@ def try_result(image_id):
 
     dims     = {}
     takeaway = ''
+    audit    = {}
     try:
         audit = _j.loads(img._audit_json or '{}')
         if audit.get('source') == 'haiku_try':
@@ -34136,6 +39252,16 @@ def try_result(image_id):
             takeaway = audit.get('takeaway', '')
     except Exception:
         pass
+    # Session 211: fallback to image columns if audit_json dims missing/corrupted
+    if not any(v for v in dims.values() if v):
+        _fb_dod = getattr(img, 'dod_score', None)
+        _fb_vd  = getattr(img, 'disruption_score', None)
+        _fb_dm  = getattr(img, 'dm_score', None)
+        _fb_wf  = getattr(img, 'wonder_score', None)
+        _fb_aq  = getattr(img, 'aq_score', None)
+        if any([_fb_dod, _fb_vd, _fb_dm, _fb_wf, _fb_aq]):
+            dims = {'dod': _fb_dod, 'vd': _fb_vd, 'dm': _fb_dm, 'wf': _fb_wf, 'aq': _fb_aq}
+            app.logger.info(f'[try_result] dim fallback to image columns image={image_id}')
 
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     # 181.18: TWO separate counts.
@@ -34181,6 +39307,23 @@ def try_result(image_id):
         except Exception as _mse:
             app.logger.warning(f'[try_result] milestone_strength failed: {_mse}')
 
+    # Build EXIF summary line for display on scorecard
+    _exif_parts = []
+    if img.exif_make or img.exif_model:
+        _cam = ' '.join(filter(None, [img.exif_make, img.exif_model]))
+        _exif_parts.append(_cam)
+    if img.exif_lens:
+        _exif_parts.append(img.exif_lens)
+    if img.exif_focal_length_35mm:
+        _exif_parts.append(f'{int(img.exif_focal_length_35mm)}mm')
+    if img.exif_aperture_raw:
+        _exif_parts.append(f'f/{img.exif_aperture_raw}')
+    if img.exif_shutter_raw:
+        _exif_parts.append(str(img.exif_shutter_raw))
+    if img.exif_iso_raw:
+        _exif_parts.append(f'ISO {img.exif_iso_raw}')
+    _exif_line = '  ·  '.join(_exif_parts) if _exif_parts else ''
+
     return render_template(
         'image_detail_haiku.html',  # SL-176: was try.html — now uses new haiku scorecard shell
         image_id           = image_id,
@@ -34204,9 +39347,33 @@ def try_result(image_id):
         what_next          = audit.get('what_next', ''),
         master_name        = audit.get('master_name', ''),
         master_why         = audit.get('master_why', ''),
+        # Session 211: per-dimension observations + conclusion
+        dim_obs_dod        = audit.get('dim_obs_dod', ''),
+        dim_obs_vd         = audit.get('dim_obs_vd', ''),
+        dim_obs_dm         = audit.get('dim_obs_dm', ''),
+        dim_obs_wf         = audit.get('dim_obs_wf', ''),
+        dim_obs_aq         = audit.get('dim_obs_aq', ''),
+        conclusion         = audit.get('conclusion', '').replace(
+            '312 blind calibrations', 'hundreds of blind calibrations'
+        ),
+        # Session 211 additions — moat fields
+        species_note       = audit.get('species_note', ''),
+        tech_read          = audit.get('tech_read', ''),
+        visual_flow        = audit.get('visual_flow', ''),
+        award_context      = audit.get('award_context', ''),
+        edit_tips          = audit.get('edit_tips', ''),
+        imagine            = audit.get('imagine', ''),
         evals_used         = evals_used,
         evals_remaining    = evals_remaining,
+        evals_limit        = FREE_IMAGE_LIMIT,
+        evals_display      = _display_count,
         milestone_strength = _milestone_strength,
+        photographer_name  = (
+            db.session.execute(db.text('SELECT full_name FROM users WHERE id=:uid'),
+            {'uid': img.user_id}).scalar() or ''
+        ),
+        # Session 211: use image owner name, not viewer (admin may be viewing)
+        exif_line          = _exif_line,
     )
 
 
@@ -34679,5 +39846,3 @@ if __name__ == '__main__':
     else:
         # Local development: `python app.py` (no args) -- unchanged behavior.
         app.run(debug=True)
-
-

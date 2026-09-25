@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 181.47-staging (Session 201 — audit fixes: line-height 1.4→1.7, text-shadow:none, mobile 13px font fixes. RETAINS 181.46.)
+  SL-VERSION: 182.12 (Session 213, 2026-09-06 — Wikipedia reference removed from species helper text and processing messages. Poll error tolerance raised 3→8 consecutive failures. Free tier copy updated 3→10 evaluations. RETAINS 181.47.)
   Session 192 · 2026-08-24
   VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
 
@@ -481,8 +481,8 @@
         <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#1A2744;color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;">See membership options →</a>
       </div>
       <div style="background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:16px 18px;">
-        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">100 for 100</div>
-        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">₹100 for 100 more Basic Evaluations. No subscription. Continue at your own pace.</div>
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">100 Basic Evaluations</div>
+        <div style="font-size:14px;color:#4A4840;line-height:1.6;margin-bottom:12px;">₹200 for 100 more Basic Evaluations. No subscription. Continue at your own pace.</div>
         <a href="{{ url_for('pricing') }}#play" style="display:inline-block;background:#fff;color:#1A2744;font-weight:700;font-size:14px;padding:10px 20px;border-radius:5px;text-decoration:none;border:1px solid #1A2744;">Get 100 more →</a>
       </div>
     </div>
@@ -499,7 +499,7 @@
   </script>
   {% else %}
   <div style="background:#E8EAF6;border:1px solid #C5CAE9;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:#1A1A18;line-height:1.5;">
-    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation {{ evals_used + 1 }} of {{ _trial_limit }}</strong><br>
+    <strong style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;">Free Evaluation — {{ _trial_limit - evals_used }} remaining</strong><br>
     Every dimension is weighted for your interest area and benchmarked against a live calibration pool.
   </div>
   {% endif %}
@@ -543,7 +543,7 @@
         {% else %}
         <div style="font-size:16px;font-weight:600;color:#c0392b;">No evaluations remaining.</div>
         <div style="font-size:15px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
-          Your 3 complimentary evaluations have been used.
+          Your 10 free evaluations have been used.
           <a href="{{ url_for('pricing') }}" style="color:#2C3E6B;font-weight:600;">Subscribe to continue →</a>
         </div>
         {% endif %}
@@ -717,8 +717,14 @@
       </div>
 
       <div class="form-group">
+        {% if is_trial %}
+        <label for="subject">What made this photograph difficult or rare? <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional — 2-3 sentences)</span></label>
+        <textarea id="subject" name="subject" placeholder="e.g. This raptor was actively hunting insects thrown up by the wildfire — behaviour documented fewer than 50 times in wildlife photography. I was positioned 30 metres from the fire line." maxlength="500" rows="3"></textarea>
+        <div style="font-size:14px; color:var(--text-muted); margin-top:6px; line-height:1.5;">The engine will use this to go beyond what the frame shows — not to repeat what you told it. If you leave this blank, the evaluation is based on the image alone.</div>
+        {% else %}
         <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <textarea id="subject" name="subject" placeholder="Brief context about this image — subject, conditions, technique…" maxlength="500"></textarea>
+        {% endif %}
       </div>
 
       <div class="exif-note">
@@ -1663,13 +1669,13 @@
         // S156-P2: if site goes to maintenance mid-poll, stop silently and warn
         // Most network blips recover in the next 2s poll — only warn after 3 consecutive fails
         _pollErrCount = (_pollErrCount || 0) + 1;
-        if (_pollErrCount >= 3) {
+        if (_pollErrCount >= 8) {
           clearInterval(_pollInterval);
           _clearCancelTimer();
           document.getElementById('scoringOverlay').classList.remove('active');
           showError(
-            'Your image may still be uploading. ' +
-            'Check your profile before trying again.'
+            'Your evaluation is processing — this takes up to 2 minutes. ' +
+            'Check My Evaluations in a moment to see your result.'
           );
         }
       };

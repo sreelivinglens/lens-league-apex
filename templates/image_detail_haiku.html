@@ -1,450 +1,544 @@
-{# image_detail_haiku.html — Production Score Card for Haiku free-try evaluations
-   Session 201 — audit fixes: opacity 0.38/0.30→0.55, line-height 1.3→1.7, canonical+noindex meta, breakpoint spacing. Session 200d: (1) Fixed conversion statement — dynamic based on evals_used. (2) Removed explore secondary CTA. (3) Added delete button. (4) Back link → try_gallery.
-   Route: /try/result/<image_id>  →  try_result() in app-staging.py
-   Visual specification: APPROVED sl_scorecard_final.html
-   Data contract confirmed Session 194 (2026-08-25)
-   Extends base-staging.html — inherits nav, mobile nav, footer, KYC.
-   DO NOT REDESIGN. DO NOT ADD UI. IMPLEMENT THE APPROVED DESIGN.
+{# image_detail_haiku.html — SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer. Rule 31 fix: species_note removed from mid-card sl-zone-species block. Now renders only in evaluation record footer alongside EXIF. Gestalt proximity: species belongs with record data, not verdict. Never mid-card.)
+   Route: /try/result/<image_id>  →  try_result() in app.py
+   Visual specification: APPROVED mock scorecard_v2_mockup Session 212
+   Extends base.html — inherits nav, mobile nav, footer, KYC.
 #}
 {% extends "base.html" %}
-
-{% block title %}Evaluation Score Card — Shutter League{% endblock %}
-
+{% block title %}Evaluation Card — Shutter League{% endblock %}
 {% block extra_head %}
 <link rel="canonical" href="{{ request.url }}">
 <meta name="robots" content="noindex,nofollow">
 {% endblock %}
 {% block extra_css %}
 <style>
-/* SCORECARD — overrides and additions on top of base */
+/* ═══ SCORECARD v2.3 ═══════════════════════════════════════════
+   Full image hero, score overlay, no italics, red delete,
+   seven distinct zone backgrounds. Session 212.
+══════════════════════════════════════════════════════════════ */
+main{padding:0!important;background:#E0DDD7}
+@media(max-width: 900px){main{padding:0!important}}
+@media(max-width: 768px){main{padding:0!important}}
+@media(max-width: 600px){main{padding:0!important}}
+.sl-page{background:#F5F3EF;max-width:1200px;margin:0 auto}
 
-/* Remove default main padding that base adds — all breakpoints */
-main { padding:0 !important; background:#E8E5DF; }
-@media (max-width: 900px) { main { padding:0 !important; } }
-@media (max-width: 768px) { main { padding:0 !important; } }
-@media (max-width: 600px) { main { padding:0 !important; } }
+/* TOP BAR */
+.sl-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 48px;border-bottom:0.5px solid rgba(26,39,68,0.10);background:#F5F3EF}
+.sl-topbar-back{font-size:14px;color:rgba(26,39,68,0.45);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
+.sl-topbar-back:hover{color:#C8A84B}
+.sl-topbar-save{font-size:14px;color:rgba(26,39,68,0.50);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
+.sl-topbar-save:hover{color:#C8A84B}
 
-/* PAGE */
-.sl-page { background:#F5F3EF; max-width:1200px; margin:0 auto; }
+/* IMAGE HERO — full, uncropped, natural ratio, object-fit:contain on dark bg */
+.sl-img-hero{position:relative;background:#0C1018;width:100%;overflow:hidden}
+.sl-img-hero img{width:100%;display:block;object-fit:contain;max-height:70vh;background:#0C1018}
+.sl-img-expand{position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.60);border:1px solid rgba(255,255,255,0.28);border-radius:3px;padding:9px 15px;font-size:13px;color:rgba(255,255,255,0.85);letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:background .15s}
+.sl-img-expand:hover{background:rgba(0,0,0,0.85);color:#C8A84B}
 
-/* TOP BAR — back link + save PDF */
-.sl-topbar {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:18px 48px;
-  border-bottom:0.5px solid rgba(26,39,68,0.10);
-  background:#F5F3EF;
-}
-.sl-topbar-back {
-  font-size:13px; color:rgba(26,39,68,0.42);
-  letter-spacing:0.08em; text-transform:uppercase;
-  text-decoration:none;
-}
-.sl-topbar-back:hover { color:#C8A84B; }
-.sl-topbar-actions {
-  display:flex; gap:28px;
-  font-size:13px; color:rgba(26,39,68,0.55);
-  letter-spacing:0.06em; text-transform:uppercase;
-}
-.sl-topbar-actions a { color:inherit; text-decoration:none; }
-.sl-topbar-actions a:hover { color:#C8A84B; }
+/* SCORE GRADIENT OVERLAY — bottom of image */
+.sl-score-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(8,12,20,0.92) 0%,rgba(8,12,20,0.55) 55%,transparent 100%);padding:44px 36px 22px}
+.sl-score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.sl-score-num{font-size:60px;font-weight:700;color:#fff;line-height:1;letter-spacing:-0.04em}
+.sl-score-denom{font-size:22px;color:rgba(255,255,255,0.48);font-weight:400}
+.sl-photo-name{font-size:20px;font-weight:600;color:#fff;margin-bottom:5px;line-height:1.5}
+.sl-tier-row{display:flex;align-items:center;gap:8px}
+.sl-tier-badge{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8A84B}
+.sl-tier-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.35)}
+.sl-genre-text{font-size:13px;color:rgba(255,255,255,0.60);letter-spacing:0.5px;text-transform:uppercase}
 
-/* PHOTOGRAPH — full width, natural aspect ratio, NEVER CROPPED
-   width:100%; height:auto; display:block; — non-negotiable.
-   No object-fit. No fixed height. No forced container ratio. */
-.sl-photo-wrap { width:100%; background:#0C1018; }
-.sl-photo-img {
-  width:100%;
-  height:auto;
-  display:block;
-}
-.sl-photo-meta {
-  padding:13px 48px;
-  background:#0C1018;
-  display:flex; justify-content:space-between; align-items:center;
-}
-.sl-photo-meta span {
-  font-size:13px; color:rgba(255,255,255,0.55);
-  letter-spacing:0.08em; text-transform:uppercase;
-}
+/* PHOTO META BAR — below image (title, asset name, small context) */
+.sl-photo-meta{width:100%;padding:11px 36px;background:#0C1018;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 
-/* EDITORIAL CONTENT COLUMN */
-.sl-content { max-width:860px; margin:0 auto; padding:0 48px; }
+/* LIGHTBOX */
+.sl-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.93);align-items:center;justify-content:center;cursor:zoom-out}
+.sl-lightbox.open{display:flex}
+.sl-lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;display:block}
+.sl-lightbox-close{position:absolute;top:20px;right:24px;font-size:32px;color:rgba(255,255,255,0.65);cursor:pointer;line-height:1}
+.sl-lightbox-close:hover{color:#fff}
 
-/* VERDICT */
-.sl-verdict { padding-top:60px; }
-.sl-score-line { display:flex; align-items:baseline; gap:14px; margin-bottom:10px; }
-.sl-score-num {
-  font-family:'Playfair Display',serif;
-  font-size:104px; font-weight:400; color:#1A2744;
-  line-height:1; letter-spacing:-0.04em;
-}
-.sl-score-denom { font-size:26px; color:rgba(26,39,68,0.45); font-weight:300; }
+/* TIER STRIP — journey */
+.sl-tier-strip{display:flex;align-items:center;flex-wrap:wrap;padding:10px 36px;background:#F0EDE6;border-bottom:0.5px solid rgba(26,39,68,0.12)}
+.sl-t{font-size:13px;letter-spacing:0.04em;text-transform:uppercase;padding:5px 11px 5px 0;white-space:nowrap;color:rgba(26,39,68,0.40)}
+.sl-t.done{color:rgba(26,39,68,0.52)}
+.sl-t.active{color:#1A2744;font-weight:700;border-bottom:2.5px solid #C8A84B;margin-bottom:-1px}
 
-/* Tier + genre — 15px, readable */
-.sl-tier-genre {
-  font-size:15px; letter-spacing:0.14em; text-transform:uppercase;
-  color:#C8A84B; font-weight:500; margin-bottom:28px;
-}
+/* SCROLL 1 — VERDICT: white */
+.sl-verdict{padding:36px 36px 32px;background:#FFFFFF;max-width:860px;margin:0 auto;width:100%;box-sizing:border-box}
+.sl-percentile{font-size:16px;color:rgba(26,39,68,0.52);margin-bottom:18px;line-height:1.65;font-weight:400}
+.sl-gold-rule{width:24px;height:2px;background:#C8A84B;margin-bottom:22px}
 
-/* Tier strip */
-.sl-tier-strip {
-  display:flex; flex-wrap:wrap; margin-bottom:20px;
-  border-bottom:0.5px solid rgba(26,39,68,0.09); padding-bottom:20px;
-}
-.sl-tier-item {
-  font-size:15px; letter-spacing:0.04em; text-transform:uppercase;
-  color:rgba(26,39,68,0.45); padding:8px 14px 8px 0; white-space:nowrap;
-}
-.sl-tier-item.active {
-  color:#1A2744; font-weight:600;
-  border-bottom:2px solid #C8A84B; margin-bottom:-0.5px;
-}
+/* Takeaway — NO italic, strong weight */
+.sl-takeaway{font-size:21px;font-weight:600;line-height:1.75;color:#1A2744;padding:22px 28px;border-left:4px solid #C8A84B;background:#FEFEFE;box-shadow:inset 0 0 0 1px rgba(200,168,75,0.18);border-radius:0 4px 4px 0;margin-bottom:20px}
 
-/* Percentile */
-.sl-percentile {
-  font-size:16px; color:rgba(26,39,68,0.48);
-  margin-bottom:64px; font-style:italic; line-height:1.65;
-}
+/* What to explore — amber */
+.sl-what-next{padding:22px 28px;background:#FBF5E8;border-left:4px solid #C8A84B;border-radius:0 4px 4px 0}
+.sl-what-next-label{font-size:13px;font-weight:700;letter-spacing:0.20em;text-transform:uppercase;color:#8A6A00;margin-bottom:12px}
+.sl-what-next-body{font-size:18px;line-height:1.85;color:#1A2744;font-weight:400}
 
-/* Gold rule */
-.sl-gold-rule { width:32px; height:1.5px; background:#C8A84B; margin-bottom:52px; }
+/* Scroll hint */
+.sl-scroll-hint{text-align:center;padding:14px;font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.10em;text-transform:uppercase;border-top:0.5px solid rgba(26,39,68,0.08);background:#FAFAF8}
+@keyframes sl-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+.sl-bounce{display:inline-block;animation:sl-bounce 2s infinite}
 
-/* Section eyebrow — 15px */
-.sl-eyebrow {
-  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:28px;
-}
+/* ══ SCROLL 2 — EVIDENCE ══ */
+.sl-zone-dims{background:#F0F4F8;padding:48px 0 40px}
+.sl-zone-narr{background:#EEEAE2;padding:48px 0 40px}
+.sl-zone-master{background:#EDF5EE;padding:44px 0 44px}
+.sl-zone-inner{max-width:860px;margin:0 auto;padding:0 36px}
 
-/* FIVE DIMENSIONS */
-.sl-dimensions { margin-bottom:64px; }
-.sl-dim-row {
-  display:flex; justify-content:space-between; align-items:baseline;
-  padding:18px 0;
-  border-bottom:0.5px solid rgba(26,39,68,0.08);
-}
-.sl-dim-row:last-of-type { border-bottom:none; }
-.sl-dim-left { display:flex; flex-direction:column; gap:4px; }
-/* Proprietary name — 15px */
-.sl-dim-official {
-  font-size:15px; letter-spacing:0.08em; text-transform:uppercase;
-  color:rgba(26,39,68,0.45); font-weight:500;
-}
-.sl-dim-plain { font-size:17px; color:#1A2744; line-height:1.7; }
-.sl-dim-right {
-  display:flex; align-items:baseline; gap:16px;
-  flex-shrink:0; padding-left:24px;
-}
-.sl-dim-val {
-  font-size:28px; color:#1A2744; font-weight:500;
-  font-variant-numeric:tabular-nums;
-}
-/* Status tag — 15px */
-.sl-dim-tag {
-  font-size:15px; letter-spacing:0.07em; text-transform:uppercase;
-  min-width:86px; text-align:right;
-}
-.sl-dim-tag.strongest { color:#C8A84B; }
-.sl-dim-tag.gap       { color:rgba(26,39,68,0.55); }
-.sl-dim-tag.developing{ color:rgba(26,39,68,0.44); }
-.sl-dim-note {
-  margin-top:24px;
-  font-size:15px; color:rgba(26,39,68,0.55);
-  font-style:italic; line-height:1.7;
-}
+/* Eyebrows — three levels */
+.sl-eyebrow-gold{font-size:13px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#C8A84B;margin-bottom:28px}
+.sl-eyebrow-mid{font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-bottom:20px}
+.sl-eyebrow-dim{font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(26,39,68,0.40);margin-bottom:16px}
 
-/* NARRATIVE — What We See */
-.sl-narrative {
-  margin-bottom:72px;
-  border-top:0.5px solid rgba(26,39,68,0.08); padding-top:60px;
-}
-.sl-narrative-body {
-  font-size:21px; line-height:1.9; color:#1A2744;
-  font-family:'Playfair Display',serif; font-weight:400;
-}
+/* Dim rows: score LEFT, text RIGHT — single read direction */
+.sl-dim-row{display:grid;grid-template-columns:72px 1fr;gap:0 22px;padding:20px 0;border-bottom:0.5px solid rgba(26,39,68,0.08);align-items:start}
+.sl-dim-row:last-of-type{border-bottom:none}
+.sl-dim-score-col{display:flex;flex-direction:column;align-items:center;padding-top:3px}
+.sl-dim-val{font-size:30px;color:#1A2744;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.sl-dim-tag{font-size:13px;letter-spacing:0.07em;text-transform:uppercase;margin-top:5px;text-align:center}
+.sl-dim-tag.strongest{color:#C8A84B;font-weight:700}
+.sl-dim-tag.gap{color:rgba(26,39,68,0.58)}
+.sl-dim-tag.ok{color:rgba(26,39,68,0.42)}
+.sl-dim-text-col{display:flex;flex-direction:column;gap:4px}
+.sl-dim-code{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(26,39,68,0.42);font-weight:500}
+.sl-dim-plain{font-size:18px;color:#1A2744;line-height:1.5;font-weight:500}
+.sl-dim-inline{font-size:16px;color:rgba(26,39,68,0.62);line-height:1.75;padding-top:7px;font-weight:400}
+.sl-band{text-align:center;font-size:14px;color:rgba(26,39,68,0.40);margin:20px 0 8px;line-height:1.9}
+.sl-band-sep{margin:0 8px;color:#C8A84B;opacity:0.45}
+.sl-dim-note{font-size:14px;color:rgba(26,39,68,0.40);line-height:1.7;text-align:center;margin-top:10px}
 
-/* EDITORIAL BLOCKS */
-.sl-editorial { margin-bottom:72px; display:flex; flex-direction:column; gap:52px; }
-/* Block labels — 15px */
-.sl-block-label {
-  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:14px;
-}
-.sl-block-body { font-size:18px; line-height:1.85; color:#1A2744; }
+/* Narrative */
+.sl-narr-body{font-size:21px;line-height:1.85;color:#1A2744;margin-bottom:28px;font-weight:400}
 
-/* EYE BEHIND THIS */
-.sl-reference {
-  margin-bottom:0;
-  border-top:0.5px solid rgba(26,39,68,0.08);
-  padding-top:56px; padding-bottom:64px;
-}
-/* Eyebrow — 15px */
-.sl-ref-eyebrow {
-  font-size:15px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,39,68,0.55); margin-bottom:18px;
-}
-.sl-ref-name {
-  font-family:'Playfair Display',serif;
-  font-size:32px; color:#1A2744; margin-bottom:14px;
-  margin-top:0; font-weight:400;
-}
-.sl-ref-desc {
-  font-size:18px; color:rgba(26,39,68,0.58);
-  line-height:1.8; margin-bottom:20px;
-}
-.sl-ref-link {
-  font-size:13px; color:#C8A84B;
-  letter-spacing:0.09em; text-transform:uppercase; text-decoration:none;
-}
-.sl-ref-link:hover { text-decoration:underline; }
+/* Strength cards — differentiated */
+.sl-strength-card{background:#FFFFFF;border-radius:4px;padding:22px 24px;margin-bottom:14px;border-left:3px solid rgba(200,168,75,0.42)}
+.sl-strength-card.leap{border-left:3px solid rgba(26,39,68,0.40)}
+.sl-strength-label{font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:10px}
+.sl-strength-label.navy{color:rgba(26,39,68,0.48)}
+.sl-strength-body{font-size:18px;line-height:1.80;color:#1A2744;font-weight:400}
 
-/* NEXT DECISION — full width navy */
-.sl-conversion { background:#1A2744; padding:56px 48px; }
-.sl-conv-inner { max-width:760px; margin:0 auto; width:100%; }
-.sl-conv-count {
-  font-size:13px; color:rgba(255,255,255,0.55);
-  letter-spacing:0.08em; text-transform:uppercase; margin-bottom:16px;
-}
-.sl-conv-statement {
-  font-size:24px; color:rgba(255,255,255,0.88); line-height:1.65;
-  font-family:'Playfair Display',serif; margin-bottom:28px;
-}
-.sl-conv-primary {
-  font-size:17px; color:#F5C518; letter-spacing:0.03em;
-  line-height:1.5; margin-bottom:16px;
-  display:block; text-decoration:none;
-}
-.sl-conv-primary:hover { text-decoration:underline; }
-.sl-conv-secondary {
-  font-size:15px; color:rgba(255,255,255,0.55);
-  line-height:1.5; display:block; text-decoration:none;
-}
+/* Master reference */
+.sl-ref-name{font-size:32px;font-weight:700;color:#1A2744;margin-bottom:10px}
+.sl-ref-desc{font-size:18px;color:rgba(26,39,68,0.68);line-height:1.80;margin-bottom:16px;font-weight:400}
+.sl-ref-link{font-size:13px;color:#2A6A35;letter-spacing:0.09em;text-transform:uppercase;text-decoration:none;font-weight:700}
+.sl-ref-link:hover{text-decoration:underline}
 
-/* NULL STATE */
-.sl-null { color:rgba(26,39,68,0.45); font-style:italic; }
+/* ══ SCROLL 3 — CRAFT ══ */
+.sl-zone-tech{background:#F8F4EE;padding:48px 0 40px}
+.sl-zone-edit{background:#F0EBF5;padding:44px 0 40px}
+.sl-zone-imagine{background:linear-gradient(160deg,#FBF6EC 0%,#F5EDD8 100%);padding:48px 0 44px}
+.sl-zone-award{background:#EBF3FB;padding:36px 0;text-align:center}
+.sl-zone-conclusion{background:#E8F0E9;padding:48px 36px 52px;border-top:1px solid rgba(60,120,70,0.18);border-bottom:1px solid rgba(60,120,70,0.18);text-align:center}
+.sl-zone-species{background:#F5F3EF;padding:36px 0}
 
-/* ── RESPONSIVE ───────────────────────────────────────── */
+.sl-tech-body{font-size:17px;color:rgba(26,39,68,0.68);line-height:1.80;font-weight:400}
 
-/* iPad portrait — 768px */
-@media (max-width: 768px) {
-  .sl-topbar,
-  .sl-photo-meta,
-  .sl-conversion { padding-left:28px; padding-right:28px; }
-  .sl-content { padding-left:28px; padding-right:28px; }
-  .sl-score-num { font-size:80px; }
-  .sl-tier-item { font-size:13px; padding-right:10px; }
-  .sl-narrative-body { font-size:19px; }
-  .sl-block-body { font-size:17px; }
-  .sl-ref-name { font-size:26px; }
-  .sl-conv-statement { font-size:20px; }
+/* Edit tips */
+.sl-edit-card{background:#FFFFFF;border-radius:4px;border-left:3px solid rgba(26,39,68,0.15);padding:20px 22px;margin-bottom:12px}
+.sl-edit-label{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.sl-edit-label.what{color:#8a6a30}
+.sl-edit-label.why,.sl-edit-label.how{color:rgba(26,39,68,0.45)}
+.sl-edit-text{font-size:16px;color:#1A2744;line-height:1.75;font-weight:400;margin-bottom:0}
+
+/* Imagine — NO italic */
+.sl-imagine-eyebrow{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:16px}
+.sl-imagine-body{font-size:21px;line-height:1.85;color:#1A2744;font-weight:400}
+
+/* Award */
+.sl-award-text{font-size:17px;color:rgba(26,39,68,0.58);line-height:1.85;max-width:600px;margin:0 auto 24px;font-weight:400}
+
+/* Conclusion — NO italic */
+.sl-conclusion-text{font-size:21px;line-height:1.85;color:#1A3020;max-width:660px;margin:0 auto;font-weight:500}
+
+/* Upgrade section */
+.sl-upgrade-wrap{background:#EDE8DF;padding:48px 36px 52px;border-top:1px solid rgba(26,39,68,0.10)}
+
+/* FOOTER — navy */
+.sl-conversion{background:#1A2744;padding:52px 36px}
+.sl-conv-inner{max-width:760px;margin:0 auto}
+.sl-conv-count{font-size:13px;color:rgba(255,255,255,0.52);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px}
+.sl-conv-headline{font-size:22px;color:rgba(255,255,255,0.90);line-height:1.65;margin-bottom:20px;font-weight:500}
+.sl-conv-cta{font-size:17px;color:#F5C518;display:block;margin-bottom:20px;text-decoration:none;font-weight:600;letter-spacing:0.02em}
+.sl-conv-divider{border-top:0.5px solid rgba(255,255,255,0.10);margin-bottom:18px;padding-top:18px}
+
+/* DELETE BUTTON — RED PILL */
+.sl-delete-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(180,40,40,0.18);border:1.5px solid rgba(220,60,60,0.50);border-radius:6px;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;color:#FF7070;padding:11px 22px;font-weight:700;transition:background .15s,border-color .15s}
+.sl-delete-btn:hover{background:rgba(220,60,60,0.28);border-color:rgba(220,60,60,0.75)}
+
+/* RESPONSIVE */
+@media(max-width: 900px){
+  .sl-verdict,.sl-zone-inner,.sl-conversion{padding-left:24px;padding-right:24px}
+  .sl-score-overlay{padding:32px 24px 18px}
+  .sl-score-num{font-size:48px}
+  .sl-tier-strip,.sl-photo-meta{padding-left:24px;padding-right:24px}
+  .sl-upgrade-wrap{padding:36px 24px 40px}
+  .sl-zone-conclusion{padding:36px 24px 40px}
 }
-
-/* Mobile — 600px */
-@media (max-width: 600px) {
-  .sl-topbar,
-  .sl-photo-meta,
-  .sl-conversion { padding-left:20px; padding-right:20px; }
-  .sl-content { padding-left:20px; padding-right:20px; }
-  .sl-score-num { font-size:68px; }
-  .sl-score-denom { font-size:20px; }
-  .sl-tier-item { font-size:13px; padding-right:8px; }
-  .sl-narrative-body { font-size:18px; }
-  .sl-dim-val { font-size:22px; }
-  .sl-dim-right { gap:10px; }
-  .sl-verdict { padding-top:40px; }
-  .sl-conv-statement { font-size:18px; }
+@media(max-width: 600px){
+  .sl-verdict,.sl-zone-inner,.sl-conversion{padding-left:20px;padding-right:20px}
+  .sl-score-num{font-size:40px}
+  .sl-takeaway{font-size:18px}
+  .sl-what-next-body{font-size:16px}
+  .sl-narr-body{font-size:18px}
+  .sl-imagine-body{font-size:18px}
+  .sl-conclusion-text{font-size:18px}
+  .sl-dim-plain{font-size:16px}
+  .sl-dim-inline{font-size:14px}
+  .sl-dim-val{font-size:26px}
+  .sl-dim-row{grid-template-columns:60px 1fr;gap:0 14px}
+  .sl-tier-strip{padding:10px 20px}
+  .sl-score-overlay{padding:28px 20px 16px}
+  .sl-upgrade-wrap{padding:28px 20px 32px}
+  .sl-zone-conclusion{padding:28px 20px 32px}
+  .sl-upgrade-grid{grid-template-columns:1fr!important}
 }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<div style="background:#E8E5DF; min-height: 100dvh; min-height: -webkit-fill-available; min-height: 100vh;">
+<div style="background:#E0DDD7;min-height:100dvh">
 <div class="sl-page">
 
   {# ── TOP BAR ── #}
   <div class="sl-topbar">
     <a href="{{ url_for('try_gallery') }}" class="sl-topbar-back">← My evaluations</a>
-    <div class="sl-topbar-actions">
-      <a href="{{ url_for('try_result_download', image_id=image_id) }}">Save PDF</a>
-    </div>
+    <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="sl-topbar-save">Save PDF</a>
   </div>
 
-  {# ── 1. PHOTOGRAPH ──
-     Full page width. Natural aspect ratio. Never cropped.
-     width:100%; height:auto; display:block; — non-negotiable. #}
-  <div class="sl-photo-wrap">
-    {% if thumb_url %}
-      <img
-        class="sl-photo-img"
-        src="{{ thumb_url }}"
-        alt="{{ asset_name or 'Submitted photograph' }}"
-        loading="eager"
-      >
-    {% else %}
-      <div style="width:100%;height:280px;background:#0C1018;display:flex;align-items:center;justify-content:center;">
-        <span style="font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.10em;text-transform:uppercase;">Photograph unavailable</span>
-      </div>
-    {% endif %}
-    <div class="sl-photo-meta">
-      <span>{{ asset_name or '—' }}</span>
-      <span>{{ genre or '—' }}</span>
-    </div>
-  </div>
+  {# ════════ SCROLL 1 — THE VERDICT ════════ #}
 
-  {# ── EDITORIAL CONTENT COLUMN ── #}
-  <div class="sl-content">
-
-    {# ── 2. SCORE + TIER ── #}
-    <div class="sl-verdict">
-      <div class="sl-score-line">
-        <span class="sl-score-num">{{ "%.2f"|format(score|float) if score else '—' }}</span>
+  {# IMAGE HERO — full, uncropped, natural ratio, overlay hugs actual image #}
+  {% if thumb_url %}
+  <div class="sl-img-hero" style="text-align:center;line-height:0">
+    <div style="position:relative;display:inline-block;width:100%;max-height:70vh;overflow:hidden;background:#0C1018">
+    <img src="{{ thumb_url }}" alt="{{ asset_name or 'Submitted photograph' }}" loading="eager"
+         style="width:100%;max-height:70vh;object-fit:contain;display:block;background:#0C1018">
+    {% if score %}
+    <div class="sl-score-overlay">
+      <div class="sl-score-row">
+        <span class="sl-score-num">{{ "%.2f"|format(score|float) }}</span>
         <span class="sl-score-denom">/10</span>
       </div>
-
-      <div class="sl-tier-genre">
-        {{ tier or '—' }}&nbsp;·&nbsp;{{ genre or '—' }}
+      {% if photographer_name %}<div class="sl-photo-name">{{ photographer_name }}</div>{% endif %}
+      <div class="sl-tier-row">
+        <span class="sl-tier-badge">{{ tier or '—' }}</span>
+        <span class="sl-tier-sep"></span>
+        <span class="sl-genre-text">{{ genre or '—' }}</span>
       </div>
+    </div>
+    {% endif %}
+    <a class="sl-img-expand" onclick="document.getElementById('sl-lightbox').classList.add('open');return false;" href="#">Expand ↗</a>
+    </div>
+  </div>
 
-      {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
-      <div class="sl-tier-strip">
-        {% for t in _tiers %}
-          <span class="sl-tier-item{% if t == tier %} active{% endif %}">{{ t }}</span>
+  {# Lightbox #}
+  <div class="sl-lightbox" id="sl-lightbox" onclick="this.classList.remove('open')">
+    <span class="sl-lightbox-close" onclick="document.getElementById('sl-lightbox').classList.remove('open')">&times;</span>
+    <img src="{{ thumb_url }}" alt="{{ asset_name or 'Photograph' }}">
+  </div>
+  {% endif %}
+
+  {# Photo meta bar #}
+  <div class="sl-photo-meta">
+    <span style="font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.06em">{{ asset_name or '—' }}</span>
+    <span style="font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.06em;text-transform:uppercase">{{ genre or '—' }}</span>
+  </div>
+
+  {# TIER STRIP — journey: done / active / ahead #}
+  {% set _tiers = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend'] %}
+  {% set _active_idx = _tiers.index(tier) if tier in _tiers else 0 %}
+  <div class="sl-tier-strip">
+    {% for t in _tiers %}
+      {% if loop.index0 < _active_idx %}<span class="sl-t done">{{ t }}</span>
+      {% elif loop.index0 == _active_idx %}<span class="sl-t active">{{ t }}</span>
+      {% else %}<span class="sl-t">{{ t }}</span>{% endif %}
+    {% endfor %}
+  </div>
+
+  {# Processing state #}
+  {% if not score %}
+  <div class="sl-verdict" style="text-align:center;padding-top:60px;padding-bottom:60px">
+    <div id="sl-processing">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:20px">Evaluating your photograph</div>
+      <div style="height:4px;background:rgba(26,39,68,0.08);border-radius:2px;margin-bottom:24px;overflow:hidden">
+        <div id="sl-progress-bar" style="height:100%;background:#C8A84B;border-radius:2px;width:0%;transition:width 0.4s ease"></div>
+      </div>
+      <div style="font-size:17px;color:rgba(26,39,68,0.55);line-height:1.7">The engine is reading your image across five dimensions.<br>This takes 60–90 seconds.</div>
+      <div id="sl-processing-msg" style="font-size:15px;color:rgba(26,39,68,0.40);margin-top:12px">Starting evaluation…</div>
+    </div>
+    <div id="sl-image-id" data-id="{{ image_id }}" style="display:none"></div>
+    <script>
+    (function(){
+      var imageId=parseInt(document.getElementById('sl-image-id').getAttribute('data-id'),10);
+      var progress=0,msgIdx=0,startTime=Date.now(),maxWait=180000;
+      var messages=['Reading the frame…','Identifying subject and behaviour…','Scoring five dimensions…','Writing your evaluation…','Almost done…'];
+      var bar=document.getElementById('sl-progress-bar'),msg=document.getElementById('sl-processing-msg');
+      function advance(){progress=Math.min(progress+(Math.random()*8+4),90);if(bar)bar.style.width=progress+'%';if(msg&&msgIdx<messages.length)msg.textContent=messages[Math.min(msgIdx++,messages.length-1)];}
+      function poll(){if(Date.now()-startTime>maxWait){if(msg)msg.textContent='Taking longer than expected — refresh the page.';return;}advance();fetch('/try/status/'+imageId).then(function(r){return r.json();}).then(function(data){if(data.status==='scored'&&data.score){if(bar)bar.style.width='100%';if(msg)msg.textContent='Done — loading your scorecard…';setTimeout(function(){window.location.reload();},800);}else{setTimeout(poll,4000);}}).catch(function(){setTimeout(poll,4000);});}
+      setTimeout(poll,4000);
+    })();
+    </script>
+  </div>
+  {% endif %}
+
+  {% if score %}
+  {# VERDICT PANEL #}
+  <div style="background:#FFFFFF">
+  <div class="sl-verdict">
+    {% if percentile and percentile.context %}
+      <div class="sl-percentile">{{ percentile.context }}</div>
+    {% elif percentile and percentile.top_pct %}
+      <div class="sl-percentile">Higher than {{ 100 - percentile.top_pct }}% of evaluated photographs on this platform.</div>
+    {% endif %}
+    <div class="sl-gold-rule"></div>
+    {% if takeaway %}
+    <div class="sl-takeaway">{{ takeaway }}</div>
+    {% endif %}
+    {% if what_next %}
+    <div class="sl-what-next">
+      <div class="sl-what-next-label">What to explore</div>
+      <div class="sl-what-next-body">{{ what_next }}</div>
+    </div>
+    {% endif %}
+  </div>
+  </div>
+
+  <div class="sl-scroll-hint">Scroll to see the full evaluation &nbsp;<span class="sl-bounce">↓</span></div>
+
+  {# ════════ SCROLL 2 — THE EVIDENCE ════════ #}
+
+  {# Zone A — Five dimensions: soft blue-grey #}
+  <div class="sl-zone-dims">
+    <div class="sl-zone-inner">
+      <div class="sl-eyebrow-gold">Five dimensions</div>
+      {% set _vals = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
+      {% set _max_v = _vals | max %}
+      {% set _min_v = _vals | min %}
+      {% set _avg_v = (_vals | sum) / 5 %}
+      {% for _code, _plain, _val, _obs in [
+        ('Affective Quotient','The emotional quality it carries', aq|float(0), dim_obs_aq),
+        ('Visual Disruption','Whether it is visually disruptive', vd|float(0), dim_obs_vd),
+        ('Decisive Moment','Whether the timing was right', dm|float(0), dim_obs_dm),
+        ('Wonder Factor','Whether it made you feel something', wf|float(0), dim_obs_wf),
+        ('Depth of Difficulty','The difficulty of getting the shot', dod|float(0), dim_obs_dod)
+      ] %}
+      <div class="sl-dim-row">
+        <div class="sl-dim-score-col">
+          <span class="sl-dim-val">{{ "%.1f"|format(_val) if _val else '—' }}</span>
+          {% if _val and _val == _max_v %}<span class="sl-dim-tag strongest">Strongest</span>
+          {% elif _val and _val == _min_v and (_avg_v - _val) > 0.4 %}<span class="sl-dim-tag gap">Gap</span>
+          {% else %}<span class="sl-dim-tag ok">{% if _val >= 9.0 %}Rare{% elif _val >= 8.0 %}Exceptional{% elif _val >= 7.0 %}Strong{% elif _val >= 6.0 %}Developing{% else %}Capable{% endif %}</span>{% endif %}
+        </div>
+        <div class="sl-dim-text-col">
+          <span class="sl-dim-code">{{ _code }}</span>
+          <span class="sl-dim-plain">{{ _plain }}</span>
+          {% if _obs %}<div class="sl-dim-inline">{{ _obs }}</div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      <p class="sl-band"><span>5–6 Capable</span><span class="sl-band-sep">·</span><span>6–7 Developing</span><span class="sl-band-sep">·</span><span>7–8 Strong</span><span class="sl-band-sep">·</span><span>8–9 Exceptional</span><span class="sl-band-sep">·</span><span>9+ Rare</span></p>
+      <div class="sl-dim-note">The highest standard demands strength across all five dimensions.</div>
+    </div>
+  </div>
+
+  {# Zone B — Narrative + cards: warm off-white #}
+  <div class="sl-zone-narr">
+    <div class="sl-zone-inner">
+      {% if impression %}
+      <div class="sl-eyebrow-mid">What we see</div>
+      <div class="sl-narr-body">{{ impression }}</div>
+      {% endif %}
+      {% if strength_obs %}
+      <div class="sl-strength-card">
+        <div class="sl-strength-label">Strongest moment{% if strength_name %} — {{ strength_name }}{% endif %}</div>
+        <div class="sl-strength-body">{{ strength_obs }}</div>
+      </div>
+      {% endif %}
+      {% if next_leap_obs %}
+      <div class="sl-strength-card leap">
+        <div class="sl-strength-label navy">Next leap{% if next_leap_name %} — {{ next_leap_name }}{% endif %}</div>
+        <div class="sl-strength-body">{{ next_leap_obs }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Zone C — Master reference: sage green #}
+  {% if master_name %}
+  <div class="sl-zone-master">
+    <div class="sl-zone-inner">
+      <div class="sl-eyebrow-mid">The eye behind this</div>
+      <div class="sl-ref-name">{{ master_name }}</div>
+      {% if master_why %}<div class="sl-ref-desc">{{ master_why }}</div>{% endif %}
+      <a class="sl-ref-link" href="https://www.google.com/search?q={{ master_name|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener">See their work →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ════════ SCROLL 3 — THE CRAFT ════════ #}
+
+  {# Zone D — Technical: warm sand #}
+  {% if tech_read or visual_flow %}
+  <div class="sl-zone-tech">
+    <div class="sl-zone-inner">
+      {% if tech_read %}
+      <div class="sl-eyebrow-dim">Technical read</div>
+      <div class="sl-tech-body" style="margin-bottom:{% if visual_flow %}32px{% else %}0{% endif %}">{{ tech_read }}</div>
+      {% endif %}
+      {% if visual_flow %}
+      <div class="sl-eyebrow-dim">Visual flow</div>
+      <div class="sl-tech-body">{{ visual_flow }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Zone E — Edit tips: lavender #}
+  {% if edit_tips %}
+  <div class="sl-zone-edit">
+    <div class="sl-zone-inner">
+      <div class="sl-eyebrow-mid">Edit suggestions</div>
+      {# Parser: newline format (WHAT:\nWHY:\nHOW:\n\n) — preferred from 182.02+
+         Fallback: pipe format (WHAT: x | WHY: y | HOW: z) from older scores #}
+      {% set _tips_clean = edit_tips.replace(' | WHY:', '\nWHY:').replace(' | HOW:', '\nHOW:').replace(' | WHAT:', '\n\nWHAT:').replace('WHAT: ', '\n\nWHAT: ') %}
+      {% set _tip_blocks = _tips_clean.split('\n\n') %}
+      {% for _block in _tip_blocks if _block.strip() and ('WHAT' in _block or 'WHY' in _block or 'HOW' in _block) %}
+      <div class="sl-edit-card">
+        {% for _line in _block.strip().split('\n') if _line.strip() %}
+          {% set _lu = _line.strip().upper() %}
+          {% if _lu.startswith('WHAT') %}
+            <span class="sl-edit-label what">What</span>
+            <div class="sl-edit-text" style="margin-bottom:12px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% elif _lu.startswith('WHY') %}
+            <span class="sl-edit-label why">Why</span>
+            <div class="sl-edit-text" style="margin-bottom:12px">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% elif _lu.startswith('HOW') %}
+            <span class="sl-edit-label how">How</span>
+            <div class="sl-edit-text">{{ _line.split(':',1)[1].strip() if ':' in _line else _line.strip() }}</div>
+          {% endif %}
         {% endfor %}
       </div>
-
-      {% if percentile and percentile.context %}
-        <div class="sl-percentile">{{ percentile.context }}</div>
-      {% elif percentile and percentile.top_pct %}
-        <div class="sl-percentile">Higher than {{ 100 - percentile.top_pct }}% of evaluated photographs on this platform.</div>
-      {% endif %}
-
-      <div class="sl-gold-rule"></div>
-    </div>
-
-    {# ── 3. FIVE DIMENSIONS ── #}
-    <div class="sl-dimensions">
-      <div class="sl-eyebrow">Five dimensions</div>
-
-      {% set _dims = [
-        ('Affective Quotient',  'The emotional quality it carries',       aq  | float(0)),
-        ('Visual Disruption',   'Whether it is visually disruptive',      vd  | float(0)),
-        ('Decisive Moment',     'Whether it caught the decisive moment',  dm  | float(0)),
-        ('Wonder Factor',       'Whether it creates wonder',              wf  | float(0)),
-        ('Depth of Difficulty', 'The difficulty of getting the shot',     dod | float(0)),
-      ] %}
-      {% set _values = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
-      {% set _max_val = _values | max %}
-      {% set _min_val = _values | min %}
-
-      {% for official, plain, val in _dims %}
-        <div class="sl-dim-row">
-          <div class="sl-dim-left">
-            <span class="sl-dim-official">{{ official }}</span>
-            <span class="sl-dim-plain">{{ plain }}</span>
-          </div>
-          <div class="sl-dim-right">
-            <span class="sl-dim-val">{{ "%.1f"|format(val) if val else '—' }}</span>
-            {% if val and val == _max_val %}
-              <span class="sl-dim-tag strongest">Strongest</span>
-            {% elif val and val == _min_val %}
-              <span class="sl-dim-tag gap">Gap</span>
-            {% else %}
-              <span class="sl-dim-tag developing">Developing</span>
-            {% endif %}
-          </div>
-        </div>
       {% endfor %}
-
-      <div class="sl-dim-note">
-        The highest standard demands strength across all five dimensions.
-      </div>
     </div>
+  </div>
+  {% endif %}
 
-    {# ── 4. WHAT WE SEE ── #}
-    {% if impression %}
-    <div class="sl-narrative">
-      <div class="sl-eyebrow">What we see</div>
-      <div class="sl-narrative-body">{{ impression }}</div>
+  {# Zone F — Imagine: gold gradient, NO italic #}
+  {% if imagine %}
+  <div class="sl-zone-imagine">
+    <div class="sl-zone-inner">
+      <div class="sl-imagine-eyebrow">Imagine</div>
+      <div class="sl-imagine-body">{{ imagine }}</div>
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 
-    {# ── 5. STRONGEST MOMENT / 6. NEXT LEAP / 7. WHAT TO EXPLORE ── #}
-    {% if strength_obs or next_leap_obs or what_next %}
-    <div class="sl-editorial">
-
-      {% if strength_obs %}
-      <div>
-        <div class="sl-block-label">Strongest moment</div>
-        <div class="sl-block-body">{{ strength_obs }}</div>
-
-      </div>
-      {% endif %}
-
-      {% if next_leap_obs %}
-      <div>
-        <div class="sl-block-label">Next leap</div>
-        <div class="sl-block-body">{{ next_leap_obs }}</div>
-
+  {# Zone Award — pastel blue #}
+  {% if award_context %}
+  <div class="sl-zone-award">
+    <div class="sl-zone-inner">
+      <div class="sl-award-text">{{ award_context }}</div>
+      {% if score and score|float >= 8.5 %}
+      <div style="display:inline-flex;align-items:center;gap:20px;background:#1A2744;border-radius:4px;padding:16px 22px;flex-wrap:wrap">
+        <span style="font-size:16px;color:rgba(255,255,255,0.82);font-weight:500">Your work is ready for the League.</span>
+        <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#C8A84B;color:#1A2744;font-size:14px;font-weight:700;padding:12px 20px;border-radius:2px;text-decoration:none;letter-spacing:.5px;white-space:nowrap">Join the League →</a>
       </div>
       {% endif %}
+    </div>
+  </div>
+  {% endif %}
 
-      {% if what_next %}
-      <div>
-        <div class="sl-block-label">What to explore</div>
-        <div class="sl-block-body">{{ what_next }}</div>
+  {# Zone G — Conclusion: soft sage green, NO italic #}
+  {% if conclusion %}
+  <div class="sl-zone-conclusion">
+    <div class="sl-conclusion-text">{{ conclusion }}</div>
+  </div>
+  {% endif %}
+
+  {# CSI cards #}
+  {% if csi_own_duplicate %}
+  <div style="background:#2D1F00;border-left:3px solid #F5C518;padding:20px 24px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#F5C518;margin-bottom:8px">Image already in your record</div>
+    <div style="font-size:15px;line-height:1.75;color:rgba(245,197,24,0.80)">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+  </div>
+  {% endif %}
+  {% if csi_threshold_hit %}
+  <div style="background:#1A1A2E;border-left:3px solid #4A6FA8;padding:20px 24px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A9FD4;margin-bottom:8px">Seen in the Shutter League pool</div>
+    <div style="font-size:15px;line-height:1.75;color:rgba(122,159,212,0.80)">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
+  </div>
+  {% endif %}
+
+  {# Upgrade teaser #}
+  <div class="sl-upgrade-wrap">
+    <div style="max-width:760px;margin:0 auto">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:12px">In a full League evaluation, you also get</div>
+      <div style="font-size:22px;font-weight:600;color:#1A2744;margin-bottom:28px;line-height:1.6">This evaluation is honest. A League evaluation goes deeper.</div>
+      <div class="sl-upgrade-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
+        {% for _title, _body in [
+          ('Mentor narrative','A Grandmaster photographer explains exactly what they see in your image — the habit behind the frame, what to strengthen, what to leave behind.'),
+          ('Your next shot — bookmarked','A specific location, timing, and subject brief based on your camera, your city, and what your last image was reaching for.'),
+          ('Calibrated standing','Your position in the League of Photographers — calibrated by evaluation score, tracked across every image you submit.'),
+          ('Your evolving portrait','After 10 evaluations, the engine builds a cross-image read of what your eye consistently finds — and what it consistently misses.'),
+          ('Weekly assignment','A specific shoot brief each week — subject, location type, and timing — calibrated to your interests and what your last image was reaching for.'),
+          ('Annual Excellence Award','The first photography credential built on twelve months of calibrated evaluation — not a single submission, not a popularity vote.')
+        ] %}
+        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
+          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">{{ _title }}</div>
+          <div style="font-size:15px;color:#3d3530;line-height:1.7">{{ _body }}</div>
+        </div>
+        {% endfor %}
       </div>
-      {% endif %}
-
+      <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#1A2744;color:#fff;font-size:16px;font-weight:600;padding:16px 28px;border-radius:2px;text-decoration:none;letter-spacing:.2px">Join the League of Photographers →</a>
+      <div style="font-size:14px;color:#8a8070;margin-top:12px">Camera League ₹4,000/year · Mobile League ₹2,000/year · No monthly plans</div>
     </div>
-    {% endif %}
+  </div>
 
-    {# ── 8. EYE BEHIND THIS ── #}
-    {% if master_name %}
-    <div class="sl-reference">
-      <div class="sl-ref-eyebrow">The eye behind this</div>
-      <div class="sl-ref-name">{{ master_name }}</div>
-      {% if master_why %}
-      <div class="sl-ref-desc">{{ master_why }}</div>
-      {% endif %}
-      {% if master_name in all_masters %}
-        <a class="sl-ref-link" href="https://www.google.com/search?q={{ all_masters[master_name] }}&tbm=isch" target="_blank" rel="noopener">See their work →</a>
-      {% else %}
-        <a class="sl-ref-link" href="https://www.google.com/search?q={{ master_name|urlencode }}+photography&tbm=isch" target="_blank" rel="noopener">See their work →</a>
-      {% endif %}
-    </div>
-    {% endif %}
-
-  </div>{# end .sl-content #}
-
-  {# ── 9. NEXT DECISION ── #}
+  {# FOOTER — navy with red delete #}
   <div class="sl-conversion">
     <div class="sl-conv-inner">
+      {% if evals_used and evals_used >= 1 %}
       <div class="sl-conv-count">
-        {{ evals_used or 0 }} of 10 free evaluations used
-        {% if evals_remaining is not none %}&nbsp;·&nbsp; {{ evals_remaining }} remaining{% endif %}
+        {{ evals_used }} of {{ evals_limit or 10 }} evaluation{{ 's' if evals_used != 1 else '' }} used{% if evals_display is defined and evals_used > evals_display %} — including deleted{% endif %}
+        {% if evals_remaining is not none and evals_remaining > 0 %} · {{ evals_remaining }} remaining{% endif %}
       </div>
-      <div class="sl-conv-statement">
-        {% if evals_used and evals_used >= 1 %}
-          {{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }} evaluated. Your record is being built, one image at a time.
-        {% else %}
-          Your record begins with your next photograph.
-        {% endif %}
+      <div class="sl-conv-headline">
+        {% if evals_used == 1 %}Your record has begun. One photograph evaluated.
+        {% elif evals_remaining is not none and evals_remaining == 0 %}You have used all {{ evals_limit or 10 }} free evaluations. Join the League to continue.
+        {% else %}{{ evals_used }} photograph{{ 's' if evals_used != 1 else '' }} evaluated. {{ evals_remaining }} free evaluation{{ 's' if evals_remaining != 1 else '' }} remaining.{% endif %}
       </div>
-      <a href="{{ url_for('try_page') }}" class="sl-conv-primary">Continue my record →</a>
+      {% else %}
+      <div class="sl-conv-count">{{ evals_limit or 10 }} free evaluations available</div>
+      <div class="sl-conv-headline">Submit your next photograph and continue building your record.</div>
+      {% endif %}
+      <a href="{{ url_for('try_page') }}" class="sl-conv-cta">Submit another photograph →</a>
+      <div class="sl-conv-divider"></div>
       <form method="POST" action="{{ url_for('delete_image', image_id=image_id) }}"
-            onsubmit="return confirm('Delete this evaluation? This cannot be undone. Your slot count will not be restored.')"
-            style="display:block;margin-top:20px;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.08);">
-        <button type="submit"
-                style="background:none;border:1px solid rgba(255,255,255,0.20);border-radius:3px;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:10px 20px;min-height:44px;display:inline-block;transition:border-color .15s,color .15s;"
-                onmouseover="this.style.borderColor='rgba(255,255,255,0.50)';this.style.color='rgba(255,255,255,0.70)'"
-                onmouseout="this.style.borderColor='rgba(255,255,255,0.20)';this.style.color='rgba(255,255,255,0.45)'">
+            onsubmit="return confirm('Delete this evaluation? This cannot be undone. Your slot count will not be restored.')">
+        <button type="submit" class="sl-delete-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
           Delete this evaluation
         </button>
       </form>
     </div>
   </div>
 
-</div>{# end .sl-page #}
-</div>{# end background wrapper #}
+  {# EXIF + Species footer — evaluation record #}
+  {% if exif_line or species_note %}
+  <div style="padding:14px 36px;background:#F5F3EF;border-top:1px solid rgba(26,39,68,0.08)">
+    {% if exif_line %}
+    <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Camera data</div>
+    <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6;margin-bottom:{% if species_note %}10px{% else %}0{% endif %}">{{ exif_line }}</div>
+    {% endif %}
+    {% if species_note %}
+    <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Species and behaviour</div>
+    <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6">{{ species_note }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
 
+  {% endif %}{# end score block #}
+
+</div>{# end .sl-page #}
+</div>{# end background #}
 {% endblock %}
