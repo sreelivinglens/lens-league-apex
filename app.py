@@ -37095,9 +37095,9 @@ _TRY_HAIKU_PROMPT = (
     "Write like the first. Never like the second.\n\n"
 
     # Session 221 — NS (Narrative Sufficiency) binary + emotion structured fields
-    "6. ns - Narrative Sufficiency: does a stranger see a story in this image without a caption?\n"
+    "6. ns - Narrative Sufficiency: can another person viewing it read the story without a caption?\n"
     "NS is a BINARY judgement. You must answer one of exactly three values:\n"
-    "  'yes'      — A stranger can narrate what is happening. Story is self-evident.\n"
+    "  'yes'      — Another person viewing it can narrate what is happening. Story is self-evident.\n"
     "               Clear subject + clear action or relationship. Maternity shadow (91%) = yes.\n"
     "               Monks walking to prayer (75%) = yes. Cherry blossom child (65%) = yes/borderline.\n"
     "  'not_sure' — The image invites a story but does not complete it. Viewer projects meaning.\n"
@@ -37108,7 +37108,7 @@ _TRY_HAIKU_PROMPT = (
     "               Swallow in flight (44%) = no. Mountain landscape (40%) = no.\n"
     "               B&W studio portrait, face only (34%) = no.\n\n"
     "NS PRINCIPLE: Do NOT say 'yes' because the image is beautiful, emotional, or powerful.\n"
-    "Ask only: can a stranger narrate what is happening without a caption?\n"
+    "Ask only: can another person viewing it narrate what is happening without a caption?\n"
     "Ambiguity is not confusion — not_sure is a valid and honourable answer.\n"
     "CSI never applies to NS — a story in 2012 is still a story in 2025.\n\n"
 
