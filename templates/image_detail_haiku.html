@@ -1,4 +1,5 @@
-{# image_detail_haiku.html — SL-VERSION: 2.8 (Session 221, 2026-09-25 — NS row moved AFTER band legend so numeric scale does not appear immediately after binary YES/NO. Green background fix: background!important on sl-dim-row overrides class CSS. RETAINS 2.7.)
+{# image_detail_haiku.html — SL-VERSION: 2.9 (Session 222, 2026-09-26 — NS label changed to "Is there a story?", sub-description removed, font colour fixed: dark text (#166534 green / #92400e amber / #64748b slate) on tinted backgrounds. RETAINS 2.8.)
+   SL-VERSION: 2.8 (Session 221, 2026-09-25 — NS row moved AFTER band legend so numeric scale does not appear immediately after binary YES/NO. Green background fix: background!important on sl-dim-row overrides class CSS. RETAINS 2.7.)
    SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED mock scorecard_v2_mockup Session 212
@@ -344,19 +345,19 @@ main{padding:0!important;background:#E0DDD7}
       {% if ns or dim_obs_ns %}
       {% set _ns_str = (ns or '')|string|lower|replace(' ','_')|replace('-','_') %}
       {% set _ns_label = 'YES' if _ns_str == 'yes' else ('NOT SURE' if _ns_str in ('not_sure','notsure','maybe','unsure') else 'NO') %}
-      {% set _ns_color = '#4ade80' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
+      {% set _ns_border = '#16a34a' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
       {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_label == 'YES' else ('rgba(255,251,235,0.6)' if _ns_label == 'NOT SURE' else 'transparent') %}
-      <div class="sl-dim-row" style="border-left:3px solid {{ _ns_color }};padding-left:12px;background:{{ _ns_bg }}!important;margin-top:12px">
+      {% set _ns_text = '#166534' if _ns_label == 'YES' else ('#92400e' if _ns_label == 'NOT SURE' else '#64748b') %}
+      <div class="sl-dim-row" style="border-left:3px solid {{ _ns_border }};padding-left:12px;background:{{ _ns_bg }}!important;margin-top:12px">
         <div class="sl-dim-score-col">
           <span style="font-size:18px;font-weight:700;color:#1A2744;line-height:1;text-align:center">{{ _ns_label }}</span>
-          <span class="sl-dim-tag" style="color:{{ _ns_color }};font-weight:700">Story</span>
+          <span class="sl-dim-tag" style="color:{{ _ns_text }};font-weight:700">Story</span>
         </div>
         <div class="sl-dim-text-col">
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:15px">📖</span>
-            <span class="sl-dim-code" style="color:{{ _ns_color }}">Narrative Sufficiency</span>
+            <span class="sl-dim-code" style="color:{{ _ns_text }}">Is there a story?</span>
           </div>
-          <span class="sl-dim-plain">If another person viewing it can read the story without the caption or description</span>
           {% if dim_obs_ns %}<div class="sl-dim-inline">{{ dim_obs_ns }}</div>{% endif %}
         </div>
       </div>
