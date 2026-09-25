@@ -1,4 +1,5 @@
-{# image_detail_haiku.html — SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer. Rule 31 fix: species_note removed from mid-card sl-zone-species block. Now renders only in evaluation record footer alongside EXIF. Gestalt proximity: species belongs with record data, not verdict. Never mid-card.)
+{# image_detail_haiku.html — SL-VERSION: 2.7 (Session 221, 2026-09-25 — NS binary dimension row added after five dims. Header is dynamic: "Six dimensions" when ns/dim_obs_ns present, "Five dimensions" for pre-221 images. Binary colour: YES=green, NOT SURE=amber, NO=grey. Subtext: "If another person viewing it can read the story without the caption or description". RETAINS 2.6.)
+   SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer.)
    Route: /try/result/<image_id>  →  try_result() in app.py
    Visual specification: APPROVED mock scorecard_v2_mockup Session 212
    Extends base.html — inherits nav, mobile nav, footer, KYC.
@@ -310,7 +311,7 @@ main{padding:0!important;background:#E0DDD7}
   {# Zone A — Five dimensions: soft blue-grey #}
   <div class="sl-zone-dims">
     <div class="sl-zone-inner">
-      <div class="sl-eyebrow-gold">Five dimensions</div>
+      <div class="sl-eyebrow-gold">{% if ns or dim_obs_ns %}Six dimensions{% else %}Five dimensions{% endif %}</div>
       {% set _vals = [aq|float(0), vd|float(0), dm|float(0), wf|float(0), dod|float(0)] %}
       {% set _max_v = _vals | max %}
       {% set _min_v = _vals | min %}
@@ -336,6 +337,28 @@ main{padding:0!important;background:#E0DDD7}
         </div>
       </div>
       {% endfor %}
+      {# ── SESSION 221: NARRATIVE SUFFICIENCY — binary dim row ── #}
+      {% if ns or dim_obs_ns %}
+      {% set _ns_str = (ns or '')|string|lower|replace(' ','_')|replace('-','_') %}
+      {% set _ns_label = 'YES' if _ns_str == 'yes' else ('NOT SURE' if _ns_str in ('not_sure','notsure','maybe','unsure') else 'NO') %}
+      {% set _ns_color = '#4ade80' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
+      {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_label == 'YES' else ('rgba(255,251,235,0.6)' if _ns_label == 'NOT SURE' else 'transparent') %}
+      <div class="sl-dim-row" style="border-left:3px solid {{ _ns_color }};padding-left:12px;background:{{ _ns_bg }}">
+        <div class="sl-dim-score-col">
+          <span style="font-size:18px;font-weight:700;color:#1A2744;line-height:1;text-align:center">{{ _ns_label }}</span>
+          <span class="sl-dim-tag" style="color:{{ _ns_color }};font-weight:700">Story</span>
+        </div>
+        <div class="sl-dim-text-col">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:15px">📖</span>
+            <span class="sl-dim-code" style="color:{{ _ns_color }}">Narrative Sufficiency</span>
+          </div>
+          <span class="sl-dim-plain">If another person viewing it can read the story without the caption or description</span>
+          {% if dim_obs_ns %}<div class="sl-dim-inline">{{ dim_obs_ns }}</div>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+
       <p class="sl-band"><span>5–6 Capable</span><span class="sl-band-sep">·</span><span>6–7 Developing</span><span class="sl-band-sep">·</span><span>7–8 Strong</span><span class="sl-band-sep">·</span><span>8–9 Exceptional</span><span class="sl-band-sep">·</span><span>9+ Rare</span></p>
       <div class="sl-dim-note">The highest standard demands strength across all five dimensions.</div>
     </div>
@@ -457,15 +480,15 @@ main{padding:0!important;background:#E0DDD7}
 
   {# CSI cards #}
   {% if csi_own_duplicate %}
-  <div style="background:#2D1F00;border-left:3px solid #F5C518;padding:20px 24px">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#F5C518;margin-bottom:8px">Image already in your record</div>
-    <div style="font-size:15px;line-height:1.75;color:rgba(245,197,24,0.80)">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+  <div style="background:#FFF8E6;border-left:3px solid #EDD89A;padding:20px 24px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">Image already in your record</div>
+    <div style="font-size:15px;line-height:1.75;color:#5C4A00">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
   </div>
   {% endif %}
   {% if csi_threshold_hit %}
-  <div style="background:#1A1A2E;border-left:3px solid #4A6FA8;padding:20px 24px">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#7A9FD4;margin-bottom:8px">Seen in the Shutter League pool</div>
-    <div style="font-size:15px;line-height:1.75;color:rgba(122,159,212,0.80)">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
+  <div style="background:#E8F0F8;border-left:3px solid #C5D8EA;padding:20px 24px">
+    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#2A5078;margin-bottom:8px">Seen in the Shutter League pool</div>
+    <div style="font-size:15px;line-height:1.75;color:#1A3A54">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
   </div>
   {% endif %}
 
