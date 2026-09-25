@@ -39424,6 +39424,9 @@ def try_result(image_id):
         dim_obs_dm         = audit.get('dim_obs_dm', ''),
         dim_obs_wf         = audit.get('dim_obs_wf', ''),
         dim_obs_aq         = audit.get('dim_obs_aq', ''),
+        # Session 221: NS binary dimension
+        ns                 = audit.get('ns', ''),
+        dim_obs_ns         = audit.get('dim_obs_ns', ''),
         conclusion         = audit.get('conclusion', '').replace(
             '312 blind calibrations', 'hundreds of blind calibrations'
         ),
