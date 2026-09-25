@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail-182.24a (Session 221, 2026-09-25 — Fix: header is dynamic — "The Six Dimensions" only when NS data present; "The Five Dimensions" for pre-221 images without ns in audit_json. RETAINS 182.24.) #}
 {# SL-VERSION: image_detail-182.24 (Session 221, 2026-09-25 — NS binary dimension row added: Narrative Sufficiency (yes/not_sure/no) displayed as 6th dimension after existing 5-dim obs loop. Section header updated to "The Six Dimensions". Binary colour: YES=green, NOT SURE=amber, NO=grey. Subtext: "If another person viewing it can read the story without the caption or description". RETAINS 182.23.) #}
 {# SL-VERSION: image_detail-182.23 (Session 216, 2026-09-07 — Gestalt restructure: (1) Conclusion moved before sparklines — emotional close before data; (2) Take-away and Path-to-9 removed — eval means 9+ card is single forward-action; (3) "What you need to do" renamed "Your assignment"; (4) CSI cards dark backgrounds replaced with light (amber/blue); (5) Contest launchpad 9.0+ dark navy replaced with light cream; (6) Evaluation record footer restyled to match Haiku — single-line camera data, species footer-only, AI disclaimer. No dark section backgrounds. RETAINS 182.22.) #}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
@@ -882,7 +883,9 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-card">
       <div class="sc-card-body">
         <div class="sc-card-hdr">
-          <span class="sc-card-title">The Six Dimensions</span>
+          {% set _ns_val = _audit.get('ns') or '' %}
+          {% set _ns_obs = _audit.get('dim_obs_ns') or '' %}
+          <span class="sc-card-title">{% if _ns_val or _ns_obs %}The Six Dimensions{% else %}The Five Dimensions{% endif %}</span>
           <div style="text-align:right">
             <div style="font-size:13px;color:var(--sc-muted)">Tap any dimension</div>
             <div style="font-size:13px;color:var(--sc-muted);margin-top:1px">All evaluations out of 10</div>
