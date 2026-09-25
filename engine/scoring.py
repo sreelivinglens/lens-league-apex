@@ -21,36 +21,58 @@ Genres (14 confirmed):
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
 # Keys must match GENRE_LIST ids exactly.
+# Session 221 — NS (Narrative Sufficiency) added as 6th scored dimension.
+# NS weight funded by proportional reduction of all 5 existing dimensions (sum stays 1.0).
+# NS weight philosophy: highest where narrative legibility changes how a stranger reads the
+# image (Documentary 12%, Street/People/Maternity 10%), lowest where narrative is irrelevant
+# (Astrophotography/Macro 2%, Landscape/Drone 3%).
+# Pre-NS weights preserved in comments for audit trail.
 GENRE_WEIGHTS = {
-    'Architecture':     {'dod': 0.15, 'disruption': 0.18, 'dm': 0.08, 'wonder': 0.35, 'aq': 0.24},
-    'Astrophotography': {'dod': 0.28, 'disruption': 0.10, 'dm': 0.08, 'wonder': 0.42, 'aq': 0.12},
-    'Creative':         {'dod': 0.12, 'disruption': 0.18, 'dm': 0.10, 'wonder': 0.30, 'aq': 0.30},
-    'Documentary':      {'dod': 0.13, 'disruption': 0.09, 'dm': 0.20, 'wonder': 0.33, 'aq': 0.25},
-    'Drone':            {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
-    'Fashion':          {'dod': 0.10, 'disruption': 0.20, 'dm': 0.16, 'wonder': 0.24, 'aq': 0.30},
-    'Landscape':        {'dod': 0.13, 'disruption': 0.12, 'dm': 0.11, 'wonder': 0.32, 'aq': 0.32},
-    'Macro':            {'dod': 0.26, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.27, 'aq': 0.19},
-    'Nature':           {'dod': 0.13, 'disruption': 0.11, 'dm': 0.13, 'wonder': 0.37, 'aq': 0.26},
-    'People':           {'dod': 0.07, 'disruption': 0.13, 'dm': 0.12, 'wonder': 0.16, 'aq': 0.52},
-    'Sports':           {'dod': 0.18, 'disruption': 0.10, 'dm': 0.32, 'wonder': 0.22, 'aq': 0.18},
-    'Street':           {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
-    'Wedding':          {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
-    'Wildlife':         {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
+    # Pre-NS: dod=0.15, dis=0.18, dm=0.08, wonder=0.35, aq=0.24
+    'Architecture':     {'dod': 0.144,  'disruption': 0.1728, 'dm': 0.0768, 'wonder': 0.336,  'aq': 0.2304, 'ns': 0.04},
+    # Pre-NS: dod=0.28, dis=0.10, dm=0.08, wonder=0.42, aq=0.12
+    'Astrophotography': {'dod': 0.2744, 'disruption': 0.098,  'dm': 0.0784, 'wonder': 0.4116, 'aq': 0.1176, 'ns': 0.02},
+    # Pre-NS: dod=0.12, dis=0.18, dm=0.10, wonder=0.30, aq=0.30
+    'Creative':         {'dod': 0.1152, 'disruption': 0.1728, 'dm': 0.096,  'wonder': 0.288,  'aq': 0.288,  'ns': 0.04},
+    # Pre-NS: dod=0.13, dis=0.09, dm=0.20, wonder=0.33, aq=0.25
+    'Documentary':      {'dod': 0.1144, 'disruption': 0.0792, 'dm': 0.176,  'wonder': 0.2904, 'aq': 0.22,   'ns': 0.12},
+    # Pre-NS: dod=0.23, dis=0.16, dm=0.12, wonder=0.30, aq=0.19
+    'Drone':            {'dod': 0.2231, 'disruption': 0.1552, 'dm': 0.1164, 'wonder': 0.291,  'aq': 0.1843, 'ns': 0.03},
+    # Pre-NS: dod=0.10, dis=0.20, dm=0.16, wonder=0.24, aq=0.30
+    'Fashion':          {'dod': 0.096,  'disruption': 0.192,  'dm': 0.1536, 'wonder': 0.2304, 'aq': 0.288,  'ns': 0.04},
+    # Pre-NS: dod=0.13, dis=0.12, dm=0.11, wonder=0.32, aq=0.32
+    'Landscape':        {'dod': 0.1261, 'disruption': 0.1164, 'dm': 0.1067, 'wonder': 0.3104, 'aq': 0.3104, 'ns': 0.03},
+    # Pre-NS: dod=0.26, dis=0.16, dm=0.12, wonder=0.27, aq=0.19
+    'Macro':            {'dod': 0.2548, 'disruption': 0.1568, 'dm': 0.1176, 'wonder': 0.2646, 'aq': 0.1862, 'ns': 0.02},
+    # Pre-NS: dod=0.13, dis=0.11, dm=0.13, wonder=0.37, aq=0.26
+    'Nature':           {'dod': 0.1248, 'disruption': 0.1056, 'dm': 0.1248, 'wonder': 0.3552, 'aq': 0.2496, 'ns': 0.04},
+    # Pre-NS: dod=0.07, dis=0.13, dm=0.12, wonder=0.16, aq=0.52
+    'People':           {'dod': 0.063,  'disruption': 0.117,  'dm': 0.108,  'wonder': 0.144,  'aq': 0.468,  'ns': 0.10},
+    # Pre-NS: dod=0.18, dis=0.10, dm=0.32, wonder=0.22, aq=0.18
+    'Sports':           {'dod': 0.1692, 'disruption': 0.094,  'dm': 0.3008, 'wonder': 0.2068, 'aq': 0.1692, 'ns': 0.06},
+    # Pre-NS: dod=0.08, dis=0.13, dm=0.17, wonder=0.30, aq=0.32
+    'Street':           {'dod': 0.072,  'disruption': 0.117,  'dm': 0.153,  'wonder': 0.27,   'aq': 0.288,  'ns': 0.10},
+    # Pre-NS: dod=0.07, dis=0.09, dm=0.22, wonder=0.10, aq=0.52
+    'Wedding':          {'dod': 0.0658, 'disruption': 0.0846, 'dm': 0.2068, 'wonder': 0.094,  'aq': 0.4888, 'ns': 0.06},
+    # Pre-NS: dod=0.20, dis=0.12, dm=0.27, wonder=0.26, aq=0.15
     # Session 219 — Wildlife weights RETAINED (reverted from weight-change attempt).
     # Composition, exposure, technical precision all matter equally in Wildlife.
     # The overcorrection (Birds Sonnet 8.42 vs human 7.97) is a WF signal error:
     # engine scored WF 8.3 for a common landing behaviour. Fix is in the prompt
     # guidance (WF behavioural rarity ladder + 30fps burst DM adjustment),
     # not in the weights. All dimensions remain equally important.
+    'Wildlife':         {'dod': 0.188,  'disruption': 0.1128, 'dm': 0.2538, 'wonder': 0.2444, 'aq': 0.141,  'ns': 0.06},
     # Session 153 — Maternity/Family as standalone genre (S150 decision)
     # Session 218 — weight rebalance: DM reduced (posed silhouettes have low DM by design),
     # wonder raised (emotional response is THE primary signal for this genre — survey data
     # confirmed: 8/35 humans named 'love' for maternity silhouette, 86% saw a story).
     # AQ reduced slightly to fund the wonder increase.
-    'Maternity':        {'dod': 0.06, 'disruption': 0.10, 'dm': 0.12, 'wonder': 0.32, 'aq': 0.40},
-    'Family':           {'dod': 0.06, 'disruption': 0.10, 'dm': 0.14, 'wonder': 0.28, 'aq': 0.42},
+    # Pre-NS: dod=0.06, dis=0.10, dm=0.12, wonder=0.32, aq=0.40
+    'Maternity':        {'dod': 0.054,  'disruption': 0.09,   'dm': 0.108,  'wonder': 0.288,  'aq': 0.36,   'ns': 0.10},
+    # Pre-NS: dod=0.06, dis=0.10, dm=0.14, wonder=0.28, aq=0.42
+    'Family':           {'dod': 0.0552, 'disruption': 0.092,  'dm': 0.1288, 'wonder': 0.2576, 'aq': 0.3864, 'ns': 0.08},
     # Legacy keys — kept for backward compat with existing DB rows
-    'Drone & Aerial':   {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
+    'Drone & Aerial':   {'dod': 0.2231, 'disruption': 0.1552, 'dm': 0.1164, 'wonder': 0.291,  'aq': 0.1843, 'ns': 0.03},
 }
 
 # ── Genre list (canonical — used by forms, DB, and prize logic) ───────────────
@@ -490,7 +512,7 @@ def get_tier(score: float) -> str:
 
 
 # ── Core formula ──────────────────────────────────────────────────────────────
-def calculate_score(genre, dod, disruption, dm, wonder, aq):
+def calculate_score(genre, dod, disruption, dm, wonder, aq, ns=None):
     """
     Returns (final_score, tier, soul_bonus, checks_dict).
 
@@ -500,20 +522,76 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
     dm         : Decisive Moment score, float 0–10
     wonder     : Wonder score, float 0–10
     aq         : Authenticity Quotient score, float 0–10
+    ns         : Narrative Sufficiency — Session 221 binary approach.
+                 Accepts: 'yes' | 'not_sure' | 'no' (string, case-insensitive)
+                   or legacy float 3.0–9.5 for backward compatibility.
+                   or None → NS weight redistributed proportionally to existing dims.
+                 Binary multipliers: yes=1.0 × ns_weight, not_sure=0.5 × ns_weight,
+                   no=0.0 × ns_weight.
+                 Empirical foundation: story recognition adds +1.49 rating points on
+                   average (n=227 survey). Binary captures the threshold that matters —
+                   does a stranger see a story? The degree is irrelevant.
     """
     canonical = normalise_genre(genre)
     weights   = GENRE_WEIGHTS.get(canonical, GENRE_WEIGHTS['Wildlife'])
     checks    = {}
     notes     = []
 
+    # Session 221 — NS binary integration.
+    # ns='yes'      → full NS weight contributes to score
+    # ns='not_sure' → 50% NS weight contributes (ambiguity is valid, not failure)
+    # ns='no'       → 0% NS weight (no narrative; weight redistributed to 0)
+    # ns=float      → legacy float path (backward compat)
+    # ns=None       → redistribute NS weight proportionally to 5 existing dims
+    _use_ns = ns is not None
+    _ns_multiplier = 0.0  # default: no contribution
+
+    if _use_ns:
+        if isinstance(ns, str):
+            _ns_str = ns.strip().lower().replace(' ', '_').replace('-', '_')
+            if _ns_str == 'yes':
+                _ns_multiplier = 1.0
+            elif _ns_str in ('not_sure', 'notsure', 'not sure', 'unsure', 'maybe'):
+                _ns_multiplier = 0.5
+            else:  # 'no' or unrecognised
+                _ns_multiplier = 0.0
+            ns = 10.0  # sentinel: actual score comes from multiplier × weight
+        else:
+            # Legacy float path — treat as-is (float × weight)
+            _ns_multiplier = None  # signals legacy mode
+    else:
+        # Redistribute NS weight proportionally across the 5 existing dims
+        _ns_w   = weights.get('ns', 0.0)
+        _base_w = 1.0 - _ns_w  # sum of the 5 existing dims
+        if _base_w > 0 and _ns_w > 0:
+            _scale = 1.0 / _base_w
+            weights = {
+                'dod':        weights['dod']        * _scale,
+                'disruption': weights['disruption'] * _scale,
+                'dm':         weights['dm']         * _scale,
+                'wonder':     weights['wonder']     * _scale,
+                'aq':         weights['aq']         * _scale,
+                'ns':         0.0,
+            }
+
     def _raw(aq_val):
-        return (
+        base = (
             dod        * weights['dod']        +
             disruption * weights['disruption'] +
             dm         * weights['dm']         +
             wonder     * weights['wonder']     +
             aq_val     * weights['aq']
         )
+        if _use_ns:
+            _ns_w = weights.get('ns', 0.0)
+            if _ns_multiplier is None:
+                # Legacy float path
+                base += (ns * _ns_w)
+            else:
+                # Binary path: multiplier × weight × 10.0 scale
+                # (weight × 10 gives the max points NS can contribute)
+                base += (_ns_multiplier * _ns_w * 10.0)
+        return base
 
     raw = _raw(aq)
 
