@@ -37094,13 +37094,51 @@ _TRY_HAIKU_PROMPT = (
     "trajectory presents an execution window requiring bilateral limb engagement.' "
     "Write like the first. Never like the second.\n\n"
 
+    # Session 221 — NS (Narrative Sufficiency) binary + emotion structured fields
+    "6. ns - Narrative Sufficiency: does a stranger see a story in this image without a caption?\n"
+    "NS is a BINARY judgement. You must answer one of exactly three values:\n"
+    "  'yes'      — A stranger can narrate what is happening. Story is self-evident.\n"
+    "               Clear subject + clear action or relationship. Maternity shadow (91%) = yes.\n"
+    "               Monks walking to prayer (75%) = yes. Cherry blossom child (65%) = yes/borderline.\n"
+    "  'not_sure' — The image invites a story but does not complete it. Viewer projects meaning.\n"
+    "               A lone figure, an ambiguous gesture, a scene that suggests rather than states.\n"
+    "               Kathak dancer feet (65%) = not_sure. Nihang horseman (57%) = not_sure.\n"
+    "               NOT_SURE is not failure — great photographs often live here.\n"
+    "  'no'       — Subject only. No narrative. What is there is visible, but nothing is happening.\n"
+    "               Swallow in flight (44%) = no. Mountain landscape (40%) = no.\n"
+    "               B&W studio portrait, face only (34%) = no.\n\n"
+    "NS PRINCIPLE: Do NOT say 'yes' because the image is beautiful, emotional, or powerful.\n"
+    "Ask only: can a stranger narrate what is happening without a caption?\n"
+    "Ambiguity is not confusion — not_sure is a valid and honourable answer.\n"
+    "CSI never applies to NS — a story in 2012 is still a story in 2025.\n\n"
+
+    "EMOTION FIELDS — label what the image creates (NOT scored, labels only):\n"
+    "emotion_primary: ONE word from this list only — joy, love, tenderness, peace, calm, "
+    "awe, nostalgia, longing, melancholy, defiance, courage, thrill, worry, grace, "
+    "innocence, freedom, passion, reverence, wonder, pride. "
+    "Choose the word a stranger would use, not a technical descriptor.\n"
+    "emotion_secondary: optional second word from same list, or blank.\n"
+    "emotion_valence: one of — warm / dark / mixed.\n"
+    "emotion_reach: 0–10 integer. How many of 10 strangers would feel this specific emotion? "
+    "Lion Cubs = 9 (tenderness is instant, universal). Horse Racing = 6 (courage/worry split). "
+    "Portrait B&W = 3 (beauty, but not felt strongly).\n"
+    "emotion_polarity: true if the image is likely to split audience response (one group "
+    "feels one thing, another feels the opposite). Horse Racing = true (courage vs cruelty). "
+    "Cherry Blossoms = false. Default false.\n\n"
+
     "Return ONLY valid JSON, nothing else, no markdown:\n"
-    "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, "
+    "{\"dod\": 0.0, \"vd\": 0.0, \"dm\": 0.0, \"wf\": 0.0, \"aq\": 0.0, \"ns\": \"yes|not_sure|no\", "
+    "\"emotion_primary\": \"<one word>\", "
+    "\"emotion_secondary\": \"<one word or blank>\", "
+    "\"emotion_valence\": \"<warm|dark|mixed>\", "
+    "\"emotion_reach\": 0, "
+    "\"emotion_polarity\": false, "
     "\"dim_obs_dod\": \"<one sentence>\", "
     "\"dim_obs_vd\": \"<one sentence>\", "
     "\"dim_obs_dm\": \"<one sentence>\", "
     "\"dim_obs_wf\": \"<one sentence>\", "
     "\"dim_obs_aq\": \"<one sentence>\", "
+    "\"dim_obs_ns\": \"<one sentence — state your NS answer (yes/not_sure/no) and why. What story detail makes it legible — or what is missing?>\", "
     "\"takeaway\": \"<one sentence>\", "
     "\"impression\": \"<2-3 sentences>\", "
     "\"strength_name\": \"<dimension name>\", "
@@ -37116,7 +37154,7 @@ _TRY_HAIKU_PROMPT = (
     "\"visual_flow\": \"<one sentence>\", "
     "\"award_context\": \"<one sentence or blank>\", "
     "\"edit_tips\": \"<max 120 words>\", "
-    "\"imagine\": \"<max 80 words>\"}" 
+    "\"imagine\": \"<max 80 words>\"}"
 )
 
 
@@ -37462,6 +37500,20 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     dm  = _clamp(d.get('dm',  5.0))
     wf  = _clamp(d.get('wf',  5.0))
     aq  = _clamp(d.get('aq',  5.0))
+    # Session 221 — NS (Narrative Sufficiency) binary: 'yes' | 'not_sure' | 'no'
+    # Accept string (new) or float (legacy backward compat)
+    _ns_raw = d.get('ns', 'no')
+    if isinstance(_ns_raw, str):
+        ns = _ns_raw.strip().lower().replace(' ', '_').replace('-', '_')
+        if ns not in ('yes', 'not_sure', 'no', 'notsure', 'maybe', 'unsure'):
+            ns = 'no'
+        # Normalise variants
+        if ns in ('notsure', 'maybe', 'unsure'):
+            ns = 'not_sure'
+    else:
+        # Legacy float → binary
+        _ns_f = float(_ns_raw) if _ns_raw is not None else 0.0
+        ns = 'yes' if _ns_f >= 7.0 else ('not_sure' if _ns_f >= 5.5 else 'no')
     takeaway       = (d.get('takeaway')       or '').strip()[:300]
     impression     = (d.get('impression')     or '').strip()[:400]
     strength_name  = (d.get('strength_name')  or '').strip()[:80]
@@ -37477,6 +37529,16 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     dim_obs_dm     = (d.get('dim_obs_dm')     or '').strip()[:350]
     dim_obs_wf     = (d.get('dim_obs_wf')     or '').strip()[:350]
     dim_obs_aq     = (d.get('dim_obs_aq')     or '').strip()[:350]
+    # Session 221 — NS dimension observation + emotion structured fields
+    dim_obs_ns     = (d.get('dim_obs_ns')     or '').strip()[:350]
+    emotion_primary   = (d.get('emotion_primary')   or '').strip()[:40]
+    emotion_secondary = (d.get('emotion_secondary') or '').strip()[:40]
+    emotion_valence   = (d.get('emotion_valence')   or '').strip()[:20]
+    try:
+        emotion_reach = max(0, min(10, int(d.get('emotion_reach', 5))))
+    except Exception:
+        emotion_reach = 5
+    emotion_polarity  = bool(d.get('emotion_polarity', False))
     conclusion     = (d.get('conclusion')     or '').strip()[:700]
     # Session 211 additions
     species_note   = (d.get('species_note')   or '').strip()[:300]
@@ -37516,7 +37578,8 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     imagine        = (d.get('imagine')        or '').strip()[:700]
 
     try:
-        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+        # Session 221: pass ns as 6th dimension — calculate_score updated to accept it
+        final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq, ns=ns)
     except Exception as e:
         app.logger.error(f'[try_haiku] calculate_score failed: {e}')
         final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
@@ -37564,6 +37627,14 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'dim_obs_dm':    dim_obs_dm,
                 'dim_obs_wf':    dim_obs_wf,
                 'dim_obs_aq':    dim_obs_aq,
+                # Session 221 — NS + emotion fields
+                'ns':                ns,
+                'dim_obs_ns':        dim_obs_ns,
+                'emotion_primary':   emotion_primary,
+                'emotion_secondary': emotion_secondary,
+                'emotion_valence':   emotion_valence,
+                'emotion_reach':     emotion_reach,
+                'emotion_polarity':  emotion_polarity,
                 'conclusion':    conclusion,
                 # Session 211 additions — moat fields
                 'species_note':  species_note,
