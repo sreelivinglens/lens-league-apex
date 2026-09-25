@@ -10625,8 +10625,16 @@ def upload():
                                 _img.dm_score         = float(result.get('dm', 0))
                                 _img.wonder_score     = float(result.get('wonder', 0))
                                 _img.aq_score         = float(result.get('aq', 0))
-                                _img.score            = float(result.get('score', 0))
-                                _img.tier             = get_tier(float(result.get('score', 0)))
+                                # NS bonus applied before storing (YES=+0.15, NOT_SURE=+0.05, cap 9.9)
+                                _raw_score = float(result.get('score', 0))
+                                _ns_val = str(result.get('ns', '')).lower().strip()
+                                if _ns_val == 'yes':
+                                    _raw_score = min(_raw_score + 0.15, 9.9)
+                                elif _ns_val in ('not_sure', 'not sure'):
+                                    _raw_score = min(_raw_score + 0.05, 9.9)
+                                _raw_score = round(_raw_score, 2)
+                                _img.score            = _raw_score
+                                _img.tier             = get_tier(_raw_score)
                                 _img.archetype        = result.get('archetype', '')
                                 _img.soul_bonus       = result.get('soul_bonus', False)
                                 _img.status           = 'scored'
@@ -11653,8 +11661,16 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
             img.dm_score         = float(result.get('dm', 0))
             img.wonder_score     = float(result.get('wonder', 0))
             img.aq_score         = float(result.get('aq', 0))
-            img.score            = float(result.get('score', 0))
-            img.tier             = get_tier(float(result.get('score', 0)))
+            # NS bonus applied before storing (YES=+0.15, NOT_SURE=+0.05, cap 9.9)
+            _rs_raw = float(result.get('score', 0))
+            _rs_ns  = str(result.get('ns', '')).lower().strip()
+            if _rs_ns == 'yes':
+                _rs_raw = min(_rs_raw + 0.15, 9.9)
+            elif _rs_ns in ('not_sure', 'not sure'):
+                _rs_raw = min(_rs_raw + 0.05, 9.9)
+            _rs_raw = round(_rs_raw, 2)
+            img.score            = _rs_raw
+            img.tier             = get_tier(_rs_raw)
             img.archetype        = result.get('archetype', img.archetype)
             img.soul_bonus       = result.get('soul_bonus', img.soul_bonus)
             img.status           = 'scored'
@@ -11873,8 +11889,16 @@ def _retry_score_in_background(image_id, old_status):
             img.dm_score         = float(result.get('dm', 0))
             img.wonder_score     = float(result.get('wonder', 0))
             img.aq_score         = float(result.get('aq', 0))
-            img.score            = float(result.get('score', 0))
-            img.tier             = get_tier(float(result.get('score', 0)))
+            # NS bonus applied before storing (YES=+0.15, NOT_SURE=+0.05, cap 9.9)
+            _rs2_raw = float(result.get('score', 0))
+            _rs2_ns  = str(result.get('ns', '')).lower().strip()
+            if _rs2_ns == 'yes':
+                _rs2_raw = min(_rs2_raw + 0.15, 9.9)
+            elif _rs2_ns in ('not_sure', 'not sure'):
+                _rs2_raw = min(_rs2_raw + 0.05, 9.9)
+            _rs2_raw = round(_rs2_raw, 2)
+            img.score            = _rs2_raw
+            img.tier             = get_tier(_rs2_raw)
             img.archetype        = result.get('archetype', '')
             img.soul_bonus       = result.get('soul_bonus', False)
             img.status           = 'scored'
@@ -12391,8 +12415,16 @@ def upload_edited_version(image_id):
                         _img.dm_score         = float(result.get('dm', 0))
                         _img.wonder_score     = float(result.get('wonder', 0))
                         _img.aq_score         = float(result.get('aq', 0))
-                        _img.score            = float(result.get('score', 0))
-                        _img.tier             = get_tier(float(result.get('score', 0)))
+                        # NS bonus applied before storing (YES=+0.15, NOT_SURE=+0.05, cap 9.9)
+                        _rs3_raw = float(result.get('score', 0))
+                        _rs3_ns  = str(result.get('ns', '')).lower().strip()
+                        if _rs3_ns == 'yes':
+                            _rs3_raw = min(_rs3_raw + 0.15, 9.9)
+                        elif _rs3_ns in ('not_sure', 'not sure'):
+                            _rs3_raw = min(_rs3_raw + 0.05, 9.9)
+                        _rs3_raw = round(_rs3_raw, 2)
+                        _img.score            = _rs3_raw
+                        _img.tier             = get_tier(_rs3_raw)
                         _img.archetype        = result.get('archetype', '')
                         _img.soul_bonus       = result.get('soul_bonus', False)
                         _img.status           = 'scored'
@@ -13476,7 +13508,9 @@ def score_image(image_id):
             'dod': dod, 'disruption': disruption, 'dm': dm, 'wonder': wonder, 'aq': aq,
             'reason': reason, 'caveat': caveat
         })
-        final_score, tier, soul_bonus, checks = calculate_score(img.genre, dod, disruption, dm, wonder, aq)
+        _existing_audit = img.get_audit() or {}
+        _ns_for_score = _existing_audit.get('ns', '')
+        final_score, tier, soul_bonus, checks = calculate_score(img.genre, dod, disruption, dm, wonder, aq, ns=_ns_for_score)
         img.dod_score=dod; img.disruption_score=disruption; img.dm_score=dm
         img.wonder_score=wonder; img.aq_score=aq; img.score=final_score
         img.tier=tier; img.archetype=archetype; img.soul_bonus=soul_bonus
@@ -18371,6 +18405,7 @@ Return ONLY valid JSON, no preamble, no markdown fences:
     dm  = _cl(d.get('dm',  5.0))
     wf  = _cl(d.get('wf',  5.0))
     aq  = _cl(d.get('aq',  5.0))
+    ns  = str(d.get('ns',  '')).lower().strip()
 
     try:
         if _mobile_weights and _is_mobile:
@@ -18387,7 +18422,7 @@ Return ONLY valid JSON, no preamble, no markdown fences:
             )
             tier = get_tier(final_score)
         else:
-            final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq)
+            final_score, tier, _, _ = calculate_score(genre, dod, vd, dm, wf, aq, ns=ns)
     except Exception as _sce:
         app.logger.warning(f'[cal_haiku] calculate_score failed ({_sce}), using mean fallback')
         final_score = round((dod + vd + dm + wf + aq) / 5.0, 2)
@@ -31509,12 +31544,13 @@ def admin_recalibrate_image(image_id):
                 flash(f'Recalibration error: {name} value {val} is out of range (0–10).', 'error')
                 return redirect(url_for('admin_dashboard'))
 
+        old_audit = img.get_audit() or {}
+        _ns_recal = old_audit.get('ns', '')
         final_score, tier, soul_bonus, checks = calculate_score(
-            img.genre, dod, disruption, dm, wonder, aq
+            img.genre, dod, disruption, dm, wonder, aq, ns=_ns_recal
         )
 
         # Preserve existing audit text fields; only update numeric + derived fields
-        old_audit = img.get_audit() or {}
         audit = {
             **old_audit,
             'score':     str(final_score),
@@ -36410,7 +36446,7 @@ _TRY_HAIKU_PROMPT = (
     "found themselves. A compositional find, rare access, cultural world most cannot enter, "
     "technical achievement that reveals the invisible.\n"
     "   PATH 2 — RECOGNITION: the image shows a human truth so universal and genuine "
-    "that a stranger stops involuntarily. A face so alive with joy, dignity, grief, or "
+    "that another viewer stops involuntarily. A face so alive with joy, dignity, grief, or "
     "wonder that it is immediately and specifically felt. The beauty the world walks past "
     "— weathered skin, broken teeth, uninhibited laughter — when the photographer stopped "
     "and made it visible. RECOGNITION does not require rarity of subject. The SEEING is "
@@ -36418,18 +36454,18 @@ _TRY_HAIKU_PROMPT = (
     "(Louvre confirmed). A child laughing so hard she covers her eyes = WF 9.0. "
     "A small child's pure wonder. A private human moment caught unguarded.\n"
     "   9.5+     World Press Photo, IPA, Sony World Photography winner level.\n"
-    "   9.0-9.4  Singular find OR recognition wonder that stops any stranger.\n"
+    "   9.0-9.4  Singular find OR recognition wonder that stops any viewer.\n"
     "   8.0-8.9  Discovery complete and not easily repeated, OR strong recognition wonder.\n"
-    "   7.0-7.9  Clear emotional signal — nameable in one word by a stranger.\n"
+    "   7.0-7.9  Clear emotional signal — nameable in one word by any viewer.\n"
     "   5.0-6.9  Pleasant but does not linger. Generic scene, no specific feeling.\n"
     "   Below 5  Nothing beyond the record.\n"
     "   ANTI-INFLATION (applies to Discovery path only, NOT Recognition path): "
     "A striking colour, dramatic sky, or charismatic animal ALONE is not Wonder. "
     "A well-made photograph of an ordinary scene with no specific emotional signal "
-    "scores 4-6. BUT: if the image produces a specific nameable feeling in a stranger "
+    "scores 4-6. BUT: if the image produces a specific nameable feeling in another viewer "
     "(joy, tenderness, awe, grief) — that IS Wonder regardless of subject rarity. "
     "Before awarding 7+, either name what is being discovered OR name the emotion "
-    "a stranger would feel. If you can do either: score 7+.\n\n"
+    "another viewer would feel. If you can do either: score 7+.\n\n"
 
     "5. aq - Affective Quotient: is there soul in this frame? "
     "The intangible quality that makes it memorable.\n"
@@ -36443,6 +36479,22 @@ _TRY_HAIKU_PROMPT = (
     "   6.5-7.9  Some feeling, but general rather than particular.\n"
     "   5.0-6.4  Technically resolved, emotionally quiet.\n"
     "   Below 4  Triggers the Humanity Check penalty. Use it when earned.\n\n"
+    "ABSOLUTE AQ REFERENCE: Raghu Rai Bhopal gas tragedy (child's face in earth) = AQ 9.5. "
+    "Every image on this platform scores below this ceiling.\n\n"
+    "AQ NAMED ANCHORS — interpolate between these, do not compress into 7.5-8.5:\n"
+    "  Nihang horseman on two galloping horses = AQ 8.1 (Defiance — specific, rare, not triumph)\n"
+    "  Maternity shadow on cracked wall = AQ 7.9 (Love/Anticipation — universal, 91% story)\n"
+    "  Kathak feet ICM in-camera BW Spider = AQ 7.9 (Rhythm/Passion — technique amplifies feeling)\n"
+    "  Mountain landscape burning sky = AQ 7.4 (Awe/Vastness — real but familiar genre)\n"
+    "  Monks in monastery corridor = AQ 7.1 (Peace/Reverence — real but passes gently)\n"
+    "  Woman in white sari bowed = AQ 7.0 (Grace/Surrender — quiet, culturally specific)\n"
+    "  Two lion cubs alert on log = AQ 6.7 (Tenderness — warm, passes, familiar; CSI applies)\n"
+    "  Child reaching for blossoms = AQ 6.6 (Joy/Innocence — gentle, many images do this)\n"
+    "  Studio portrait contemplative gaze = AQ 6.5 (Beauty/Nothing — 35% story; do not exceed 7.0)\n"
+    "  Swallow landing wings spread = AQ 6.3 (Craft admiration — NOT a human emotion; max 6.5)\n\n"
+    "AQ ANTI-INFLATION: AQ 8.0+ requires a specific nameable emotion felt — not admiration of "
+    "craft, not appreciation of colour, not a general pleasant feeling. "
+    "If the feeling is 'interesting' or 'nice' or 'impressive': AQ below 8.0.\n\n"
 
     "SCORE BAND REFERENCE — USE THIS WHEN WRITING DIMENSION OBSERVATIONS:\n"
     "   5-6  Competent. Present in the work but not yet a conscious strength.\n"
@@ -37094,29 +37146,57 @@ _TRY_HAIKU_PROMPT = (
     "trajectory presents an execution window requiring bilateral limb engagement.' "
     "Write like the first. Never like the second.\n\n"
 
-    # Session 221 — NS (Narrative Sufficiency) binary + emotion structured fields
-    "6. ns - Narrative Sufficiency: can another person viewing it read the story without a caption?\n"
-    "NS is a BINARY judgement. You must answer one of exactly three values:\n"
-    "  'yes'      — Another person viewing it can narrate what is happening. Story is self-evident.\n"
-    "               Clear subject + clear action or relationship. Maternity shadow (91%) = yes.\n"
-    "               Monks walking to prayer (75%) = yes. Cherry blossom child (65%) = yes/borderline.\n"
-    "  'not_sure' — The image invites a story but does not complete it. Viewer projects meaning.\n"
-    "               A lone figure, an ambiguous gesture, a scene that suggests rather than states.\n"
-    "               Kathak dancer feet (65%) = not_sure. Nihang horseman (57%) = not_sure.\n"
-    "               NOT_SURE is not failure — great photographs often live here.\n"
-    "  'no'       — Subject only. No narrative. What is there is visible, but nothing is happening.\n"
-    "               Swallow in flight (44%) = no. Mountain landscape (40%) = no.\n"
-    "               B&W studio portrait, face only (34%) = no.\n\n"
-    "NS PRINCIPLE: Do NOT say 'yes' because the image is beautiful, emotional, or powerful.\n"
-    "Ask only: can another person viewing it narrate what is happening without a caption?\n"
-    "Ambiguity is not confusion — not_sure is a valid and honourable answer.\n"
-    "CSI never applies to NS — a story in 2012 is still a story in 2025.\n\n"
+    # Session 222 — NS rewrite: write-the-sentence method + full-frame scan + calibration anchors
+    "6. ns - Is there a story? Narrative Sufficiency — does meaning transfer without a caption?\n"
+    "NS is a THREE-VERDICT judgement: 'yes', 'not_sure', or 'no'. DEFAULT = 'not_sure'.\n\n"
+    "THE WRITE-THE-SENTENCE METHOD — DO THIS FIRST:\n"
+    "Before choosing a verdict, write one sentence in your head using this structure:\n"
+    "  'A [subject] is [verb] [consequence/context].'\n"
+    "  Example: 'A heron is feeding in a river polluted with plastic bottles.'\n"
+    "  Example: 'A pregnant woman's shadow falls on a cracked drought wall beneath her.'\n"
+    "If you can complete that sentence with a verb AND a consequence that carries meaning:\n"
+    "  → The meaning transfers without a caption. Consider YES.\n"
+    "If you can describe what you see but not narrate meaning:\n"
+    "  → 'A heron is standing in shallow water.' (description only) → NOT SURE or NO.\n"
+    "If NOTHING is happening — subject is simply present:\n"
+    "  → NO.\n\n"
+    "FULL-FRAME SCAN RULE — MANDATORY:\n"
+    "Before writing your sentence, scan the ENTIRE frame — not just the primary subject.\n"
+    "Story elements are often NOT the primary subject. A heron with a plastic bottle in the\n"
+    "frame: the bottle IS the story (environmental disruption), not the bird. A bride looking\n"
+    "away while guests celebrate behind her: the story is private thought vs. public moment.\n"
+    "NEVER judge NS from the subject alone. Read the whole frame.\n\n"
+    "AQ/NS INDEPENDENCE RULE:\n"
+    "A beautiful image is NOT automatically a story. A strong emotion is NOT a story.\n"
+    "A portrait AQ 6.5 with NO story = NS: no. A landscape AQ 7.4 with NO story = NS: no.\n"
+    "Do not inflate NS because the image is powerful. They measure different things.\n\n"
+    "WILDLIFE NS RULE:\n"
+    "Behaviour, habitat tension, or disruption = story. Subject present, well-photographed = NO.\n"
+    "  'A heron hunting with a plastic bottle visible downstream' = YES (disruption/tension).\n"
+    "  'A heron in flight, wings spread cleanly' = NO (subject only — craft admiration).\n"
+    "  'Lion cubs play-fighting on a fallen log' = YES (behaviour readable).\n"
+    "  'Swallow landing on a branch, wings extended' = NO (specimen — no behaviour narrative).\n\n"
+    "CALIBRATION ANCHORS (n=227 survey):\n"
+    "  YES (>75% story recognition):\n"
+    "    Maternity shadow on cracked wall (91%) — shadow + cracked drought wall = two elements\n"
+    "    Monks walking to prayer in corridor (75%) — procession + destination readable\n"
+    "  NOT SURE (50–75% recognition):\n"
+    "    Child reaching for cherry blossoms (65%) — gesture implies story, destination unclear\n"
+    "    Kathak dancer's feet in motion (65%) — movement implies performance, not complete\n"
+    "    Nihang horseman mid-gallop (57%) — drama readable, context requires knowledge\n"
+    "  NO (<50% recognition):\n"
+    "    Mountain landscape, dramatic sky (40%) — no subject, no action, no consequence\n"
+    "    Swallow landing, wings extended (44%) — specimen only, no narrative\n"
+    "    B&W studio portrait, contemplative face (34%) — emotion present, story absent\n\n"
+    "NS DEFAULT: When you are not certain, verdict = 'not_sure'. Do NOT default to 'yes'.\n"
+    "Most photographs = NOT_SURE. YES requires meaning that transfers without any caption.\n"
+    "NOT_SURE is not failure — many great photographs live in productive ambiguity.\n\n"
 
     "EMOTION FIELDS — label what the image creates (NOT scored, labels only):\n"
     "emotion_primary: ONE word from this list only — joy, love, tenderness, peace, calm, "
     "awe, nostalgia, longing, melancholy, defiance, courage, thrill, worry, grace, "
     "innocence, freedom, passion, reverence, wonder, pride. "
-    "Choose the word a stranger would use, not a technical descriptor.\n"
+    "Choose the word any viewer would use, not a technical descriptor.\n"
     "emotion_secondary: optional second word from same list, or blank.\n"
     "emotion_valence: one of — warm / dark / mixed.\n"
     "emotion_reach: 0–10 integer. How many of 10 strangers would feel this specific emotion? "
@@ -37138,7 +37218,7 @@ _TRY_HAIKU_PROMPT = (
     "\"dim_obs_dm\": \"<one sentence>\", "
     "\"dim_obs_wf\": \"<one sentence>\", "
     "\"dim_obs_aq\": \"<one sentence>\", "
-    "\"dim_obs_ns\": \"<one sentence — state your NS answer (yes/not_sure/no) and why. What story detail makes it legible — or what is missing?>\", "
+    "\"dim_obs_ns\": \"<one sentence defending your verdict — DO NOT describe the image. Instead explain WHY it is yes/not_sure/no: what specific visual elements make the story legible without a caption, OR what is absent that prevents it. Example YES: 'YES because subject + action + context are all readable: the posture and bells together complete the story without words.' Example NOT SURE: 'NOT SURE because the subject is clear but the action is ambiguous — viewer projects meaning rather than reads it.' Example NO: 'NO because only the subject is present; nothing is happening that another viewer could narrate.'>\", "
     "\"takeaway\": \"<one sentence>\", "
     "\"impression\": \"<2-3 sentences>\", "
     "\"strength_name\": \"<dimension name>\", "
