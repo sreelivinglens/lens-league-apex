@@ -1,3 +1,4 @@
+# SL-VERSION: 171.31 (Session 221, 2026-09-25 — (1) AQ: CSI removed from all 3 AQ locations (Wildlife, Sports genre contexts, main AQ anchor for lion cubs). Emotional truth does not expire with subject saturation — CSI stays on VD/WF/DoD only. (2) AQ definition rewritten: emotion hierarchy from n=227 survey — rare/demanding emotions (Victory, Awe, Love at intensity) score 7.5–9.5; common/gentle emotions (Joy, Innocence, Beauty) score 5.5–7.0; Nothing/Neutral scores 3.0–5.5. (3) NS converted from float 3.0–9.5 to binary yes/not_sure/no — grounded in survey finding that story recognition threshold (+1.49 avg rating lift) matters, not degree. Scoring: yes=full weight, not_sure=50% weight, no=0% weight. (4) NS JSON schema updated to string. RETAINS 171.30.)
 # SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
@@ -739,12 +740,45 @@ WF (Wonder Factor):
   ══════════════════════════════════════════════════════════════════════════
 
 AQ (Affective Quotient):
-  The specific feeling the image creates in a viewer. NOT technical quality.
-  Three questions: WHAT does the viewer feel? How PRECISELY is that feeling named?
-  How INTENSELY does it arrive and stay?
+  The specific feeling the image creates in a stranger who sees it without a caption.
+  NOT technical quality. NOT subject familiarity. NOT how saturated the genre is.
+
+  Three questions: WHAT does the viewer feel? How PRECISELY can that feeling be named?
+  How INTENSELY does it arrive and does it stay?
 
   AQ is an emotional intensity meter, not a quality ladder.
   Most technically good photographs score AQ 6.0–7.5. That is correct and honest.
+
+  CRITICAL PRINCIPLE — CSI NEVER APPLIES TO AQ:
+  Emotional truth does not expire. If a leopard on a tree created defiance and power
+  in 2012 when Sudhir Shivaram won Sanctuary Asia, and someone else photographs the
+  same scene in 2025 — that image STILL creates defiance and power in a stranger who
+  sees it. The emotional response belongs to the viewer, not to the calendar.
+  CSI (Cultural Saturation Index) penalises visual and craft dimensions (VD, WF, DoD)
+  when a genre is visually oversaturated. It NEVER penalises AQ. Score the emotion
+  the image creates, not the frequency of images attempting to create it.
+
+  EMOTION HIERARCHY — calibrated from n=227 blind perception survey:
+  Emotions that MOVE ratings highest (score these at AQ 7.5–9.5 when clearly present):
+    Victory / Strength / Defiance — rare to capture authentically; requires real moment
+    Awe / Grandeur — genuine smallness under something vast; not just a wide shot
+    Love / Tenderness at intensity — not gentle fondness but profound connection
+    Grief / Witness — the photograph that defines an event for all who were not there
+    Freedom / Wild Power — body doing something physically exceptional with command
+
+  Emotions that register but do not arrest (score these at AQ 5.5–7.0):
+    Gentle Joy — warmth and happiness that passes quickly
+    Innocence / Purity — real feeling, universal, but the viewer moves on
+    Simple Beauty / Elegance — aesthetic appreciation, not emotional arrest
+    Tranquility / Peace — the image is pleasant; the feeling is not demanding
+
+  Emotional absence (score these at AQ 3.0–5.5):
+    Nothing / Neutral — a real survey respondent wrote this about a technically
+      masterful B&W portrait. If the image fails to produce a felt response
+      in strangers, AQ must reflect that honestly.
+    Craft admiration — admiring technique is NOT a human emotion. A swallow
+      in perfect flight creates aesthetic pleasure, not emotional arrest.
+      Do not conflate technical excellence with emotional resonance.
 
   ABSOLUTE REFERENCE — Raghu Rai, Bhopal gas tragedy, child's face in the earth:
   AQ 9.5. Grief, horror, and witness simultaneously. Defines the event permanently.
@@ -764,24 +798,21 @@ AQ (Affective Quotient):
     AQ 7.9 — Rhythm / Passion. You almost hear the bells. Technique amplifies
     the feeling. BW Spider honourable mention.
 
+  Mountain landscape, burning orange sky (Landscape):
+    AQ 7.4 — Awe / Vastness. The smallness under this sky is real.
+
   Monks in Tibetan monastery corridor (Monks):
     AQ 7.1 — Reverence / Peace. Stillness of devotion in a closed world.
     Real feeling but passes gently. Does not arrest.
-
-  Mountain landscape, burning orange sky (Landscape):
-    AQ 7.4 — Awe / Vastness. The smallness under this sky is real.
-    But the feeling is familiar — the genre is saturated.
 
   Woman in white sari, head bowed (Fineart):
     AQ 7.0 — Grace / Surrender. Quiet, contemplative, culturally specific.
     Passes without arresting a non-specialist viewer.
 
   Two lion cubs alert on log (Cubs):
-    AQ 6.7 — Tenderness. Real and universal. But: tenderness toward
-    juvenile animals is the most common wildlife emotion. Every safari
-    photographer produces this feeling. Warm, pleasant, passes.
-    CSI applies to AQ too: familiar emotion in a saturated genre.
-    Score AQ 6.5–7.2 for well-executed juvenile wildlife. Not higher.
+    AQ 6.7 — Tenderness. Real and universal. Warm, pleasant, passes.
+    CSI does NOT lower this. The emotional truth remains regardless of how many
+    lion cub images exist. Score what the image creates, not what the genre has.
 
   Child reaching for cherry blossoms (Cherry):
     AQ 6.6 — Joy / Innocence. Warm and gentle. Many photographs
@@ -822,6 +853,57 @@ AQ (Affective Quotient):
     suspension, the space between things
   Fashion: tension, unease, desire, power, otherness, beauty as threat
   Macro/Drone: revelation, scale-shift, insignificance, hidden order, the sublime
+
+NS (Narrative Sufficiency):
+  Does a stranger see a story in this image without a caption?
+  NS is a binary judgement, not a scale. The scoring engine converts your answer
+  into a weighted contribution to the final score.
+
+  YOUR ANSWER MUST BE ONE OF THREE VALUES:
+    "yes"      — A stranger can narrate what is happening. Story is complete and
+                  self-evident without a caption. The viewer can say: "A child is
+                  reaching for blossoms", "Monks are walking to prayer", "A mother
+                  and child". Clear subject + clear action or relationship.
+    "not_sure" — The image invites a story but does not complete it. The viewer
+                  projects their own meaning onto an ambiguous or open scene. A lone
+                  figure in a landscape, a face with a feeling but no context, an
+                  abstract arrangement that suggests rather than states.
+                  NOT SURE is not failure — it is an invitation. Many great photographs
+                  live here. The viewer completes the work.
+    "no"       — Subject only. No narrative. The image shows what the subject is,
+                  not what is happening. A bird at peak wing spread, a mountain range,
+                  a studio portrait with no context beyond the face.
+
+  SCORING WEIGHT:
+    yes      = full NS weight contributes to final score
+    not_sure = 50% NS weight contributes
+    no       = 0% NS weight (NS does not reduce other dimensions — it simply adds nothing)
+
+  EMPIRICAL FOUNDATION — n=227 blind perception survey:
+  Within each image, viewers who saw a story rated it +1.49 points higher on average.
+  The threshold matters — does a stranger see a story? The degree is irrelevant.
+
+  CALIBRATION FROM SURVEY (story recognition % → NS answer):
+    Maternity shadow (91% recognition)         → yes
+    Monks in corridor (75%)                    → yes
+    Lion cubs on log (69%)                     → not_sure / yes (borderline)
+    Cherry blossom child (65%)                 → not_sure / yes
+    Kathak dancer feet (65%)                   → not_sure
+    Nihang horseman (57%)                      → not_sure
+    Kerala fishing boats (57%)                 → not_sure
+    Mountain landscape, orange sky (40%)       → no / not_sure (borderline)
+    Swallow in flight, wing spread (44%)       → no
+    B&W studio portrait, face only (34%)       → no
+
+  NS PRINCIPLE:
+  Ambiguity is NOT confusion. A powerful image with no legible narrative scores
+  high AQ and NS="no". Both are correct — they measure different things.
+  Do NOT change NS to "yes" because the image is beautiful, powerful, or moving.
+  Ask only: can a stranger, seeing this for the first time, narrate what is happening?
+
+  CSI NEVER APPLIES TO NS: if Sudhir Shivaram's leopard-on-tree image had a story
+  in 2012, that same story is visible in 2025. Narrative recognition does not
+  expire with subject saturation.
 
 APEX LAYER RULES:
 - Soul Bonus: AQ >= 8.0 removes ALL technical penalties
@@ -1652,6 +1734,7 @@ Return this exact JSON structure:
   "dm": <float 0-10>,
   "wonder": <float 0-10>,
   "aq": <float 0-10>,
+  "ns": "<yes|not_sure|no>",
   "dod_reasoning": "<WHY THIS DOD SCORE. One sentence, image-specific. Name the access difficulty, environmental challenge, or technical execution that determined this number. Reference the specific subject, location, or conditions in this image. Plain English. No jargon. Example: 'Getting to eye level with an Indian Grey Wolf in open grassland without flushing the animal requires sustained field access that most photographers never achieve.' Never write a generic definition of the dimension.>",
   "disruption_reasoning": "<WHY THIS DISRUPTION SCORE. One sentence, image-specific. Name the specific compositional choice, angle, or treatment that is either breaking or following convention — and whether that was enough. Example: 'The direct eye-contact frame is the most common composition for a sitting wildlife subject — the grass foreground adds layering but the overall treatment is familiar.' Never write a generic definition of the dimension.>",
   "dm_reasoning": "<WHY THIS MOMENT SCORE. One sentence, image-specific. Name what the chosen moment achieved and specifically what stronger moment was available — or if this was the peak, confirm exactly why. This is the answer to 'why did I get X and not higher'. Example: 'The alert gaze is strong but the grass stems are sharp and competing — the decisive frame was the gaze with the foreground fallen into blur, and that window existed but was not taken.' Never write a generic definition of the dimension.>",
@@ -1764,7 +1847,14 @@ FORMAT:
   "dim_obs_disruption": "<One sentence, max 40 words. Why this disruption score. Name the specific compositional choice or treatment — what it broke from convention, or why it followed it. Image-specific.>",
   "dim_obs_dm": "<One sentence, max 40 words. Why this moment score. Was this the peak of the act? If not, name exactly what stronger moment was available and what the photographer would have needed to wait for. Image-specific.>",
   "dim_obs_wonder": "<One sentence, max 40 words. Why this wonder score. Name the type (access, eye, cultural, emotional) and what created it — or what would have elevated it. Image-specific.>",
-  "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific.>",
+  "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific. Never cite CSI as a reason for a lower AQ score — score the emotion, not the subject frequency.>",
+  "ns": "<yes|not_sure|no>",
+  "dim_obs_ns": "<One sentence, max 40 words. State your NS answer (yes/not_sure/no) and why. Name exactly what story detail makes it legible — or what is missing that would make it legible. Example: 'not_sure — two monks walk toward prayer in a closed world; a stranger feels devotion without being able to narrate the full scene.' Image-specific.>",
+  "emotion_primary": "<ONE word from: joy/love/tenderness/peace/calm/awe/nostalgia/longing/melancholy/defiance/courage/thrill/worry/grace/innocence/freedom/passion/reverence/wonder/pride — or blank if none fits>",
+  "emotion_secondary": "<optional second word from the same list, or blank>",
+  "emotion_valence": "<warm|dark|mixed>",
+  "emotion_reach": <integer 0-10, how universally the emotion lands across strangers — Lion Cubs=9, Horse Racing=6, Studio Portrait=3>,
+  "emotion_polarity": <true if image splits audience strongly by gender/culture/background, else false>,
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
   "tech_read": "<One paragraph, max 60 words. Forensic: (1) sharpness — name CAUSE; (2) exposure — clipping or crush; CRITICAL: dark background ≠ night; (3) one gear observation if EXIF present. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Tone: senior editor examining a contact sheet.>",
@@ -1997,7 +2087,8 @@ GENRE_CONTEXT = {
         "the precision and the colour field. They do not feel something specific "
         "in their chest. Do NOT score above 6.5 for bird craft images.\n"
         "Two lion cubs alert in golden light (Masai Mara safari) = AQ 6.7. "
-        "Tenderness is real but familiar. CSI applies. Warm, passes, does not arrest.\n"
+        "Tenderness is real and universal. Warm, passes, does not arrest. "
+        "Score the emotion the image creates — CSI never lowers AQ.\n"
         "AQ 7.5+ requires: specific rare behaviour (predation, birth, conflict) where "
         "the emotion is genuinely uncommon — not just a technically excellent frame "
         "of a common subject.\n"
@@ -2535,13 +2626,14 @@ GENRE_CONTEXT = {
         "background, long-exposure crowd blur around a static athlete), and frames that refuse "
         "the standard side-on action shot. "
         "Penalise technically correct but compositionally generic sports frames.\n\n"
-        "AQ: The specific emotional state the image captures. BUT: apply CSI to sports emotions. "
-        "Victory and triumph are the most common sports emotions — they appear in every competition "
-        "photograph. Generic triumph = AQ 7.0–7.5. "
-        "AQ 7.5–8.0: a specific non-generic emotion is legible — pain at the exact moment of loss, "
+        "AQ: The specific emotional state the image creates in a stranger. "
+        "Victory / triumph is the most common sports emotion — a generic fist-pump = AQ 6.5–7.0. "
+        "Score what the image CREATES, not how common the emotion is in the genre. "
+        "CSI never lowers AQ — emotional truth does not expire with subject saturation. "
+        "AQ 7.5–8.0: a specific, less common emotional state is legible — pain at the exact moment of loss, "
         "relief after a long struggle, the face of someone who knows they have just broken a record. "
         "AQ 8.0+: rare emotional specificity that a non-sports viewer would recognise and feel. "
-        "A losing face at the finish line scores higher than a winning fist pump. "
+        "A losing face at the finish line scores higher than a generic winning fist pump. "
         "Crowd reaction at collective peak (a whole stand in simultaneous grief or joy) = AQ 8.0+."
     ),
     'default': (
@@ -6751,6 +6843,19 @@ def build_audit_data(result, image_obj):
         "dim_obs_dm":      result.get("dim_obs_dm", ""),
         "dim_obs_wf":      result.get("dim_obs_wonder", "") or result.get("dim_obs_wf", ""),
         "dim_obs_aq":      result.get("dim_obs_aq", ""),
+        # Session 221 — NS binary + emotion structured fields
+        # ns is now a string: 'yes' | 'not_sure' | 'no'
+        # Legacy float fallback: map to nearest binary string
+        "ns":                  result.get("ns", "no") if isinstance(result.get("ns"), str)
+                               else ("yes" if (result.get("ns") or 0) >= 7.0
+                                     else "not_sure" if (result.get("ns") or 0) >= 5.5
+                                     else "no"),
+        "dim_obs_ns":          result.get("dim_obs_ns", ""),
+        "emotion_primary":     result.get("emotion_primary", ""),
+        "emotion_secondary":   result.get("emotion_secondary", ""),
+        "emotion_valence":     result.get("emotion_valence", ""),
+        "emotion_reach":       result.get("emotion_reach", 5),
+        "emotion_polarity":    result.get("emotion_polarity", False),
         "master_name":     result.get("master_name", ""),
         "master_why":      result.get("master_why", ""),
         "tech_read":       result.get("tech_read", ""),
