@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-182.24a (Session 221, 2026-09-25 — Fix: header is dynamic — "The Six Dimensions" only when NS data present; "The Five Dimensions" for pre-221 images without ns in audit_json. RETAINS 182.24.) #}
-{# SL-VERSION: image_detail-182.24 (Session 221, 2026-09-25 — NS binary dimension row added: Narrative Sufficiency (yes/not_sure/no) displayed as 6th dimension after existing 5-dim obs loop. Section header updated to "The Six Dimensions". Binary colour: YES=green, NOT SURE=amber, NO=grey. Subtext: "If another person viewing it can read the story without the caption or description". RETAINS 182.23.) #}
+{# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
+{# SL-VERSION: image_detail-182.24 (Session 221 — ns/dim_obs_ns passthrough from audit_json to template. RETAINS 182.23.) #}
 {# SL-VERSION: image_detail-182.23 (Session 216, 2026-09-07 — Gestalt restructure: (1) Conclusion moved before sparklines — emotional close before data; (2) Take-away and Path-to-9 removed — eval means 9+ card is single forward-action; (3) "What you need to do" renamed "Your assignment"; (4) CSI cards dark backgrounds replaced with light (amber/blue); (5) Contest launchpad 9.0+ dark navy replaced with light cream; (6) Evaluation record footer restyled to match Haiku — single-line camera data, species footer-only, AI disclaimer. No dark section backgrounds. RETAINS 182.22.) #}
 {# SL-VERSION: image_detail-182.15 (Session 214, 2026-09-06 — Removed on-view backfill banner entirely. DB flag written via SQL for all 319 existing images. Clean. RETAINS 182.14.)
 {# SL-VERSION: image_detail-182.22 (Session 215, 2026-09-06 — Evaluation record footer: full EXIF (camera, lens, focal, exposure, software), evaluated-for name, date, file, genre, species (when confident), AI disclaimer. Species removed from mid-card. RETAINS 182.21.) #}
@@ -883,9 +883,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div class="sc-card">
       <div class="sc-card-body">
         <div class="sc-card-hdr">
-          {% set _ns_val = _audit.get('ns') or '' %}
-          {% set _ns_obs = _audit.get('dim_obs_ns') or '' %}
-          <span class="sc-card-title">{% if _ns_val or _ns_obs %}The Six Dimensions{% else %}The Five Dimensions{% endif %}</span>
+          <span class="sc-card-title">The Five Dimensions</span>
           <div style="text-align:right">
             <div style="font-size:13px;color:var(--sc-muted)">Tap any dimension</div>
             <div style="font-size:13px;color:var(--sc-muted);margin-top:1px">All evaluations out of 10</div>
@@ -978,27 +976,25 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         </div>
         {% endif %}
 
-        {# ── SESSION 221: NARRATIVE SUFFICIENCY — binary dim row ── #}
-        {% set _ns_val = _audit.get('ns') or '' %}
-        {% set _ns_obs = _audit.get('dim_obs_ns') or '' %}
-        {% if _ns_val or _ns_obs %}
-        {% set _ns_label = 'YES' if _ns_val in ('yes','Yes','YES') else ('NOT SURE' if _ns_val in ('not_sure','Not Sure','NOT SURE','notsure','maybe','unsure') else 'NO') %}
-        {% set _ns_color = '#4ade80' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
-        {% set _ns_bg    = 'linear-gradient(to right,#F0FDF4,transparent 50%)' if _ns_label == 'YES' else ('linear-gradient(to right,#FFFBEB,transparent 50%)' if _ns_label == 'NOT SURE' else 'transparent') %}
-        <div style="display:grid;grid-template-columns:80px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {{ _ns_color }};background:{{ _ns_bg }}">
+        {# Session 222 — NS row: "Is there a story?" — appears after all dim_obs rows #}
+        {% set _ns_raw = (_audit.get('ns') or '') | string | lower | replace(' ','_') | replace('-','_') %}
+        {% set _dim_obs_ns_val = (_audit.get('dim_obs_ns') or '') | trim %}
+        {% if _ns_raw or _dim_obs_ns_val %}
+        {% set _ns_label = 'YES' if _ns_raw == 'yes' else ('NOT SURE' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'NO') %}
+        {% set _ns_border = '#16a34a' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
+        {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_label == 'YES' else ('rgba(255,251,235,0.6)' if _ns_label == 'NOT SURE' else 'transparent') %}
+        {% set _ns_text = '#166534' if _ns_label == 'YES' else ('#92400e' if _ns_label == 'NOT SURE' else '#64748b') %}
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {{ _ns_border }};background:{{ _ns_bg }};margin-top:4px">
           <div style="display:flex;flex-direction:column;align-items:center;padding-top:2px">
-            <span style="font-size:18px;font-weight:700;color:var(--sc-dark);line-height:1;text-align:center">{{ _ns_label }}</span>
-            <span style="font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:5px;text-align:center;color:{{ _ns_color }}">Story</span>
+            <span style="font-size:18px;font-weight:700;color:#1A2744;line-height:1;text-align:center">{{ _ns_label }}</span>
+            <span style="font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:5px;text-align:center;color:{{ _ns_text }}">Story</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:15px">📖</span>
-              <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:{{ _ns_color }}">NARRATIVE SUFFICIENCY</span>
+              <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:{{ _ns_text }}">Is there a story?</span>
             </div>
-            <div style="font-size:13px;color:var(--sc-muted);line-height:1.6;margin-bottom:4px">If another person viewing it can read the story without the caption or description</div>
-            {% if _ns_obs %}
-            <div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _ns_obs | safe }}</div>
-            {% endif %}
+            {% if _dim_obs_ns_val %}<div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _dim_obs_ns_val }}</div>{% endif %}
           </div>
         </div>
         {% endif %}
