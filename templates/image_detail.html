@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-182.30 (Session 222, 2026-09-26 — Tap panel now shows TWO layers: (1) what SL measures with this dimension — definition in muted text, (2) WHY this exact score was given — reasoning in bold text. Fixes founder complaint that both panels read the same. RETAINS 182.29.)
+{# SL-VERSION: image_detail-182.31 (Session 222, 2026-09-26 — Tap panel shows dimension definition only. Removed redundant why/reasoning layer — dim_obs rows below already carry image-specific text. Tap = what SL measures. Rows below = what the engine saw. RETAINS 182.30.)
 {# SL-VERSION: image_detail-182.27 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 182.26.)
 {# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
 {# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
@@ -1867,10 +1867,9 @@ function scToggleDDI(col, idx) {
     document.getElementById('sc-ddi-title').textContent = d.t;
     /* S222 — two-layer tap: dimension definition (what SL measures) + why this exact score */
     var textEl = document.getElementById('sc-ddi-text');
-    var defHtml = d.def ? '<p style="font-size:13px;color:var(--sc-muted);margin:0 0 10px 0;line-height:1.65">' + d.def + '</p>' : '';
-    var whyText = d.why || d.tx || '';
-    var whyHtml = whyText ? '<p style="font-size:14px;color:var(--sc-text);margin:0;line-height:1.75;font-weight:500">' + whyText + '</p>' : '';
-    textEl.innerHTML = defHtml + whyHtml;
+    /* S222.30 — tap shows definition only; dim_obs rows below show image-specific text */
+    var defHtml = d.def ? '<p style="font-size:14px;color:var(--sc-text);margin:0;line-height:1.75">' + d.def + '</p>' : '';
+    textEl.innerHTML = defHtml;
     det.style.display = 'block';
   }
 }
