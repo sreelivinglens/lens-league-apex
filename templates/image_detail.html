@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-182.29 (Session 222, 2026-09-26 — Restored Five Dimensions tap interaction. Un-hid DDI tile strip, added sc-ddi-detail panel with sc-ddi-title/sc-ddi-text children. Tap now shows WHY this exact score — legal defensibility for international contests. scToggleDDI JS was intact, only DOM was missing. RETAINS 182.28.)
+{# SL-VERSION: image_detail-182.30 (Session 222, 2026-09-26 — Tap panel now shows TWO layers: (1) what SL measures with this dimension — definition in muted text, (2) WHY this exact score was given — reasoning in bold text. Fixes founder complaint that both panels read the same. RETAINS 182.29.)
 {# SL-VERSION: image_detail-182.27 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 182.26.)
 {# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
 {# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
@@ -1781,11 +1781,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
 {% endif %}
 <script type="application/json" id="sc-ddi-data">
 [
-  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","tx":{{ (_audit.get('dod_reasoning') or _dod_fb or '') | tojson }}},{% endif %}
-  {% if image.wonder_score %}{"t":"Visual Display (WOW Factor) — {{ '%.1f'|format(image.wonder_score) }}","tx":{{ (_audit.get('wonder_reasoning') or _won_fb or '') | tojson }}},{% endif %}
-  {% if image.dm_score %}{"t":"Decisive Moment — {{ '%.1f'|format(image.dm_score) }}","tx":{{ (_audit.get('dm_reasoning') or _dm_fb or '') | tojson }}},{% endif %}
-  {% if image.disruption_score %}{"t":"Disruption / Uniqueness — {{ '%.1f'|format(image.disruption_score) }}","tx":{{ (_audit.get('disruption_reasoning') or _dis_fb or '') | tojson }}},{% endif %}
-  {% if image.aq_score %}{"t":"Affective Quotient — {{ '%.1f'|format(image.aq_score) }}","tx":{{ (_audit.get('aq_reasoning') or _aq_fb or '') | tojson }}},{% endif %}
+  {% if image.dod_score %}{"t":"Depth of Difficulty — {{ '%.1f'|format(image.dod_score) }}","def":"How hard was this image to make? Shutter League scores the access, conditions, and technical execution required — not just equipment, but the choices the photographer made under pressure. A 10 is a frame most photographers could never repeat. A 7 is skilled work in genuinely demanding conditions.","why":{{ (_audit.get('dod_reasoning') or _dod_fb or '') | tojson }}},{% endif %}
+  {% if image.wonder_score %}{"t":"Visual Impact — {{ '%.1f'|format(image.wonder_score) }}","def":"Would this image stop a stranger mid-scroll? Shutter League scores the visual arrest — the light, geometry, colour, and subject presence that makes a frame impossible to pass. A 10 stops everyone. A 7 holds attention longer than most frames do.","why":{{ (_audit.get('wonder_reasoning') or _won_fb or '') | tojson }}},{% endif %}
+  {% if image.dm_score %}{"t":"Timing — {{ '%.1f'|format(image.dm_score) }}","def":"Did the shutter fire at the right instant? Shutter League scores the peak of the action, expression, or geometry — the fraction of a second where all elements resolve. A 10 is unrepeatable. A 7 is close to the peak, with one better moment still available.","why":{{ (_audit.get('dm_reasoning') or _dm_fb or '') | tojson }}},{% endif %}
+  {% if image.disruption_score %}{"t":"Disruption — {{ '%.1f'|format(image.disruption_score) }}","def":"Does this image do something unexpected? Shutter League scores originality in subject choice, angle, or visual grammar — the decisions that break from what photographers typically do with this material. A 10 is a frame no one else would make. A 7 has a distinct perspective within familiar conventions.","why":{{ (_audit.get('disruption_reasoning') or _dis_fb or '') | tojson }}},{% endif %}
+  {% if image.aq_score %}{"t":"Emotion — {{ '%.1f'|format(image.aq_score) }}","def":"What does this image make you feel? Shutter League scores the specific, nameable emotion the frame creates — not beauty or craft admiration, but a feeling a viewer could name in one word. A 10 is a feeling that hits before the eye has finished moving. A 7 carries genuine emotional weight that the viewer senses.","why":{{ (_audit.get('aq_reasoning') or _aq_fb or '') | tojson }}},{% endif %}
   null
 ]
 </script>
@@ -1865,7 +1865,12 @@ function scToggleDDI(col, idx) {
   var d = scDDIData[idx];
   if (d && det) {
     document.getElementById('sc-ddi-title').textContent = d.t;
-    document.getElementById('sc-ddi-text').textContent = d.tx;
+    /* S222 — two-layer tap: dimension definition (what SL measures) + why this exact score */
+    var textEl = document.getElementById('sc-ddi-text');
+    var defHtml = d.def ? '<p style="font-size:13px;color:var(--sc-muted);margin:0 0 10px 0;line-height:1.65">' + d.def + '</p>' : '';
+    var whyText = d.why || d.tx || '';
+    var whyHtml = whyText ? '<p style="font-size:14px;color:var(--sc-text);margin:0;line-height:1.75;font-weight:500">' + whyText + '</p>' : '';
+    textEl.innerHTML = defHtml + whyHtml;
     det.style.display = 'block';
   }
 }
