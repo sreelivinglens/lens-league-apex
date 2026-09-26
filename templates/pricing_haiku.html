@@ -1,12 +1,12 @@
-{# SL-VERSION: pricing_haiku-1.4 (Session 205 — 2026-08-31 — Nav label 11px, padding tightened to prevent PRICING cutoff. RETAINS 1.3: — 2026-08-31 — Mobile bottom nav: dynamic active state via request.endpoint; tap highlight + transition added. RETAINS 1.2: — 2026-08-31 — Full eval sample → try_sample_sonnet (Sonnet/League eval); Basic eval sample → try_sample (Haiku eval). Session 201: standalone Haiku pricing page, no base.html, Haiku nav.) #}
+{# SL-VERSION: pricing_haiku-2.0 (Session 223, 2026-09-26 — eValuation (20 evals ₹200, ₹10/image, top-up ₹100/10), eLevate Your Photography (Annual ₹4,000/48, POPULAR badge, "Join the League of Photographers →" byline), 10 free hero callout, updated comparison table, updated JS _planLabels/_planKeys/_planCharges. RETAINS 1.4: Haiku nav, mobile bottom nav, toggleBottomMoreHaiku, Razorpay logic, track modal, intl waitlist, footer, KYC strip.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Two ways to build your photographic record. Annual membership, 6-month membership, or 100 honest evaluations. One standard. Making Images Matter.">
+<meta name="description" content="Start with 10 free evaluations. Then choose: eValuation (20 images, ₹200) or eLevate Your Photography — the full League of Photographers experience.">
 <meta property="og:title" content="Pricing · Shutter League">
-<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. Annual, 6-month, or 100-for-100. One calibrated standard.">
+<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. 10 free evaluations, then eValuation or eLevate.">
 <meta property="og:image" content="/static/img/shutterleague-logo-cropped.png">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="/static/img/shutterleague-logo-cropped.png">
@@ -62,6 +62,26 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .pr-hero-built { font-size:17px; color:var(--text-primary); line-height:1.65; margin-bottom:16px; }
 .pr-hero-200 { font-size:18px; font-weight:600; color:var(--text-primary); line-height:1.65; max-width:560px; margin:0 auto 8px; }
 .pr-hero-std { font-size:15px; font-style:italic; color:var(--text-muted); margin-top:8px; }
+/* 10 free callout */
+.pr-free-band {
+  background:rgba(200,168,75,0.12);
+  border:1px solid var(--gold);
+  border-radius:8px;
+  padding:14px 22px;
+  margin:24px auto 0;
+  max-width:560px;
+  font-size:17px;
+  font-weight:600;
+  color:var(--text-primary);
+  line-height:1.6;
+}
+.pr-free-band span {
+  font-weight:400;
+  color:var(--text-muted);
+  font-size:15px;
+  display:block;
+  margin-top:4px;
+}
 .pr-proof { max-width:620px; margin:28px auto 0; border-left:3px solid var(--gold); padding:16px 22px; background:var(--surface-2); border-radius:0 var(--radius-md) var(--radius-md) 0; }
 .pr-proof-q { font-size:17px; font-style:italic; color:var(--text-primary); line-height:1.7; margin-bottom:8px; }
 .pr-proof-a { font-size:14px; color:var(--text-muted); }
@@ -91,8 +111,21 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .pr-cta-outline { background:var(--surface-1); color:var(--text-primary); border:1.5px solid var(--gold); }
 .pr-cta-navy    { background:var(--navy); color:#fff; }
 .pr-cta:hover   { opacity:.88; }
-
-/* ── FOUNDING MEMBER ── */
+.pr-elevate-byline {
+  text-align:center;
+  font-size:14px;
+  color:var(--gold-dark,#A8883B);
+  font-weight:600;
+  margin-top:10px;
+  letter-spacing:0.01em;
+}
+.pr-topup-note {
+  font-size:13px;
+  color:var(--text-muted);
+  text-align:center;
+  margin-top:10px;
+  line-height:1.5;
+}
 
 /* ── INTERNATIONAL WAITLIST ── */
 .pr-intl { max-width:1080px; margin:20px auto 0; padding:0 var(--page-pad); }
@@ -108,14 +141,14 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .pr-compare { max-width:1080px; margin:44px auto 0; padding:0 var(--page-pad); }
 .pr-compare h2 { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:20px; }
 .pr-table-wrap { overflow-x:auto; }
-.pr-table { width:100%; border-collapse:collapse; font-size:15px; }
+.pr-table { width:100%; min-width:500px; border-collapse:collapse; font-size:15px; }
 .pr-table th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--border-strong); color:var(--text-muted); font-weight:700; font-size:13px; letter-spacing:1px; text-transform:uppercase; }
 .pr-table th.hl { color:var(--text-primary); }
 .pr-table td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text-primary); vertical-align:middle; line-height:1.5; }
 .pr-table tr:last-child td { border-bottom:none; }
 .pr-table .check { color:var(--text-primary); font-weight:700; }
 .pr-table .dash  { color:var(--border-strong); }
-.pr-table .row-key { font-weight:500; }
+.pr-table .row-key { font-weight:500; white-space:nowrap; }
 
 /* ── WHY BLOCKS ── */
 .pr-why { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:1080px; margin:36px auto 0; padding:0 var(--page-pad); }
@@ -157,14 +190,13 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 .sl-mob-drawer-item:hover { color:#fff; }
 
 /* ── RESPONSIVE ── */
-
-  @media (max-width: 768px) {
-    .pr-plans { grid-template-columns: 1fr !important; }
-    .pr-why { grid-template-columns: 1fr !important; }
-    .pr-compare { overflow-x:auto; }
-    .pr-table { min-width:500px; }
-      }
-  @media (max-width: 900px) {
+@media (max-width: 768px) {
+  .pr-plans { grid-template-columns: 1fr !important; }
+  .pr-why { grid-template-columns: 1fr !important; }
+  .pr-compare { overflow-x:auto; }
+  .pr-table { min-width:500px; }
+}
+@media (max-width: 900px) {
   :root { --page-pad: 24px; }
   .sl-nav { display:none; }
   .sl-mob-nav { display:block; }
@@ -172,7 +204,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   .pr-plans { grid-template-columns:1fr; max-width:480px; }
   .pr-plan-tagline { min-height:unset; }
   .pr-why { grid-template-columns: 1fr !important; }
-    }
+}
 @media (max-width: 600px) {
   :root { --page-pad: 16px; }
   .pr-hero h1 { font-size:clamp(24px,7vw,32px); }
@@ -181,6 +213,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
   .pr-features li { font-size:14px; }
   .pr-table { font-size:14px; }
   .pr-table th, .pr-table td { padding:8px 10px; }
+  .pr-free-band { font-size:16px; }
 }
 </style>
 </head>
@@ -217,10 +250,14 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <!-- HERO -->
 <div class="pr-hero">
   <div class="pr-hero-eye">Photography evaluation platform</div>
-  <h1>You've seen what the platform sees.<br>Now build the record.</h1>
+  <h1>Your first 10 evaluations are free.<br>Then choose your path.</h1>
   <p class="pr-hero-built">Built by award-winning photographers, for photographers who want to get better.</p>
   <p class="pr-hero-200">Chess has Elo. Cricket has ICC standings.<br>In 200 years of photography — nobody built one. Until now.</p>
   <p class="pr-hero-std">The standard is the same whether you are in Bengaluru or Berlin.</p>
+  <div class="pr-free-band">
+    10 evaluations — free. No card required.
+    <span>Upload your best photograph and see exactly what the platform sees. Five dimensions. One score. One improvement to work on.</span>
+  </div>
   <div class="pr-proof">
     <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
     <p class="pr-proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
@@ -230,10 +267,10 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <!-- PLANS -->
 <div class="pr-plans">
 
-  <!-- Annual -->
+  <!-- eLevate — Annual (POPULAR / featured) -->
   <div class="pr-plan featured">
-    <div class="pr-plan-pill">★ Build the record</div>
-    <div class="pr-plan-label">Annual</div>
+    <div class="pr-plan-pill">★ Most popular</div>
+    <div class="pr-plan-label">eLevate Your Photography</div>
     <div class="pr-plan-price"><sup>₹</sup>4,000<span style="font-size:16px;font-weight:400;color:var(--text-muted);white-space:nowrap"> / year</span></div>
     <div class="pr-plan-period">₹333 per month · 48 Full Evaluations</div>
     <p class="pr-plan-tagline">The complete record begins here. Every photograph remembered. The Mentor reads this frame specifically — what it decided, whether it worked, what to do before the next one. The record you build in year one is the foundation for everything that follows.</p>
@@ -248,12 +285,13 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Next Shot advisory after every evaluation</li>
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory — where to shoot next</li>
-          </ul>
+    </ul>
     <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-gold" onclick="startPricing('annual')">Join the League — ₹4,000 →</button>
+    <div class="pr-elevate-byline">Join the League of Photographers →</div>
   </div>
 
-  <!-- 6 Months -->
+  <!-- 6 Months (anchor/bait — unchanged) -->
   <div class="pr-plan">
     <div class="pr-plan-label">6 Months</div>
     <div class="pr-plan-price"><sup>₹</sup>2,500</div>
@@ -270,27 +308,28 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <li>Next Shot advisory</li>
       <li>Memory-aware re-evaluation</li>
       <li>Location advisory</li>
-          </ul>
+    </ul>
     <a href="{{ url_for('try_sample_sonnet') }}" target="_blank" class="pr-sample">See a sample Full Evaluation →</a>
     <button class="pr-cta pr-cta-outline" onclick="startPricing('half_yearly')">Start 6 months — ₹2,500 →</button>
   </div>
 
-  <!-- 100 for 100 -->
+  <!-- eValuation — 20 for ₹200 -->
   <div class="pr-plan">
-    <div class="pr-plan-label">100 Basic Evaluations</div>
+    <div class="pr-plan-label">eValuation</div>
     <div class="pr-plan-price"><sup>₹</sup>200</div>
-    <div class="pr-plan-period">One-time · 100 Basic Evaluations</div>
-    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. That is exactly what this is. One hundred honest evaluations. Your pattern becomes clearer. When you are ready, the League is here.</p>
+    <div class="pr-plan-period">One-time · 20 image evaluations · ₹10 per image</div>
+    <p class="pr-plan-tagline">Not everyone wants a standing or an award. Some photographers want honest feedback on their photographs — consistently, without commitment. Twenty evaluations. Your pattern starts to become clear. When you are ready, the League of Photographers is here.</p>
     <div class="pr-divider"></div>
     <ul class="pr-features">
-      <li>100 Basic Evaluations</li>
+      <li>20 image evaluations</li>
       <li>Five-dimension feedback on every photograph</li>
-      <li>Your pattern across 100 photographs</li>
+      <li>Your pattern across 20 photographs</li>
       <li>See how your eye develops over time</li>
       <li>One-time purchase — no subscription</li>
     </ul>
-    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Basic Evaluation →</a>
-    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 100 honest evaluations — ₹200</button>
+    <a href="{{ url_for('try_sample') }}" target="_blank" class="pr-sample">See a sample Evaluation →</a>
+    <button class="pr-cta pr-cta-navy" onclick="startPricing('play')">Get 20 evaluations — ₹200</button>
+    <div class="pr-topup-note">Need more? Top up with 10 evaluations for ₹100 anytime.</div>
   </div>
 
 </div>
@@ -299,7 +338,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 <div id="pr-track-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
   <div style="background:var(--surface-2);border-radius:14px;padding:32px;max-width:440px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
     <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Choose your league</div>
-    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">Annual — ₹4,000</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px" id="pr-modal-plan-label">eLevate Your Photography — ₹4,000</div>
     <p style="font-size:15px;color:var(--text-primary);margin-bottom:24px;line-height:1.6">Camera League for DSLR, mirrorless, and medium format. Mobile League for smartphone photographers — evaluated on its own terms.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <button onclick="startDirectPayment('camera')" style="padding:16px;font-size:15px;font-weight:700;background:var(--gold);color:#1a1200;border:none;border-radius:8px;cursor:pointer;min-height:52px;font-family:'Inter',sans-serif">Camera League →</button>
@@ -307,8 +346,6 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     </div>
     <button onclick="document.getElementById('pr-track-modal').style.display='none'" style="width:100%;padding:10px;font-size:14px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
   </div>
-</div>
-
 </div>
 
 <!-- INDIA ONLY + INTERNATIONAL WAITLIST -->
@@ -333,14 +370,14 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
     <thead>
       <tr>
         <th style="width:36%"> </th>
-        <th class="hl">Annual ₹4,000</th>
+        <th class="hl">eLevate ₹4,000/yr</th>
         <th>6 Months ₹2,500</th>
-        <th>100 Basic Evaluations ₹200</th>
+        <th>eValuation ₹200</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">100 Basic</td></tr>
-      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td>Basic — five dimensions</td></tr>
+      <tr><td class="row-key">Evaluations</td><td class="check">48 Full / year</td><td class="check">24 Full / 6 months</td><td class="check">20 · top up ₹100/10</td></tr>
+      <tr><td class="row-key">Evaluation type</td><td class="check">Full — Mentor + five dimensions</td><td class="check">Full — Mentor + five dimensions</td><td>Five dimensions · ₹10/image</td></tr>
       <tr><td class="row-key">Mentor narrative</td><td class="check">✓ every photograph</td><td class="check">✓ every photograph</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Annual Excellence Award</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Calibrated standing</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
@@ -350,7 +387,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
       <tr><td class="row-key">Memory-aware re-evaluation</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Location advisory</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
       <tr><td class="row-key">Body of Work eligibility</td><td class="check">✓</td><td class="check">✓</td><td class="dash">—</td></tr>
-          </tbody>
+    </tbody>
   </table>
   </div>
 </div>
@@ -487,7 +524,7 @@ body { background:#F5F3EF; font-family:'Inter',sans-serif; color:#1A2744; -webki
 var _isLoggedIn  = document.getElementById('pr-data').dataset.loggedin === 'true';
 var _loginUrl    = document.getElementById('pr-data').dataset.loginurl;
 var _currentPlan = 'annual';
-var _planLabels  = ['Annual — ₹4,000','6 Months — ₹2,500','100 Basic Evaluations — ₹200'];
+var _planLabels  = ['eLevate Your Photography — ₹4,000','6 Months — ₹2,500','eValuation — ₹200'];
 var _planKeys    = ['annual','half_yearly','play'];
 var _planRzp     = ['annual','halfyearly','play'];
 var _planCharges = [4000, 2500, 200];
