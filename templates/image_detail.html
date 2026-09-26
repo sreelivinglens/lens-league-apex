@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
 {# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
 {# SL-VERSION: image_detail-182.24 (Session 221 — ns/dim_obs_ns passthrough from audit_json to template. RETAINS 182.23.) #}
 {# SL-VERSION: image_detail-182.23 (Session 216, 2026-09-07 — Gestalt restructure: (1) Conclusion moved before sparklines — emotional close before data; (2) Take-away and Path-to-9 removed — eval means 9+ card is single forward-action; (3) "What you need to do" renamed "Your assignment"; (4) CSI cards dark backgrounds replaced with light (amber/blue); (5) Contest launchpad 9.0+ dark navy replaced with light cream; (6) Evaluation record footer restyled to match Haiku — single-line camera data, species footer-only, AI disclaimer. No dark section backgrounds. RETAINS 182.22.) #}
@@ -980,14 +981,13 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% set _ns_raw = (_audit.get('ns') or '') | string | lower | replace(' ','_') | replace('-','_') %}
         {% set _dim_obs_ns_val = (_audit.get('dim_obs_ns') or '') | trim %}
         {% if _ns_raw or _dim_obs_ns_val %}
-        {% set _ns_label = 'YES' if _ns_raw == 'yes' else ('NOT SURE' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'NO') %}
-        {% set _ns_border = '#16a34a' if _ns_label == 'YES' else ('#f59e0b' if _ns_label == 'NOT SURE' else '#94a3b8') %}
-        {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_label == 'YES' else ('rgba(255,251,235,0.6)' if _ns_label == 'NOT SURE' else 'transparent') %}
-        {% set _ns_text = '#166534' if _ns_label == 'YES' else ('#92400e' if _ns_label == 'NOT SURE' else '#64748b') %}
-        <div style="display:grid;grid-template-columns:80px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {{ _ns_border }};background:{{ _ns_bg }};margin-top:4px">
-          <div style="display:flex;flex-direction:column;align-items:center;padding-top:2px">
-            <span style="font-size:18px;font-weight:700;color:#1A2744;line-height:1;text-align:center">{{ _ns_label }}</span>
-            <span style="font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:5px;text-align:center;color:{{ _ns_text }}">Story</span>
+        {% set _ns_label = 'Story coming through' if _ns_raw == 'yes' else ('Not sure' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'No story') %}
+        {% set _ns_border = '#16a34a' if _ns_raw == 'yes' else ('#f59e0b' if _ns_raw in ('not_sure','notsure','maybe','unsure') else '#94a3b8') %}
+        {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_raw == 'yes' else ('rgba(255,251,235,0.6)' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'transparent') %}
+        {% set _ns_text = '#166534' if _ns_raw == 'yes' else ('#92400e' if _ns_raw in ('not_sure','notsure','maybe','unsure') else '#64748b') %}
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {{ _ns_border }};background:{{ _ns_bg }};margin-top:4px">
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding-top:2px">
+            <span style="font-size:14px;font-weight:700;color:{{ _ns_text }};line-height:1.2;text-align:left">{{ _ns_label }}</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
             <div style="display:flex;align-items:center;gap:6px">
