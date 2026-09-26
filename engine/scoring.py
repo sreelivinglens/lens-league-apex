@@ -1,3 +1,4 @@
+# SL-VERSION: scoring-222.1 (Session 222, 2026-09-26 — NS scoring bonus: YES +0.15, NOT_SURE +0.05, NO +0.00. Applied after all other modifiers. Cap at 9.9 retained.)
 """
 Apex DDI Engine — core scoring module
 Shutter League · May 2026
