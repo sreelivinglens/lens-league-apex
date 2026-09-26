@@ -1,14 +1,14 @@
-{# SL-VERSION: 182.12 (Session 213, 2026-09-06 — Hero redesign: five-dimension card, new headline/CTA copy. RETAINS 182.33-main.) #}
+{# SL-VERSION: index-v183.1a (Session 223, 2026-09-27 — fix onerror syntax on trust tile images. — Homepage redesign: full-bleed hero with dynamic DB image 8.5+, photographer name+score overlay, gold CTA eValuation ₹200, THE SHIFT icons, two-door pricing on homepage, founder signature, trust tiles. RETAINS nav, mobile bottom nav, footer, cookie banner, lightbox from v182.12.) #}
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shutter League — What if you could see how good you could become?</title>
-<meta name="description" content="Photography Assessment &amp; Evolution Platform. Making Images Matter. An honest evaluation of your photography that remembers every image and shows you what to work on next.">
+<title>Shutter League — Everyone can become a better photographer. Photo by photo.</title>
+<meta name="description" content="Photography evaluation platform. 10 free evaluations at sign-up. eValuation ₹200 · eLevate Your Photography ₹4,000/year. Making Images Matter.">
 <link rel="canonical" href="https://shutterleague.com">
-<meta property="og:title" content="What if you could see how good you could become? — Shutter League">
-<meta property="og:description" content="Photography Assessment & Evolution Platform. Making Images Matter. An honest, calibrated evaluation of your photography — remembered across every image you make. Your first 10 evaluations are free.">
+<meta property="og:title" content="Everyone can become a better photographer. Photo by photo. — Shutter League">
+<meta property="og:description" content="Photography evaluation platform. 10 free evaluations at sign-up. No subscription required.">
 <meta property="og:url" content="https://shutterleague.com">
 <meta property="og:image" content="https://shutterleague.com/static/og-image.jpg">
 <meta property="og:image:width" content="1200">
@@ -18,214 +18,548 @@
 <meta name="twitter:image" content="https://shutterleague.com/static/og-image.jpg">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --dark:#0F1F3D;--cream:#FEFCF8;--paper:#F5F0E8;--blue:#1A2744;--blue-mid:#2C4070;
-  --gold:#C8A84B;--ink:#1A1A18;--muted:#6a6055;--line:#E0D8C8;
-  --panel-bg:#060e1c;
+:root {
+  --dark:     #0F1F3D;
+  --cream:    #FEFCF8;
+  --paper:    #F5F0E8;
+  --blue:     #1A2744;
+  --blue-mid: #2C4070;
+  --gold:     #C8A84B;
+  --gold-dark:#A8883B;
+  --ink:      #1A1A18;
+  --muted:    #6a6055;
+  --line:     #E0D8C8;
+  --surface1: #F5F3EF;
+  --surface2: #EDE9E1;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--cream);color:var(--ink);font-family:Aptos,'Segoe UI',system-ui,Arial,sans-serif;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
-body,html{overflow-x:hidden;max-width:100%}
-a{text-decoration:none;color:inherit}
-button{font:inherit;cursor:pointer}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: Aptos, 'Segoe UI', system-ui, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+button { font: inherit; cursor: pointer; }
 
 /* ── NAV ── */
-.nav{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:var(--dark);position:sticky;top:0;z-index:50}
-.brand{display:flex;align-items:center;gap:12px;color:#F5F3EF;text-decoration:none}
-.brand img{height:36px;width:auto;display:block}
-.brand-text{display:flex;flex-direction:column;gap:2px}
-.brand-name{font-size:13px;font-weight:700;letter-spacing:3px;color:#F5F3EF;text-transform:uppercase}
-.brand-sub{font-size:13px;letter-spacing:2px;color:rgba(245,243,239,.65);text-transform:uppercase}
-.navlinks{display:flex;gap:16px;align-items:center}
-.navlinks a{font-size:14px;color:rgba(245,243,239,.8);min-height:44px;display:inline-flex;align-items:center;transition:color .15s}
-.navlinks a:hover{color:#F5F3EF}
-.navsection{color:rgba(245,243,239,.65) !important}
-.navlogin{color:#F5F3EF !important;font-weight:600}
-.navstart{background:var(--gold);color:var(--dark) !important;border:none;border-radius:2px;padding:10px 20px;font-size:14px;font-weight:700;min-height:44px;display:inline-flex;align-items:center}
+.nav {
+  height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px;
+  background: var(--dark);
+  position: sticky; top: 0; z-index: 500;
+}
+.brand { display: flex; align-items: center; gap: 12px; color: #F5F3EF; }
+.brand img { height: 36px; width: auto; display: block; }
+.brand-text { display: flex; flex-direction: column; gap: 2px; }
+.brand-name { font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #F5F3EF; text-transform: uppercase; }
+.brand-sub  { font-size: 13px; letter-spacing: 2px; color: rgba(245,243,239,.65); text-transform: uppercase; }
+.navlinks { display: flex; gap: 16px; align-items: center; }
+.navlinks a { font-size: 14px; color: rgba(245,243,239,.8); min-height: 44px; display: inline-flex; align-items: center; transition: color .15s; }
+.navlinks a:hover { color: #F5F3EF; }
+.navsection { color: rgba(245,243,239,.65) !important; }
+.navlogin   { color: #F5F3EF !important; font-weight: 600; }
+.navstart   {
+  background: var(--gold); color: var(--dark) !important;
+  border: none; border-radius: 2px; padding: 10px 20px;
+  font-size: 14px; font-weight: 700; min-height: 44px;
+  display: inline-flex; align-items: center;
+}
 
-/* ── SCROLL 1: HERO ── */
-.hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 68px);min-height:calc(100dvh - 68px);align-items:start}
-.hero-photograph{background:var(--panel-bg);display:flex;flex-direction:column;min-height:520px}
-.hero-photograph-img-wrap{flex:1;padding:28px 28px 0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-photograph-img{max-width:100%;max-height:100%;object-fit:contain;object-position:center;cursor:zoom-in;display:block}
+/* ── HERO — full bleed ── */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 68px);
+  min-height: calc(100dvh - 68px);
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+  background: #0d1622;
+}
+.hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 20%;
+  display: block;
+}
+/* gradient: dark left for text legibility, subtle bottom for credit strip */
+.hero-gradient {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(10,18,40,0.72) 0%, rgba(10,18,40,0.30) 55%, rgba(10,18,40,0.05) 100%),
+    linear-gradient(to top, rgba(10,18,40,0.70) 0%, transparent 35%);
+  pointer-events: none;
+}
+/* text block — left, vertically centred */
+.hero-content {
+  position: absolute;
+  top: 50%; left: 0;
+  transform: translateY(-50%);
+  padding: 0 56px;
+  max-width: 560px;
+  z-index: 2;
+}
+.hero-eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 20px;
+}
+.hero-h1 {
+  font-size: clamp(30px, 3.8vw, 52px);
+  font-weight: 700; line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #F5F3EF;
+  margin-bottom: 8px;
+}
+.hero-h1 em {
+  font-style: italic;
+  color: var(--gold);
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.hero-sub {
+  font-size: 18px; color: rgba(245,243,239,0.82);
+  line-height: 1.6; margin-bottom: 32px;
+}
+.hero-cta {
+  display: inline-flex; align-items: center;
+  background: var(--gold); color: #1a1200;
+  border: none; border-radius: 3px;
+  padding: 16px 28px; font-size: 17px; font-weight: 700;
+  min-height: 52px; cursor: pointer;
+  text-decoration: none; letter-spacing: 0.01em;
+  transition: background .15s;
+}
+.hero-cta:hover { background: #d9b855; }
+.hero-micronote {
+  font-size: 14px; color: rgba(245,243,239,0.65);
+  margin-top: 12px;
+}
 
-/* Credential panel */
-.hero-credential{background:var(--panel-bg);border-top:1px solid rgba(200,168,75,.2);padding:20px 28px 22px;flex-shrink:0}
-.credential-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
-.credential-name{font-size:18px;font-weight:600;color:#F5F3EF;letter-spacing:.2px;margin-bottom:5px}
-.credential-league{font-size:13px;color:rgba(245,243,239,.7)}
-.credential-gm-block{text-align:right}
-.credential-gm{font-size:22px;font-weight:700;color:var(--gold);font-family:'Playfair Display',Georgia,serif;letter-spacing:.3px}
-.credential-gm-label{font-size:13px;color:rgba(245,243,239,.7);margin-top:4px}
-.credential-divider{height:1px;background:rgba(200,168,75,.18);margin-bottom:14px}
-.credential-bottom{display:flex;align-items:center;justify-content:space-between}
-.credential-score-label{font-size:13px;color:rgba(245,243,239,.7);letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
-.credential-score{font-size:52px;font-weight:700;color:var(--gold);line-height:1;letter-spacing:-.03em;font-family:'Playfair Display',Georgia,serif}
-.credential-score-sub{font-size:13px;color:rgba(245,243,239,.7);margin-top:4px}
-.credential-logo-col{display:flex;flex-direction:column;align-items:center;gap:8px}
-.credential-logo-ring{width:48px;height:48px;border:1.5px solid rgba(200,168,75,.4);border-radius:50%;display:flex;align-items:center;justify-content:center}
-.credential-logo-ring img{width:32px;height:32px;opacity:.7}
-.credential-logo-text{font-size:13px;color:rgba(245,243,239,.7);letter-spacing:1px;text-transform:uppercase}
+/* photographer credit — bottom left */
+.hero-credit {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  z-index: 3;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 20px 32px 24px;
+}
+.hero-credit-photographer {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.hero-credit-name {
+  font-size: 15px; font-weight: 700; color: #F5F3EF;
+  letter-spacing: 0.2px;
+}
+.hero-credit-meta {
+  font-size: 13px; color: rgba(245,243,239,0.70);
+  letter-spacing: 0.3px;
+}
+.hero-credit-score-block {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+}
+.hero-credit-score-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(245,243,239,0.55);
+}
+.hero-credit-score {
+  font-size: 38px; font-weight: 700; color: var(--gold);
+  font-family: 'Playfair Display', Georgia, serif;
+  line-height: 1;
+}
+.hero-credit-score-sub {
+  font-size: 12px; color: rgba(245,243,239,0.55);
+}
 
-/* Hero text */
-.hero-text{display:flex;flex-direction:column;justify-content:flex-start;padding:28px 6vw 36px;background:var(--cream)}
-.hero-kicker{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
-.hero-h1{font-size:clamp(32px,3.6vw,52px);line-height:1.5;letter-spacing:-.04em;color:var(--blue-mid);font-weight:600;margin-bottom:10px}
-.hero-h1 em{font-style:italic;color:var(--gold)}
-.hero-lead{font-size:17px;line-height:1.75;color:#3d3530;margin-bottom:8px;max-width:420px}
-.hero-solve{font-size:19px;font-weight:600;color:var(--blue-mid);margin-bottom:20px}
-.bigbtn{background:var(--dark);color:#fff;border:none;padding:16px 28px;min-height:52px;font-size:16px;font-weight:600;letter-spacing:.2px;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}
-.micronote{font-size:14px;color:var(--muted);margin-top:12px}
-.hero-dims{border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:14px}
-.hero-dim{display:flex;align-items:baseline;gap:12px;padding:7px 14px;border-bottom:1px solid var(--line);background:#fff}
-.hero-dim:last-child{border-bottom:none}
-.dim-label{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#7A5A08;width:100px;flex-shrink:0}
-.dim-q{font-size:16px;color:#3d3530;line-height:1.7}
-.hero-standard{font-size:15px;line-height:1.75;color:#3d3530;margin-top:16px;font-weight:400;padding-top:14px;border-top:1px solid var(--line)}
-.hero-standard-headline{font-size:18px;font-weight:600;color:#2C4070;display:block;margin-bottom:6px}
+/* ── THE SHIFT ── */
+.shift {
+  background: var(--cream);
+  padding: 72px 48px 64px;
+  text-align: center;
+}
+.shift-kicker {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 14px;
+}
+.shift-h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 700; color: var(--blue);
+  letter-spacing: -0.02em; line-height: 1.3;
+  margin-bottom: 52px;
+}
+.shift-h2 em {
+  font-style: normal; color: var(--gold);
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.shift-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 1080px; margin: 0 auto;
+}
+.shift-item {
+  background: var(--surface1);
+  border-radius: 12px;
+  padding: 32px 24px 28px;
+  text-align: left;
+}
+.shift-icon {
+  width: 48px; height: 48px;
+  background: rgba(200,168,75,0.12);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.shift-icon svg { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.shift-num {
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 8px;
+}
+.shift-item-h {
+  font-size: 17px; font-weight: 700; color: var(--blue);
+  margin-bottom: 8px; line-height: 1.4;
+}
+.shift-item-b {
+  font-size: 15px; color: var(--muted); line-height: 1.7;
+}
 
-/* Lightbox */
-.hero-lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
-.hero-lightbox.active{display:flex}
-.hero-lightbox img{max-width:94vw;max-height:94vh;object-fit:contain;border-radius:2px}
-.hero-lightbox-close{position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;line-height:1;opacity:.8}
+/* ── TWO DOORS ── */
+.doors-section {
+  background: var(--surface2);
+  padding: 72px 48px 64px;
+}
+.doors-section-h {
+  text-align: center;
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 700; color: var(--blue);
+  letter-spacing: -0.02em; margin-bottom: 8px;
+}
+.doors-section-sub {
+  text-align: center;
+  font-size: 16px; color: var(--muted);
+  margin-bottom: 44px;
+}
+.doors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 960px; margin: 0 auto 32px;
+}
+.door {
+  background: #fff;
+  border: 1px solid rgba(26,39,68,0.12);
+  border-radius: 16px;
+  padding: 32px 28px;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.door.featured {
+  border: 2px solid var(--gold);
+  background: #FFFDF7;
+}
+.door-badge {
+  position: absolute; top: -14px; right: 24px;
+  background: var(--gold); color: #1a1200;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 4px 14px; border-radius: 20px;
+}
+.door-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 6px;
+}
+.door-name {
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 700; color: var(--blue);
+  line-height: 1.2; margin-bottom: 4px;
+}
+.door-tagline {
+  font-size: 15px; color: var(--muted); margin-bottom: 20px;
+}
+.door-price {
+  font-size: 40px; font-weight: 700; color: var(--blue);
+  line-height: 1; margin-bottom: 4px;
+}
+.door-price sup { font-size: 20px; vertical-align: super; }
+.door-price-detail {
+  font-size: 14px; color: var(--muted); margin-bottom: 6px;
+}
+.door-bonus {
+  font-size: 14px; font-weight: 700; color: var(--gold);
+  margin-bottom: 20px;
+}
+.door-divider {
+  height: 1px; background: rgba(26,39,68,0.10);
+  margin-bottom: 20px;
+}
+.door-label-included {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 12px;
+}
+.door-features {
+  list-style: none; flex: 1; margin-bottom: 24px;
+}
+.door-features li {
+  font-size: 15px; color: #3d3530;
+  padding: 6px 0 6px 24px;
+  position: relative;
+  border-bottom: 1px solid rgba(26,39,68,0.06);
+  line-height: 1.5;
+}
+.door-features li:last-child { border-bottom: none; }
+.door-features li::before {
+  content: '✓'; position: absolute; left: 0;
+  color: var(--gold); font-weight: 700;
+}
+.door-cta {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 15px;
+  font-size: 16px; font-weight: 700;
+  border-radius: 8px; border: none; cursor: pointer;
+  min-height: 52px; text-decoration: none;
+  font-family: inherit; letter-spacing: 0.01em;
+  transition: opacity .15s;
+}
+.door-cta:hover { opacity: 0.88; }
+.door-cta-gold   { background: var(--gold); color: #1a1200; }
+.door-cta-outline {
+  background: var(--surface1);
+  color: var(--blue);
+  border: 1.5px solid var(--gold);
+}
+.door-topup {
+  font-size: 13px; color: var(--muted);
+  text-align: center; margin-top: 10px; line-height: 1.5;
+}
 
-/* ── SCROLL 2: THREE BANDS ── */
+/* ONE ACCOUNT strip */
+.doors-footer {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap;
+}
+.doors-footer-text h3 {
+  font-size: 22px; font-weight: 700; color: var(--blue);
+  line-height: 1.3; margin-bottom: 6px;
+}
+.doors-footer-text p {
+  font-size: 15px; color: var(--muted); line-height: 1.7;
+}
+.doors-footer-link {
+  font-size: 15px; font-weight: 700;
+  color: var(--gold-dark); border-bottom: 1px solid var(--gold);
+  white-space: nowrap;
+}
 
-/* Band A — progression (dark navy) */
-.s2-band-a{background:#E8EEF7;padding:72px 48px 56px}
-.band-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
-.band-h2{font-size:28px;font-weight:600;color:#1A2744;letter-spacing:-.02em;margin-bottom:36px;line-height:1.5}
-.progress-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 52px}
-.progress-item{display:grid;grid-template-columns:90px 1fr;align-items:center;padding:18px 0;border-bottom:1px solid rgba(26,39,68,.12)}
-.progress-verb{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1A2744;line-height:1.5}
-.progress-text{font-size:16px;color:#2d2926;line-height:1.5}
+/* ── PROOF / QUOTE ── */
+.proof-band {
+  background: var(--dark);
+  padding: 56px 48px;
+}
+.proof-inner {
+  max-width: 760px; margin: 0 auto; text-align: center;
+}
+.proof-q {
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-style: italic; color: #F5F3EF;
+  font-family: 'Playfair Display', Georgia, serif;
+  line-height: 1.65; margin-bottom: 20px;
+}
+.proof-a {
+  font-size: 14px; color: rgba(245,243,239,0.60);
+  letter-spacing: 0.3px;
+}
+.proof-a strong { color: rgba(245,243,239,0.85); }
 
-/* Band B — standard (warm pastel) */
-.s2-band-b{background:#EDE8DF;padding:56px 48px}
-.s2-band-b-inner{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
-.std-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:16px}
-.std-h{font-size:22px;font-weight:600;color:var(--blue-mid);margin-bottom:16px;line-height:1.5}
-.std-body{font-size:16px;line-height:1.8;color:#3d3530}
-.mahesh{border-left:3px solid var(--gold);padding:22px 24px;background:#fff;border-radius:0 3px 3px 0}
-.mahesh-quote{font-size:18px;font-style:italic;color:var(--blue-mid);line-height:1.7;margin-bottom:14px;font-family:'Playfair Display',Georgia,serif}
-.mahesh-attr{font-size:14px;color:#8a6a30;letter-spacing:.3px}
+/* ── FOUNDER ── */
+.founder-section {
+  background: var(--cream);
+  padding: 72px 48px 64px;
+}
+.founder-inner {
+  max-width: 860px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1.4fr;
+  gap: 64px; align-items: start;
+}
+.founder-kicker {
+  font-size: 12px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 16px;
+}
+.founder-h {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 700; color: var(--blue);
+  line-height: 1.3; margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.founder-h em { font-style: normal; color: var(--gold); }
+.founder-body {
+  font-size: 16px; color: #3d3530;
+  line-height: 1.8; margin-bottom: 14px;
+}
+.founder-sig {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.founder-sig-name {
+  font-size: 16px; font-weight: 700; color: var(--blue);
+  margin-bottom: 2px;
+}
+.founder-sig-title {
+  font-size: 14px; color: var(--muted);
+}
 
-/* Band C — gallery (dark) */
-.s2-band-c{background:var(--dark);padding:44px 48px 52px}
-.gallery-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
-.gallery-h{font-size:22px;font-weight:600;color:#F5F3EF;margin-bottom:6px;letter-spacing:-.02em}
-.gallery-sub{font-size:15px;color:rgba(245,243,239,.65);margin-bottom:24px}
-.gallery-sub a{color:var(--gold);border-bottom:1px solid rgba(200,168,75,.3)}
-.photos{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.ph{position:relative;overflow:hidden;background:#0d1a30;border-radius:3px;aspect-ratio:3/4;display:block;text-decoration:none}
-.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(6,14,28,.92));padding:12px 10px 10px}
-.ph-name{font-size:13px;font-weight:600;color:#fff;letter-spacing:.3px;margin-bottom:3px}
-.ph-tier{font-size:13px;color:var(--gold);letter-spacing:.5px}
-.ph-score{position:absolute;top:8px;right:8px;background:rgba(6,14,28,.8);border:1px solid rgba(200,168,75,.5);color:var(--gold);font-size:14px;font-weight:700;padding:4px 8px;border-radius:2px;font-family:'Playfair Display',Georgia,serif}
+/* Trust tiles */
+.trust-section {
+  padding: 0;
+}
+.trust-kicker {
+  font-size: 12px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 20px;
+}
+.trust-tiles {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.trust-tile {
+  background: var(--surface1);
+  border-radius: 10px; overflow: hidden;
+}
+.trust-tile-img {
+  width: 100%; height: 100px;
+  object-fit: cover; display: block;
+}
+.trust-tile-body {
+  padding: 12px 14px 14px;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.trust-tile-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.trust-tile-text {
+  font-size: 14px; color: var(--blue);
+  font-weight: 600; line-height: 1.4;
+}
 
-/* ── SCROLL 3: FOUNDER + CLOSE ── */
-.s3{background:var(--cream);padding:64px 48px 80px}
-.founder-card{background:#fff;border:1px solid #d8d4cc;border-radius:4px;padding:40px;display:grid;grid-template-columns:200px 1fr;gap:40px;align-items:start;max-width:900px;margin:0 auto 36px}
-.founder-img-wrap{position:relative}
-.founder-img-wrap img{width:200px;height:250px;object-fit:cover;border-radius:3px;display:block}
-.founder-badge{background:var(--dark);padding:12px 14px;border-radius:0 0 3px 3px}
-.founder-badge-name{font-size:14px;font-weight:700;color:#F5F3EF}
-.founder-badge-sub{font-size:13px;color:rgba(245,243,239,.7);margin-top:3px}
-.founder-kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.founder-h{font-size:22px;font-weight:600;color:var(--blue-mid);letter-spacing:-.02em;margin-bottom:18px;line-height:1.5}
-.founder-body{font-size:16px;line-height:1.8;color:#2d2926;margin-bottom:14px}
-.founder-cred{font-size:14px;color:#5a5248;line-height:2;border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
-
-.aea-strip{background:var(--dark);border-radius:3px;padding:24px 28px;display:flex;flex-direction:column;gap:16px;max-width:900px;margin:0 auto 48px}
-.aea-text{font-size:15px;color:rgba(245,243,239,.8);line-height:1.7}
-.aea-text strong{color:#F5F3EF}
-.aea-date{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#C8A84B;border-top:1px solid rgba(200,168,75,.2);padding-top:14px;margin-top:2px}
-
-.final-cta{text-align:center}
-.final-h{font-size:32px;font-weight:600;color:var(--blue-mid);letter-spacing:-.03em;margin-bottom:10px}
-.final-sub{font-size:17px;color:var(--muted);margin-bottom:24px}
-.final-note{font-size:14px;color:var(--muted);margin-top:12px}
+/* ── FINAL CTA ── */
+.final-cta {
+  text-align: center;
+  background: var(--surface2);
+  padding: 64px 48px 72px;
+  border-top: 1px solid rgba(26,39,68,0.10);
+}
+.final-h {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 700; color: var(--blue);
+  letter-spacing: -0.03em; margin-bottom: 10px;
+}
+.final-sub {
+  font-size: 17px; color: var(--muted);
+  margin-bottom: 28px;
+}
+.final-btn {
+  display: inline-flex; align-items: center;
+  background: var(--dark); color: #fff;
+  border: none; border-radius: 3px;
+  padding: 16px 32px; font-size: 16px; font-weight: 700;
+  min-height: 52px; cursor: pointer; text-decoration: none;
+}
+.final-note {
+  font-size: 14px; color: var(--muted); margin-top: 12px;
+}
 
 /* ── FOOTER ── */
-.footer{background:var(--dark);padding:56px 48px 28px}
-.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
-.footer-brand .brand{margin-bottom:12px}
-.footer-tagline{font-size:16px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px}
-.footer-email{font-size:16px;color:rgba(255,255,255,.6)}
-.footer-email a{color:var(--gold)}
-.footer-col h4{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px}
-.footer-col a{display:flex;align-items:center;min-height:44px;color:rgba(255,255,255,.65);font-size:16px;transition:color .15s}
-.footer-col a:hover{color:#fff}
-.footer-bottom{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:rgba(255,255,255,.4)}
-.footer-bottom-links{display:flex;gap:20px;flex-wrap:wrap}
-.footer-bottom-links a{color:rgba(255,255,255,.4);font-size:13px;min-height:44px;display:inline-flex;align-items:center}
+.footer { background: var(--dark); padding: 56px 48px 28px; }
+.footer-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 32px; max-width: 1200px; margin: 0 auto 40px;
+  padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.footer-brand .brand { margin-bottom: 12px; }
+.footer-tagline { font-size: 16px; color: rgba(255,255,255,.5); line-height: 1.7; margin-bottom: 16px; }
+.footer-email { font-size: 16px; color: rgba(255,255,255,.6); }
+.footer-email a { color: var(--gold); }
+.footer-col h4 { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 14px; }
+.footer-col a { display: flex; align-items: center; min-height: 44px; color: rgba(255,255,255,.65); font-size: 16px; transition: color .15s; }
+.footer-col a:hover { color: #fff; }
+.footer-bottom { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; color: rgba(255,255,255,.4); }
+.footer-bottom-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-bottom-links a { color: rgba(255,255,255,.4); font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
 
 /* ── BOTTOM NAV (mobile only) ── */
-.sl-bottom-nav{position:fixed;top:auto !important;bottom:0;left:0;right:0;height:auto;min-height:62px;padding-bottom:env(safe-area-inset-bottom,0px);background:#1A2744;border-top:0.5px solid rgba(255,255,255,0.10);display:none;justify-content:space-around;align-items:flex-start;z-index:1200;padding-top:10px}
-.sl-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:4px;transition:color .1s,opacity .1s;-webkit-tap-highlight-color:rgba(200,168,75,0.20)}
-.sl-nav-item:hover,.sl-nav-item.active{color:#C8A84B}
-.sl-nav-item:active{color:#C8A84B;opacity:.75}
-.sl-nav-logo{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px;text-decoration:none;min-width:44px;min-height:44px}
-.sl-nav-logo__text{font-size:13px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.5);text-align:center;line-height:1.5}
-.sl-nav-fab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:rgba(255,255,255,.4);font-size:13px;font-weight:500;min-width:44px;min-height:44px;justify-content:flex-start;padding-top:2px}
-.sl-nav-fab__circle{width:40px;height:40px;background:#F4C20D;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1814;font-weight:300;line-height:1;margin-bottom:2px}
-@media (max-width:900px){.sl-bottom-nav{display:flex}}
-#cookie-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1A1814;color:#fff;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px}
-#cookie-banner.cb-visible{display:flex}
-#cookie-banner a{color:var(--gold)}
-#cookie-banner button{background:var(--gold);color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
-#cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
+.sl-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: auto; min-height: 62px; padding-bottom: env(safe-area-inset-bottom,0px); background: #1A2744; border-top: 0.5px solid rgba(255,255,255,0.10); display: none; justify-content: space-around; align-items: flex-start; z-index: 1200; padding-top: 10px; }
+.sl-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: rgba(255,255,255,.4); font-size: 13px; font-weight: 500; min-width: 44px; min-height: 44px; justify-content: flex-start; padding-top: 4px; transition: color .1s; -webkit-tap-highlight-color: rgba(200,168,75,0.20); }
+.sl-nav-item:hover, .sl-nav-item.active { color: var(--gold); }
+.sl-nav-logo { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 4px; text-decoration: none; min-width: 44px; min-height: 44px; }
+.sl-nav-logo__text { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,.5); text-align: center; line-height: 1.5; }
+.sl-nav-fab { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: rgba(255,255,255,.4); font-size: 13px; font-weight: 500; min-width: 44px; min-height: 44px; justify-content: flex-start; padding-top: 2px; }
+.sl-nav-fab__circle { width: 40px; height: 40px; background: #F4C20D; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1A1814; font-weight: 300; line-height: 1; margin-bottom: 2px; }
+@media (max-width: 900px) { .sl-bottom-nav { display: flex; } }
+
+/* Cookie banner */
+#cookie-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; background: #1A1814; color: #fff; padding: 14px 24px; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 15px; }
+#cookie-banner.cb-visible { display: flex; }
+#cookie-banner a { color: var(--gold); }
+#cookie-banner button { background: var(--gold); color: #1A1814; border: none; padding: 8px 18px; border-radius: 2px; font-weight: 700; cursor: pointer; min-height: 36px; }
+#cb-dismiss { background: transparent; color: rgba(255,255,255,.6); font-size: 20px; padding: 4px 10px; }
+
+/* Lightbox */
+.hero-lightbox { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.92); align-items: center; justify-content: center; cursor: zoom-out; }
+.hero-lightbox.active { display: flex; }
+.hero-lightbox img { max-width: 94vw; max-height: 94vh; object-fit: contain; border-radius: 2px; }
+.hero-lightbox-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: #fff; font-size: 32px; cursor: pointer; line-height: 1; opacity: .8; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 1024px){
-  .nav{padding:0 24px}
-  .navsection{display:none !important}
-  .hero{grid-template-columns:1fr;min-height:auto}
-  .hero-photograph{min-height:auto;max-height:64vw}
-  .hero-photograph-img-wrap{height:52vw;min-height:200px;max-height:320px;padding:12px 12px 0}
-  .hero-credential{padding:16px 20px 18px}
-  .credential-score{font-size:40px}
-  .hero-text{padding:40px 32px 48px}
-  .s2-band-a{padding:56px 32px 44px}
-  .s2-band-b{padding:44px 32px}
-  .s2-band-c{padding:36px 32px 44px}
-  .s2-band-b-inner{grid-template-columns:1fr;gap:28px}
-  .photos{grid-template-columns:repeat(3,1fr)}
-  .ph:nth-child(4),.ph:nth-child(5){display:none}
-  .founder-card{grid-template-columns:160px 1fr;gap:28px;padding:28px}
-  .s3{padding:48px 32px 60px}
-  body{padding-bottom:72px}
+@media (max-width: 1024px) {
+  .nav { padding: 0 24px; }
+  .navsection { display: none !important; }
+  .hero-content { padding: 0 36px; max-width: 480px; }
+  .shift { padding: 56px 32px 48px; }
+  .shift-grid { grid-template-columns: repeat(2, 1fr); }
+  .doors-section { padding: 56px 32px 48px; }
+  .doors-grid { grid-template-columns: 1fr; max-width: 480px; }
+  .founder-section { padding: 56px 32px 48px; }
+  .founder-inner { grid-template-columns: 1fr; gap: 36px; }
+  .proof-band { padding: 48px 32px; }
+  .final-cta { padding: 52px 32px 60px; }
+  .footer { padding: 44px 32px 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-brand { grid-column: 1 / 3; }
+  body { padding-bottom: 72px; }
 }
-@media (max-width: 768px){
-  .photos{grid-template-columns:repeat(3,1fr)}
-  .ph:nth-child(5){display:none}
-  .progress-grid{grid-template-columns:1fr}
-  .s2-band-b-inner{grid-template-columns:1fr;gap:28px}
-  .founder-card{grid-template-columns:160px 1fr;gap:24px}
+@media (max-width: 768px) {
+  .hero-content { padding: 0 24px; max-width: 100%; }
+  .hero-h1 { font-size: clamp(26px, 7vw, 40px); }
+  .hero-sub { font-size: 16px; }
+  .hero-credit { padding: 16px 20px 20px; }
+  .hero-credit-score { font-size: 28px; }
+  .trust-tiles { grid-template-columns: 1fr; }
+  .doors-footer { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
-@media (max-width: 600px){
-  .nav{padding:0 16px}
-  .brand-sub{display:none}
-  .hero-text{padding:32px 20px 40px}
-  .hero-h1{font-size:clamp(28px,9vw,40px)}
-  .progress-grid{grid-template-columns:1fr}
-  .photos{grid-template-columns:repeat(2,1fr)}
-  .ph:nth-child(4){display:block}
-  .ph:nth-child(5){display:none}
-  .founder-card{grid-template-columns:1fr;padding:24px;gap:20px}
-  .founder-img-wrap img{width:100%;height:200px}
-  .s3{padding:40px 20px 52px}
-  .aea-strip{padding:20px}
-  .footer{padding:44px 20px 24px}
-  .footer-grid{grid-template-columns:1fr 1fr}
-  .footer-brand{grid-column:1/3}
-  .s2-band-a{padding:48px 20px 40px}
-  .s2-band-b{padding:36px 20px}
-  .s2-band-c{padding:32px 20px 40px}
+@media (max-width: 600px) {
+  .nav { padding: 0 16px; }
+  .brand-sub { display: none; }
+  .hero-content { top: 40%; }
+  .hero-cta { font-size: 16px; padding: 14px 22px; }
+  .shift { padding: 48px 20px 40px; }
+  .shift-grid { grid-template-columns: 1fr; gap: 16px; }
+  .doors-section { padding: 48px 20px 40px; }
+  .proof-band { padding: 40px 20px; }
+  .founder-section { padding: 48px 20px 40px; }
+  .final-cta { padding: 44px 20px 52px; }
+  .footer { padding: 40px 16px 20px; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-brand { grid-column: auto; }
 }
 </style>
 </head>
@@ -264,174 +598,240 @@ button{font:inherit;cursor:pointer}
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════
-     SCROLL 1 — HERO
-═══════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════
+     HERO — full bleed
+═══════════════════════════════════ -->
 <section class="hero">
-  <div class="hero-photograph">
-    <div class="hero-photograph-img-wrap">
-      {% if hero and hero.thumb_url %}
-        <img class="hero-photograph-img" src="{{ hero.thumb_url }}"
-             alt="{{ hero.genre or 'Photography' }} — from the League"
-             loading="eager" fetchpriority="high"
-             onerror="this.style.display='none'">
-      {% endif %}
-    </div>
-    <div class="hero-credential">
-      <div class="credential-top">
-        <div>
-          <div class="credential-name">{{ hero.photographer_name if hero and hero.photographer_name else 'From the League' }}</div>
-          <div class="credential-league">League of Photographers · 2026</div>
-        </div>
-        <div class="credential-gm-block">
-          {% if hero and hero.tier %}
-            <div class="credential-gm">{{ hero.tier }}</div>
-          {% else %}
-            <div class="credential-gm">Grandmaster</div>
-          {% endif %}
-          <div class="credential-gm-label">Honorary Title · Shutter League</div>
-        </div>
-      </div>
-      <div class="credential-divider"></div>
-      <div class="credential-bottom">
-        <div>
-          <div class="credential-score-label">Your Evaluation</div>
-          <div class="credential-score">{% if hero and hero.score %}{{ '%.1f'|format(hero.score) }}{% else %}9.3{% endif %}</div>
-          <div class="credential-score-sub">Out of 10</div>
-        </div>
-        <div class="credential-logo-col">
-          <div class="credential-logo-ring">
-            <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" onerror="this.style.display='none'">
-          </div>
-          <div class="credential-logo-text">Shutter League</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  {% if hero and hero.thumb_url %}
+    <img class="hero-img" src="{{ hero.thumb_url }}"
+         alt="{{ hero.genre or 'Photography' }} — from the League"
+         loading="eager" fetchpriority="high"
+         onclick="openLightbox(this.src, this.alt)"
+         onerror="this.style.display='none'">
+  {% endif %}
+  <div class="hero-gradient"></div>
 
-  <div class="hero-text">
-    <h1 class="hero-h1">Everyone can become a better photographer.<br><span style="color:var(--gold)">Photo by photo.</span></h1>
-    <p class="hero-lead">Five questions to see every photograph differently.</p>
-    <div class="hero-dims">
-      <div class="hero-dim"><span class="dim-label">Difficulty</span><span class="dim-q">How difficult was it to capture?</span></div>
-      <div class="hero-dim"><span class="dim-label">Disruption</span><span class="dim-q">Does it break expectations?</span></div>
-      <div class="hero-dim"><span class="dim-label">Moment</span><span class="dim-q">Did you capture the right moment?</span></div>
-      <div class="hero-dim"><span class="dim-label">Wow</span><span class="dim-q">Does it make one say WOW?</span></div>
-      <div class="hero-dim"><span class="dim-label">Emotion</span><span class="dim-q">Does the image make another person feel something?</span></div>
-    </div>
-    <p class="hero-solve">Learn from each image. Evolve with the next.</p>
+  <!-- Headline + CTA -->
+  <div class="hero-content">
+    <div class="hero-eyebrow">Photography Evaluation Platform</div>
+    <h1 class="hero-h1">Everyone can become<br>a better photographer.<br><em>Photo by photo.</em></h1>
+    <p class="hero-sub">Five questions to see every photograph differently.</p>
     {% if current_user.is_authenticated %}
       {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="bigbtn">Start with your first 10 free →</a>
+        <a href="{{ url_for('dashboard') }}" class="hero-cta">Go to my dashboard →</a>
       {% else %}
-        <a href="{{ url_for('try_welcome') }}" class="bigbtn">Start with your first 10 free →</a>
+        <a href="{{ url_for('try_page') }}" class="hero-cta">Start eValuation — ₹200 →</a>
       {% endif %}
     {% else %}
-      <a href="{{ url_for('register') }}" class="bigbtn">Start with your first 10 free →</a>
+      <a href="{{ url_for('register') }}" class="hero-cta">Start eValuation — ₹200 →</a>
     {% endif %}
-    <div class="hero-standard"><span class="hero-standard-headline">A new standard for photography.</span>Created by photographers. Built for the photography of today — and for how photography will evolve tomorrow.</div>
+    <div class="hero-micronote">10 free evaluations at sign-up. No subscription required.</div>
+  </div>
+
+  <!-- Photographer credit — bottom -->
+  <div class="hero-credit">
+    <div class="hero-credit-photographer">
+      <div class="hero-credit-name">{{ hero.photographer_name if hero and hero.photographer_name else 'League of Photographers' }}</div>
+      <div class="hero-credit-meta">{{ hero.tier if hero and hero.tier else 'Grandmaster' }} · Shutter League</div>
+    </div>
+    {% if hero and hero.score %}
+    <div class="hero-credit-score-block">
+      <div class="hero-credit-score-label">Score</div>
+      <div class="hero-credit-score">{{ '%.1f'|format(hero.score) }}</div>
+      <div class="hero-credit-score-sub">out of 10</div>
+    </div>
+    {% endif %}
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════
-     SCROLL 2 — THREE BANDS
-═══════════════════════════════════════════════ -->
-
-<!-- Band A: Progression -->
-<div class="s2-band-a">
-  <div class="band-kicker">What happens when you build a record</div>
-  <div class="band-h2">After enough photographs, something shifts.</div>
-  <div class="progress-grid">
-    <div class="progress-item"><span class="progress-verb">You see</span><span class="progress-text">what comes naturally to you</span></div>
-    <div class="progress-item"><span class="progress-verb">You notice</span><span class="progress-text">what you keep missing</span></div>
-    <div class="progress-item"><span class="progress-verb">You work</span><span class="progress-text">on what will make the difference</span></div>
-    <div class="progress-item"><span class="progress-verb">You reach</span><span class="progress-text">for a level you didn't know you could touch</span></div>
-  </div>
-</div>
-
-<!-- Band B: Standard + Mahesh -->
-<div class="s2-band-b">
-  <div class="s2-band-b-inner">
-    <div>
-      <div class="std-kicker">The standard</div>
-      <div class="std-h">Built from hundreds of blind evaluations. That standard exists nowhere else.</div>
-      <div class="std-body">Calibrated through live sessions — Making Images Matter — where serious photographers evaluated work without knowing whose it was. Five dimensions. One honest evaluation.</div>
-    </div>
-    <div class="mahesh">
-      <div class="mahesh-quote">"It told me exactly what I was doing right and what I was missing. After twenty years of photography, that is not an easy thing to say."</div>
-      <div class="mahesh-attr">Mahesh Iyer · Street photographer · Grandmaster · 37 evaluations</div>
-    </div>
-  </div>
-</div>
-
-<!-- Band C: Gallery -->
-<div class="s2-band-c">
-  <div class="gallery-kicker">League of Photographers</div>
-  <div class="gallery-h">Recently evaluated from the League.</div>
-  <div class="gallery-sub">Every evaluation calibrated against the same standard. <a href="{{ url_for('league_haiku') }}">View the full League →</a></div>
-  <div class="photos">
-    {% set ns = namespace(count=0) %}
-    {% for gi in gallery_pool %}
-      {% if gi.thumb_url and ns.count < 5 %}
-        {% set ns.count = ns.count + 1 %}
-        <a href="{{ url_for('try_standing', image_id=gi.id) }}" class="ph">
-          <img src="{{ gi.thumb_url }}" alt="{{ gi.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.parentElement.style.display='none'">
-          {% if gi.score %}<div class="ph-score">{{ '%.1f'|format(gi.score) }}</div>{% endif %}
-          <div class="ph-overlay">
-            {% if gi.photographer_name %}<div class="ph-name">{{ gi.photographer_name }}</div>{% endif %}
-            <div class="ph-tier">{{ gi.tier if gi.tier else 'Master' }}</div>
-          </div>
-        </a>
-      {% endif %}
-    {% endfor %}
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     SCROLL 3 — FOUNDER + CLOSE
-═══════════════════════════════════════════════ -->
-<section class="s3">
-  <div class="founder-card">
-    <div class="founder-img-wrap">
-      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}" alt="Sreekumar Krishnan" loading="lazy" onerror="this.style.display='none'">
-      <div class="founder-badge">
-        <div class="founder-badge-name">Sreekumar Krishnan</div>
-        <div class="founder-badge-sub">Founder, Shutter League</div>
+<!-- ═══════════════════════════════════
+     THE SHIFT
+═══════════════════════════════════ -->
+<section class="shift">
+  <div class="shift-kicker">The Shift</div>
+  <h2 class="shift-h2">After enough photographs, <em>something shifts.</em></h2>
+  <div class="shift-grid">
+    <div class="shift-item">
+      <div class="shift-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
       </div>
+      <div class="shift-num">01</div>
+      <div class="shift-item-h">Self-Awareness</div>
+      <p class="shift-item-b">You see what comes naturally to your eye — and what you reach for every time without knowing it.</p>
     </div>
-    <div>
-      <div class="founder-kicker">Why this was built</div>
-      <div class="founder-h">Photography has never had a global standard. Until now.</div>
-      <p class="founder-body">I have been making photographs for twenty-five years. For most of that time, I received two kinds of feedback — people who liked my work, and people who said nothing. Neither made me better.</p>
-      <p class="founder-body">Shutter League remembers your photographs, sees what you consistently do well, shows you what you consistently miss — and helps you understand what to work on next. A standard to grow towards. Internationally. Finally.</p>
-      <div class="founder-cred">
-        IPPAWARDS 2019 — Global Winner · Shot on iPhone 6s<br>
-        Featured: Times of India · Deccan Herald · National Geographic<br>
-        Exhibited at the Louvre, Paris · Abu Dhabi 2025 alongside UNESCO<br>
-        B&amp;W Spider Awards · 2019 onwards · Photography teacher · Bengaluru
+    <div class="shift-item">
+      <div class="shift-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </div>
+      <div class="shift-num">02</div>
+      <div class="shift-item-h">Blindspots</div>
+      <p class="shift-item-b">You notice what you keep missing — the same dimension, the same moment, consistently overlooked.</p>
+    </div>
+    <div class="shift-item">
+      <div class="shift-icon">
+        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div class="shift-num">03</div>
+      <div class="shift-item-h">Growth</div>
+      <p class="shift-item-b">You work on what will make the difference — not every dimension at once, but the one that matters next.</p>
+    </div>
+    <div class="shift-item">
+      <div class="shift-icon">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="shift-num">04</div>
+      <div class="shift-item-h">Potential</div>
+      <p class="shift-item-b">You reach for a level you didn't know you could touch — because the record shows you exactly how far you've come.</p>
     </div>
   </div>
+</section>
 
-  <div class="aea-strip">
-    <div class="aea-text">At the end of every year, the most consistent work among <strong>League members</strong> is recognised by the <strong>Annual Excellence Award</strong> — the first photography credential built on twelve months of calibrated evaluation, not a single submission.</div>
-    <div class="aea-date">Evaluations for this year's Excellence Awards closes on: 31 December 2026</div>
-  </div>
+<!-- ═══════════════════════════════════
+     TWO DOORS — pricing on homepage
+═══════════════════════════════════ -->
+<section class="doors-section">
+  <h2 class="doors-section-h">Two ways in. One standard.</h2>
+  <p class="doors-section-sub">Start where you are. Move when you're ready. Same account throughout.</p>
 
-  <div class="final-cta">
-    <div class="final-h">We think you're capable of more.</div>
-    <div class="final-sub">Come see what your photographs say.</div>
-    {% if current_user.is_authenticated %}
-      {% if current_user.is_subscribed or current_user.role == 'admin' %}
-        <a href="{{ url_for('dashboard') }}" class="bigbtn">Show me what I'm missing →</a>
+  <div class="doors-grid">
+
+    <!-- eValuation -->
+    <div class="door">
+      <div class="door-label">— Start here</div>
+      <div class="door-name">eValuation</div>
+      <div class="door-tagline">Understand your photographs. Prepaid, pay per use.</div>
+      <div class="door-price"><sup>₹</sup>200</div>
+      <div class="door-price-detail">= 20 image evaluations · ₹10 per image</div>
+      <div class="door-bonus">+ 10 free evaluations at sign-up</div>
+      <div class="door-divider"></div>
+      <div class="door-label-included">Included with eValuation</div>
+      <ul class="door-features">
+        <li>Five-dimension feedback on every photograph</li>
+        <li>Standard photographic feedback</li>
+        <li>Personal evaluation history</li>
+        <li>Pattern recognition after 10 images</li>
+        <li>Your balance always visible on dashboard</li>
+        <li>Top up with 10 evaluations for ₹100 anytime</li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('try_page') }}" class="door-cta door-cta-outline">Start eValuation — ₹200 →</a>
       {% else %}
-        <a href="{{ url_for('try_welcome') }}" class="bigbtn">Show me what I'm missing →</a>
+        <a href="{{ url_for('register') }}" class="door-cta door-cta-outline">Start eValuation — ₹200 →</a>
       {% endif %}
-    {% else %}
-      <a href="{{ url_for('register') }}" class="bigbtn">Start free — 10 evaluations →</a>
-    {% endif %}
-    <div class="final-note">No subscription. No credit card.</div>
+    </div>
+
+    <!-- eLevate -->
+    <div class="door featured">
+      <div class="door-badge">Popular</div>
+      <div class="door-label">— Go further</div>
+      <div class="door-name">eLevate Your Photography</div>
+      <div class="door-tagline">Develop your photography. Annual development programme.</div>
+      <div class="door-price"><sup>₹</sup>4,000</div>
+      <div class="door-price-detail">/ year · 48 Full Evaluations · ₹333/month</div>
+      <div class="door-bonus">Annual subscription only.</div>
+      <div class="door-divider"></div>
+      <div class="door-label-included">Included with eLevate</div>
+      <ul class="door-features">
+        <li>Everything in eValuation</li>
+        <li>Mentor narrative on every photograph</li>
+        <li>Image scores and calibrated standing</li>
+        <li>Advanced editing feedback</li>
+        <li>Locations for practice</li>
+        <li>Guidance on what to work on next</li>
+        <li>Competition preparedness for salons</li>
+        <li>Peer review and peer work visibility</li>
+        <li>Human mentoring</li>
+        <li>Annual Excellence Award eligibility</li>
+        <li>Next Shot and location advisory</li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('pricing') }}" class="door-cta door-cta-gold">Join eLevate — ₹4,000 →</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="door-cta door-cta-gold">Join eLevate — ₹4,000 →</a>
+      {% endif %}
+    </div>
+
   </div>
+
+  <div class="doors-footer">
+    <div class="doors-footer-text">
+      <h3>One account.<br>Two paths.</h3>
+      <p>Start with eValuation. Move to eLevate when you are ready.<br>Same login. Same account.</p>
+    </div>
+    <a href="{{ url_for('pricing') }}" class="doors-footer-link">Compare in detail →</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     PROOF QUOTE
+═══════════════════════════════════ -->
+<section class="proof-band">
+  <div class="proof-inner">
+    <p class="proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
+    <p class="proof-a"><strong>Vaibhav Parakh</strong> · Mobile photographer · Shutter League</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FOUNDER + TRUST
+═══════════════════════════════════ -->
+<section class="founder-section">
+  <div class="founder-inner">
+    <div>
+      <div class="founder-kicker">The Founder</div>
+      <h2 class="founder-h">Photography has never had<br>a global standard. <em>Until now.</em></h2>
+      <p class="founder-body">Shutter League was founded by Sreekumar Krishnan to create a more useful way for photographers to understand their own work — through consistent evaluation, patterns, mentoring and deliberate practice.</p>
+      <p class="founder-body">Calibrated through live sessions where serious photographers evaluated work without knowing whose it was. Five dimensions. One honest evaluation. The same standard whether you are in Bengaluru or Berlin.</p>
+      <div class="founder-sig">
+        <div class="founder-sig-name">Sreekumar Krishnan</div>
+        <div class="founder-sig-title">Founder, Shutter League</div>
+      </div>
+    </div>
+    <div class="trust-section">
+      <div class="trust-kicker">Trust / Recognition</div>
+      <div class="trust-tiles">
+        <div class="trust-tile">
+          <img class="trust-tile-img" src="{{ url_for('static', filename='img/trust-louvre.jpg') }}" alt="Exhibited at the Louvre, Paris" onerror="this.style.background='#e8e4dc';this.style.minHeight='100px'">
+          <div class="trust-tile-body">
+            <div class="trust-tile-icon">🏛</div>
+            <div class="trust-tile-text">Exhibited at the Louvre, Paris</div>
+          </div>
+        </div>
+        <div class="trust-tile">
+          <img class="trust-tile-img" src="{{ url_for('static', filename='img/trust-abudhabi.jpg') }}" alt="Abu Dhabi 2025 alongside UNESCO" onerror="this.style.background='#e8e4dc';this.style.minHeight='100px'">
+          <div class="trust-tile-body">
+            <div class="trust-tile-icon">🏛</div>
+            <div class="trust-tile-text">Abu Dhabi 2025 alongside UNESCO</div>
+          </div>
+        </div>
+        <div class="trust-tile">
+          <img class="trust-tile-img" src="{{ url_for('static', filename='img/trust-natgeo.jpg') }}" alt="Featured in National Geographic" onerror="this.style.background='#e8e4dc';this.style.minHeight='100px'">
+          <div class="trust-tile-body">
+            <div class="trust-tile-icon">📰</div>
+            <div class="trust-tile-text">Featured in National Geographic</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FINAL CTA
+═══════════════════════════════════ -->
+<section class="final-cta">
+  <div class="final-h">We think you're capable of more.</div>
+  <div class="final-sub">Come see what your photographs say.</div>
+  {% if current_user.is_authenticated %}
+    {% if current_user.is_subscribed or current_user.role == 'admin' %}
+      <a href="{{ url_for('dashboard') }}" class="final-btn">Show me what I'm missing →</a>
+    {% else %}
+      <a href="{{ url_for('try_page') }}" class="final-btn">Show me what I'm missing →</a>
+    {% endif %}
+  {% else %}
+    <a href="{{ url_for('register') }}" class="final-btn">Start free — 10 evaluations →</a>
+  {% endif %}
+  <div class="final-note">No subscription. No credit card.</div>
 </section>
 
 <!-- FOOTER -->
@@ -440,9 +840,7 @@ button{font:inherit;cursor:pointer}
     <div class="footer-brand">
       <div class="brand" style="margin-bottom:12px">
         <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" alt="Shutter League" style="height:32px;width:auto" onerror="this.style.display='none'">
-        <div class="brand-text">
-          <span class="brand-name">Shutter League</span>
-        </div>
+        <div class="brand-text"><span class="brand-name">Shutter League</span></div>
       </div>
       <div class="footer-tagline">Making Images Matter</div>
       <div class="footer-email" style="margin-top:14px">support: <a href="mailto:support@shutterleague.com">support@shutterleague.com</a></div>
@@ -455,13 +853,6 @@ button{font:inherit;cursor:pointer}
       <a href="/faq">FAQ</a>
     </div>
     <div class="footer-col">
-      <h4>Legal</h4>
-      <a href="/terms">Terms &amp; Conditions</a>
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/refund-policy">Refund Policy</a>
-      <a href="/shipping-policy">Shipping &amp; Returns</a>
-    </div>
-    <div class="footer-col">
       <h4>Programmes</h4>
       <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
       <a href="/programme-rules">Programme Rules</a>
@@ -469,9 +860,17 @@ button{font:inherit;cursor:pointer}
     </div>
     <div class="footer-col">
       <h4>Learn</h4>
-      <a href="{{ url_for('science') }}">Science</a>
-      <a href="{{ url_for('learning') }}">Lessons</a>
-      <a href="{{ url_for('mentors') }}">Mentor Review</a>
+      <a href="{{ url_for('science') }}">The Science</a>
+      <a href="{{ url_for('learning') }}">Photography Journal</a>
+      <a href="/faq">Guides</a>
+      <a href="{{ url_for('pricing') }}">Payments</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/refund-policy">Refund Policy</a>
+      <a href="/shipping-policy">Shipping &amp; Returns</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -557,7 +956,7 @@ button{font:inherit;cursor:pointer}
   </div>
 </div>
 
-<!-- HERO LIGHTBOX -->
+<!-- LIGHTBOX -->
 <div class="hero-lightbox" id="heroLightbox" role="dialog" aria-modal="true">
   <button class="hero-lightbox-close" id="heroLightboxClose" aria-label="Close">&#x2715;</button>
   <img id="heroLightboxImg" src="" alt="Full screen photograph">
@@ -588,21 +987,20 @@ document.addEventListener('click', function(e) {
     menu.style.display = 'none';
   }
 });
-(function(){
-  var img = document.querySelector('.hero-photograph-img');
+function openLightbox(src, alt) {
   var box = document.getElementById('heroLightbox');
-  var lbImg = document.getElementById('heroLightboxImg');
-  var closeBtn = document.getElementById('heroLightboxClose');
-  if (!img || !box) return;
-  img.addEventListener('click', function(){
-    lbImg.src = img.src; lbImg.alt = img.alt;
-    box.classList.add('active'); document.body.style.overflow = 'hidden';
-  });
-  function closeLightbox(){ box.classList.remove('active'); document.body.style.overflow = ''; }
-  closeBtn.addEventListener('click', closeLightbox);
-  box.addEventListener('click', function(e){ if(e.target === box) closeLightbox(); });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeLightbox(); });
-})();
+  var img = document.getElementById('heroLightboxImg');
+  img.src = src; img.alt = alt;
+  box.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('heroLightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.getElementById('heroLightboxClose').addEventListener('click', closeLightbox);
+document.getElementById('heroLightbox').addEventListener('click', function(e){ if(e.target === this) closeLightbox(); });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeLightbox(); });
 </script>
 
 </body>
