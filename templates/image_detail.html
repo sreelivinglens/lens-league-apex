@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# SL-VERSION: image_detail-182.31 (Session 222, 2026-09-26 — Tap panel shows dimension definition only. Removed redundant why/reasoning layer — dim_obs rows below already carry image-specific text. Tap = what SL measures. Rows below = what the engine saw. RETAINS 182.30.)
+{# SL-VERSION: image_detail-182.32 (Session 222, 2026-09-26 — Master reference name is now a tappable link: opens Google search for photographer's work in new tab. Gold underline indicates tappable. RETAINS 182.31.)
 {# SL-VERSION: image_detail-182.27 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 182.26.)
 {# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
 {# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
@@ -1124,7 +1124,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if _master_name_s %}
     <div class="sc-master-card">
       <div class="sc-master-label">Master reference</div>
-      <div class="sc-master-name">{{ _master_name_s }}</div>
+      {# S222 — master name links to photographer's work; Google search opens in new tab #}
+      {% set _master_search_url = 'https://www.google.com/search?q=' ~ (_master_name_s | urlencode) ~ '+photographer+work' %}
+      <div class="sc-master-name">
+        <a href="{{ _master_search_url }}" target="_blank" rel="noopener noreferrer"
+           style="color:var(--sc-dark);text-decoration:none;border-bottom:2px solid var(--sc-gold)">{{ _master_name_s }}</a>
+      </div>
       {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | safe }}</div>{% endif %}
     </div>
     {% endif %}
