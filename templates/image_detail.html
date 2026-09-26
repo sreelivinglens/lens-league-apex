@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail-182.29 (Session 222, 2026-09-26 — Restored Five Dimensions tap interaction. Un-hid DDI tile strip, added sc-ddi-detail panel with sc-ddi-title/sc-ddi-text children. Tap now shows WHY this exact score — legal defensibility for international contests. scToggleDDI JS was intact, only DOM was missing. RETAINS 182.28.)
+{# SL-VERSION: image_detail-182.27 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 182.26.)
 {# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
 {# SL-VERSION: image_detail-182.25 (Session 222, 2026-09-26 — NS row added after dim_obs: "Is there a story?" label, dark text on tinted backgrounds, no sub-description. body_of_work now populated by Sonnet engine. RETAINS 182.24.) #}
 {# SL-VERSION: image_detail-182.24 (Session 221 — ns/dim_obs_ns passthrough from audit_json to template. RETAINS 182.23.) #}
@@ -886,13 +888,12 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <div class="sc-card-hdr">
           <span class="sc-card-title">The Five Dimensions</span>
           <div style="text-align:right">
-            <div style="font-size:13px;color:var(--sc-muted)">Tap any dimension</div>
-            <div style="font-size:13px;color:var(--sc-muted);margin-top:1px">All evaluations out of 10</div>
+            <div style="font-size:13px;color:var(--sc-muted)">All evaluations out of 10 · Tap any dimension to see why</div>
           </div>
         </div>
 
         {# Desktop strip — hidden when dim_obs present below; kept for mobile fallback #}
-        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip" style="display:none">
+        <div class="sc-ddi-strip sc-ddi-strip-desktop" id="sc-ddi-strip">
           {# SL-181.9 — ONE NAME PER DIMENSION.
              The page carried three naming systems at once: abbreviations here
              ("Affective Q."), longer forms mid-page ("Affective Quotient"), and
@@ -939,6 +940,11 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           {% endfor %}
         </div>
 
+        {# sc-ddi-detail panel — restored S222 — tap reveals WHY this exact score (legal defensibility) #}
+        <div class="sc-ddi-detail" id="sc-ddi-detail" style="display:none">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:8px" id="sc-ddi-title"></div>
+          <div id="sc-ddi-text"></div>
+        </div>
 
         {# ── SESSION 214: DIMENSION OBSERVATIONS — always visible ── #}
         {% set _dim_obs_map = {
@@ -981,7 +987,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% set _ns_raw = (_audit.get('ns') or '') | string | lower | replace(' ','_') | replace('-','_') %}
         {% set _dim_obs_ns_val = (_audit.get('dim_obs_ns') or '') | trim %}
         {% if _ns_raw or _dim_obs_ns_val %}
-        {% set _ns_label = 'Story coming through' if _ns_raw == 'yes' else ('Not sure' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'No story') %}
+        {% set _ns_label = 'Yes' if _ns_raw == 'yes' else ('Not sure' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'No') %}
         {% set _ns_border = '#16a34a' if _ns_raw == 'yes' else ('#f59e0b' if _ns_raw in ('not_sure','notsure','maybe','unsure') else '#94a3b8') %}
         {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_raw == 'yes' else ('rgba(255,251,235,0.6)' if _ns_raw in ('not_sure','notsure','maybe','unsure') else 'transparent') %}
         {% set _ns_text = '#166534' if _ns_raw == 'yes' else ('#92400e' if _ns_raw in ('not_sure','notsure','maybe','unsure') else '#64748b') %}
@@ -992,7 +998,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
           <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:15px">📖</span>
-              <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:{{ _ns_text }}">Is there a story?</span>
+              <span style="font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:{{ _ns_text }}">Does the image have a story?</span>
             </div>
             {% if _dim_obs_ns_val %}<div style="font-size:15px;color:var(--sc-text);line-height:1.75">{{ _dim_obs_ns_val }}</div>{% endif %}
           </div>
