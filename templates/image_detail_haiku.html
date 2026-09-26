@@ -1,4 +1,5 @@
-{# image_detail_haiku.html — SL-VERSION: 2.10 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". dim_obs_ns suppressed on Haiku — verdict label only, no defence sentence. RETAINS 2.9.)
+{# image_detail_haiku.html — SL-VERSION: 2.11 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 2.10.)
+   SL-VERSION: 2.10 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". dim_obs_ns suppressed on Haiku — verdict label only, no defence sentence. RETAINS 2.9.)
    SL-VERSION: 2.9 (Session 222, 2026-09-26 — NS label changed to "Is there a story?", sub-description removed, font colour fixed: dark text (#166534 green / #92400e amber / #64748b slate) on tinted backgrounds. RETAINS 2.8.)
    SL-VERSION: 2.8 (Session 221, 2026-09-25 — NS row moved AFTER band legend so numeric scale does not appear immediately after binary YES/NO. Green background fix: background!important on sl-dim-row overrides class CSS. RETAINS 2.7.)
    SL-VERSION: 2.6 (Session 216, 2026-09-06 — Species note moved to footer.)
@@ -345,7 +346,7 @@ main{padding:0!important;background:#E0DDD7}
       {# ── SESSION 221: NARRATIVE SUFFICIENCY — binary dim row (after band legend) ── #}
       {% if ns or dim_obs_ns %}
       {% set _ns_str = (ns or '')|string|lower|replace(' ','_')|replace('-','_') %}
-      {% set _ns_label = 'Story coming through' if _ns_str == 'yes' else ('Not sure' if _ns_str in ('not_sure','notsure','maybe','unsure') else 'No story') %}
+      {% set _ns_label = 'Yes' if _ns_str == 'yes' else ('Not sure' if _ns_str in ('not_sure','notsure','maybe','unsure') else 'No') %}
       {% set _ns_border = '#16a34a' if _ns_str == 'yes' else ('#f59e0b' if _ns_str in ('not_sure','notsure','maybe','unsure') else '#94a3b8') %}
       {% set _ns_bg = 'rgba(240,253,244,0.6)' if _ns_str == 'yes' else ('rgba(255,251,235,0.6)' if _ns_str in ('not_sure','notsure','maybe','unsure') else 'transparent') %}
       {% set _ns_text = '#166534' if _ns_str == 'yes' else ('#92400e' if _ns_str in ('not_sure','notsure','maybe','unsure') else '#64748b') %}
@@ -356,7 +357,7 @@ main{padding:0!important;background:#E0DDD7}
         <div class="sl-dim-text-col">
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:15px">📖</span>
-            <span class="sl-dim-code" style="color:{{ _ns_text }}">Is there a story?</span>
+            <span class="sl-dim-code" style="color:{{ _ns_text }}">Does the image have a story?</span>
           </div>
           {# dim_obs_ns suppressed on Haiku — Haiku cannot reliably describe the story element #}
         </div>
