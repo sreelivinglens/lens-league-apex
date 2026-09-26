@@ -1,3 +1,4 @@
+# SL-VERSION: 171.31 (Session 222, 2026-09-26 — BOW format fix: body_of_work prompt now requires "Frame 1: / Frame 2: / Frame 3: / Frame 4:" labels on separate lines. Prevents prose run-on that broke template frame-splitter. RETAINS 171.30.)
 # SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
 # SL-VERSION: 171.17-staging (Session 215, 2026-09-06 — FIX: Master reference fact accuracy rule. Engine was inventing specific locations/expeditions/timeframes for master photographers (e.g. 'Sudhir Shivaram worked Ranganathittu for years', 'Frans Lanting in the Danube Delta'). Added explicit FACT ACCURACY rule to SCORE_PROMPT master reference section and master_why field spec: never state specific locations, dates, or project names unless established general knowledge. Use broad known approach + search link instead. RETAINS 171.16.)
@@ -1674,8 +1675,15 @@ body of work. Second person, Sherpa voice. Present tense. DIRECTIONAL — not lo
 Each frame names: the subject tension, the light or moment type, and what emotional register it
 would complete. Write four distinct frames that define a photographic project, not four
 variations of the same image. Max 120 words total. No dimension names. No jargon.
-Example frame: 'The next image in this series shows the same subject in a moment of conflict
-or failure — not the perfect shot, the complicated one. That tension is what a body of work needs.'
+FORMAT — MANDATORY: Each frame MUST start with its label on a new line, exactly as:
+Frame 1: [frame description]
+Frame 2: [frame description]
+Frame 3: [frame description]
+Frame 4: [frame description]
+Do NOT write them as continuous prose. Each frame is a separate paragraph.
+Example:
+Frame 1: The next image in this series shows the same subject in a moment of conflict or failure — not the perfect shot, the complicated one. That tension is what a body of work needs.
+Frame 2: The second frame shows the flock at dusk, the light shifting, the mood changing — what the subject looks like when the energy leaves the scene.
 
 SHERPA TEST — APPLY TO EVERY SENTENCE IN EVERY NEW FIELD:
 Before writing any sentence, ask: would a Sherpa guiding someone up a mountain say this?
