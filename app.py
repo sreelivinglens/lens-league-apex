@@ -1,4 +1,4 @@
-# SL-VERSION: 182.23 (Session 224, 2026-09-27 — Contest Judge: Mentor Notes field added; founder_note column; interactive review page /admin/contest-judge/review/<batch_ref>; save-note AJAX route; scorecards now include Mentor Notes block; selective export by ids param. RETAINS 182.22.)
+# SL-VERSION: 182.24 (Session 224, 2026-09-27 — Contest Judge: thumb_path added to results JSON; thumbnail column in results table. RETAINS 182.23.)
 
 import os
 import re
@@ -15771,7 +15771,8 @@ def admin_contest_judge_results(batch_ref):
         SELECT id, filename, photographer, image_title,
                emotion_score, story_score, composition_score, technique_score,
                arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note, judged_at
+               theme_relevant, theme_note, master_ref, gap_note, judged_at,
+               thumb_path
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
@@ -15793,7 +15794,8 @@ def admin_contest_judge_results(batch_ref):
         'theme_note': r.theme_note,
         'master_ref': r.master_ref,
         'gap_note': r.gap_note,
-        'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else ''
+        'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else '',
+        'thumb_url': f'/static/{r.thumb_path}' if r.thumb_path else None
     } for r in rows])
 
 
