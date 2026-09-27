@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.1 (Session 224, 2026-09-27 — Added Review & Mentor Notes button on each batch row. RETAINS v2.0.) #}
+{# SL-VERSION: admin_contest_judge-2.2 (Session 224, 2026-09-27 — Thumbnail column in results table. RETAINS v2.1.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -230,6 +230,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <thead>
           <tr>
             <th class="center">#</th>
+            <th style="width:68px"></th>
             <th>Photographer</th>
             <th class="center">Emotion</th>
             <th class="center">Story</th>
@@ -400,6 +401,11 @@ async function loadResults(batchRef) {
     tr.dataset.rank = rank;
     tr.innerHTML = `
       <td><span class="rank-num">${rank}</span></td>
+      <td style="padding:4px 6px;vertical-align:middle;">
+        ${r.thumb_url
+          ? `<img src="${r.thumb_url}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:5px;display:block;">`
+          : `<div style="width:60px;height:60px;background:#e8e4dc;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">—</div>`}
+      </td>
       <td>
         <div class="photographer-name">${esc(r.photographer||'Unknown')}</div>
         <div class="image-title">${esc(r.title||r.filename)}</div>
