@@ -1,394 +1,522 @@
-{# SL-VERSION: admin_contest_review-1.1 (Session 224, 2026-09-27 — Standalone page, no base template dependency. RETAINS v1.0.) #}
+{# SL-VERSION: admin_contest_review-2.0 (Session 224, 2026-09-28 — Full DDI rewrite: 6 dimension pills (Wonder/AQ/StoryXfr/Disruption/Craft/Moment), Story Transfer scale label, genre detected, theme score/gate badge, inline edit buttons for Theme Note/Gap/Master Ref/Subject ID via AJAX POST to /admin/contest-judge/save-override/<id>. RETAINS v1.1 layout structure.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>Contest Review — {{ batch_ref }}</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Review — {{ batch_ref }} — Shutter League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,sans-serif;background:#111009;color:#e8e4dc;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-</style>
-<style>
-/* ── Review page ── */
-.cr-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
-.cr-topbar {
-  display: flex; align-items: center; gap: 16px;
-  background: #1a1815; border-radius: 10px;
-  padding: 14px 20px; margin-bottom: 24px;
-  position: sticky; top: 0; z-index: 100;
-}
-.cr-topbar h2 { color: #c8a84b; font-size: 18px; margin: 0; flex: 1; }
-.cr-counter { color: #a0a09a; font-size: 15px; white-space: nowrap; }
-.cr-nav-btn {
-  background: #2c2a26; border: 1px solid #3a3831; color: #e8e4dc;
-  border-radius: 6px; padding: 7px 18px; cursor: pointer; font-size: 15px;
-  transition: background .15s;
-}
-.cr-nav-btn:hover { background: #3a3831; }
-.cr-nav-btn:disabled { opacity: .35; cursor: default; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
-/* Card */
-.cr-card {
-  display: none; background: #1e1c18; border: 1px solid #2e2c28;
-  border-radius: 12px; overflow: hidden;
-}
-.cr-card.active { display: flex; flex-direction: column; }
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid #E0DDD6;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:50}
+.sb-logo{padding:18px 18px 14px;border-bottom:1px solid #E0DDD6}
+.sb-logo-title{font-size:14px;font-weight:600;color:#1A1A18;display:flex;align-items:center;gap:8px}
+.sb-logo-sub{font-size:12px;color:#8A8A86;margin-top:3px}
+.sb-back{display:flex;align-items:center;gap:8px;padding:12px 18px;font-size:14px;color:#3A3A38;text-decoration:none;border-bottom:1px solid #F0EDE6}
+.sb-back:hover{background:#F5F3EF}
+.sb-back i{font-size:16px;color:#8A8A86}
+.sb-section{padding:16px 18px 8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#AEAEA8}
+.sb-nav{list-style:none}
+.sb-nav a{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:14px;color:#3A3A38;text-decoration:none;border-radius:0}
+.sb-nav a:hover{background:#F5F3EF}
+.sb-nav a.active{background:#F5F3EF;font-weight:600;color:#1A1A18}
+.sb-nav i{font-size:17px;color:#8A8A86}
 
-.cr-card-top { display: flex; gap: 0; }
-.cr-img-col {
-  width: 420px; min-width: 320px; background: #111;
-  display: flex; align-items: center; justify-content: center;
-  min-height: 360px;
-}
-.cr-img-col img { max-width: 100%; max-height: 480px; object-fit: contain; display: block; }
-.cr-img-col .no-img { color: #555; font-size: 13px; padding: 20px; }
+.main{padding:24px 28px 80px;min-width:0}
+.page-header{margin-bottom:24px}
+.page-title{font-size:22px;font-weight:500;color:#1A1A18}
+.page-sub{font-size:14px;color:#6B6B68;margin-top:4px}
 
-.cr-info-col { flex: 1; padding: 28px 28px 20px; }
+/* ── SUMMARY BAR ── */
+.summary-bar{display:flex;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.sum-item{text-align:center}
+.sum-label{font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.sum-val{font-size:20px;font-weight:600;color:#1A1A18}
+.sum-val.good{color:#065F46}
+.sum-val.warn{color:#B45309}
 
-.cr-rank-badge {
-  display: inline-block; font-size: 28px; font-weight: 700;
-  color: #c8a84b; margin-bottom: 6px;
-}
-.cr-rank-pct { font-size: 13px; color: #a0a09a; margin-bottom: 12px; }
-.cr-photographer { font-size: 22px; font-weight: 700; color: #f0ece0; margin-bottom: 2px; }
-.cr-title { font-size: 14px; color: #a0a09a; margin-bottom: 14px; }
-.cr-composite { font-size: 42px; font-weight: 800; color: #f0ece0; line-height: 1; }
-.cr-composite span { font-size: 15px; color: #a0a09a; font-weight: 400; }
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.card-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.rank-badge{min-width:48px;height:48px;border-radius:50%;background:#1A2744;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.rank-badge.r1{background:#c8a84b}
+.rank-badge.r2{background:#9CA3AF}
+.rank-badge.r3{background:#B45309}
+.entry-meta{flex:1;min-width:0}
+.entry-name{font-size:18px;font-weight:600;color:#1A1A18;margin-bottom:2px}
+.entry-title{font-size:14px;color:#6B6B68}
+.entry-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-theme-pass{background:#D1FAE5;color:#065F46}
+.badge-theme-fail{background:#FEE2E2;color:#991B1B}
+.badge-genre{background:#EDE9FE;color:#5B21B6}
+.badge-soul{background:#FEF3C7;color:#92400E}
+.entry-composite{font-size:28px;font-weight:700;color:#1A2744;line-height:1;text-align:right;flex-shrink:0}
+.entry-composite small{display:block;font-size:11px;font-weight:500;color:#8A8A86;text-align:right;margin-top:2px}
 
-/* Theme badge */
-.cr-theme-badge {
-  display: inline-block; border-radius: 6px; padding: 3px 12px;
-  font-size: 13px; font-weight: 600; margin: 10px 0 14px;
-}
-.cr-theme-badge.pass { background: #064e3b22; color: #34d399; border: 1px solid #064e3b; }
-.cr-theme-badge.fail { background: #7f1d1d22; color: #f87171; border: 1px solid #7f1d1d; }
+/* ── IMAGE + DIMS GRID ── */
+.entry-body{display:grid;grid-template-columns:180px 1fr;gap:20px}
+.thumb-wrap{position:relative}
+.thumb-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:#EDE9E0}
+.thumb-none{width:100%;aspect-ratio:1;background:#EDE9E0;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#AEAEA8;font-size:12px}
 
-/* 7 score pills */
-.cr-scores { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-.cr-score-pill {
-  background: #2c2a26; border-radius: 8px; padding: 8px 12px;
-  text-align: center; min-width: 72px;
-}
-.cr-score-pill .sp-val { font-size: 20px; font-weight: 700; color: #f0ece0; }
-.cr-score-pill .sp-lbl { font-size: 11px; color: #7a7a72; margin-top: 2px; }
+/* ── DDI DIMENSION PILLS ── */
+.dims-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.dim-pill{background:#F5F3EF;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.dim-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A8A86}
+.dim-weight{font-size:10px;color:#AEAEA8}
+.dim-val{font-size:22px;font-weight:700;line-height:1;margin:4px 0 2px}
+.dim-val.dv-high{color:#065F46}
+.dim-val.dv-mid{color:#1A2744}
+.dim-val.dv-low{color:#B91C1C}
+.dim-bar{height:4px;background:#E0DDD6;border-radius:2px;overflow:hidden}
+.dim-bar-fill{height:100%;border-radius:2px;background:#1A2744;transition:width .4s}
+.dim-bar-fill.dv-high{background:#059669}
+.dim-bar-fill.dv-low{background:#DC2626}
+.story-label{font-size:10px;color:#6B6B68;margin-top:2px;font-style:italic}
 
-/* Notes sections */
-.cr-note-section { margin-bottom: 10px; }
-.cr-note-label { font-size: 11px; font-weight: 600; color: #7a7a72; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
-.cr-note-body { font-size: 14px; color: #ccc8be; line-height: 1.55; }
+/* ── MODIFIERS ROW ── */
+.modifiers-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.mod-tag{padding:3px 10px;border-radius:14px;font-size:11px;font-weight:600}
+.mod-soul{background:#FEF3C7;color:#92400E}
+.mod-iconic{background:#FEE2E2;color:#991B1B}
+.mod-excellence{background:#D1FAE5;color:#065F46}
+.mod-ns-yes{background:#DBEAFE;color:#1E40AF}
+.mod-ns-maybe{background:#EDE9FE;color:#5B21B6}
+.mod-humanity{background:#FEE2E2;color:#7F1D1D}
 
-/* Mentor Notes textarea */
-.cr-mentor-area {
-  border-top: 1px solid #2e2c28; padding: 20px 28px 24px;
-}
-.cr-mentor-area label {
-  display: block; font-size: 13px; font-weight: 700;
-  color: #c8a84b; margin-bottom: 8px; letter-spacing: .04em;
-}
-.cr-mentor-area textarea {
-  width: 100%; box-sizing: border-box;
-  background: #141210; border: 1px solid #3a3831; color: #f0ece0;
-  border-radius: 8px; padding: 12px 14px; font-size: 15px;
-  line-height: 1.6; resize: vertical; min-height: 140px;
-  font-family: inherit;
-  transition: border-color .15s;
-}
-.cr-mentor-area textarea:focus { outline: none; border-color: #c8a84b; }
-.cr-mentor-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-.btn-save-note {
-  background: #c8a84b; color: #1a1815; border: none;
-  border-radius: 7px; padding: 9px 26px; font-size: 14px;
-  font-weight: 700; cursor: pointer; transition: background .15s;
-}
-.btn-save-note:hover { background: #d4b55a; }
-.btn-save-note:disabled { opacity: .5; cursor: default; }
-.save-status { font-size: 13px; color: #34d399; display: none; }
+/* ── NOTES SECTION ── */
+.notes-section{border-top:1px solid #E0DDD6;padding-top:14px;margin-top:2px}
+.note-block{margin-bottom:14px}
+.note-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.note-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A8A86}
+.note-text{font-size:14px;color:#3A3A38;line-height:1.6;min-height:20px}
+.ai-flag{font-size:11px;color:#AEAEA8;font-style:italic}
+.edit-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #C8C5BE;background:#FAFAF6;color:#3A3A38;transition:background .15s}
+.edit-btn:hover{background:#E0DDD6}
 
-/* Footer toolbar */
-.cr-footer-bar {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  background: #1a1815; border-radius: 10px; padding: 16px 20px;
-  margin-top: 20px;
-}
-.cr-select-all { font-size: 14px; color: #a0a09a; cursor: pointer; user-select: none; }
-.cr-select-all input { cursor: pointer; margin-right: 6px; }
-.btn-export-sel {
-  background: #1d4ed8; color: #fff; border: none; border-radius: 7px;
-  padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background .15s;
-}
-.btn-export-sel:hover { background: #1e40af; }
-.btn-export-all {
-  background: #2c2a26; color: #e8e4dc; border: 1px solid #3a3831;
-  border-radius: 7px; padding: 9px 20px; font-size: 14px; cursor: pointer;
-  transition: background .15s;
-}
-.btn-export-all:hover { background: #3a3831; }
-.cr-sel-count { font-size: 13px; color: #a0a09a; margin-left: auto; }
+/* ── INLINE EDIT FORM ── */
+.edit-form{display:none;margin-top:8px}
+.edit-form.open{display:block}
+.edit-textarea{width:100%;min-height:72px;padding:8px 10px;border:1px solid #C8C5BE;border-radius:6px;font-size:14px;font-family:inherit;color:#1A1A18;background:#FAFAF6;resize:vertical}
+.edit-textarea:focus{outline:none;border-color:#1A2744}
+.edit-actions{display:flex;gap:8px;margin-top:6px}
+.save-btn{padding:6px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#1A2744;color:#fff}
+.save-btn:hover{background:#253660}
+.cancel-btn{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid #C8C5BE;background:#fff;color:#3A3A38}
+.save-status{font-size:12px;padding:4px 0;display:none}
+.save-status.ok{color:#065F46;display:inline}
+.save-status.err{color:#991B1B;display:inline}
 
-/* Thumbnail row */
-.cr-thumb-row {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;
-}
-.cr-thumb-item {
-  position: relative; cursor: pointer; border-radius: 6px; overflow: hidden;
-  border: 2px solid transparent; transition: border-color .15s;
-  width: 72px; height: 72px; background: #111; flex-shrink: 0;
-}
-.cr-thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cr-thumb-item .no-img-mini { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #555; font-size: 10px; }
-.cr-thumb-item.active-thumb { border-color: #c8a84b; }
-.cr-thumb-item .cr-chk {
-  position: absolute; top: 3px; right: 3px;
-  width: 16px; height: 16px; border-radius: 3px;
-  background: rgba(0,0,0,.55); border: 1px solid #555;
-  display: flex; align-items: center; justify-content: center;
-}
-.cr-thumb-item.selected .cr-chk { background: #c8a84b; border-color: #c8a84b; }
-.cr-thumb-item .cr-chk::after { content: '✓'; font-size: 10px; color: #1a1815; display: none; }
-.cr-thumb-item.selected .cr-chk::after { display: block; }
-.cr-rank-num {
-  position: absolute; bottom: 3px; left: 3px;
-  font-size: 10px; font-weight: 700; color: #fff;
-  background: rgba(0,0,0,.6); border-radius: 3px; padding: 1px 4px;
+/* ── FOUNDER NOTE ── */
+.founder-note-wrap{background:#FAFAF6;border:1px solid #E0DDD6;border-radius:8px;padding:12px 14px;margin-top:10px}
+.founder-note-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c8a84b;margin-bottom:6px}
+.founder-note-text{font-size:14px;color:#1A1A18;white-space:pre-wrap}
+.founder-note-form{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.founder-note-ta{flex:1;min-width:180px;padding:8px 10px;border:1px solid #C8C5BE;border-radius:6px;font-size:14px;font-family:inherit;min-height:60px}
+.founder-note-btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#c8a84b;color:#1a1815}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:background .15s;text-decoration:none}
+.btn-gold{background:#c8a84b;color:#1a1815}.btn-gold:hover{background:#b8962e}
+.btn-outline{background:#fff;color:#1A1A18;border:1px solid #C8C5BE}.btn-outline:hover{background:#F5F3EF}
+.btn-green{background:#059669;color:#fff}.btn-green:hover{background:#047857}
+.top-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr}.sidebar{display:none}
+  .entry-body{grid-template-columns:1fr}
+  .dims-grid{grid-template-columns:repeat(2,1fr)}
+  .entry-composite{display:none}
 }
 </style>
+</head>
+<body>
+<div class="layout">
 
-<div class="cr-wrap">
-  <!-- Top bar -->
-  <div class="cr-topbar">
-    <a href="{{ url_for('admin_contest_judge') }}" style="color:#7a7a72;text-decoration:none;font-size:14px;">← Back</a>
-    <h2>{{ batch_ref }}</h2>
-    <span class="cr-counter" id="cr-counter">1 / {{ total }}</span>
-    <button class="cr-nav-btn" id="btn-prev" onclick="cNav(-1)" disabled>◀ Prev</button>
-    <button class="cr-nav-btn" id="btn-next" onclick="cNav(1)">Next ▶</button>
-  </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-title"><i class="ti ti-aperture" style="font-size:20px;color:#c8a84b"></i> Shutter League</div>
+      <div class="sb-logo-sub">Admin · Contest Judge</div>
+    </div>
+    <a href="/admin/contest-judge" class="sb-back"><i class="ti ti-arrow-left"></i> Back to Judge</a>
+    <div class="sb-section">Batch</div>
+    <ul class="sb-nav">
+      <li><a href="#" class="active"><i class="ti ti-notebook"></i> {{ batch_ref }}</a></li>
+      <li><a href="/admin/contest-judge/export/{{ batch_ref|urlencode }}"><i class="ti ti-file-spreadsheet"></i> Excel Export</a></li>
+      <li><a href="/admin/contest-judge/scorecards/{{ batch_ref|urlencode }}"><i class="ti ti-id"></i> Scorecards ZIP</a></li>
+    </ul>
+    <div class="sb-section">Admin</div>
+    <ul class="sb-nav">
+      <li><a href="/admin"><i class="ti ti-layout-dashboard"></i> Dashboard</a></li>
+      <li><a href="/admin/users"><i class="ti ti-users"></i> Members</a></li>
+      <li><a href="/admin/images"><i class="ti ti-photo"></i> Images</a></li>
+    </ul>
+  </aside>
 
-  <!-- Cards -->
-  {% for e in entries %}
-  <div class="cr-card {% if loop.first %}active{% endif %}" id="card-{{ loop.index0 }}" data-idx="{{ loop.index0 }}">
-    <div class="cr-card-top">
-      <!-- Image -->
-      <div class="cr-img-col">
-        {% if e.thumb_url %}
-          <img src="{{ e.thumb_url }}" alt="{{ e.filename }}" loading="lazy">
-        {% else %}
-          <div class="no-img">No image stored</div>
-        {% endif %}
+  <!-- MAIN -->
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Review — {{ batch_ref }}</div>
+      <div class="page-sub">Open Call DDI v182.27 · {{ entries|length }} entries · Wonder 27% · Connect 19% · Story Transfer 18% · Disruption 15% · Craft 13% · Moment 8%</div>
+    </div>
+
+    <!-- SUMMARY BAR -->
+    <div class="summary-bar">
+      <div class="sum-item">
+        <div class="sum-label">Entries</div>
+        <div class="sum-val">{{ entries|length }}</div>
       </div>
-      <!-- Info -->
-      <div class="cr-info-col">
-        <div class="cr-rank-badge">
-          {% if e.rank == 1 %}🥇{% elif e.rank == 2 %}🥈{% elif e.rank == 3 %}🥉{% else %}#{{ e.rank }}{% endif %}
+      {% set composites = entries | map(attribute='composite_score') | select('gt', 0) | list %}
+      {% if composites %}
+      <div class="sum-item">
+        <div class="sum-label">Avg Composite</div>
+        <div class="sum-val">{{ (composites|sum / composites|length)|round(2) }}</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-label">Highest</div>
+        <div class="sum-val good">{{ composites|max|round(2) }}</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-label">Lowest</div>
+        <div class="sum-val warn">{{ composites|min|round(2) }}</div>
+      </div>
+      {% endif %}
+      <div class="sum-item">
+        <div class="sum-label">Theme Qualified</div>
+        <div class="sum-val">{{ entries | selectattr('theme_relevant') | list | length }} / {{ entries|length }}</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-label">Theme Gate</div>
+        <div class="sum-val">≥ {{ entries[0].theme_threshold if entries else '6.0' }}</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <a href="/admin/contest-judge/export/{{ batch_ref|urlencode }}" class="btn btn-green">
+        <i class="ti ti-file-spreadsheet"></i> Excel Export
+      </a>
+      <a href="/admin/contest-judge/scorecards/{{ batch_ref|urlencode }}" class="btn btn-gold">
+        <i class="ti ti-id"></i> Scorecards ZIP
+      </a>
+      <a href="/admin/contest-judge" class="btn btn-outline">
+        <i class="ti ti-arrow-left"></i> Back
+      </a>
+    </div>
+
+    {% for e in entries %}
+    {% set is_top = e.rank <= 3 %}
+    <div class="card" id="entry-{{ e.id }}">
+
+      <!-- HEADER -->
+      <div class="card-header">
+        <div class="rank-badge {% if e.rank == 1 %}r1{% elif e.rank == 2 %}r2{% elif e.rank == 3 %}r3{% endif %}">
+          {{ e.rank }}
         </div>
-        {% if e.pct is not none %}
-        <div class="cr-rank-pct">Top {{ 100 - e.pct }}% · {{ e.pct }}th percentile of {{ total }}</div>
-        {% endif %}
-        <div class="cr-photographer">{{ e.photographer }}</div>
-        <div class="cr-title">{{ e.image_title or e.filename }}</div>
-        <div class="cr-composite">{{ "%.2f"|format(e.composite_score) }} <span>/ 10</span></div>
-        <div class="cr-theme-badge {% if e.theme_relevant %}pass{% else %}fail{% endif %}">
-          Theme: {{ e.theme }} {{ '✓' if e.theme_relevant else '✗' }}
-        </div>
-        <!-- 7 scores -->
-        <div class="cr-scores">
-          {% for lbl, val in [('Emotion', e.emotion_score), ('Story', e.story_score), ('Compo', e.composition_score), ('Tech', e.technique_score), ('Arrest', e.arrest_score), ('Wow', e.wow_score), ('Disrupt', e.disruption_score)] %}
-          <div class="cr-score-pill">
-            <div class="sp-val">{{ "%.1f"|format(val) }}</div>
-            <div class="sp-lbl">{{ lbl }}</div>
+        <div class="entry-meta">
+          <div class="entry-name">{{ e.photographer }}</div>
+          <div class="entry-title">{{ e.image_title or e.filename }}</div>
+          <div class="entry-badges">
+            {% if e.theme_relevant %}
+              <span class="badge badge-theme-pass">
+                <i class="ti ti-check"></i> Theme {{ '%.1f'|format(e.theme_score) }}/10 ✓ Qualified
+              </span>
+            {% else %}
+              <span class="badge badge-theme-fail">
+                <i class="ti ti-x"></i> Theme {{ '%.1f'|format(e.theme_score) }}/10 · Below {{ e.theme_threshold }}
+              </span>
+            {% endif %}
+            {% if e.genre_detected %}
+              <span class="badge badge-genre"><i class="ti ti-camera"></i> {{ e.genre_detected }}</span>
+            {% endif %}
+            {% if e.judged_at %}
+              <span class="badge" style="background:#F5F3EF;color:#8A8A86">{{ e.judged_at }}</span>
+            {% endif %}
           </div>
-          {% endfor %}
         </div>
-        {% if e.theme_note %}
-        <div class="cr-note-section">
-          <div class="cr-note-label">Theme Note</div>
-          <div class="cr-note-body">{{ e.theme_note }}</div>
-        </div>
-        {% endif %}
-        {% if e.master_ref %}
-        <div class="cr-note-section">
-          <div class="cr-note-label">Master Reference</div>
-          <div class="cr-note-body">{{ e.master_ref }}</div>
-        </div>
-        {% endif %}
-        {% if e.gap_note %}
-        <div class="cr-note-section">
-          <div class="cr-note-label">Gap</div>
-          <div class="cr-note-body">{{ e.gap_note }}</div>
-        </div>
-        {% endif %}
-        <div class="cr-note-section" style="margin-top:10px;">
-          <div class="cr-note-label" style="color:#555;">{{ e.filename }} · {{ e.judged_at }}</div>
+        <div class="entry-composite">
+          {{ '%.2f'|format(e.composite_score) }}
+          <small>/10 Composite</small>
         </div>
       </div>
-    </div>
 
-    <!-- Mentor Notes -->
-    <div class="cr-mentor-area">
-      <label>✦ MENTOR NOTES</label>
-      <textarea id="note-{{ e.id }}"
-                placeholder="Type your notes here — 3 to 8 lines recommended. These will appear on the exported scorecard."
-                rows="8">{{ e.founder_note }}</textarea>
-      <div class="cr-mentor-actions">
-        <button class="btn-save-note" onclick="saveNote({{ e.id }}, {{ loop.index }}, {{ total }})">Save Note</button>
-        <span class="save-status" id="saved-{{ e.id }}">✓ Saved</span>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
+      <!-- IMAGE + DIMS -->
+      <div class="entry-body">
+        <div class="thumb-wrap">
+          {% if e.thumb_url %}
+            <img class="thumb-img" src="{{ e.thumb_url }}" alt="{{ e.image_title }}">
+          {% else %}
+            <div class="thumb-none"><i class="ti ti-photo" style="font-size:24px"></i></div>
+          {% endif %}
+          <div style="margin-top:8px;font-size:11px;color:#8A8A86;word-break:break-all">{{ e.filename }}</div>
+          {% if e.subject_id %}
+          <div style="margin-top:6px;font-size:12px;font-weight:600;color:#5B21B6">
+            Subject: {{ e.subject_id }}
+          </div>
+          {% endif %}
+        </div>
 
-  <!-- Thumbnail strip + export bar -->
-  <div class="cr-footer-bar" style="flex-direction:column;align-items:flex-start;gap:14px;">
-    <!-- Thumb row -->
-    <div class="cr-thumb-row" id="thumb-row">
-      {% for e in entries %}
-      <div class="cr-thumb-item {% if loop.first %}active-thumb{% endif %}"
-           id="thumb-{{ loop.index0 }}"
-           onclick="cGoTo({{ loop.index0 }})"
-           title="{{ e.photographer }}">
-        {% if e.thumb_url %}
-          <img src="{{ e.thumb_url }}" alt="{{ e.photographer }}" loading="lazy">
-        {% else %}
-          <div class="no-img-mini">?</div>
-        {% endif %}
-        <div class="cr-chk"></div>
-        <div class="cr-rank-num">{{ e.rank }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    <!-- Action row -->
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;">
-      <label class="cr-select-all">
-        <input type="checkbox" id="chk-all" onchange="toggleAll(this)"> Select all
-      </label>
-      <button class="btn-export-sel" onclick="exportSelected()">Download Selected Scorecards</button>
-      <button class="btn-export-all" onclick="exportAll()">Download All Scorecards</button>
-      <span class="cr-sel-count" id="sel-count">0 selected</span>
-    </div>
-  </div>
+        <div>
+          <!-- DDI DIMENSION PILLS -->
+          <div class="dims-grid">
+            {% set dims = [
+              ('Wonder', 'Emotion', '27%', e.wonder_score, ''),
+              ('Human Connect', 'AQ', '19%', e.aq_score, ''),
+              ('Story Transfer', 'Scale 1–10', '18%', e.story_transfer_score, 'story'),
+              ('Disruption', 'Wow Factor', '15%', e.disruption_score, ''),
+              ('Craft', 'DoD', '13%', e.dod_score, ''),
+              ('Moment', 'DM', '8%', e.dm_score, ''),
+            ] %}
+            {% for label, sublabel, weight, val, dtype in dims %}
+            {% set cls = 'dv-high' if val >= 8.5 else ('dv-low' if val < 5.0 else 'dv-mid') %}
+            <div class="dim-pill">
+              <div class="dim-label">{{ label }}</div>
+              <div class="dim-weight">{{ sublabel }} · {{ weight }}</div>
+              <div class="dim-val {{ cls }}">{{ '%.1f'|format(val) }}</div>
+              <div class="dim-bar">
+                <div class="dim-bar-fill {{ cls }}" style="width:{{ (val/10*100)|int }}%"></div>
+              </div>
+              {% if dtype == 'story' %}
+              <div class="story-label">
+                {% if val >= 9.0 %}Instant transfer
+                {% elif val >= 7.0 %}Most viewers
+                {% elif val >= 5.0 %}Needs a moment
+                {% else %}Needs context{% endif %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- MODIFIERS -->
+          {% if e.soul_bonus or e.checks %}
+          <div class="modifiers-row">
+            {% set chk = e.checks if e.checks else {} %}
+            {% if chk.get('soul_bonus') %}<span class="mod-tag mod-soul"><i class="ti ti-star"></i> Soul Bonus</span>{% endif %}
+            {% if chk.get('excellence_bonus') %}<span class="mod-tag mod-excellence"><i class="ti ti-award"></i> Excellence Bonus</span>{% endif %}
+            {% if chk.get('ns_bonus') == 'yes' %}<span class="mod-tag mod-ns-yes"><i class="ti ti-book"></i> NS Bonus +0.15</span>{% endif %}
+            {% if chk.get('ns_bonus') == 'not_sure' %}<span class="mod-tag mod-ns-maybe"><i class="ti ti-book"></i> NS Bonus +0.05</span>{% endif %}
+            {% if chk.get('iconic_wall_blocked') %}<span class="mod-tag mod-iconic"><i class="ti ti-shield-off"></i> Iconic Wall Blocked</span>{% endif %}
+            {% if chk.get('iconic_wall_cleared') %}<span class="mod-tag mod-excellence"><i class="ti ti-shield-check"></i> Iconic Wall Cleared</span>{% endif %}
+            {% if chk.get('humanity_check') %}<span class="mod-tag mod-humanity"><i class="ti ti-alert-triangle"></i> Humanity Check −1.5</span>{% endif %}
+          </div>
+          {% endif %}
+
+          <!-- NOTES -->
+          <div class="notes-section">
+
+            <!-- THEME NOTE -->
+            <div class="note-block">
+              <div class="note-head">
+                <span class="note-label">Theme Note</span>
+                <button class="edit-btn" onclick="toggleEdit({{ e.id }}, 'theme_note')">
+                  <i class="ti ti-pencil"></i> Edit
+                </button>
+              </div>
+              <div class="note-text" id="disp-{{ e.id }}-theme_note">
+                {{ e.theme_note or '—' }}
+                {% if e.override_theme_note %}<span class="ai-flag">(edited)</span>{% endif %}
+              </div>
+              <div class="edit-form" id="form-{{ e.id }}-theme_note">
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_theme_note or '—' }}</div>
+                <textarea class="edit-textarea" id="ta-{{ e.id }}-theme_note">{{ e.theme_note }}</textarea>
+                <div class="edit-actions">
+                  <button class="save-btn" onclick="saveOverride({{ e.id }}, 'theme_note')">Save</button>
+                  <button class="cancel-btn" onclick="cancelEdit({{ e.id }}, 'theme_note')">Cancel</button>
+                  <span class="save-status" id="status-{{ e.id }}-theme_note"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MASTER REFERENCE -->
+            <div class="note-block">
+              <div class="note-head">
+                <span class="note-label">Master Reference</span>
+                <button class="edit-btn" onclick="toggleEdit({{ e.id }}, 'master_ref')">
+                  <i class="ti ti-pencil"></i> Edit
+                </button>
+              </div>
+              <div class="note-text" id="disp-{{ e.id }}-master_ref">
+                {{ e.master_ref or '—' }}
+                {% if e.override_master_ref %}<span class="ai-flag">(edited)</span>{% endif %}
+              </div>
+              <div class="edit-form" id="form-{{ e.id }}-master_ref">
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_master_ref or '—' }}</div>
+                <textarea class="edit-textarea" id="ta-{{ e.id }}-master_ref">{{ e.master_ref }}</textarea>
+                <div class="edit-actions">
+                  <button class="save-btn" onclick="saveOverride({{ e.id }}, 'master_ref')">Save</button>
+                  <button class="cancel-btn" onclick="cancelEdit({{ e.id }}, 'master_ref')">Cancel</button>
+                  <span class="save-status" id="status-{{ e.id }}-master_ref"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- GAP NOTE -->
+            <div class="note-block">
+              <div class="note-head">
+                <span class="note-label">Gap / Feedback</span>
+                <button class="edit-btn" onclick="toggleEdit({{ e.id }}, 'gap_note')">
+                  <i class="ti ti-pencil"></i> Edit
+                </button>
+              </div>
+              <div class="note-text" id="disp-{{ e.id }}-gap_note">
+                {{ e.gap_note or '—' }}
+                {% if e.override_gap_note %}<span class="ai-flag">(edited)</span>{% endif %}
+              </div>
+              <div class="edit-form" id="form-{{ e.id }}-gap_note">
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_gap_note or '—' }}</div>
+                <textarea class="edit-textarea" id="ta-{{ e.id }}-gap_note">{{ e.gap_note }}</textarea>
+                <div class="edit-actions">
+                  <button class="save-btn" onclick="saveOverride({{ e.id }}, 'gap_note')">Save</button>
+                  <button class="cancel-btn" onclick="cancelEdit({{ e.id }}, 'gap_note')">Cancel</button>
+                  <span class="save-status" id="status-{{ e.id }}-gap_note"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUBJECT ID -->
+            <div class="note-block">
+              <div class="note-head">
+                <span class="note-label">Subject / Cultural ID</span>
+                <button class="edit-btn" onclick="toggleEdit({{ e.id }}, 'subject_id')">
+                  <i class="ti ti-pencil"></i> Correct
+                </button>
+              </div>
+              <div class="note-text" id="disp-{{ e.id }}-subject_id">
+                {{ e.subject_id or '(AI identified subject — click Correct if wrong)' }}
+              </div>
+              <div class="edit-form" id="form-{{ e.id }}-subject_id">
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Use this to correct AI misidentification of cultural or religious subjects (e.g. "Mushika, Ganesha's divine vehicle" not "Ganesha's clay face").</div>
+                <textarea class="edit-textarea" id="ta-{{ e.id }}-subject_id" rows="2">{{ e.subject_id }}</textarea>
+                <div class="edit-actions">
+                  <button class="save-btn" onclick="saveOverride({{ e.id }}, 'subject_id')">Save</button>
+                  <button class="cancel-btn" onclick="cancelEdit({{ e.id }}, 'subject_id')">Cancel</button>
+                  <span class="save-status" id="status-{{ e.id }}-subject_id"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- FOUNDER NOTE -->
+            <div class="founder-note-wrap">
+              <div class="founder-note-label"><i class="ti ti-message-circle"></i> Founder Note</div>
+              <div class="founder-note-text" id="fnote-text-{{ e.id }}">{{ e.founder_note or '(no note yet)' }}</div>
+              <div class="founder-note-form">
+                <textarea class="founder-note-ta" id="fnote-ta-{{ e.id }}" placeholder="Add or edit a private note on this entry...">{{ e.founder_note }}</textarea>
+                <button class="founder-note-btn" onclick="saveFounderNote({{ e.id }})"><i class="ti ti-device-floppy"></i> Save Note</button>
+                <span class="save-status" id="fnote-status-{{ e.id }}"></span>
+              </div>
+            </div>
+
+          </div><!-- /notes-section -->
+        </div><!-- /right col -->
+      </div><!-- /entry-body -->
+
+    </div><!-- /card -->
+    {% endfor %}
+
+  </main>
 </div>
 
 <script>
-/* ── State ── */
-const TOTAL   = {{ total }};
-const ENTRIES = {{ entries | tojson }};
-let cur       = 0;
-const selected = new Set();
-
-/* ── Navigate ── */
-function cNav(dir) {
-  const next = cur + dir;
-  if (next < 0 || next >= TOTAL) return;
-  cGoTo(next);
+// ── Inline edit toggle ────────────────────────────────────────────────────────
+function toggleEdit(id, field) {
+  const form = document.getElementById(`form-${id}-${field}`);
+  const isOpen = form.classList.contains('open');
+  if (!isOpen) {
+    form.classList.add('open');
+  } else {
+    form.classList.remove('open');
+  }
+}
+function cancelEdit(id, field) {
+  document.getElementById(`form-${id}-${field}`).classList.remove('open');
 }
 
-function cGoTo(idx) {
-  document.getElementById('card-' + cur)?.classList.remove('active');
-  document.getElementById('thumb-' + cur)?.classList.remove('active-thumb');
-  cur = idx;
-  document.getElementById('card-' + cur)?.classList.add('active');
-  document.getElementById('thumb-' + cur)?.classList.add('active-thumb');
-  document.getElementById('btn-prev').disabled = cur === 0;
-  document.getElementById('btn-next').disabled = cur === TOTAL - 1;
-  document.getElementById('cr-counter').textContent = (cur + 1) + ' / ' + TOTAL;
-  // Scroll thumb into view
-  document.getElementById('thumb-' + cur)?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
-}
+// ── Save override via AJAX ────────────────────────────────────────────────────
+async function saveOverride(id, field) {
+  const ta = document.getElementById(`ta-${id}-${field}`);
+  const statusEl = document.getElementById(`status-${id}-${field}`);
+  const dispEl = document.getElementById(`disp-${id}-${field}`);
+  const value = ta.value.trim();
 
-/* ── Save Note ── */
-async function saveNote(entryId, idx, total) {
-  const ta = document.getElementById('note-' + entryId);
-  const status = document.getElementById('saved-' + entryId);
-  const btn = ta.closest('.cr-mentor-area').querySelector('.btn-save-note');
-  if (!ta) return;
-  btn.disabled = true;
-  status.style.display = 'none';
+  statusEl.className = 'save-status';
+  statusEl.textContent = 'Saving...';
+  statusEl.style.display = 'inline';
+
   try {
-    const resp = await fetch('/admin/contest-judge/save-note/' + entryId, {
+    const resp = await fetch(`/admin/contest-judge/save-override/${id}`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
-      body: JSON.stringify({note: ta.value})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ field, value })
     });
-    if (resp.ok) {
-      status.style.display = 'inline';
-      setTimeout(() => { status.style.display = 'none'; }, 3000);
+    const data = await resp.json();
+    if (data.saved) {
+      dispEl.innerHTML = esc(value || '—') + ' <span class="ai-flag">(edited)</span>';
+      statusEl.className = 'save-status ok';
+      statusEl.textContent = '✓ Saved';
+      setTimeout(() => {
+        statusEl.style.display = 'none';
+        document.getElementById(`form-${id}-${field}`).classList.remove('open');
+      }, 1200);
     } else {
-      alert('Save failed. Please try again.');
+      statusEl.className = 'save-status err';
+      statusEl.textContent = 'Error: ' + (data.error || 'unknown');
     }
-  } catch(e) {
-    alert('Network error: ' + e.message);
+  } catch (e) {
+    statusEl.className = 'save-status err';
+    statusEl.textContent = 'Network error';
   }
-  btn.disabled = false;
 }
 
-function getCSRF() {
-  const m = document.cookie.match(/csrf_token=([^;]+)/);
-  return m ? m[1] : '';
-}
+// ── Save founder note ─────────────────────────────────────────────────────────
+async function saveFounderNote(id) {
+  const ta = document.getElementById(`fnote-ta-${id}`);
+  const statusEl = document.getElementById(`fnote-status-${id}`);
+  const textEl = document.getElementById(`fnote-text-${id}`);
+  const value = ta.value.trim();
 
-/* ── Selection ── */
-function toggleThumbSelect(idx) {
-  const thumb = document.getElementById('thumb-' + idx);
-  if (!thumb) return;
-  if (selected.has(idx)) {
-    selected.delete(idx);
-    thumb.classList.remove('selected');
-  } else {
-    selected.add(idx);
-    thumb.classList.add('selected');
-  }
-  updateSelCount();
-}
+  statusEl.className = 'save-status';
+  statusEl.textContent = 'Saving...';
+  statusEl.style.display = 'inline';
 
-// Right-click or long-press thumb to select; left-click to navigate
-document.querySelectorAll('.cr-thumb-item').forEach((el, idx) => {
-  el.addEventListener('contextmenu', (e) => { e.preventDefault(); toggleThumbSelect(idx); });
-  // For mobile: tap .cr-chk area to select
-  el.querySelector('.cr-chk').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleThumbSelect(idx);
-  });
-});
-
-function toggleAll(chk) {
-  if (chk.checked) {
-    for (let i = 0; i < TOTAL; i++) {
-      selected.add(i);
-      document.getElementById('thumb-' + i)?.classList.add('selected');
+  try {
+    const resp = await fetch(`/admin/contest-judge/save-note/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: value })
+    });
+    const data = await resp.json();
+    if (data.saved) {
+      textEl.textContent = value || '(no note yet)';
+      statusEl.className = 'save-status ok';
+      statusEl.textContent = '✓ Note saved';
+      setTimeout(() => { statusEl.style.display = 'none'; }, 1500);
+    } else {
+      statusEl.className = 'save-status err';
+      statusEl.textContent = 'Error saving note';
     }
-  } else {
-    selected.clear();
-    document.querySelectorAll('.cr-thumb-item').forEach(t => t.classList.remove('selected'));
+  } catch (e) {
+    statusEl.className = 'save-status err';
+    statusEl.textContent = 'Network error';
   }
-  updateSelCount();
 }
 
-function updateSelCount() {
-  document.getElementById('sel-count').textContent = selected.size + ' selected';
-  document.getElementById('chk-all').checked = selected.size === TOTAL;
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
-
-/* ── Export ── */
-function exportSelected() {
-  if (selected.size === 0) { alert('Select at least one scorecard first (tick the checkmark on a thumbnail).'); return; }
-  const ids = Array.from(selected).map(i => ENTRIES[i].id).join(',');
-  window.location = '/admin/contest-judge/scorecards/{{ batch_ref | urlencode }}?ids=' + ids;
-}
-
-function exportAll() {
-  window.location = '/admin/contest-judge/scorecards/{{ batch_ref | urlencode }}';
-}
-
-/* ── Keyboard nav ── */
-document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') cNav(1);
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   cNav(-1);
-  if (e.key === ' ') { e.preventDefault(); toggleThumbSelect(cur); }
-});
 </script>
 </body>
 </html>
