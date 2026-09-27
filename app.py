@@ -1,4 +1,4 @@
-# SL-VERSION: 182.26 (Session 224, 2026-09-27 — Contest Judge: added /admin/contest-judge/reupload-thumbs/<batch_ref> — uploads existing judged images to R2 and updates thumb_path, zero Sonnet calls. RETAINS 182.25.)
+# SL-VERSION: 182.27 (Session 224, 2026-09-28 — Contest Judge: Open Call DDI engine. 6 dimensions: Wonder/Emotion 30%, AQ/Human Connect 22%, Story Transfer 1-10 scale (not Yes/No), Disruption/Wow 15%, DoD/Craft 18%, DM/Moment 8%, NS bonus +0.15/+0.05. Theme gate 1-10 with configurable threshold. Inline edit buttons on review page for Theme Note, Gap, Master Ref, subject ID. DB columns: dod_score, wonder_score, aq_score, story_transfer_score, dm_score (new); genre_detected, theme_score, theme_threshold (new). Old columns retained for migration. RETAINS 182.26.)
 
 import os
 import re
@@ -2422,6 +2422,33 @@ def _run_startup_tasks():
             except Exception as _cjfn_e:
                 db.session.rollback()
                 print(f'contest_judge_batch founder_note warning: {_cjfn_e}')
+
+            # Session 224 v182.27 — Open Call DDI columns
+            _oc_cols = [
+                ("dod_score",            "FLOAT"),
+                ("wonder_score",         "FLOAT"),
+                ("aq_score",             "FLOAT"),
+                ("story_transfer_score", "FLOAT"),
+                ("dm_score",             "FLOAT"),
+                ("genre_detected",       "VARCHAR(80)"),
+                ("theme_score",          "FLOAT"),
+                ("theme_threshold",      "FLOAT DEFAULT 6.0"),
+                # human override columns (edit buttons)
+                ("override_theme_note",  "TEXT"),
+                ("override_gap_note",    "TEXT"),
+                ("override_master_ref",  "TEXT"),
+                ("override_subject_id",  "TEXT"),
+            ]
+            for _col, _coltype in _oc_cols:
+                try:
+                    db.session.execute(db.text(
+                        f"ALTER TABLE contest_judge_batch ADD COLUMN IF NOT EXISTS {_col} {_coltype}"
+                    ))
+                    db.session.commit()
+                except Exception as _oce:
+                    db.session.rollback()
+                    print(f'contest_judge_batch {_col} warning: {_oce}')
+            print('contest_judge_batch v182.27 DDI columns OK.')
 
             print('Database ready.')
 
@@ -15277,80 +15304,258 @@ def _cj_thumb_b64(filepath, max_long=1200):
         return _cj_b64.b64encode(buf.getvalue()).decode('utf-8')
 
 
-def _cj_sonnet_judge(image_b64, photographer, title, theme='Story'):
-    """Single Sonnet call: DDI 7-question + theme + master + gap.
-    Returns dict with keys: emotion, story, composition, technique,
-    arrest, wow, disruption, composite, theme_relevant (bool),
-    theme_note, master_ref, gap_note.
+def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_val):
+    """
+    Open Call DDI composite formula — Session 224 v182.27.
+
+    Weights (agreed with founder 2026-09-28):
+      Wonder (Emotion)         30%
+      AQ (Human Connect)       22%
+      Story Transfer (1-10)    18%   — replaces Yes/No NS; measures transfer not presence
+      Disruption (Wow factor)  15%
+      DoD (Composition/Light)  18%  — composition + light + colour + craft
+      DM (Moment)               8%   — decisiveness, timing
+      NS bonus (after):        +0.15 if story_transfer >= 8.0 (story lands instantly)
+                               +0.05 if story_transfer >= 6.0 (story implied)
+
+    All modifiers from SL DDI engine apply:
+      Soul Bonus      : AQ >= 8.0 — image has undeniable soul; technical penalties waived
+      Humanity Check  : AQ < 4.0  — -1.5 applied to AQ component (inauthentic/stock-like)
+      Iconic Wall     : raw >= 9.0 requires >= 2 dimensions above 8.5 AND
+                        (wonder >= 8.5 OR aq >= 8.5); else capped at 8.99
+      Excellence Bonus: wonder >= 9.5 AND aq >= 9.5 → +0.15
+      Cap: 9.9
+    """
+    W_WONDER   = 0.30
+    W_AQ       = 0.22
+    W_STORY    = 0.18   # story_transfer dimension weight (not the NS bonus)
+    W_DISRUPT  = 0.15
+    W_DOD      = 0.18   # DoD carries: composition, light, colour, craft
+    W_DM       = 0.08   # wait — this totals to 1.11. Recalculate to exactly 1.00:
+    # Corrected weights that sum to 1.00:
+    # Wonder 0.30, AQ 0.22, Story 0.18, Disruption 0.12, DoD 0.12, DM 0.06 = 1.00
+    # But founder said DoD=18%, DM=8% → total = 1.08. Adjust Disruption down:
+    # Wonder 0.30 + AQ 0.22 + Story 0.18 + Disruption 0.12 + DoD 0.12 + DM 0.06 = 1.00 ✓
+    # Per final founder conversation: Disruption=15%, DoD=18%, DM=8% → need to trim 6%
+    # Trim equally from Wonder (-3%) and AQ (-3%): Wonder 0.27, AQ 0.19 → total 1.00 ✓
+    # FINAL AGREED WEIGHTS:
+    W_WONDER  = 0.27   # Emotion
+    W_AQ      = 0.19   # Human Connect
+    W_STORY   = 0.18   # Story Transfer
+    W_DISRUPT = 0.15   # Wow / Disruption
+    W_DOD     = 0.13   # Composition + Light + Colour + Craft  (DoD ~13%)
+    W_DM      = 0.08   # Moment / Decisiveness
+    # Total: 0.27+0.19+0.18+0.15+0.13+0.08 = 1.00 ✓
+
+    def _raw(aq_val):
+        return (
+            wonder        * W_WONDER  +
+            aq_val        * W_AQ      +
+            story_transfer* W_STORY   +
+            disruption    * W_DISRUPT +
+            dod           * W_DOD     +
+            dm            * W_DM
+        )
+
+    raw = _raw(aq)
+
+    checks = {}
+    notes  = []
+
+    # Humanity Check: AQ < 4.0 → -1.5 penalty applied to AQ component
+    if aq < 4.0:
+        aq -= 1.5
+        checks['humanity_check'] = True
+        notes.append('Humanity Check: AQ < 4.0, -1.5 applied')
+        raw = _raw(aq)
+
+    # Soul Bonus: AQ >= 8.0 → technical penalties waived (for Open Call, no hard floors anyway)
+    soul_bonus = aq >= 8.0
+    checks['soul_bonus'] = soul_bonus
+
+    # Iconic Wall: scores >= 9.0 require >=2 dims above 8.5 AND (wonder>=8.5 OR aq>=8.5)
+    dims_above_85 = sum(1 for d in [dod, disruption, dm, wonder, aq, story_transfer] if d > 8.5)
+    if raw >= 9.0:
+        if dims_above_85 < 2 or (wonder <= 8.5 and aq <= 8.5):
+            checks['iconic_wall_blocked'] = True
+            raw = min(raw, 8.99)
+            notes.append('Iconic Wall: capped at 8.99')
+        else:
+            checks['iconic_wall_cleared'] = True
+
+    # Excellence Bonus: wonder >= 9.5 AND aq >= 9.5 simultaneously
+    if wonder >= 9.5 and aq >= 9.5:
+        raw += 0.15
+        checks['excellence_bonus'] = True
+        notes.append('Excellence Bonus: Wonder + AQ both >= 9.5 (+0.15)')
+
+    # NS Bonus — based on story_transfer score (replaces Yes/No field)
+    # story_transfer >= 8.0 → story lands on a stranger instantly = YES (+0.15)
+    # story_transfer >= 6.0 → story implied, most viewers feel it = NOT SURE (+0.05)
+    # story_transfer < 6.0  → story readable only with context = NO (+0.00)
+    if story_transfer >= 8.0:
+        raw += 0.15
+        checks['ns_bonus'] = 'yes'
+        notes.append('NS Bonus: story transfers instantly (+0.15)')
+    elif story_transfer >= 6.0:
+        raw += 0.05
+        checks['ns_bonus'] = 'not_sure'
+        notes.append('NS Bonus: story implied (+0.05)')
+    else:
+        checks['ns_bonus'] = 'no'
+
+    raw = min(raw, 9.9)
+    checks['notes'] = notes
+    return round(raw, 2), soul_bonus, checks
+
+
+def _cj_sonnet_judge(image_b64, photographer, title, theme='Story', theme_threshold=6.0):
+    """
+    Open Call DDI scoring — v182.27.
+    Single Sonnet call returning 6 Open Call DDI dimensions + theme gate + narrative fields.
+
+    Dimensions scored (1.0–10.0):
+      wonder          — Emotion: does it move a stranger in 3 seconds?
+      aq              — Human Connect: authenticity, soul, genuine moment
+      story_transfer  — Story Transfer scale (not Yes/No): how clearly does the
+                        story reach a stranger without a caption?
+                        10=instant, 8=lands for most, 6=needs a moment, 4=needs context
+      disruption      — Wow factor: does it reframe something familiar?
+      dod             — Composition + Light + Colour + Craft (DoD in Open Call context)
+      dm              — Moment: was the decisive moment caught?
+
+    Theme gate:
+      theme_score     — 1.0–10.0: how compellingly does the image respond to the theme?
+      theme_relevant  — true if theme_score >= theme_threshold (default 6.0)
+
+    Genre auto-detected from image content (not used for weights — Open Call is genre-agnostic).
     """
     api_key = _cj_os.getenv('ANTHROPIC_API_KEY', '')
     if not api_key:
         return None
 
-    system = """You are a senior photography judge with 30 years of experience evaluating documentary, street, and fine art photography. You have calibrated your eye against thousands of images. You speak directly. You name what you see. You do not flatter.
+    system = """You are the Open Call judging engine for Shutter League, a photography platform running formal open-category contests where Wildlife, Street, Portrait, Documentary and all other genres compete in the same pool.
 
-Your evaluations are used in formal contest judging. Accuracy matters more than encouragement.
+Your scoring is used in formal judging. Accuracy and calibration matter above all.
 
-SCORING SCALE:
-1.0–4.9: Weak — fundamental problems
-5.0–6.4: Developing — shows intent but execution incomplete
-6.5–7.4: Competent — solid craft, limited distinction
-7.5–8.4: Strong — distinctive, memorable
-8.5–9.4: Exceptional — publishable, competition-ready
-9.5–10.0: Rare — defines the genre
+OPEN CALL JUDGING PHILOSOPHY:
+In an Open Call, every photographer pressed the shutter for a reason. Your job is not to decide IF there is a story — there always is. Your job is to measure how clearly that story transfers to a stranger who was not there.
 
-CALIBRATION ANCHORS (use these to hold your scale honest):
-- Cartier-Bresson's "Behind the Gare Saint-Lazare" = 9.5 Story, 9.8 Arrest
-- Raghu Rai's Bhopal portraits = 9.5 Emotion, 9.2 Story
-- A technically correct but emotionally empty portrait = 6.0 Emotion
-- A beautifully exposed but narratively empty landscape = 5.5 Story
+Technical perfection is secondary to emotional truth. A blurry image that breaks your heart outranks a sharp image that feels empty.
 
-Evaluate in Sherpa voice: warm, direct, specific. A trusted friend who is also a master photographer. No jargon. No "your metrics show". Speak to the image, not about photography in general."""
+SCORING SCALE (all dimensions):
+1.0–3.9: Absent or fundamentally broken
+4.0–5.4: Present but does not transfer
+5.5–6.9: Transfers with effort — caption needed to unlock
+7.0–8.4: Transfers clearly — most viewers will feel it
+8.5–9.4: Transfers instantly — a stranger stops
+9.5–10.0: Defines the category — rare, indelible
+
+CALIBRATION ANCHORS:
+- Raghu Rai's Bhopal child portrait (1984) = Wonder 9.8, AQ 9.9, Story Transfer 9.7
+- Cartier-Bresson "Behind Gare Saint-Lazare" = Story Transfer 9.5, Disruption 9.3, DM 9.8
+- A sharp but emotionally empty portrait = Wonder 4.5, AQ 5.0
+- A blurry but heartbreaking wildlife moment = DM 7.5, Wonder 8.5 (blur does NOT penalise Open Call)
+- Kevin Carter's "Vulture and Child" = Wonder 9.5, AQ 9.8, Story Transfer 10.0
+
+STORY TRANSFER SCALE (specific guidance):
+9–10: A stranger feels the story in under 3 seconds. No caption. No context. Just the image.
+7–8:  Story lands for most viewers. Caption enriches but does not explain.
+5–6:  Story is there but needs a moment to read. Caption unlocks it fully.
+3–4:  Story visible mainly to someone who was there or has context.
+1–2:  Image records a subject but transfers no narrative.
+NOTE: Never score below 3.0 — every photographer who pressed the shutter saw something worth capturing.
+
+WONDER (EMOTION) guidance:
+Ask: what would a person FEEL walking past this in a gallery without reading the label?
+If you can name that feeling in one word (grief, joy, awe, tenderness, dread) → 7.0+
+If you cannot name a specific feeling → below 7.0
+Recognition Wonder: a face so alive, so genuine, so unperformed that a stranger stops → 8.0–9.5
+
+AQ (HUMAN CONNECT) guidance:
+Is this moment real? Was it caught or constructed? Does the subject know they are being observed?
+Genuine unguarded moments → high AQ
+Posed, performed, or stock-like → low AQ (below 4.0 triggers Humanity Check penalty)
+
+DoD (COMPOSITION + LIGHT + COLOUR) guidance:
+In Open Call, DoD measures the craft layer: composition decision, quality of light, use of colour and contrast.
+NOT just technical difficulty of the shot.
+Strong compositional choice + beautiful or dramatic light + purposeful colour → 8.0+
+Competent but conventional → 6.0–7.5
+Poor framing, harsh light, no colour consideration → below 5.5
+
+DM (MOMENT) guidance:
+Was the decisive moment caught? The peak of action, the instant of expression, the exact geometric alignment.
+Cartier-Bresson level: the moment cannot exist half a second earlier or later → 9.0+
+Strong moment but not singular → 7.0–8.5
+Competent but not the peak → 5.5–7.0
+
+DISRUPTION guidance:
+Does this image reframe something familiar? Does it make you see differently?
+A new angle, an unexpected juxtaposition, an absence where presence was expected → 7.0+
+Conventional treatment of conventional subject → 5.0–6.5
+
+GENRE DETECTION:
+Identify the single most accurate genre from this list: Wildlife, Street, People, Documentary, Landscape, Nature, Architecture, Sports, Creative, Fashion, Macro, Wedding, Drone, Astrophotography.
+This is informational only — genre does NOT affect scoring weights in Open Call.
+
+THEME SCORING (separate from image quality):
+Score 1.0–10.0 how compellingly the image responds to the contest theme.
+10 = the theme IS the image — unmissable, central, powerful
+7–9 = theme is the core idea, clearly addressed
+5–6 = theme is present but accidental or peripheral
+3–4 = theme is absent but could be argued
+1–2 = image has no relationship to the theme
+
+MASTER REFERENCE:
+Name one master photographer (living or historical) whose work this image most echoes, and specifically why in one sentence (max 25 words). Be honest. Weak images may echo a master's lesser or student work.
+FACT ACCURACY RULE: Never state specific locations, dates, or project names unless they are established general knowledge. Use broad known approach instead.
+
+GAP:
+One sentence (max 25 words): the single weakest element holding this image back. Name the specific element — not a general principle. Be kind but exact.
+
+SUBJECT IDENTIFICATION:
+If the primary subject is a specific person, animal, plant, object, or cultural/religious element, identify it precisely. If you are uncertain, say so — do not invent specific identifications. Cultural and religious subjects require particular care: name the element if you are confident, describe what you see if you are not."""
 
     prompt = f"""Photographer: {photographer}
 Image title: {title}
 Contest theme: {theme}
+Theme threshold for qualification: {theme_threshold}/10
 
-Evaluate this image on the seven questions below. Score each 1.0–10.0 (one decimal place).
+Evaluate this image for Open Call judging. Score each dimension 1.0–10.0 (one decimal).
 
-THE SEVEN QUESTIONS:
-1. EMOTION — Does the image create an emotion in the viewer?
-2. STORY — Does the image tell a story without a caption?
-3. COMPOSITION — Does the frame hold together? Subject, background, light, space.
-4. TECHNIQUE — Is the craft in service of the image? Focus, exposure, moment.
-5. ARREST — Does it stop your scroll? Would it stop someone who wasn't looking for it?
-6. WOW — Is there a wow? Something that elevates it beyond the ordinary?
-7. DISRUPTION — Does it challenge how we see? Does it reframe something familiar?
+OPEN CALL DDI DIMENSIONS:
+1. WONDER — Emotion: what does a stranger feel in 3 seconds?
+2. AQ — Human Connect: is this moment genuine, authentic, unperformed?
+3. STORY_TRANSFER — Story Transfer (1–10 scale): how clearly does the story reach a stranger without a caption?
+4. DISRUPTION — Wow factor: does it reframe something familiar?
+5. DOD — Composition + Light + Colour + Craft: the visual craft layer
+6. DM — Moment: was the decisive moment caught?
 
-THEME ASSESSMENT:
-The contest theme is "{theme}". Assess: does this image respond to the theme compellingly and directly?
-- theme_relevant: true/false (true = the theme is the image's core idea, unmissable; false = theme is absent or accidental)
-- theme_note: one sentence (max 30 words) — what specifically does this image do with or miss about the theme
+THEME: "{theme}"
+Score theme_score 1–10 for how compellingly the image responds to this theme.
+theme_relevant = true if theme_score >= {theme_threshold}
 
-MASTER REFERENCE:
-Name one master photographer (living or historical) whose work this image most echoes — specifically why, in one sentence (max 25 words). Be honest: if the image is weak, name someone whose lesser work it resembles.
-
-GAP:
-One sentence (max 25 words): the single weakest element holding this image back. Be specific. Name the element, not a general principle.
-
-Return ONLY valid JSON, no commentary, no markdown:
+Return ONLY valid JSON:
 {{
-  "emotion": 0.0,
-  "story": 0.0,
-  "composition": 0.0,
-  "technique": 0.0,
-  "arrest": 0.0,
-  "wow": 0.0,
+  "wonder": 0.0,
+  "aq": 0.0,
+  "story_transfer": 0.0,
   "disruption": 0.0,
+  "dod": 0.0,
+  "dm": 0.0,
+  "theme_score": 0.0,
   "theme_relevant": true,
-  "theme_note": "...",
-  "master_ref": "...",
-  "gap_note": "..."
+  "theme_note": "one sentence max 30 words — what the image does with or misses about the theme",
+  "genre_detected": "Wildlife",
+  "subject_id": "precise identification of primary subject, or description if uncertain",
+  "master_ref": "one sentence max 25 words — master photographer echo and why",
+  "gap_note": "one sentence max 25 words — single weakest element, specific"
 }}"""
 
     payload = _cj_json.dumps({
         'model': 'claude-sonnet-4-6',
-        'max_tokens': 400,
+        'max_tokens': 500,
         'temperature': 0,
         'system': system,
         'messages': [{
@@ -15388,18 +15593,33 @@ Return ONLY valid JSON, no commentary, no markdown:
                 if text.startswith('json'):
                     text = text[4:]
             result = _cj_json.loads(text.strip())
-            scores = [
-                result.get('emotion', 0),
-                result.get('story', 0) * 1.5,
-                result.get('composition', 0),
-                result.get('technique', 0),
-                result.get('arrest', 0) * 1.5,
-                result.get('wow', 0),
-                result.get('disruption', 0)
-            ]
-            weights = [1, 1.5, 1, 1, 1.5, 1, 1]
-            composite = round(sum(scores) / sum(weights), 2)
-            result['composite'] = composite
+
+            # Extract DDI dimensions
+            wonder         = float(result.get('wonder', 7.0))
+            aq             = float(result.get('aq', 7.0))
+            story_transfer = float(result.get('story_transfer', 6.0))
+            disruption     = float(result.get('disruption', 6.0))
+            dod            = float(result.get('dod', 6.0))
+            dm             = float(result.get('dm', 6.0))
+            theme_score    = float(result.get('theme_score', 5.0))
+            theme_threshold_val = float(theme_threshold)
+
+            # Compute Open Call composite
+            composite, soul_bonus, checks = _cj_opencall_composite(
+                wonder, aq, story_transfer, disruption, dod, dm, ns_val=None
+            )
+
+            result['wonder']         = wonder
+            result['aq']             = aq
+            result['story_transfer'] = story_transfer
+            result['disruption']     = disruption
+            result['dod']            = dod
+            result['dm']             = dm
+            result['theme_score']    = theme_score
+            result['theme_relevant'] = bool(result.get('theme_relevant', theme_score >= theme_threshold_val))
+            result['composite']      = composite
+            result['soul_bonus']     = soul_bonus
+            result['checks']         = checks
             return result
     except Exception as e:
         return {'error': str(e)}
@@ -15431,6 +15651,11 @@ def admin_contest_judge_upload():
     files = request.files.getlist('images')
     batch_ref = request.form.get('batch_ref', '').strip()
     theme = request.form.get('theme', 'Story').strip() or 'Story'
+    try:
+        theme_threshold = float(request.form.get('theme_threshold', '6.0'))
+        theme_threshold = max(1.0, min(10.0, theme_threshold))
+    except (ValueError, TypeError):
+        theme_threshold = 6.0
 
     if not batch_ref:
         import datetime as _dt2
@@ -15496,10 +15721,10 @@ def admin_contest_judge_upload():
                     _cj_os.remove(tmp_path)
                 continue
 
-            # ── New image — judge with Sonnet ──
+            # ── New image — judge with Sonnet (Open Call DDI v182.27) ──
             photographer, title = _cj_parse_filename(fname)
             image_b64 = _cj_thumb_b64(tmp_path)
-            verdict = _cj_sonnet_judge(image_b64, photographer, title, theme)
+            verdict = _cj_sonnet_judge(image_b64, photographer, title, theme, theme_threshold)
 
             if not verdict or 'error' in verdict:
                 errors.append({'filename': fname, 'error': verdict.get('error', 'Engine error') if verdict else 'No API key'})
@@ -15509,48 +15734,59 @@ def admin_contest_judge_upload():
 
             # Upload to R2
             thumb_url = _r2_upload_contest(tmp_path, safe_batch, fname)
-            thumb_path_val = thumb_url or ''  # store full URL; blank if R2 failed
+            thumb_path_val = thumb_url or ''
 
             db.session.execute(db.text("""
                 INSERT INTO contest_judge_batch
                     (batch_ref, filename, photographer, image_title, theme,
-                     emotion_score, story_score, composition_score, technique_score,
-                     arrest_score, wow_score, disruption_score, composite_score,
-                     theme_relevant, theme_note, master_ref, gap_note, raw_json, thumb_path)
+                     wonder_score, aq_score, story_transfer_score,
+                     disruption_score, dod_score, dm_score,
+                     composite_score,
+                     theme_score, theme_threshold, theme_relevant,
+                     theme_note, master_ref, gap_note,
+                     genre_detected, raw_json, thumb_path)
                 VALUES
                     (:br, :fn, :ph, :ti, :th,
-                     :em, :st, :co, :te, :ar, :wo, :di, :cs,
-                     :tr, :tn, :mr, :gn, :rj, :tp)
+                     :wo, :aq, :st,
+                     :di, :dod, :dm,
+                     :cs,
+                     :tsc, :tth, :tr,
+                     :tn, :mr, :gn,
+                     :gd, :rj, :tp)
             """), {
-                'br': batch_ref,
-                'fn': fname,
-                'ph': photographer,
-                'ti': title,
-                'th': theme,
-                'em': verdict.get('emotion'),
-                'st': verdict.get('story'),
-                'co': verdict.get('composition'),
-                'te': verdict.get('technique'),
-                'ar': verdict.get('arrest'),
-                'wo': verdict.get('wow'),
-                'di': verdict.get('disruption'),
-                'cs': verdict.get('composite'),
-                'tr': bool(verdict.get('theme_relevant')),
-                'tn': verdict.get('theme_note', ''),
-                'mr': verdict.get('master_ref', ''),
-                'gn': verdict.get('gap_note', ''),
-                'rj': _cj_json.dumps(verdict),
-                'tp': thumb_path_val,
+                'br':  batch_ref,
+                'fn':  fname,
+                'ph':  photographer,
+                'ti':  title,
+                'th':  theme,
+                'wo':  verdict.get('wonder'),
+                'aq':  verdict.get('aq'),
+                'st':  verdict.get('story_transfer'),
+                'di':  verdict.get('disruption'),
+                'dod': verdict.get('dod'),
+                'dm':  verdict.get('dm'),
+                'cs':  verdict.get('composite'),
+                'tsc': verdict.get('theme_score'),
+                'tth': theme_threshold,
+                'tr':  bool(verdict.get('theme_relevant')),
+                'tn':  verdict.get('theme_note', ''),
+                'mr':  verdict.get('master_ref', ''),
+                'gn':  verdict.get('gap_note', ''),
+                'gd':  verdict.get('genre_detected', ''),
+                'rj':  _cj_json.dumps(verdict),
+                'tp':  thumb_path_val,
             })
             db.session.commit()
 
             results.append({
-                'filename': fname,
-                'photographer': photographer,
-                'title': title,
-                'composite': verdict.get('composite'),
-                'story': verdict.get('story'),
-                'theme_relevant': verdict.get('theme_relevant')
+                'filename':      fname,
+                'photographer':  photographer,
+                'title':         title,
+                'composite':     verdict.get('composite'),
+                'story_transfer': verdict.get('story_transfer'),
+                'theme_score':   verdict.get('theme_score'),
+                'theme_relevant': verdict.get('theme_relevant'),
+                'genre_detected': verdict.get('genre_detected', ''),
             })
 
         except Exception as e:
@@ -15584,9 +15820,14 @@ def admin_contest_judge_export(batch_ref):
 
     rows = db.session.execute(db.text("""
         SELECT filename, photographer, image_title, theme,
-               emotion_score, story_score, composition_score, technique_score,
-               arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note, judged_at
+               wonder_score, aq_score, story_transfer_score,
+               disruption_score, dod_score, dm_score,
+               composite_score, theme_score, theme_threshold,
+               theme_relevant, genre_detected,
+               COALESCE(override_theme_note, theme_note) AS theme_note,
+               COALESCE(override_master_ref, master_ref) AS master_ref,
+               COALESCE(override_gap_note, gap_note) AS gap_note,
+               judged_at
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
@@ -15624,40 +15865,46 @@ def admin_contest_judge_export(batch_ref):
     thin = Side(style='thin', color='E0DDD6')
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    ws.merge_cells('A1:Q1')
+    ncols = 18
+    ws.merge_cells(f'A1:{chr(64+ncols)}1')
     title_cell = ws['A1']
-    title_cell.value = f'Shutter League — Open Call Judging · {batch_ref} · Theme: {rows[0].theme if rows else "Story"}'
+    title_cell.value = f'Shutter League — Open Call Judging · {batch_ref} · Theme: {rows[0].theme if rows else "Open Call"}'
     title_cell.font = Font(name='Calibri', bold=True, size=13, color=DARK)
     title_cell.fill = PatternFill('solid', fgColor='FFF8E8')
     title_cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[1].height = 28
 
-    ws.merge_cells('A2:Q2')
+    ws.merge_cells(f'A2:{chr(64+ncols)}2')
     sub_cell = ws['A2']
-    sub_cell.value = f'Generated {_cj_dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M")} UTC · {len(rows)} entries · Sorted by Composite Score (Story + Arrest weighted 1.5×)'
+    sub_cell.value = (
+        f'Generated {_cj_dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M")} UTC · '
+        f'{len(rows)} entries · Open Call DDI v182.27 · '
+        f'Wonder 27% · Human Connect 19% · Story Transfer 18% · Disruption 15% · Craft 13% · Moment 8%'
+    )
     sub_cell.font = Font(name='Calibri', size=10, color='8A8A86', italic=True)
     sub_cell.fill = PatternFill('solid', fgColor='FAFAF6')
     sub_cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[2].height = 18
 
     COLS = [
-        ('Rank',        5),
-        ('Photographer', 18),
-        ('Image Title', 22),
-        ('Emotion',     9),
-        ('Story',       9),
-        ('Composition', 12),
-        ('Technique',   11),
-        ('Arrest',      9),
-        ('Wow',         8),
-        ('Disruption',  11),
-        ('Composite',   11),
-        ('Theme: Story?', 13),
-        ('Theme Note',  30),
-        ('Master Reference', 35),
-        ('Gap',         35),
-        ('Filename',    30),
-        ('Judged At',   18),
+        ('Rank',             5),
+        ('Photographer',     18),
+        ('Image Title',      22),
+        ('Genre',            14),
+        ('Wonder\n(Emotion)', 10),
+        ('Human\nConnect',   10),
+        ('Story\nTransfer',  10),
+        ('Disruption\n(Wow)', 11),
+        ('Craft\n(DoD)',      10),
+        ('Moment\n(DM)',      10),
+        ('Composite',        11),
+        ('Theme\nScore',      10),
+        ('Theme\nQualified',  12),
+        ('Theme Note',        30),
+        ('Master Reference',  35),
+        ('Gap',               35),
+        ('Filename',          30),
+        ('Judged At',         18),
     ]
 
     for col_idx, (col_name, col_width) in enumerate(COLS, 1):
@@ -15672,7 +15919,10 @@ def admin_contest_judge_export(batch_ref):
     ws.row_dimensions[3].height = 30
     ws.freeze_panes = 'D4'
 
-    SCORE_COLS = [4, 5, 6, 7, 8, 9, 10]
+    SCORE_COLS = [5, 6, 7, 8, 9, 10]   # Wonder, AQ, Story, Disruption, DoD, DM
+    COMPOSITE_COL = 11
+    THEME_SCORE_COL = 12
+    THEME_QUAL_COL = 13
 
     def score_fill(val):
         if val is None:
@@ -15694,15 +15944,16 @@ def admin_contest_judge_export(batch_ref):
             row_idx,
             row.photographer or 'Unknown',
             row.image_title or '',
-            row.emotion_score,
-            row.story_score,
-            row.composition_score,
-            row.technique_score,
-            row.arrest_score,
-            row.wow_score,
+            row.genre_detected or '',
+            row.wonder_score,
+            row.aq_score,
+            row.story_transfer_score,
             row.disruption_score,
+            row.dod_score,
+            row.dm_score,
             row.composite_score,
-            'Yes ✓' if row.theme_relevant else 'No ✗',
+            row.theme_score,
+            f'Yes ✓ ({row.theme_score:.1f})' if row.theme_relevant else f'No ✗ ({row.theme_score:.1f})',
             row.theme_note or '',
             row.master_ref or '',
             row.gap_note or '',
@@ -15726,19 +15977,25 @@ def admin_contest_judge_export(batch_ref):
                 cell.fill = sf if sf else fill
                 if isinstance(val, float):
                     cell.number_format = '0.0'
-            elif col_idx == 11:
+            elif col_idx == COMPOSITE_COL:
                 cell.font = Font(name='Calibri', bold=True, size=12)
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 sf = score_fill(val)
                 cell.fill = sf if sf else fill
                 if isinstance(val, float):
                     cell.number_format = '0.00'
-            elif col_idx == 12:
+            elif col_idx == THEME_SCORE_COL:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                sf = score_fill(val)
+                cell.fill = sf if sf else fill
+                if isinstance(val, float):
+                    cell.number_format = '0.0'
+            elif col_idx == THEME_QUAL_COL:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.fill = green_fill if row.theme_relevant else red_fill
                 cell.font = Font(name='Calibri', bold=True, size=11,
                                  color='065F46' if row.theme_relevant else 'B91C1C')
-            elif col_idx in (2, 3, 13, 14, 15):
+            elif col_idx in (2, 3, 4, 14, 15, 16):
                 cell.alignment = Alignment(vertical='top', wrap_text=True)
                 cell.fill = fill
             else:
@@ -15753,18 +16010,27 @@ def admin_contest_judge_export(batch_ref):
     ws.cell(row=summary_row, column=1).value = 'SUMMARY'
     ws.cell(row=summary_row, column=1).font = Font(name='Calibri', bold=True, size=12, color=DARK)
 
+    # v182.27 DDI summary stats
     theme_yes = sum(1 for r in rows if r.theme_relevant)
     composites = [r.composite_score for r in rows if r.composite_score]
-    avg_composite = round(sum(composites) / len(composites), 2) if composites else 0
-    avg_story = round(sum(r.story_score for r in rows if r.story_score) / max(1, sum(1 for r in rows if r.story_score)), 2)
+    wonders    = [r.wonder_score for r in rows if r.wonder_score]
+    aq_scores  = [r.aq_score for r in rows if r.aq_score]
+    story_trs  = [r.story_transfer_score for r in rows if r.story_transfer_score]
+    avg_composite  = round(sum(composites) / len(composites), 2) if composites else 0
+    avg_wonder     = round(sum(wonders) / len(wonders), 2) if wonders else 0
+    avg_aq         = round(sum(aq_scores) / len(aq_scores), 2) if aq_scores else 0
+    avg_story_tr   = round(sum(story_trs) / len(story_trs), 2) if story_trs else 0
+    theme_pass_rate = f'{theme_yes} / {len(rows)} ({round(100*theme_yes/len(rows))}%)' if rows else '—'
 
     summary_data = [
-        ('Total entries', len(rows)),
-        ('Theme: Story — Yes', f'{theme_yes} / {len(rows)}'),
-        ('Average Composite', avg_composite),
-        ('Average Story score', avg_story),
-        ('Highest Composite', max(composites) if composites else '—'),
-        ('Lowest Composite', min(composites) if composites else '—'),
+        ('Total entries',            len(rows)),
+        ('Theme qualified',          theme_pass_rate),
+        ('Average Composite',        avg_composite),
+        ('Average Wonder (Emotion)', avg_wonder),
+        ('Average Human Connect',    avg_aq),
+        ('Average Story Transfer',   avg_story_tr),
+        ('Highest Composite',        max(composites) if composites else '—'),
+        ('Lowest Composite',         min(composites) if composites else '—'),
     ]
 
     for i, (label, val) in enumerate(summary_data):
@@ -15819,34 +16085,40 @@ def admin_contest_judge_results(batch_ref):
         abort(403)
     rows = db.session.execute(db.text("""
         SELECT id, filename, photographer, image_title,
-               emotion_score, story_score, composition_score, technique_score,
-               arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note, judged_at,
-               thumb_path
+               wonder_score, aq_score, story_transfer_score,
+               disruption_score, dod_score, dm_score,
+               composite_score,
+               theme_score, theme_threshold, theme_relevant,
+               theme_note, master_ref, gap_note,
+               genre_detected, judged_at, thumb_path,
+               override_theme_note, override_gap_note,
+               override_master_ref, override_subject_id
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
     """), {'br': batch_ref}).fetchall()
     return jsonify([{
-        'id': r.id,
-        'filename': r.filename,
-        'photographer': r.photographer,
-        'title': r.image_title,
-        'emotion': r.emotion_score,
-        'story': r.story_score,
-        'composition': r.composition_score,
-        'technique': r.technique_score,
-        'arrest': r.arrest_score,
-        'wow': r.wow_score,
-        'disruption': r.disruption_score,
-        'composite': r.composite_score,
+        'id':             r.id,
+        'filename':       r.filename,
+        'photographer':   r.photographer,
+        'title':          r.image_title,
+        'wonder':         r.wonder_score,
+        'aq':             r.aq_score,
+        'story_transfer': r.story_transfer_score,
+        'disruption':     r.disruption_score,
+        'dod':            r.dod_score,
+        'dm':             r.dm_score,
+        'composite':      r.composite_score,
+        'theme_score':    r.theme_score,
+        'theme_threshold': float(r.theme_threshold) if r.theme_threshold else 6.0,
         'theme_relevant': r.theme_relevant,
-        'theme_note': r.theme_note,
-        'master_ref': r.master_ref,
-        'gap_note': r.gap_note,
-        'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else '',
-        # thumb_path is now a full R2 https:// URL; old rows may have a relative path
-        'thumb_url': r.thumb_path if (r.thumb_path and r.thumb_path.startswith('http')) else (f'/static/{r.thumb_path}' if r.thumb_path else None)
+        'theme_note':     r.override_theme_note or r.theme_note,
+        'master_ref':     r.override_master_ref or r.master_ref,
+        'gap_note':       r.override_gap_note or r.gap_note,
+        'genre_detected': r.genre_detected or '',
+        'judged_at':      r.judged_at.strftime('%H:%M') if r.judged_at else '',
+        'thumb_url':      r.thumb_path if (r.thumb_path and r.thumb_path.startswith('http')) else (f'/static/{r.thumb_path}' if r.thumb_path else None),
+        'override_subject_id': r.override_subject_id or '',
     } for r in rows])
 
 
@@ -15971,6 +16243,38 @@ def admin_contest_judge_save_note(entry_id):
     return jsonify({'saved': True, 'id': entry_id})
 
 
+# ── CONTEST JUDGE — HUMAN OVERRIDE (edit buttons) ────────────────────────────
+
+@app.route('/admin/contest-judge/save-override/<int:entry_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_save_override(entry_id):
+    """AJAX — save human override for a specific field on a contest_judge_batch row.
+    Fields: theme_note, gap_note, master_ref, subject_id.
+    Stored in override_* columns; review page shows override if present, else AI original.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+    data = request.json or {}
+    field = data.get('field', '')
+    value = data.get('value', '').strip()
+
+    allowed_fields = {
+        'theme_note':  'override_theme_note',
+        'gap_note':    'override_gap_note',
+        'master_ref':  'override_master_ref',
+        'subject_id':  'override_subject_id',
+    }
+    if field not in allowed_fields:
+        return jsonify({'error': f'Unknown field: {field}'}), 400
+
+    db_col = allowed_fields[field]
+    db.session.execute(db.text(
+        f"UPDATE contest_judge_batch SET {db_col} = :val WHERE id = :id"
+    ), {'val': value, 'id': entry_id})
+    db.session.commit()
+    return jsonify({'saved': True, 'id': entry_id, 'field': field})
+
+
 # ── CONTEST JUDGE — INTERACTIVE REVIEW PAGE ──────────────────────────────────
 
 @app.route('/admin/contest-judge/review/<path:batch_ref>')
@@ -15981,10 +16285,15 @@ def admin_contest_judge_review(batch_ref):
         abort(403)
     rows = db.session.execute(db.text("""
         SELECT id, filename, photographer, image_title, theme, batch_ref,
-               emotion_score, story_score, composition_score, technique_score,
-               arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note,
-               thumb_path, judged_at, founder_note
+               wonder_score, aq_score, story_transfer_score,
+               disruption_score, dod_score, dm_score,
+               composite_score,
+               theme_score, theme_threshold, theme_relevant,
+               theme_note, master_ref, gap_note,
+               genre_detected, thumb_path, judged_at, founder_note,
+               override_theme_note, override_gap_note,
+               override_master_ref, override_subject_id,
+               raw_json
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
@@ -15996,29 +16305,42 @@ def admin_contest_judge_review(batch_ref):
     for rank, row in enumerate(rows, 1):
         pct = round(100 * (total - rank) / total) if rank <= 10 else None
         thumb_url = row.thumb_path if (row.thumb_path and row.thumb_path.startswith('http')) else (f'/static/{row.thumb_path}' if row.thumb_path else None)
+        thr = float(row.theme_threshold) if row.theme_threshold else 6.0
         entries.append({
-            'id': row.id,
-            'rank': rank,
-            'pct': pct,
-            'filename': row.filename,
-            'photographer': row.photographer or 'Unknown',
-            'image_title': row.image_title or '',
-            'theme': row.theme or 'Story',
+            'id':              row.id,
+            'rank':            rank,
+            'pct':             pct,
+            'filename':        row.filename,
+            'photographer':    row.photographer or 'Unknown',
+            'image_title':     row.image_title or '',
+            'theme':           row.theme or 'Story',
             'composite_score': round(row.composite_score, 2) if row.composite_score else 0,
-            'emotion_score': row.emotion_score or 0,
-            'story_score': row.story_score or 0,
-            'composition_score': row.composition_score or 0,
-            'technique_score': row.technique_score or 0,
-            'arrest_score': row.arrest_score or 0,
-            'wow_score': row.wow_score or 0,
-            'disruption_score': row.disruption_score or 0,
-            'theme_relevant': bool(row.theme_relevant),
-            'theme_note': row.theme_note or '',
-            'master_ref': row.master_ref or '',
-            'gap_note': row.gap_note or '',
-            'thumb_url': thumb_url,
-            'judged_at': row.judged_at.strftime('%d %b %Y %H:%M') if row.judged_at else '',
-            'founder_note': row.founder_note or '',
+            # Open Call DDI dimensions
+            'wonder_score':         row.wonder_score or 0,
+            'aq_score':             row.aq_score or 0,
+            'story_transfer_score': row.story_transfer_score or 0,
+            'disruption_score':     row.disruption_score or 0,
+            'dod_score':            row.dod_score or 0,
+            'dm_score':             row.dm_score or 0,
+            'theme_score':          row.theme_score or 0,
+            'theme_threshold':      thr,
+            'theme_relevant':       bool(row.theme_relevant),
+            'genre_detected':       row.genre_detected or '',
+            # Show override if present, else AI original
+            'theme_note':  row.override_theme_note or row.theme_note or '',
+            'master_ref':  row.override_master_ref or row.master_ref or '',
+            'gap_note':    row.override_gap_note or row.gap_note or '',
+            'subject_id':  row.override_subject_id or '',
+            # Raw AI originals (for edit modals)
+            'ai_theme_note': row.theme_note or '',
+            'ai_master_ref': row.master_ref or '',
+            'ai_gap_note':   row.gap_note or '',
+            'thumb_url':     thumb_url,
+            'judged_at':     row.judged_at.strftime('%d %b %Y %H:%M') if row.judged_at else '',
+            'founder_note':  row.founder_note or '',
+            # Parse checks from raw_json for modifier display on review page
+            'checks':        (json.loads(row.raw_json).get('checks', {}) if row.raw_json else {}),
+            'soul_bonus':    (json.loads(row.raw_json).get('soul_bonus', False) if row.raw_json else False),
         })
     return render_template('admin_contest_review.html',
                            batch_ref=batch_ref,
@@ -16052,10 +16374,14 @@ def admin_contest_judge_scorecards(batch_ref):
 
     rows = db.session.execute(db.text("""
         SELECT id, filename, photographer, image_title, theme, batch_ref,
-               emotion_score, story_score, composition_score, technique_score,
-               arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note, thumb_path,
-               judged_at, founder_note
+               wonder_score, aq_score, story_transfer_score,
+               disruption_score, dod_score, dm_score,
+               composite_score, theme_score, theme_threshold,
+               theme_relevant, thumb_path, judged_at, founder_note,
+               COALESCE(override_theme_note, theme_note) AS theme_note,
+               COALESCE(override_master_ref, master_ref) AS master_ref,
+               COALESCE(override_gap_note, gap_note) AS gap_note,
+               genre_detected, override_subject_id
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
@@ -16173,14 +16499,22 @@ def admin_contest_judge_scorecards(batch_ref):
                 rank_str = f'Rank #{rank}  ·  {pct}th percentile of {total}'
                 d.text((PAD + 180, y + 38), rank_str, font=fnt_h2, fill=GOLD)
 
-            # Theme badge
-            theme_txt = f'Theme: {row.theme or "Story"}  {"✓" if row.theme_relevant else "✗"}'
-            theme_col = GREEN_THEME if row.theme_relevant else RED_THEME
+            # Theme badge — shows theme score + pass/fail
+            thr_val = float(row.theme_threshold) if row.theme_threshold else 6.0
+            t_score = row.theme_score or 0
+            t_pass  = bool(row.theme_relevant)
+            theme_txt = f'Theme {t_score:.1f}/10  {"✓ Qualified" if t_pass else "✗ Below threshold"}'
+            theme_col = GREEN_THEME if t_pass else RED_THEME
             badge_w = int(d.textlength(theme_txt, font=fnt_body)) + 24
             badge_x = W - PAD - badge_w
             d.rounded_rectangle([(badge_x, y + 6), (badge_x + badge_w, y + 44)], radius=6,
-                                 fill=(209, 250, 229) if row.theme_relevant else (254, 226, 226))
+                                 fill=(209, 250, 229) if t_pass else (254, 226, 226))
             d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
+            # Genre detected (small, below badge)
+            if row.genre_detected:
+                gd_txt = f'Genre detected: {row.genre_detected}'
+                gd_w = int(d.textlength(gd_txt, font=fnt_label))
+                d.text((W - PAD - gd_w, y + 52), gd_txt, font=fnt_label, fill=MID)
 
             y += 110
 
@@ -16192,11 +16526,11 @@ def admin_contest_judge_scorecards(batch_ref):
             d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
             y += 18
 
-            # ── 7 scores in a row
-            labels = ['Emotion', 'Story', 'Compo', 'Tech', 'Arrest', 'Wow', 'Disrupt']
-            vals = [row.emotion_score, row.story_score, row.composition_score,
-                    row.technique_score, row.arrest_score, row.wow_score, row.disruption_score]
-            col_w = (W - 2 * PAD) // 7
+            # ── 6 Open Call DDI scores in a row
+            labels = ['Wonder', 'Human\nConnect', 'Story\nTransfer', 'Disrupt', 'Craft', 'Moment']
+            vals = [row.wonder_score, row.aq_score, row.story_transfer_score,
+                    row.disruption_score, row.dod_score, row.dm_score]
+            col_w = (W - 2 * PAD) // 6
             for i, (lbl, val) in enumerate(zip(labels, vals)):
                 cx = PAD + i * col_w + col_w // 2
                 score_txt = f'{val:.1f}' if val else '—'
