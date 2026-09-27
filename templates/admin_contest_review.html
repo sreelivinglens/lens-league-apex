@@ -1,6 +1,16 @@
-{% extends "admin_3_1.html" %}
-{% block title %}Contest Review — {{ batch_ref }}{% endblock %}
-{% block content %}
+{# SL-VERSION: admin_contest_review-1.1 (Session 224, 2026-09-27 — Standalone page, no base template dependency. RETAINS v1.0.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Contest Review — {{ batch_ref }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#111009;color:#e8e4dc;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+</style>
 <style>
 /* ── Review page ── */
 .cr-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
@@ -380,4 +390,5 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') { e.preventDefault(); toggleThumbSelect(cur); }
 });
 </script>
-{% endblock %}
+</body>
+</html>
