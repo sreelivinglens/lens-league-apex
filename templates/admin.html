@@ -1,4 +1,4 @@
-{# SL-VERSION: admin-3.0 (Session 218, 2026-09-10 — Image grid: Delete button on every tile, checkbox select on hover, bulk delete bar. Single delete via POST /admin/image-grid/delete (JSON, no reload). Checkbox appears on hover or when any image selected; selected tiles get red border. RETAINS admin-2.9.) #}
+{# SL-VERSION: admin-3.1 (Session 223, 2026-09-27 — Open Call: Contest Judge sidebar item added. RETAINS admin-3.0.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -565,6 +565,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Security</div>
     <a class="sb-item" href="{{ url_for('admin_bot_review') }}" style="text-decoration:none"><i class="ti ti-robot"></i> Bot review</a>
     <a class="sb-item" href="{{ url_for('admin_blocked_ips') }}" style="text-decoration:none"><i class="ti ti-ban"></i> Blocked IPs</a>
+  </div>
+
+  <div class="sb-group">
+    <div class="sb-group-label">Open Call</div>
+    <a class="sb-item" href="{{ url_for('admin_contest_judge') }}" style="text-decoration:none">
+      <i class="ti ti-gavel"></i> Contest Judge
+    </a>
   </div>
 
   <div class="sb-divider"></div>
