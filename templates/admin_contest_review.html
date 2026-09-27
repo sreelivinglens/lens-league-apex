@@ -1,0 +1,383 @@
+{% extends "admin_3_1.html" %}
+{% block title %}Contest Review — {{ batch_ref }}{% endblock %}
+{% block content %}
+<style>
+/* ── Review page ── */
+.cr-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+.cr-topbar {
+  display: flex; align-items: center; gap: 16px;
+  background: #1a1815; border-radius: 10px;
+  padding: 14px 20px; margin-bottom: 24px;
+  position: sticky; top: 0; z-index: 100;
+}
+.cr-topbar h2 { color: #c8a84b; font-size: 18px; margin: 0; flex: 1; }
+.cr-counter { color: #a0a09a; font-size: 15px; white-space: nowrap; }
+.cr-nav-btn {
+  background: #2c2a26; border: 1px solid #3a3831; color: #e8e4dc;
+  border-radius: 6px; padding: 7px 18px; cursor: pointer; font-size: 15px;
+  transition: background .15s;
+}
+.cr-nav-btn:hover { background: #3a3831; }
+.cr-nav-btn:disabled { opacity: .35; cursor: default; }
+
+/* Card */
+.cr-card {
+  display: none; background: #1e1c18; border: 1px solid #2e2c28;
+  border-radius: 12px; overflow: hidden;
+}
+.cr-card.active { display: flex; flex-direction: column; }
+
+.cr-card-top { display: flex; gap: 0; }
+.cr-img-col {
+  width: 420px; min-width: 320px; background: #111;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 360px;
+}
+.cr-img-col img { max-width: 100%; max-height: 480px; object-fit: contain; display: block; }
+.cr-img-col .no-img { color: #555; font-size: 13px; padding: 20px; }
+
+.cr-info-col { flex: 1; padding: 28px 28px 20px; }
+
+.cr-rank-badge {
+  display: inline-block; font-size: 28px; font-weight: 700;
+  color: #c8a84b; margin-bottom: 6px;
+}
+.cr-rank-pct { font-size: 13px; color: #a0a09a; margin-bottom: 12px; }
+.cr-photographer { font-size: 22px; font-weight: 700; color: #f0ece0; margin-bottom: 2px; }
+.cr-title { font-size: 14px; color: #a0a09a; margin-bottom: 14px; }
+.cr-composite { font-size: 42px; font-weight: 800; color: #f0ece0; line-height: 1; }
+.cr-composite span { font-size: 15px; color: #a0a09a; font-weight: 400; }
+
+/* Theme badge */
+.cr-theme-badge {
+  display: inline-block; border-radius: 6px; padding: 3px 12px;
+  font-size: 13px; font-weight: 600; margin: 10px 0 14px;
+}
+.cr-theme-badge.pass { background: #064e3b22; color: #34d399; border: 1px solid #064e3b; }
+.cr-theme-badge.fail { background: #7f1d1d22; color: #f87171; border: 1px solid #7f1d1d; }
+
+/* 7 score pills */
+.cr-scores { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.cr-score-pill {
+  background: #2c2a26; border-radius: 8px; padding: 8px 12px;
+  text-align: center; min-width: 72px;
+}
+.cr-score-pill .sp-val { font-size: 20px; font-weight: 700; color: #f0ece0; }
+.cr-score-pill .sp-lbl { font-size: 11px; color: #7a7a72; margin-top: 2px; }
+
+/* Notes sections */
+.cr-note-section { margin-bottom: 10px; }
+.cr-note-label { font-size: 11px; font-weight: 600; color: #7a7a72; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.cr-note-body { font-size: 14px; color: #ccc8be; line-height: 1.55; }
+
+/* Mentor Notes textarea */
+.cr-mentor-area {
+  border-top: 1px solid #2e2c28; padding: 20px 28px 24px;
+}
+.cr-mentor-area label {
+  display: block; font-size: 13px; font-weight: 700;
+  color: #c8a84b; margin-bottom: 8px; letter-spacing: .04em;
+}
+.cr-mentor-area textarea {
+  width: 100%; box-sizing: border-box;
+  background: #141210; border: 1px solid #3a3831; color: #f0ece0;
+  border-radius: 8px; padding: 12px 14px; font-size: 15px;
+  line-height: 1.6; resize: vertical; min-height: 140px;
+  font-family: inherit;
+  transition: border-color .15s;
+}
+.cr-mentor-area textarea:focus { outline: none; border-color: #c8a84b; }
+.cr-mentor-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.btn-save-note {
+  background: #c8a84b; color: #1a1815; border: none;
+  border-radius: 7px; padding: 9px 26px; font-size: 14px;
+  font-weight: 700; cursor: pointer; transition: background .15s;
+}
+.btn-save-note:hover { background: #d4b55a; }
+.btn-save-note:disabled { opacity: .5; cursor: default; }
+.save-status { font-size: 13px; color: #34d399; display: none; }
+
+/* Footer toolbar */
+.cr-footer-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: #1a1815; border-radius: 10px; padding: 16px 20px;
+  margin-top: 20px;
+}
+.cr-select-all { font-size: 14px; color: #a0a09a; cursor: pointer; user-select: none; }
+.cr-select-all input { cursor: pointer; margin-right: 6px; }
+.btn-export-sel {
+  background: #1d4ed8; color: #fff; border: none; border-radius: 7px;
+  padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.btn-export-sel:hover { background: #1e40af; }
+.btn-export-all {
+  background: #2c2a26; color: #e8e4dc; border: 1px solid #3a3831;
+  border-radius: 7px; padding: 9px 20px; font-size: 14px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-export-all:hover { background: #3a3831; }
+.cr-sel-count { font-size: 13px; color: #a0a09a; margin-left: auto; }
+
+/* Thumbnail row */
+.cr-thumb-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;
+}
+.cr-thumb-item {
+  position: relative; cursor: pointer; border-radius: 6px; overflow: hidden;
+  border: 2px solid transparent; transition: border-color .15s;
+  width: 72px; height: 72px; background: #111; flex-shrink: 0;
+}
+.cr-thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cr-thumb-item .no-img-mini { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #555; font-size: 10px; }
+.cr-thumb-item.active-thumb { border-color: #c8a84b; }
+.cr-thumb-item .cr-chk {
+  position: absolute; top: 3px; right: 3px;
+  width: 16px; height: 16px; border-radius: 3px;
+  background: rgba(0,0,0,.55); border: 1px solid #555;
+  display: flex; align-items: center; justify-content: center;
+}
+.cr-thumb-item.selected .cr-chk { background: #c8a84b; border-color: #c8a84b; }
+.cr-thumb-item .cr-chk::after { content: '✓'; font-size: 10px; color: #1a1815; display: none; }
+.cr-thumb-item.selected .cr-chk::after { display: block; }
+.cr-rank-num {
+  position: absolute; bottom: 3px; left: 3px;
+  font-size: 10px; font-weight: 700; color: #fff;
+  background: rgba(0,0,0,.6); border-radius: 3px; padding: 1px 4px;
+}
+</style>
+
+<div class="cr-wrap">
+  <!-- Top bar -->
+  <div class="cr-topbar">
+    <a href="{{ url_for('admin_contest_judge') }}" style="color:#7a7a72;text-decoration:none;font-size:14px;">← Back</a>
+    <h2>{{ batch_ref }}</h2>
+    <span class="cr-counter" id="cr-counter">1 / {{ total }}</span>
+    <button class="cr-nav-btn" id="btn-prev" onclick="cNav(-1)" disabled>◀ Prev</button>
+    <button class="cr-nav-btn" id="btn-next" onclick="cNav(1)">Next ▶</button>
+  </div>
+
+  <!-- Cards -->
+  {% for e in entries %}
+  <div class="cr-card {% if loop.first %}active{% endif %}" id="card-{{ loop.index0 }}" data-idx="{{ loop.index0 }}">
+    <div class="cr-card-top">
+      <!-- Image -->
+      <div class="cr-img-col">
+        {% if e.thumb_url %}
+          <img src="{{ e.thumb_url }}" alt="{{ e.filename }}" loading="lazy">
+        {% else %}
+          <div class="no-img">No image stored</div>
+        {% endif %}
+      </div>
+      <!-- Info -->
+      <div class="cr-info-col">
+        <div class="cr-rank-badge">
+          {% if e.rank == 1 %}🥇{% elif e.rank == 2 %}🥈{% elif e.rank == 3 %}🥉{% else %}#{{ e.rank }}{% endif %}
+        </div>
+        {% if e.pct is not none %}
+        <div class="cr-rank-pct">Top {{ 100 - e.pct }}% · {{ e.pct }}th percentile of {{ total }}</div>
+        {% endif %}
+        <div class="cr-photographer">{{ e.photographer }}</div>
+        <div class="cr-title">{{ e.image_title or e.filename }}</div>
+        <div class="cr-composite">{{ "%.2f"|format(e.composite_score) }} <span>/ 10</span></div>
+        <div class="cr-theme-badge {% if e.theme_relevant %}pass{% else %}fail{% endif %}">
+          Theme: {{ e.theme }} {{ '✓' if e.theme_relevant else '✗' }}
+        </div>
+        <!-- 7 scores -->
+        <div class="cr-scores">
+          {% for lbl, val in [('Emotion', e.emotion_score), ('Story', e.story_score), ('Compo', e.composition_score), ('Tech', e.technique_score), ('Arrest', e.arrest_score), ('Wow', e.wow_score), ('Disrupt', e.disruption_score)] %}
+          <div class="cr-score-pill">
+            <div class="sp-val">{{ "%.1f"|format(val) }}</div>
+            <div class="sp-lbl">{{ lbl }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if e.theme_note %}
+        <div class="cr-note-section">
+          <div class="cr-note-label">Theme Note</div>
+          <div class="cr-note-body">{{ e.theme_note }}</div>
+        </div>
+        {% endif %}
+        {% if e.master_ref %}
+        <div class="cr-note-section">
+          <div class="cr-note-label">Master Reference</div>
+          <div class="cr-note-body">{{ e.master_ref }}</div>
+        </div>
+        {% endif %}
+        {% if e.gap_note %}
+        <div class="cr-note-section">
+          <div class="cr-note-label">Gap</div>
+          <div class="cr-note-body">{{ e.gap_note }}</div>
+        </div>
+        {% endif %}
+        <div class="cr-note-section" style="margin-top:10px;">
+          <div class="cr-note-label" style="color:#555;">{{ e.filename }} · {{ e.judged_at }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mentor Notes -->
+    <div class="cr-mentor-area">
+      <label>✦ MENTOR NOTES</label>
+      <textarea id="note-{{ e.id }}"
+                placeholder="Type your notes here — 3 to 8 lines recommended. These will appear on the exported scorecard."
+                rows="8">{{ e.founder_note }}</textarea>
+      <div class="cr-mentor-actions">
+        <button class="btn-save-note" onclick="saveNote({{ e.id }}, {{ loop.index }}, {{ total }})">Save Note</button>
+        <span class="save-status" id="saved-{{ e.id }}">✓ Saved</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Thumbnail strip + export bar -->
+  <div class="cr-footer-bar" style="flex-direction:column;align-items:flex-start;gap:14px;">
+    <!-- Thumb row -->
+    <div class="cr-thumb-row" id="thumb-row">
+      {% for e in entries %}
+      <div class="cr-thumb-item {% if loop.first %}active-thumb{% endif %}"
+           id="thumb-{{ loop.index0 }}"
+           onclick="cGoTo({{ loop.index0 }})"
+           title="{{ e.photographer }}">
+        {% if e.thumb_url %}
+          <img src="{{ e.thumb_url }}" alt="{{ e.photographer }}" loading="lazy">
+        {% else %}
+          <div class="no-img-mini">?</div>
+        {% endif %}
+        <div class="cr-chk"></div>
+        <div class="cr-rank-num">{{ e.rank }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- Action row -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;">
+      <label class="cr-select-all">
+        <input type="checkbox" id="chk-all" onchange="toggleAll(this)"> Select all
+      </label>
+      <button class="btn-export-sel" onclick="exportSelected()">Download Selected Scorecards</button>
+      <button class="btn-export-all" onclick="exportAll()">Download All Scorecards</button>
+      <span class="cr-sel-count" id="sel-count">0 selected</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── State ── */
+const TOTAL   = {{ total }};
+const ENTRIES = {{ entries | tojson }};
+let cur       = 0;
+const selected = new Set();
+
+/* ── Navigate ── */
+function cNav(dir) {
+  const next = cur + dir;
+  if (next < 0 || next >= TOTAL) return;
+  cGoTo(next);
+}
+
+function cGoTo(idx) {
+  document.getElementById('card-' + cur)?.classList.remove('active');
+  document.getElementById('thumb-' + cur)?.classList.remove('active-thumb');
+  cur = idx;
+  document.getElementById('card-' + cur)?.classList.add('active');
+  document.getElementById('thumb-' + cur)?.classList.add('active-thumb');
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === TOTAL - 1;
+  document.getElementById('cr-counter').textContent = (cur + 1) + ' / ' + TOTAL;
+  // Scroll thumb into view
+  document.getElementById('thumb-' + cur)?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+/* ── Save Note ── */
+async function saveNote(entryId, idx, total) {
+  const ta = document.getElementById('note-' + entryId);
+  const status = document.getElementById('saved-' + entryId);
+  const btn = ta.closest('.cr-mentor-area').querySelector('.btn-save-note');
+  if (!ta) return;
+  btn.disabled = true;
+  status.style.display = 'none';
+  try {
+    const resp = await fetch('/admin/contest-judge/save-note/' + entryId, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCSRF()},
+      body: JSON.stringify({note: ta.value})
+    });
+    if (resp.ok) {
+      status.style.display = 'inline';
+      setTimeout(() => { status.style.display = 'none'; }, 3000);
+    } else {
+      alert('Save failed. Please try again.');
+    }
+  } catch(e) {
+    alert('Network error: ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+function getCSRF() {
+  const m = document.cookie.match(/csrf_token=([^;]+)/);
+  return m ? m[1] : '';
+}
+
+/* ── Selection ── */
+function toggleThumbSelect(idx) {
+  const thumb = document.getElementById('thumb-' + idx);
+  if (!thumb) return;
+  if (selected.has(idx)) {
+    selected.delete(idx);
+    thumb.classList.remove('selected');
+  } else {
+    selected.add(idx);
+    thumb.classList.add('selected');
+  }
+  updateSelCount();
+}
+
+// Right-click or long-press thumb to select; left-click to navigate
+document.querySelectorAll('.cr-thumb-item').forEach((el, idx) => {
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); toggleThumbSelect(idx); });
+  // For mobile: tap .cr-chk area to select
+  el.querySelector('.cr-chk').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleThumbSelect(idx);
+  });
+});
+
+function toggleAll(chk) {
+  if (chk.checked) {
+    for (let i = 0; i < TOTAL; i++) {
+      selected.add(i);
+      document.getElementById('thumb-' + i)?.classList.add('selected');
+    }
+  } else {
+    selected.clear();
+    document.querySelectorAll('.cr-thumb-item').forEach(t => t.classList.remove('selected'));
+  }
+  updateSelCount();
+}
+
+function updateSelCount() {
+  document.getElementById('sel-count').textContent = selected.size + ' selected';
+  document.getElementById('chk-all').checked = selected.size === TOTAL;
+}
+
+/* ── Export ── */
+function exportSelected() {
+  if (selected.size === 0) { alert('Select at least one scorecard first (tick the checkmark on a thumbnail).'); return; }
+  const ids = Array.from(selected).map(i => ENTRIES[i].id).join(',');
+  window.location = '/admin/contest-judge/scorecards/{{ batch_ref | urlencode }}?ids=' + ids;
+}
+
+function exportAll() {
+  window.location = '/admin/contest-judge/scorecards/{{ batch_ref | urlencode }}';
+}
+
+/* ── Keyboard nav ── */
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') cNav(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   cNav(-1);
+  if (e.key === ' ') { e.preventDefault(); toggleThumbSelect(cur); }
+});
+</script>
+{% endblock %}
