@@ -1,4 +1,4 @@
-# SL-VERSION: 182.24 (Session 224, 2026-09-27 — Contest Judge: thumb_path added to results JSON; thumbnail column in results table. RETAINS 182.23.)
+# SL-VERSION: 182.26 (Session 224, 2026-09-27 — Contest Judge: added /admin/contest-judge/reupload-thumbs/<batch_ref> — uploads existing judged images to R2 and updates thumb_path, zero Sonnet calls. RETAINS 182.25.)
 
 import os
 import re
@@ -15420,7 +15420,11 @@ def admin_contest_judge():
 @app.route('/admin/contest-judge/upload', methods=['POST'])
 @login_required
 def admin_contest_judge_upload():
-    """Bulk upload + judge. Accepts multiple files. Returns JSON progress."""
+    """Bulk upload + judge. Accepts multiple files. Returns JSON progress.
+    v182.25: images stored on R2 (contest/<safe_batch>/<fname>) — survives
+    every Railway deploy. If a filename already exists in the batch, only the
+    R2 thumb_path is updated — Sonnet is NOT called again (zero re-judge cost).
+    """
     if current_user.role != 'admin':
         abort(403)
 
@@ -15435,13 +15439,26 @@ def admin_contest_judge_upload():
     if not files:
         return jsonify({'error': 'No files received'}), 400
 
-    # Persistent storage folder — kept until admin deletes the batch
     safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
-    STORE_DIR = _cj_os.path.join(app.root_path, 'static', 'contest_uploads', safe_batch)
-    _cj_os.makedirs(STORE_DIR, exist_ok=True)
+
+    # Temp dir for this request only — files are removed after R2 upload
+    import tempfile as _cj_tempfile
+    tmp_dir = _cj_tempfile.mkdtemp(prefix='cj_')
 
     results = []
-    errors = []
+    errors  = []
+    reused  = []   # filenames that already had scores — thumb only updated
+
+    def _r2_upload_contest(local_path, safe_batch_name, filename):
+        """Upload contest image to R2 under contest/<batch>/<filename>."""
+        ext = _cj_os.path.splitext(filename)[1].lower() or '.jpg'
+        key = f'contest/{safe_batch_name}/{filename}'
+        try:
+            url = r2.upload_file(local_path, key, content_type='image/jpeg')
+            return url
+        except Exception as _r2e:
+            app.logger.error(f'[contest_r2_upload] {_r2e}')
+            return None
 
     for f in files:
         if not f or not f.filename:
@@ -15452,11 +15469,34 @@ def admin_contest_judge_upload():
             errors.append({'filename': fname, 'error': 'Unsupported file type'})
             continue
 
-        tmp_path = _cj_os.path.join(STORE_DIR, fname)
+        tmp_path = _cj_os.path.join(tmp_dir, fname)
         f.save(tmp_path)
 
         try:
-            # No dimension floor — accept all submitted images
+            # ── Check if this filename already has scores in this batch ──
+            existing = db.session.execute(db.text(
+                "SELECT id, composite_score FROM contest_judge_batch "
+                "WHERE batch_ref = :br AND filename = :fn LIMIT 1"
+            ), {'br': batch_ref, 'fn': fname}).fetchone()
+
+            if existing:
+                # Already judged — just upload to R2 and update thumb_path
+                thumb_url = _r2_upload_contest(tmp_path, safe_batch, fname)
+                if thumb_url:
+                    db.session.execute(db.text(
+                        "UPDATE contest_judge_batch SET thumb_path = :tp "
+                        "WHERE batch_ref = :br AND filename = :fn"
+                    ), {'tp': thumb_url, 'br': batch_ref, 'fn': fname})
+                    db.session.commit()
+                    reused.append({'filename': fname, 'composite': existing.composite_score})
+                else:
+                    errors.append({'filename': fname, 'error': 'R2 upload failed (thumb update)'})
+                # Clean up temp regardless
+                if _cj_os.path.exists(tmp_path):
+                    _cj_os.remove(tmp_path)
+                continue
+
+            # ── New image — judge with Sonnet ──
             photographer, title = _cj_parse_filename(fname)
             image_b64 = _cj_thumb_b64(tmp_path)
             verdict = _cj_sonnet_judge(image_b64, photographer, title, theme)
@@ -15467,8 +15507,9 @@ def admin_contest_judge_upload():
                     _cj_os.remove(tmp_path)
                 continue
 
-            # Store relative path for scorecard rendering
-            thumb_rel = f'contest_uploads/{safe_batch}/{fname}'
+            # Upload to R2
+            thumb_url = _r2_upload_contest(tmp_path, safe_batch, fname)
+            thumb_path_val = thumb_url or ''  # store full URL; blank if R2 failed
 
             db.session.execute(db.text("""
                 INSERT INTO contest_judge_batch
@@ -15499,7 +15540,7 @@ def admin_contest_judge_upload():
                 'mr': verdict.get('master_ref', ''),
                 'gn': verdict.get('gap_note', ''),
                 'rj': _cj_json.dumps(verdict),
-                'tp': thumb_rel
+                'tp': thumb_path_val,
             })
             db.session.commit()
 
@@ -15514,12 +15555,21 @@ def admin_contest_judge_upload():
 
         except Exception as e:
             errors.append({'filename': fname, 'error': str(e)})
+        finally:
+            # Always clean up temp file — image lives on R2 now
             if _cj_os.path.exists(tmp_path):
                 _cj_os.remove(tmp_path)
+
+    # Clean up temp dir
+    try:
+        _cj_os.rmdir(tmp_dir)
+    except Exception:
+        pass
 
     return jsonify({
         'batch_ref': batch_ref,
         'judged': len(results),
+        'reused': len(reused),
         'errors': errors,
         'results': results
     })
@@ -15795,7 +15845,8 @@ def admin_contest_judge_results(batch_ref):
         'master_ref': r.master_ref,
         'gap_note': r.gap_note,
         'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else '',
-        'thumb_url': f'/static/{r.thumb_path}' if r.thumb_path else None
+        # thumb_path is now a full R2 https:// URL; old rows may have a relative path
+        'thumb_url': r.thumb_path if (r.thumb_path and r.thumb_path.startswith('http')) else (f'/static/{r.thumb_path}' if r.thumb_path else None)
     } for r in rows])
 
 
@@ -15805,17 +15856,103 @@ def admin_contest_judge_delete_batch(batch_ref):
     """Delete all rows for a batch and remove stored images."""
     if current_user.role != 'admin':
         abort(403)
+    # Collect R2 keys to delete before removing DB rows
+    _thumb_rows = db.session.execute(db.text(
+        "SELECT thumb_path FROM contest_judge_batch WHERE batch_ref = :br AND thumb_path IS NOT NULL"
+    ), {'br': batch_ref}).fetchall()
     db.session.execute(db.text(
         "DELETE FROM contest_judge_batch WHERE batch_ref = :br"
     ), {'br': batch_ref})
     db.session.commit()
-    # Remove stored images
-    import shutil as _shutil
+    # Best-effort R2 cleanup — delete contest/<safe_batch>/* objects
     safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
+    try:
+        for _tr in _thumb_rows:
+            if _tr.thumb_path and _tr.thumb_path.startswith('http'):
+                # Extract key from URL: everything after the R2 public base
+                _key = _tr.thumb_path.split(r2.R2_PUBLIC_URL + '/')[-1]
+                if _key and _key != _tr.thumb_path:
+                    r2.delete_file(_key)
+    except Exception as _r2del_e:
+        app.logger.warning(f'[contest_delete_r2] {_r2del_e}')
+    # Also remove any legacy local folder if it still exists
+    import shutil as _shutil
     store_dir = _cj_os.path.join(app.root_path, 'static', 'contest_uploads', safe_batch)
     if _cj_os.path.isdir(store_dir):
         _shutil.rmtree(store_dir, ignore_errors=True)
     return jsonify({'deleted': True, 'batch_ref': batch_ref})
+
+
+# ── CONTEST JUDGE — REUPLOAD THUMBS TO R2 (zero re-judge) ───────────────────
+
+@app.route('/admin/contest-judge/reupload-thumbs/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_reupload_thumbs(batch_ref):
+    """Accept a batch of already-judged images, upload to R2, update thumb_path only.
+    Zero Sonnet calls — scores are never touched. Use this to fix broken thumbnails
+    after a Railway redeploy without paying for re-judging.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+
+    files = request.files.getlist('images')
+    if not files:
+        return jsonify({'error': 'No files received'}), 400
+
+    safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
+    import tempfile as _cj_tf2
+    tmp_dir = _cj_tf2.mkdtemp(prefix='cj_reup_')
+
+    updated = []
+    skipped = []   # filename not found in this batch
+    errors  = []
+
+    for f in files:
+        if not f or not f.filename:
+            continue
+        fname = f.filename
+        tmp_path = _cj_os.path.join(tmp_dir, fname)
+        f.save(tmp_path)
+        try:
+            existing = db.session.execute(db.text(
+                "SELECT id FROM contest_judge_batch "
+                "WHERE batch_ref = :br AND filename = :fn LIMIT 1"
+            ), {'br': batch_ref, 'fn': fname}).fetchone()
+
+            if not existing:
+                skipped.append(fname)
+                continue
+
+            key = f'contest/{safe_batch}/{fname}'
+            thumb_url = r2.upload_file(tmp_path, key, content_type='image/jpeg')
+            if not thumb_url:
+                errors.append({'filename': fname, 'error': 'R2 upload returned None'})
+                continue
+
+            db.session.execute(db.text(
+                "UPDATE contest_judge_batch SET thumb_path = :tp "
+                "WHERE batch_ref = :br AND filename = :fn"
+            ), {'tp': thumb_url, 'br': batch_ref, 'fn': fname})
+            db.session.commit()
+            updated.append(fname)
+
+        except Exception as _e:
+            errors.append({'filename': fname, 'error': str(_e)})
+        finally:
+            if _cj_os.path.exists(tmp_path):
+                _cj_os.remove(tmp_path)
+
+    try:
+        _cj_os.rmdir(tmp_dir)
+    except Exception:
+        pass
+
+    return jsonify({
+        'batch_ref': batch_ref,
+        'updated': len(updated),
+        'skipped': skipped,
+        'errors': errors
+    })
 
 
 # ── CONTEST JUDGE — SAVE MENTOR NOTE ────────────────────────────────────────
@@ -15858,7 +15995,7 @@ def admin_contest_judge_review(batch_ref):
     entries = []
     for rank, row in enumerate(rows, 1):
         pct = round(100 * (total - rank) / total) if rank <= 10 else None
-        thumb_url = (f'/static/{row.thumb_path}') if row.thumb_path else None
+        thumb_url = row.thumb_path if (row.thumb_path and row.thumb_path.startswith('http')) else (f'/static/{row.thumb_path}' if row.thumb_path else None)
         entries.append({
             'id': row.id,
             'rank': rank,
@@ -15996,26 +16133,31 @@ def admin_contest_judge_scorecards(batch_ref):
             # ── Thin rule under header
             d.rectangle([(PAD, 76), (W - PAD, 78)], fill=(224, 221, 214))
 
-            # ── Image (if available)
+            # ── Image (if available — thumb_path is now an R2 https:// URL)
             img_y = 95
             IMG_H = 420
             if row.thumb_path:
-                full_path = _cj_os.path.join(app.root_path, 'static', row.thumb_path)
-                if _cj_os.path.exists(full_path):
-                    try:
-                        with _PILSC.open(full_path) as src:
-                            src = src.convert('RGB')
-                            # Fit into box W-2*PAD × IMG_H preserving aspect
-                            box_w = W - 2 * PAD
-                            src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
-                            # Centre horizontally
-                            x_off = PAD + (box_w - src.width) // 2
-                            img_card.paste(src, (x_off, img_y))
-                    except Exception:
-                        d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
-                        d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
-                else:
+                try:
+                    import io as _scio
+                    import requests as _screq
+                    if row.thumb_path.startswith('http'):
+                        _img_resp = _screq.get(row.thumb_path, timeout=10)
+                        _img_resp.raise_for_status()
+                        _img_bytes = _scio.BytesIO(_img_resp.content)
+                    else:
+                        # Legacy: relative local path
+                        full_path = _cj_os.path.join(app.root_path, 'static', row.thumb_path)
+                        with open(full_path, 'rb') as _lf:
+                            _img_bytes = _scio.BytesIO(_lf.read())
+                    with _PILSC.open(_img_bytes) as src:
+                        src = src.convert('RGB')
+                        box_w = W - 2 * PAD
+                        src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
+                        x_off = PAD + (box_w - src.width) // 2
+                        img_card.paste(src, (x_off, img_y))
+                except Exception:
                     d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+                    d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
             else:
                 d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
 
