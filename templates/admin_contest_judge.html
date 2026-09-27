@@ -1,0 +1,467 @@
+{# SL-VERSION: admin_contest_judge-1.0 (Session 223, 2026-09-27 — Standalone open call judging panel. Bulk upload → Sonnet DDI + theme + master + gap → Excel download. Isolated from member data.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Open Call Judge — Shutter League Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid #E0DDD6;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:50}
+.sb-logo{padding:18px 18px 14px;border-bottom:1px solid #E0DDD6}
+.sb-logo-title{font-size:14px;font-weight:600;color:#1A1A18;display:flex;align-items:center;gap:8px}
+.sb-logo-sub{font-size:12px;color:#8A8A86;margin-top:3px}
+.sb-back{display:flex;align-items:center;gap:8px;padding:12px 18px;font-size:14px;color:#3A3A38;text-decoration:none;border-bottom:1px solid #F0EDE6}
+.sb-back:hover{background:#F5F3EF}
+.sb-back i{font-size:16px;color:#8A8A86}
+.sb-section{padding:16px 18px 8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#AEAEA8}
+
+/* ── MAIN ── */
+.main{padding:24px 28px 80px;min-width:0}
+.page-header{margin-bottom:24px}
+.page-title{font-size:22px;font-weight:500;color:#1A1A18}
+.page-sub{font-size:14px;color:#6B6B68;margin-top:4px}
+
+/* ── GUIDE ── */
+.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:20px;font-size:14px;color:#1A1A18;line-height:1.6}
+.guide strong{font-weight:600;color:#92400E}
+.guide.ok{background:#F0FDF4;border-color:#BBF7D0;border-left-color:#2E7D32}
+.guide.ok strong{color:#2E7D32}
+.guide.danger{background:#FEF2F2;border-color:#FECACA;border-left-color:#B91C1C}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:20px 22px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.card-title i{font-size:16px}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:13px;font-weight:500;color:#3A3A38}
+.form-input{padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:15px;background:#FAFAF6;color:#1A1A18;font-family:inherit;outline:none;min-height:44px;width:100%}
+.form-input:focus{border-color:#1A2744}
+.form-hint{font-size:12px;color:#8A8A86}
+
+/* ── DROP ZONE ── */
+.dropzone{border:2px dashed #C8C5BE;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:#FAFAF6;margin-bottom:14px}
+.dropzone.dragover{border-color:#C8A84B;background:#FFF8E8}
+.dropzone.has-files{border-color:#2E7D32;background:#F0FDF4}
+.dz-icon{font-size:36px;color:#C8A84B;margin-bottom:8px}
+.dz-title{font-size:15px;font-weight:500;color:#1A1A18;margin-bottom:4px}
+.dz-sub{font-size:13px;color:#8A8A86}
+.dz-count{font-size:14px;font-weight:600;color:#2E7D32;margin-top:8px;display:none}
+#file-input{display:none}
+
+/* ── BUTTON ── */
+.btn{padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;border:none;min-height:44px;display:inline-flex;align-items:center;gap:8px;transition:background .12s}
+.btn-gold{background:#C8A84B;color:#1A1A18}
+.btn-gold:hover{background:#A88830}
+.btn-gold:disabled{background:#E0DDD6;color:#8A8A86;cursor:not-allowed}
+.btn-outline{background:#fff;border:1px solid #C8C5BE;color:#1A1A18}
+.btn-outline:hover{border-color:#1A2744;background:#F5F3EF}
+.btn-danger{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C}
+.btn-danger:hover{background:#B91C1C;color:#fff}
+.btn-green{background:#2E7D32;color:#fff}
+.btn-green:hover{background:#1B5E20}
+
+/* ── PROGRESS ── */
+.progress-wrap{display:none;margin-bottom:16px}
+.progress-bar-bg{height:8px;background:#E0DDD6;border-radius:99px;overflow:hidden;margin-bottom:8px}
+.progress-bar-fill{height:100%;background:#C8A84B;border-radius:99px;transition:width .3s;width:0%}
+.progress-label{font-size:13px;color:#6B6B68}
+.progress-errors{margin-top:8px}
+.err-item{font-size:12px;color:#B91C1C;padding:3px 0}
+
+/* ── RESULTS TABLE ── */
+.results-wrap{display:none}
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th{font-size:11px;color:#8A8A86;font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid #E0DDD6;white-space:nowrap;background:#FAFAF6}
+.rtable th.center{text-align:center}
+.rtable td{padding:10px 10px;border-bottom:1px solid #F5F3EF;vertical-align:top}
+.rtable tr:hover td{background:#FFFBEB}
+.score-cell{text-align:center;font-weight:600;font-size:14px}
+.s-high{color:#065F46}
+.s-mid{color:#92400E}
+.s-low{color:#B91C1C}
+.theme-yes{background:#D1FAE5;color:#065F46;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block}
+.theme-no{background:#FEE2E2;color:#B91C1C;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block}
+.rank-num{font-weight:700;font-size:15px;color:#1A1A18;text-align:center;display:block}
+.photographer-name{font-weight:500;color:#1A1A18}
+.image-title{color:#6B6B68;font-size:12px}
+.note-text{font-size:12px;color:#3A3A38;line-height:1.4}
+.master-text{font-size:12px;color:#1A2744;font-style:italic;line-height:1.4}
+.gap-text{font-size:12px;color:#B45309;line-height:1.4}
+
+/* ── BATCH LIST ── */
+.batch-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F5F3EF;gap:12px}
+.batch-row:last-child{border-bottom:none}
+.batch-info{flex:1}
+.batch-name{font-size:14px;font-weight:500;color:#1A1A18}
+.batch-meta{font-size:12px;color:#8A8A86;margin-top:2px}
+.batch-actions{display:flex;gap:8px;flex-shrink:0}
+.batch-btn{font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid #E0DDD6;background:#FAFAF6;color:#1A1A18;cursor:pointer;font-family:inherit;min-height:36px;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+.batch-btn:hover{border-color:#C8A84B;background:#FFF8E8}
+.batch-btn.danger{color:#B91C1C}
+.batch-btn.danger:hover{background:#FEF2F2;border-color:#FECACA}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-title">
+      <i class="ti ti-camera" style="color:#C8A84B"></i>
+      Shutter League
+    </div>
+    <div class="sb-logo-sub">Open Call Judge</div>
+  </div>
+  <a class="sb-back" href="/admin"><i class="ti ti-arrow-left"></i> Back to Admin</a>
+  <div class="sb-section">In this tool</div>
+  <div style="padding:8px 18px;font-size:13px;color:#6B6B68;line-height:1.7">
+    <p style="margin-bottom:8px">Bulk upload contest images → Sonnet evaluates each one → Download Excel.</p>
+    <p style="margin-bottom:8px"><strong style="color:#1A1A18">Isolated.</strong> No member data is touched.</p>
+    <p style="margin-bottom:8px"><strong style="color:#1A1A18">Filename convention:</strong><br>
+    <code style="background:#F5F3EF;padding:2px 5px;border-radius:4px;font-size:12px">Photographer_Title.jpg</code></p>
+    <p style="margin-bottom:8px">Example:<br>
+    <code style="background:#F5F3EF;padding:2px 5px;border-radius:4px;font-size:12px">Mahesh_I_TaxiWindow.jpg</code></p>
+    <p><strong style="color:#1A1A18">Minimum:</strong> 800px short side</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="page-header">
+    <div class="page-title"><i class="ti ti-gavel" style="color:#C8A84B;margin-right:8px"></i>Open Call Judge</div>
+    <div class="page-sub">Upload images → Sonnet judges each one → Export Excel. Completely isolated from member accounts.</div>
+  </div>
+
+  <div class="guide">
+    <strong>How to use:</strong> Name files as <code>PhotographerName_ImageTitle.jpg</code> (e.g. <code>Mahesh_I_TaxiWindow.jpg</code>). Upload all images for a batch together. The engine runs one Sonnet call per image — 30 images takes approximately 2–3 minutes. Download the Excel when done.
+  </div>
+
+  <!-- UPLOAD FORM -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-upload"></i> New Judging Batch</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Batch name / reference</label>
+        <input type="text" class="form-input" id="batch-ref" placeholder="e.g. Story_Oct2026" maxlength="40">
+        <div class="form-hint">Left blank → auto-named with today's date and time</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Theme</label>
+        <input type="text" class="form-input" id="theme-input" value="Story" maxlength="80">
+        <div class="form-hint">The contest theme the engine will assess relevance against</div>
+      </div>
+    </div>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+      <div class="dz-icon"><i class="ti ti-photo"></i></div>
+      <div class="dz-title">Drop images here or click to browse</div>
+      <div class="dz-sub">JPG, PNG, TIFF, WebP · 800px short side minimum · No limit on count</div>
+      <div class="dz-count" id="dz-count"></div>
+    </div>
+    <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.tif,.tiff,.webp">
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">Preparing...</div>
+      <div class="progress-errors" id="progress-errors"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-gold" id="judge-btn" disabled onclick="startJudging()">
+        <i class="ti ti-sparkles"></i> Judge batch
+      </button>
+      <button class="btn btn-outline" onclick="clearForm()">
+        <i class="ti ti-x"></i> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- LIVE RESULTS -->
+  <div class="card results-wrap" id="results-card">
+    <div class="card-title"><i class="ti ti-list-check"></i> Results — <span id="results-batch-name"></span></div>
+
+    <div id="results-summary" style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:#FAFAF6;border-radius:8px;border:1px solid #E0DDD6"></div>
+
+    <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-green" id="export-btn" onclick="exportBatch()">
+        <i class="ti ti-file-spreadsheet"></i> Download Excel
+      </button>
+      <span style="font-size:13px;color:#6B6B68">Sorted by Composite Score · Story + Arrest weighted 1.5×</span>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="rtable" id="results-table">
+        <thead>
+          <tr>
+            <th class="center">#</th>
+            <th>Photographer</th>
+            <th class="center">Emotion</th>
+            <th class="center">Story</th>
+            <th class="center">Compo</th>
+            <th class="center">Tech</th>
+            <th class="center">Arrest</th>
+            <th class="center">Wow</th>
+            <th class="center">Disrupt</th>
+            <th class="center">Composite</th>
+            <th class="center">Theme?</th>
+            <th>Theme Note</th>
+            <th>Master Ref</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PREVIOUS BATCHES -->
+  <div class="card" id="batches-card">
+    <div class="card-title"><i class="ti ti-history"></i> Previous batches</div>
+    <div id="batches-list"><div style="font-size:14px;color:#8A8A86">Loading...</div></div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+let selectedFiles = [];
+let currentBatch = '';
+
+// ── File selection ──────────────────────────────────────────────────────────
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  setFiles(Array.from(e.dataTransfer.files));
+});
+fileInput.addEventListener('change', e => setFiles(Array.from(e.target.files)));
+
+function setFiles(files) {
+  selectedFiles = files.filter(f => /\.(jpg|jpeg|png|tif|tiff|webp)$/i.test(f.name));
+  if (selectedFiles.length > 0) {
+    dropzone.classList.add('has-files');
+    const countEl = document.getElementById('dz-count');
+    countEl.textContent = `${selectedFiles.length} image${selectedFiles.length === 1 ? '' : 's'} selected`;
+    countEl.style.display = 'block';
+    document.getElementById('judge-btn').disabled = false;
+  }
+}
+
+function clearForm() {
+  selectedFiles = [];
+  fileInput.value = '';
+  dropzone.classList.remove('has-files', 'dragover');
+  document.getElementById('dz-count').style.display = 'none';
+  document.getElementById('judge-btn').disabled = true;
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('progress-errors').innerHTML = '';
+}
+
+// ── Judging ─────────────────────────────────────────────────────────────────
+async function startJudging() {
+  if (!selectedFiles.length) return;
+
+  const batchRef = document.getElementById('batch-ref').value.trim() || '';
+  const theme = document.getElementById('theme-input').value.trim() || 'Story';
+
+  document.getElementById('judge-btn').disabled = true;
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-errors').innerHTML = '';
+
+  const total = selectedFiles.length;
+  let done = 0;
+  let allResults = [];
+  let allErrors = [];
+
+  // Upload in batches of 5 to avoid timeout
+  const CHUNK = 5;
+  let usedBatchRef = batchRef;
+
+  for (let i = 0; i < selectedFiles.length; i += CHUNK) {
+    const chunk = selectedFiles.slice(i, i + CHUNK);
+    updateProgress(done, total, `Judging images ${i + 1}–${Math.min(i + CHUNK, total)} of ${total}...`);
+
+    const fd = new FormData();
+    fd.append('batch_ref', usedBatchRef);
+    fd.append('theme', theme);
+    chunk.forEach(f => fd.append('images', f));
+
+    try {
+      const resp = await fetch('/admin/contest-judge/upload', { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (data.batch_ref && !usedBatchRef) usedBatchRef = data.batch_ref;
+      allResults = allResults.concat(data.results || []);
+      allErrors = allErrors.concat(data.errors || []);
+      done += chunk.length;
+    } catch (e) {
+      allErrors.push({ filename: 'chunk ' + (i/CHUNK + 1), error: e.message });
+      done += chunk.length;
+    }
+    updateProgress(done, total, done >= total ? 'Done!' : `${done} of ${total} judged...`);
+  }
+
+  currentBatch = usedBatchRef;
+
+  // Show errors
+  if (allErrors.length) {
+    const errEl = document.getElementById('progress-errors');
+    allErrors.forEach(e => {
+      errEl.innerHTML += `<div class="err-item"><i class="ti ti-alert-circle"></i> <strong>${e.filename}</strong>: ${e.error}</div>`;
+    });
+  }
+
+  updateProgress(total, total, `✓ ${allResults.length} images judged${allErrors.length ? ` · ${allErrors.length} error(s) — see above` : ''}`);
+
+  // Load results
+  if (currentBatch) {
+    await loadResults(currentBatch);
+    loadBatches();
+  }
+
+  document.getElementById('judge-btn').disabled = false;
+}
+
+function updateProgress(done, total, label) {
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+// ── Results ─────────────────────────────────────────────────────────────────
+async function loadResults(batchRef) {
+  const resp = await fetch(`/admin/contest-judge/results/${encodeURIComponent(batchRef)}`);
+  const rows = await resp.json();
+
+  document.getElementById('results-batch-name').textContent = batchRef;
+  document.getElementById('export-btn').dataset.batchRef = batchRef;
+
+  // Summary
+  const composites = rows.map(r => r.composite).filter(v => v != null);
+  const themeYes = rows.filter(r => r.theme_relevant).length;
+  const avgStory = rows.length ? (rows.reduce((s, r) => s + (r.story || 0), 0) / rows.length).toFixed(1) : '—';
+
+  document.getElementById('results-summary').innerHTML = `
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Entries</div><div style="font-size:22px;font-weight:500">${rows.length}</div></div>
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Avg Composite</div><div style="font-size:22px;font-weight:500">${composites.length ? (composites.reduce((a,b)=>a+b,0)/composites.length).toFixed(2) : '—'}</div></div>
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Avg Story</div><div style="font-size:22px;font-weight:500">${avgStory}</div></div>
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Theme: Story ✓</div><div style="font-size:22px;font-weight:500">${themeYes} / ${rows.length}</div></div>
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Highest</div><div style="font-size:22px;font-weight:500;color:#065F46">${composites.length ? Math.max(...composites).toFixed(2) : '—'}</div></div>
+    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Lowest</div><div style="font-size:22px;font-weight:500;color:#B91C1C">${composites.length ? Math.min(...composites).toFixed(2) : '—'}</div></div>
+  `;
+
+  const tbody = document.getElementById('results-tbody');
+  tbody.innerHTML = '';
+  rows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank-num">${idx + 1}</span></td>
+      <td>
+        <div class="photographer-name">${esc(r.photographer || 'Unknown')}</div>
+        <div class="image-title">${esc(r.title || r.filename)}</div>
+      </td>
+      ${scoreCell(r.emotion)}
+      ${scoreCell(r.story)}
+      ${scoreCell(r.composition)}
+      ${scoreCell(r.technique)}
+      ${scoreCell(r.arrest)}
+      ${scoreCell(r.wow)}
+      ${scoreCell(r.disruption)}
+      <td class="score-cell" style="font-size:16px">${scoreSpan(r.composite)}</td>
+      <td style="text-align:center">${r.theme_relevant
+        ? '<span class="theme-yes">Yes ✓</span>'
+        : '<span class="theme-no">No ✗</span>'}</td>
+      <td><div class="note-text">${esc(r.theme_note || '')}</div></td>
+      <td><div class="master-text">${esc(r.master_ref || '')}</div></td>
+      <td><div class="gap-text">${esc(r.gap_note || '')}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('results-card').style.display = 'block';
+  document.getElementById('results-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scoreCell(val) {
+  if (val == null) return '<td class="score-cell">—</td>';
+  return `<td class="score-cell">${scoreSpan(val)}</td>`;
+}
+function scoreSpan(val) {
+  if (val == null) return '—';
+  const cls = val >= 8.5 ? 's-high' : val >= 7.0 ? 's-mid' : 's-low';
+  return `<span class="${cls}">${val.toFixed(1)}</span>`;
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Export ──────────────────────────────────────────────────────────────────
+function exportBatch() {
+  const ref = document.getElementById('export-btn').dataset.batchRef || currentBatch;
+  if (!ref) return;
+  window.location = `/admin/contest-judge/export/${encodeURIComponent(ref)}`;
+}
+
+// ── Batch list ──────────────────────────────────────────────────────────────
+async function loadBatches() {
+  const resp = await fetch('/admin/contest-judge/batches');
+  const batches = await resp.json();
+  const el = document.getElementById('batches-list');
+  if (!batches.length) {
+    el.innerHTML = '<div style="font-size:14px;color:#8A8A86">No batches yet.</div>';
+    return;
+  }
+  el.innerHTML = batches.map(b => `
+    <div class="batch-row">
+      <div class="batch-info">
+        <div class="batch-name">${esc(b.batch_ref)}</div>
+        <div class="batch-meta">${b.n} images · Avg composite: ${b.avg_composite ?? '—'} · Theme yes: ${b.theme_yes}/${b.n} · ${b.started}</div>
+      </div>
+      <div class="batch-actions">
+        <button class="batch-btn" onclick="loadResults('${esc(b.batch_ref)}')"><i class="ti ti-eye"></i> View</button>
+        <a class="batch-btn" href="/admin/contest-judge/export/${encodeURIComponent(b.batch_ref)}"><i class="ti ti-file-spreadsheet"></i> Excel</a>
+        <button class="batch-btn danger" onclick="deleteBatch('${esc(b.batch_ref)}')"><i class="ti ti-trash"></i> Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function deleteBatch(ref) {
+  if (!confirm(`Delete all results for "${ref}"? This cannot be undone.`)) return;
+  await fetch(`/admin/contest-judge/delete-batch/${encodeURIComponent(ref)}`, { method: 'POST' });
+  loadBatches();
+  if (currentBatch === ref) {
+    document.getElementById('results-card').style.display = 'none';
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+loadBatches();
+</script>
+</body>
+</html>
