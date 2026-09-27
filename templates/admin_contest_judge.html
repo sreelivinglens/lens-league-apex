@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.2 (Session 224, 2026-09-27 — Thumbnail column in results table. RETAINS v2.1.) #}
+{# SL-VERSION: admin_contest_judge-2.3 (Session 224, 2026-09-27 — Fix Thumbnails button on batch row for zero-cost R2 reupload. RETAINS v2.2.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -507,6 +507,7 @@ async function loadBatches() {
         <a class="batch-btn" href="/admin/contest-judge/review/${encodeURIComponent(b.batch_ref)}" style="background:#c8a84b;color:#1a1815;font-weight:600;"><i class="ti ti-notebook"></i> Review &amp; Notes</a>
         <a class="batch-btn" href="/admin/contest-judge/export/${encodeURIComponent(b.batch_ref)}"><i class="ti ti-file-spreadsheet"></i> Excel</a>
         <a class="batch-btn" href="/admin/contest-judge/scorecards/${encodeURIComponent(b.batch_ref)}"><i class="ti ti-id"></i> Scorecards</a>
+        <button class="batch-btn" style="background:#1e3a5f;color:#93c5fd;" onclick="fixThumbs('${esc(b.batch_ref)}')"><i class="ti ti-photo-up"></i> Fix Thumbs</button>
         <button class="batch-btn danger" onclick="deleteBatch('${esc(b.batch_ref)}')"><i class="ti ti-trash"></i> Delete</button>
       </div>
     </div>
@@ -521,6 +522,39 @@ async function deleteBatch(ref) {
     document.getElementById('results-card').style.display = 'none';
     document.getElementById('podium').style.display = 'none';
   }
+}
+
+// ── Fix Thumbnails — zero Sonnet calls, R2 reupload only ──
+function fixThumbs(ref) {
+  // Hidden file input
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.multiple = true;
+  inp.onchange = async () => {
+    if (!inp.files.length) return;
+    const label = document.createElement('div');
+    label.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1a2744;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999;font-size:14px;';
+    label.textContent = `Uploading ${inp.files.length} images to R2…`;
+    document.body.appendChild(label);
+    const fd = new FormData();
+    for (const f of inp.files) fd.append('images', f);
+    try {
+      const resp = await fetch(`/admin/contest-judge/reupload-thumbs/${encodeURIComponent(ref)}`, {
+        method: 'POST', body: fd
+      });
+      const data = await resp.json();
+      label.style.background = '#065f46';
+      label.textContent = `✓ ${data.updated} thumbnails fixed on R2. ${data.skipped?.length ? data.skipped.length + ' skipped (not in batch).' : ''}`;
+      setTimeout(() => label.remove(), 5000);
+      if (currentBatch === ref) loadResults(ref);
+    } catch(e) {
+      label.style.background = '#7f1d1d';
+      label.textContent = 'Upload failed: ' + e.message;
+      setTimeout(() => label.remove(), 5000);
+    }
+  };
+  inp.click();
 }
 
 loadBatches();
