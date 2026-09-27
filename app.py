@@ -1,4 +1,4 @@
-# SL-VERSION: 182.20 (Session 223, 2026-09-27 — Contest Judge: /admin/contest-judge bulk upload route, contest_judge_batch table, Sonnet DDI + theme + master + gap, Excel export. Isolated from member data. RETAINS 182.19.)
+# SL-VERSION: 182.22 (Session 223, 2026-09-27 — Contest Judge: images stored in static/contest_uploads/<batch_ref>/ until batch deleted; thumb_path column added; scorecard ZIP route; podium strip in admin UI. RETAINS 182.21.)
 
 import os
 import re
@@ -2400,6 +2400,17 @@ def _run_startup_tasks():
             except Exception as _cjb_e:
                 db.session.rollback()
                 print(f'contest_judge_batch migration warning: {_cjb_e}')
+
+            # Session 223 v182.22 — add thumb_path column for scorecard image storage
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE contest_judge_batch ADD COLUMN IF NOT EXISTS thumb_path VARCHAR(500)"
+                ))
+                db.session.commit()
+                print('contest_judge_batch thumb_path column OK.')
+            except Exception as _cjtp_e:
+                db.session.rollback()
+                print(f'contest_judge_batch thumb_path warning: {_cjtp_e}')
 
             print('Database ready.')
 
@@ -15413,8 +15424,10 @@ def admin_contest_judge_upload():
     if not files:
         return jsonify({'error': 'No files received'}), 400
 
-    UPLOAD_TMP = _cj_os.path.join(app.config.get('UPLOAD_FOLDER', '/tmp'), 'cj_tmp')
-    _cj_os.makedirs(UPLOAD_TMP, exist_ok=True)
+    # Persistent storage folder — kept until admin deletes the batch
+    safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
+    STORE_DIR = _cj_os.path.join(app.root_path, 'static', 'contest_uploads', safe_batch)
+    _cj_os.makedirs(STORE_DIR, exist_ok=True)
 
     results = []
     errors = []
@@ -15428,37 +15441,34 @@ def admin_contest_judge_upload():
             errors.append({'filename': fname, 'error': 'Unsupported file type'})
             continue
 
-        tmp_path = _cj_os.path.join(UPLOAD_TMP, fname)
+        tmp_path = _cj_os.path.join(STORE_DIR, fname)
         f.save(tmp_path)
 
         try:
-            with _PILImage.open(tmp_path) as img:
-                w, h = img.size
-                short_side = min(w, h)
-                if short_side < 800:
-                    errors.append({'filename': fname, 'error': f'Image too small: {short_side}px short side (minimum 800px)'})
-                    _cj_os.remove(tmp_path)
-                    continue
-
+            # No dimension floor — accept all submitted images
             photographer, title = _cj_parse_filename(fname)
             image_b64 = _cj_thumb_b64(tmp_path)
             verdict = _cj_sonnet_judge(image_b64, photographer, title, theme)
 
             if not verdict or 'error' in verdict:
                 errors.append({'filename': fname, 'error': verdict.get('error', 'Engine error') if verdict else 'No API key'})
-                _cj_os.remove(tmp_path)
+                if _cj_os.path.exists(tmp_path):
+                    _cj_os.remove(tmp_path)
                 continue
+
+            # Store relative path for scorecard rendering
+            thumb_rel = f'contest_uploads/{safe_batch}/{fname}'
 
             db.session.execute(db.text("""
                 INSERT INTO contest_judge_batch
                     (batch_ref, filename, photographer, image_title, theme,
                      emotion_score, story_score, composition_score, technique_score,
                      arrest_score, wow_score, disruption_score, composite_score,
-                     theme_relevant, theme_note, master_ref, gap_note, raw_json)
+                     theme_relevant, theme_note, master_ref, gap_note, raw_json, thumb_path)
                 VALUES
                     (:br, :fn, :ph, :ti, :th,
                      :em, :st, :co, :te, :ar, :wo, :di, :cs,
-                     :tr, :tn, :mr, :gn, :rj)
+                     :tr, :tn, :mr, :gn, :rj, :tp)
             """), {
                 'br': batch_ref,
                 'fn': fname,
@@ -15477,7 +15487,8 @@ def admin_contest_judge_upload():
                 'tn': verdict.get('theme_note', ''),
                 'mr': verdict.get('master_ref', ''),
                 'gn': verdict.get('gap_note', ''),
-                'rj': _cj_json.dumps(verdict)
+                'rj': _cj_json.dumps(verdict),
+                'tp': thumb_rel
             })
             db.session.commit()
 
@@ -15492,7 +15503,6 @@ def admin_contest_judge_upload():
 
         except Exception as e:
             errors.append({'filename': fname, 'error': str(e)})
-        finally:
             if _cj_os.path.exists(tmp_path):
                 _cj_os.remove(tmp_path)
 
@@ -15779,14 +15789,237 @@ def admin_contest_judge_results(batch_ref):
 @app.route('/admin/contest-judge/delete-batch/<batch_ref>', methods=['POST'])
 @login_required
 def admin_contest_judge_delete_batch(batch_ref):
-    """Delete all rows for a batch."""
+    """Delete all rows for a batch and remove stored images."""
     if current_user.role != 'admin':
         abort(403)
     db.session.execute(db.text(
         "DELETE FROM contest_judge_batch WHERE batch_ref = :br"
     ), {'br': batch_ref})
     db.session.commit()
+    # Remove stored images
+    import shutil as _shutil
+    safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
+    store_dir = _cj_os.path.join(app.root_path, 'static', 'contest_uploads', safe_batch)
+    if _cj_os.path.isdir(store_dir):
+        _shutil.rmtree(store_dir, ignore_errors=True)
     return jsonify({'deleted': True, 'batch_ref': batch_ref})
+
+
+# ── CONTEST JUDGE — SCORECARD ZIP ────────────────────────────────────────────
+
+@app.route('/admin/contest-judge/scorecards/<path:batch_ref>')
+@login_required
+def admin_contest_judge_scorecards(batch_ref):
+    """Generate a ZIP of JPG scorecards for all entries in a batch.
+    Top 10 by composite score show rank + percentile.
+    Ranks 11+ show scores only — no rank or percentile printed.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+
+    rows = db.session.execute(db.text("""
+        SELECT id, filename, photographer, image_title, theme, batch_ref,
+               emotion_score, story_score, composition_score, technique_score,
+               arrest_score, wow_score, disruption_score, composite_score,
+               theme_relevant, theme_note, master_ref, gap_note, thumb_path, judged_at
+        FROM contest_judge_batch
+        WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+
+    if not rows:
+        abort(404)
+
+    try:
+        from PIL import Image as _PILSC, ImageDraw as _PILID, ImageFont as _PILIF
+        import zipfile as _zipfile
+        import textwrap as _textwrap
+    except ImportError as e:
+        return f"Missing library: {e}", 500
+
+    total = len(rows)
+    zip_buf = _cj_io.BytesIO()
+
+    # Card dimensions
+    W, H = 1200, 1600
+    PAD = 60
+    GOLD = (200, 168, 75)
+    DARK = (26, 24, 21)
+    MID  = (90, 90, 86)
+    LIGHT_BG = (254, 252, 248)
+    WHITE = (255, 255, 255)
+    RED_THEME = (185, 28, 28)
+    GREEN_THEME = (6, 95, 70)
+
+    def _load_font(size, bold=False):
+        try:
+            # Try common system fonts
+            for name in (['DejaVuSans-Bold.ttf', 'DejaVuSans.ttf'] if bold else ['DejaVuSans.ttf', 'DejaVuSans-Bold.ttf']):
+                for path in [f'/usr/share/fonts/truetype/dejavu/{name}',
+                             f'/usr/share/fonts/dejavu/{name}',
+                             f'/usr/share/fonts/{name}']:
+                    if _cj_os.path.exists(path):
+                        return _PILIF.truetype(path, size)
+        except Exception:
+            pass
+        return _PILIF.load_default()
+
+    fnt_title   = _load_font(32, bold=True)
+    fnt_h1      = _load_font(52, bold=True)
+    fnt_h2      = _load_font(36, bold=True)
+    fnt_body    = _load_font(26)
+    fnt_small   = _load_font(22)
+    fnt_label   = _load_font(20)
+    fnt_score   = _load_font(44, bold=True)
+    fnt_score_s = _load_font(30, bold=True)
+
+    def _wrap(text, width=70):
+        return '\n'.join(_textwrap.wrap(text or '', width))
+
+    with _zipfile.ZipFile(zip_buf, 'w', _zipfile.ZIP_DEFLATED) as zf:
+        for rank, row in enumerate(rows, 1):
+            img_card = _PILSC.new('RGB', (W, H), LIGHT_BG)
+            d = _PILID.Draw(img_card)
+
+            # ── Gold top bar
+            d.rectangle([(0, 0), (W, 8)], fill=GOLD)
+
+            # ── Contest name + date (top left / right)
+            contest_label = batch_ref
+            date_label = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
+            d.text((PAD, 28), contest_label, font=fnt_title, fill=DARK)
+            date_w = d.textlength(date_label, font=fnt_title)
+            d.text((W - PAD - date_w, 28), date_label, font=fnt_title, fill=MID)
+
+            # ── Thin rule under header
+            d.rectangle([(PAD, 76), (W - PAD, 78)], fill=(224, 221, 214))
+
+            # ── Image (if available)
+            img_y = 95
+            IMG_H = 420
+            if row.thumb_path:
+                full_path = _cj_os.path.join(app.root_path, 'static', row.thumb_path)
+                if _cj_os.path.exists(full_path):
+                    try:
+                        with _PILSC.open(full_path) as src:
+                            src = src.convert('RGB')
+                            # Fit into box W-2*PAD × IMG_H preserving aspect
+                            box_w = W - 2 * PAD
+                            src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
+                            # Centre horizontally
+                            x_off = PAD + (box_w - src.width) // 2
+                            img_card.paste(src, (x_off, img_y))
+                    except Exception:
+                        d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+                        d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
+                else:
+                    d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+            else:
+                d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+
+            y = img_y + IMG_H + 28
+
+            # ── Overall score + optional rank/percentile
+            score_str = f'{row.composite_score:.2f}' if row.composite_score else '—'
+            d.text((PAD, y), 'Overall Score', font=fnt_label, fill=MID)
+            d.text((PAD, y + 24), score_str, font=fnt_h1, fill=DARK)
+
+            if rank <= 10:
+                pct = round(100 * (total - rank) / total)
+                rank_str = f'Rank #{rank}  ·  {pct}th percentile of {total}'
+                d.text((PAD + 180, y + 38), rank_str, font=fnt_h2, fill=GOLD)
+
+            # Theme badge
+            theme_txt = f'Theme: {row.theme or "Story"}  {"✓" if row.theme_relevant else "✗"}'
+            theme_col = GREEN_THEME if row.theme_relevant else RED_THEME
+            badge_w = int(d.textlength(theme_txt, font=fnt_body)) + 24
+            badge_x = W - PAD - badge_w
+            d.rounded_rectangle([(badge_x, y + 6), (badge_x + badge_w, y + 44)], radius=6,
+                                 fill=(209, 250, 229) if row.theme_relevant else (254, 226, 226))
+            d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
+
+            y += 110
+
+            # ── Photographer name
+            d.text((PAD, y), row.photographer or 'Unknown', font=fnt_h2, fill=DARK)
+            y += 50
+
+            # ── Thin rule
+            d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
+            y += 18
+
+            # ── 7 scores in a row
+            labels = ['Emotion', 'Story', 'Compo', 'Tech', 'Arrest', 'Wow', 'Disrupt']
+            vals = [row.emotion_score, row.story_score, row.composition_score,
+                    row.technique_score, row.arrest_score, row.wow_score, row.disruption_score]
+            col_w = (W - 2 * PAD) // 7
+            for i, (lbl, val) in enumerate(zip(labels, vals)):
+                cx = PAD + i * col_w + col_w // 2
+                score_txt = f'{val:.1f}' if val else '—'
+                sw = int(d.textlength(score_txt, font=fnt_score_s))
+                lw = int(d.textlength(lbl, font=fnt_label))
+                d.text((cx - sw // 2, y), score_txt, font=fnt_score_s, fill=DARK)
+                d.text((cx - lw // 2, y + 36), lbl, font=fnt_label, fill=MID)
+
+            y += 80
+
+            # ── Thin rule
+            d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
+            y += 18
+
+            # ── Theme note
+            if row.theme_note:
+                d.text((PAD, y), 'Theme Note', font=fnt_label, fill=MID)
+                y += 22
+                for line in _textwrap.wrap(row.theme_note, 80):
+                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                    y += 32
+                y += 6
+
+            # ── Master ref
+            if row.master_ref:
+                d.text((PAD, y), 'Master Reference', font=fnt_label, fill=MID)
+                y += 22
+                for line in _textwrap.wrap(row.master_ref, 80):
+                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                    y += 32
+                y += 6
+
+            # ── Gap
+            if row.gap_note:
+                d.text((PAD, y), 'Gap', font=fnt_label, fill=MID)
+                y += 22
+                for line in _textwrap.wrap(row.gap_note, 80):
+                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                    y += 32
+                y += 6
+
+            # ── Footer: filename + judged at
+            footer_y = H - 48
+            d.rectangle([(0, footer_y - 8), (W, footer_y - 7)], fill=(224, 221, 214))
+            d.text((PAD, footer_y), row.filename or '', font=fnt_label, fill=MID)
+            jat = row.judged_at.strftime('%Y-%m-%d %H:%M UTC') if row.judged_at else ''
+            jw = int(d.textlength(jat, font=fnt_label))
+            d.text((W - PAD - jw, footer_y), jat, font=fnt_label, fill=MID)
+
+            # ── Gold bottom bar
+            d.rectangle([(0, H - 6), (W, H)], fill=GOLD)
+
+            # Save to ZIP
+            sc_buf = _cj_io.BytesIO()
+            img_card.save(sc_buf, format='JPEG', quality=92)
+            sc_buf.seek(0)
+            safe_name = (row.photographer or 'Unknown').replace(' ', '_')
+            zf.writestr(f'{rank:02d}_{safe_name}_scorecard.jpg', sc_buf.read())
+
+    zip_buf.seek(0)
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return send_file(
+        zip_buf,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=f'SL_Scorecards_{safe_ref}.zip'
+    )
 
 
 # ── BOT REVIEW — /admin/bot-review ──────────────────────────────────────────
