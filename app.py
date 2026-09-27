@@ -1,4 +1,4 @@
-# SL-VERSION: 182.22 (Session 223, 2026-09-27 — Contest Judge: images stored in static/contest_uploads/<batch_ref>/ until batch deleted; thumb_path column added; scorecard ZIP route; podium strip in admin UI. RETAINS 182.21.)
+# SL-VERSION: 182.23 (Session 224, 2026-09-27 — Contest Judge: Mentor Notes field added; founder_note column; interactive review page /admin/contest-judge/review/<batch_ref>; save-note AJAX route; scorecards now include Mentor Notes block; selective export by ids param. RETAINS 182.22.)
 
 import os
 import re
@@ -2411,6 +2411,17 @@ def _run_startup_tasks():
             except Exception as _cjtp_e:
                 db.session.rollback()
                 print(f'contest_judge_batch thumb_path warning: {_cjtp_e}')
+
+            # Session 224 v182.23 — add founder_note column for Mentor Notes
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE contest_judge_batch ADD COLUMN IF NOT EXISTS founder_note TEXT"
+                ))
+                db.session.commit()
+                print('contest_judge_batch founder_note column OK.')
+            except Exception as _cjfn_e:
+                db.session.rollback()
+                print(f'contest_judge_batch founder_note warning: {_cjfn_e}')
 
             print('Database ready.')
 
@@ -15805,27 +15816,116 @@ def admin_contest_judge_delete_batch(batch_ref):
     return jsonify({'deleted': True, 'batch_ref': batch_ref})
 
 
+# ── CONTEST JUDGE — SAVE MENTOR NOTE ────────────────────────────────────────
+
+@app.route('/admin/contest-judge/save-note/<int:entry_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_save_note(entry_id):
+    """AJAX — save Mentor Notes for a single contest_judge_batch row."""
+    if current_user.role != 'admin':
+        abort(403)
+    note = request.json.get('note', '') if request.is_json else request.form.get('note', '')
+    db.session.execute(db.text(
+        "UPDATE contest_judge_batch SET founder_note = :fn WHERE id = :id"
+    ), {'fn': note.strip(), 'id': entry_id})
+    db.session.commit()
+    return jsonify({'saved': True, 'id': entry_id})
+
+
+# ── CONTEST JUDGE — INTERACTIVE REVIEW PAGE ──────────────────────────────────
+
+@app.route('/admin/contest-judge/review/<path:batch_ref>')
+@login_required
+def admin_contest_judge_review(batch_ref):
+    """Interactive scorecard review: view each image, add Mentor Notes, export selected."""
+    if current_user.role != 'admin':
+        abort(403)
+    rows = db.session.execute(db.text("""
+        SELECT id, filename, photographer, image_title, theme, batch_ref,
+               emotion_score, story_score, composition_score, technique_score,
+               arrest_score, wow_score, disruption_score, composite_score,
+               theme_relevant, theme_note, master_ref, gap_note,
+               thumb_path, judged_at, founder_note
+        FROM contest_judge_batch
+        WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    if not rows:
+        abort(404)
+    total = len(rows)
+    entries = []
+    for rank, row in enumerate(rows, 1):
+        pct = round(100 * (total - rank) / total) if rank <= 10 else None
+        thumb_url = (f'/static/{row.thumb_path}') if row.thumb_path else None
+        entries.append({
+            'id': row.id,
+            'rank': rank,
+            'pct': pct,
+            'filename': row.filename,
+            'photographer': row.photographer or 'Unknown',
+            'image_title': row.image_title or '',
+            'theme': row.theme or 'Story',
+            'composite_score': round(row.composite_score, 2) if row.composite_score else 0,
+            'emotion_score': row.emotion_score or 0,
+            'story_score': row.story_score or 0,
+            'composition_score': row.composition_score or 0,
+            'technique_score': row.technique_score or 0,
+            'arrest_score': row.arrest_score or 0,
+            'wow_score': row.wow_score or 0,
+            'disruption_score': row.disruption_score or 0,
+            'theme_relevant': bool(row.theme_relevant),
+            'theme_note': row.theme_note or '',
+            'master_ref': row.master_ref or '',
+            'gap_note': row.gap_note or '',
+            'thumb_url': thumb_url,
+            'judged_at': row.judged_at.strftime('%d %b %Y %H:%M') if row.judged_at else '',
+            'founder_note': row.founder_note or '',
+        })
+    return render_template('admin_contest_review.html',
+                           batch_ref=batch_ref,
+                           entries=entries,
+                           total=total)
+
+
 # ── CONTEST JUDGE — SCORECARD ZIP ────────────────────────────────────────────
 
 @app.route('/admin/contest-judge/scorecards/<path:batch_ref>')
 @login_required
 def admin_contest_judge_scorecards(batch_ref):
-    """Generate a ZIP of JPG scorecards for all entries in a batch.
+    """Generate a ZIP of JPG scorecards for entries in a batch.
+    Optional ?ids=1,2,3 limits to those entry IDs (for selective export from review page).
     Top 10 by composite score show rank + percentile.
     Ranks 11+ show scores only — no rank or percentile printed.
+    Mentor Notes (founder_note) are included at the bottom if present.
     """
     if current_user.role != 'admin':
         abort(403)
+
+    # Selective export: ?ids=1,2,3
+    ids_param = request.args.get('ids', '').strip()
+    if ids_param:
+        try:
+            id_list = [int(x) for x in ids_param.split(',') if x.strip().isdigit()]
+        except Exception:
+            id_list = []
+    else:
+        id_list = []
 
     rows = db.session.execute(db.text("""
         SELECT id, filename, photographer, image_title, theme, batch_ref,
                emotion_score, story_score, composition_score, technique_score,
                arrest_score, wow_score, disruption_score, composite_score,
-               theme_relevant, theme_note, master_ref, gap_note, thumb_path, judged_at
+               theme_relevant, theme_note, master_ref, gap_note, thumb_path,
+               judged_at, founder_note
         FROM contest_judge_batch
         WHERE batch_ref = :br
         ORDER BY composite_score DESC NULLS LAST
     """), {'br': batch_ref}).fetchall()
+
+    # If selective, filter + keep original ranking
+    if id_list:
+        all_ids_ordered = [r.id for r in rows]
+        rows = [r for r in rows if r.id in id_list]
 
     if not rows:
         abort(404)
@@ -15990,6 +16090,18 @@ def admin_contest_judge_scorecards(batch_ref):
                 d.text((PAD, y), 'Gap', font=fnt_label, fill=MID)
                 y += 22
                 for line in _textwrap.wrap(row.gap_note, 80):
+                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                    y += 32
+                y += 6
+
+            # ── Mentor Notes (founder_note)
+            if getattr(row, 'founder_note', None):
+                y += 4
+                d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=GOLD)
+                y += 12
+                d.text((PAD, y), 'Mentor Notes', font=fnt_h2, fill=GOLD)
+                y += 44
+                for line in _textwrap.wrap(row.founder_note, 80):
                     d.text((PAD, y), line, font=fnt_body, fill=DARK)
                     y += 32
                 y += 6
