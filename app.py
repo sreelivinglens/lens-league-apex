@@ -1,4 +1,4 @@
-# SL-VERSION: 182.19 (Session 218, 2026-09-10 — Calibration rescore: POST /admin/calibration/rescore/<id> (single row, uses stored thumb_path) and POST /admin/calibration/rescore-bulk (multi-row). Both Sonnet and Haiku paths. No file re-upload needed. Returns same JSON shape as upload route.)
+# SL-VERSION: 182.20 (Session 223, 2026-09-27 — Contest Judge: /admin/contest-judge bulk upload route, contest_judge_batch table, Sonnet DDI + theme + master + gap, Excel export. Isolated from member data. RETAINS 182.19.)
 
 import os
 import re
@@ -2369,6 +2369,38 @@ def _run_startup_tasks():
                     ), {'h': new_hash})
                     print('Admin account updated.')
                 conn.commit()
+            # Session 223 — Contest Judge batch table
+            try:
+                db.session.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS contest_judge_batch (
+                        id SERIAL PRIMARY KEY,
+                        batch_ref VARCHAR(40) NOT NULL,
+                        filename VARCHAR(255) NOT NULL,
+                        photographer VARCHAR(120),
+                        image_title VARCHAR(120),
+                        theme VARCHAR(80) DEFAULT 'Story',
+                        emotion_score FLOAT,
+                        story_score FLOAT,
+                        composition_score FLOAT,
+                        technique_score FLOAT,
+                        arrest_score FLOAT,
+                        wow_score FLOAT,
+                        disruption_score FLOAT,
+                        composite_score FLOAT,
+                        theme_relevant BOOLEAN,
+                        theme_note TEXT,
+                        master_ref TEXT,
+                        gap_note TEXT,
+                        raw_json TEXT,
+                        judged_at TIMESTAMP DEFAULT NOW()
+                    )
+                """))
+                db.session.commit()
+                print('contest_judge_batch schema OK.')
+            except Exception as _cjb_e:
+                db.session.rollback()
+                print(f'contest_judge_batch migration warning: {_cjb_e}')
+
             print('Database ready.')
 
             # Session 211: upsert critical master_references entries that may be
@@ -15180,6 +15212,581 @@ def admin_mim_export():
         mimetype='text/csv',
         headers={'Content-Disposition': f'attachment;filename={filename}'}
     )
+
+
+# ── CONTEST JUDGE — STANDALONE JUDGING TOOL ─────────────────────────────────
+# Session 223, 2026-09-27 — Isolated from all member data.
+# Uses contest_judge_batch table. Sonnet only. 1 API call per image.
+# No portfolio, no location, no Hive, no emails, no images table writes.
+# ─────────────────────────────────────────────────────────────────────────────
+
+import json as _cj_json
+import urllib.request as _cj_ur
+import urllib.parse as _cj_up
+import os as _cj_os
+import io as _cj_io
+import base64 as _cj_b64
+import datetime as _cj_dt
+from PIL import Image as _PILImage
+
+
+def _cj_parse_filename(filename):
+    """Split 'Name_I_Title.jpg' → (photographer, title).
+    Convention: everything before LAST underscore = photographer, after = title.
+    If no underscore → photographer='Unknown', title=stem.
+    """
+    stem = filename.rsplit('.', 1)[0]  # strip extension
+    if '_' not in stem:
+        return 'Unknown', stem
+    parts = stem.rsplit('_', 1)
+    return parts[0].replace('_', ' ').strip(), parts[1].replace('_', ' ').strip()
+
+
+def _cj_thumb_b64(filepath, max_long=1200):
+    """Read image, resize so long edge ≤ max_long, return base64 JPEG string."""
+    with _PILImage.open(filepath) as img:
+        img = img.convert('RGB')
+        w, h = img.size
+        if max(w, h) > max_long:
+            scale = max_long / max(w, h)
+            img = img.resize((int(w * scale), int(h * scale)), _PILImage.LANCZOS)
+        buf = _cj_io.BytesIO()
+        img.save(buf, format='JPEG', quality=85)
+        return _cj_b64.b64encode(buf.getvalue()).decode('utf-8')
+
+
+def _cj_sonnet_judge(image_b64, photographer, title, theme='Story'):
+    """Single Sonnet call: DDI 7-question + theme + master + gap.
+    Returns dict with keys: emotion, story, composition, technique,
+    arrest, wow, disruption, composite, theme_relevant (bool),
+    theme_note, master_ref, gap_note.
+    """
+    api_key = _cj_os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return None
+
+    system = """You are a senior photography judge with 30 years of experience evaluating documentary, street, and fine art photography. You have calibrated your eye against thousands of images. You speak directly. You name what you see. You do not flatter.
+
+Your evaluations are used in formal contest judging. Accuracy matters more than encouragement.
+
+SCORING SCALE:
+1.0–4.9: Weak — fundamental problems
+5.0–6.4: Developing — shows intent but execution incomplete
+6.5–7.4: Competent — solid craft, limited distinction
+7.5–8.4: Strong — distinctive, memorable
+8.5–9.4: Exceptional — publishable, competition-ready
+9.5–10.0: Rare — defines the genre
+
+CALIBRATION ANCHORS (use these to hold your scale honest):
+- Cartier-Bresson's "Behind the Gare Saint-Lazare" = 9.5 Story, 9.8 Arrest
+- Raghu Rai's Bhopal portraits = 9.5 Emotion, 9.2 Story
+- A technically correct but emotionally empty portrait = 6.0 Emotion
+- A beautifully exposed but narratively empty landscape = 5.5 Story
+
+Evaluate in Sherpa voice: warm, direct, specific. A trusted friend who is also a master photographer. No jargon. No "your metrics show". Speak to the image, not about photography in general."""
+
+    prompt = f"""Photographer: {photographer}
+Image title: {title}
+Contest theme: {theme}
+
+Evaluate this image on the seven questions below. Score each 1.0–10.0 (one decimal place).
+
+THE SEVEN QUESTIONS:
+1. EMOTION — Does the image create an emotion in the viewer?
+2. STORY — Does the image tell a story without a caption?
+3. COMPOSITION — Does the frame hold together? Subject, background, light, space.
+4. TECHNIQUE — Is the craft in service of the image? Focus, exposure, moment.
+5. ARREST — Does it stop your scroll? Would it stop someone who wasn't looking for it?
+6. WOW — Is there a wow? Something that elevates it beyond the ordinary?
+7. DISRUPTION — Does it challenge how we see? Does it reframe something familiar?
+
+THEME ASSESSMENT:
+The contest theme is "{theme}". Assess: does this image respond to the theme compellingly and directly?
+- theme_relevant: true/false (true = the theme is the image's core idea, unmissable; false = theme is absent or accidental)
+- theme_note: one sentence (max 30 words) — what specifically does this image do with or miss about the theme
+
+MASTER REFERENCE:
+Name one master photographer (living or historical) whose work this image most echoes — specifically why, in one sentence (max 25 words). Be honest: if the image is weak, name someone whose lesser work it resembles.
+
+GAP:
+One sentence (max 25 words): the single weakest element holding this image back. Be specific. Name the element, not a general principle.
+
+Return ONLY valid JSON, no commentary, no markdown:
+{{
+  "emotion": 0.0,
+  "story": 0.0,
+  "composition": 0.0,
+  "technique": 0.0,
+  "arrest": 0.0,
+  "wow": 0.0,
+  "disruption": 0.0,
+  "theme_relevant": true,
+  "theme_note": "...",
+  "master_ref": "...",
+  "gap_note": "..."
+}}"""
+
+    payload = _cj_json.dumps({
+        'model': 'claude-sonnet-4-6',
+        'max_tokens': 400,
+        'temperature': 0,
+        'system': system,
+        'messages': [{
+            'role': 'user',
+            'content': [
+                {
+                    'type': 'image',
+                    'source': {
+                        'type': 'base64',
+                        'media_type': 'image/jpeg',
+                        'data': image_b64
+                    }
+                },
+                {'type': 'text', 'text': prompt}
+            ]
+        }]
+    }).encode('utf-8')
+
+    req = _cj_ur.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type': 'application/json',
+            'x-api-key': api_key,
+            'anthropic-version': '2023-06-01'
+        },
+        method='POST'
+    )
+    try:
+        with _cj_ur.urlopen(req, timeout=60) as resp:
+            data = _cj_json.loads(resp.read().decode('utf-8'))
+            text = data['content'][0]['text'].strip()
+            if text.startswith('```'):
+                text = text.split('```')[1]
+                if text.startswith('json'):
+                    text = text[4:]
+            result = _cj_json.loads(text.strip())
+            scores = [
+                result.get('emotion', 0),
+                result.get('story', 0) * 1.5,
+                result.get('composition', 0),
+                result.get('technique', 0),
+                result.get('arrest', 0) * 1.5,
+                result.get('wow', 0),
+                result.get('disruption', 0)
+            ]
+            weights = [1, 1.5, 1, 1, 1.5, 1, 1]
+            composite = round(sum(scores) / sum(weights), 2)
+            result['composite'] = composite
+            return result
+    except Exception as e:
+        return {'error': str(e)}
+
+
+@app.route('/admin/contest-judge', methods=['GET'])
+@login_required
+def admin_contest_judge():
+    if current_user.role != 'admin':
+        abort(403)
+    batches = db.session.execute(db.text(
+        "SELECT DISTINCT batch_ref, COUNT(*) as n, MIN(judged_at) as started "
+        "FROM contest_judge_batch GROUP BY batch_ref ORDER BY started DESC"
+    )).fetchall()
+    return render_template('admin_contest_judge.html', batches=batches)
+
+
+@app.route('/admin/contest-judge/upload', methods=['POST'])
+@login_required
+def admin_contest_judge_upload():
+    """Bulk upload + judge. Accepts multiple files. Returns JSON progress."""
+    if current_user.role != 'admin':
+        abort(403)
+
+    files = request.files.getlist('images')
+    batch_ref = request.form.get('batch_ref', '').strip()
+    theme = request.form.get('theme', 'Story').strip() or 'Story'
+
+    if not batch_ref:
+        import datetime as _dt2
+        batch_ref = 'batch_' + _dt2.datetime.utcnow().strftime('%Y%m%d_%H%M')
+
+    if not files:
+        return jsonify({'error': 'No files received'}), 400
+
+    UPLOAD_TMP = _cj_os.path.join(app.config.get('UPLOAD_FOLDER', '/tmp'), 'cj_tmp')
+    _cj_os.makedirs(UPLOAD_TMP, exist_ok=True)
+
+    results = []
+    errors = []
+
+    for f in files:
+        if not f or not f.filename:
+            continue
+        fname = f.filename
+        ext = fname.rsplit('.', 1)[-1].lower() if '.' in fname else ''
+        if ext not in ('jpg', 'jpeg', 'png', 'tif', 'tiff', 'webp'):
+            errors.append({'filename': fname, 'error': 'Unsupported file type'})
+            continue
+
+        tmp_path = _cj_os.path.join(UPLOAD_TMP, fname)
+        f.save(tmp_path)
+
+        try:
+            with _PILImage.open(tmp_path) as img:
+                w, h = img.size
+                short_side = min(w, h)
+                if short_side < 800:
+                    errors.append({'filename': fname, 'error': f'Image too small: {short_side}px short side (minimum 800px)'})
+                    _cj_os.remove(tmp_path)
+                    continue
+
+            photographer, title = _cj_parse_filename(fname)
+            image_b64 = _cj_thumb_b64(tmp_path)
+            verdict = _cj_sonnet_judge(image_b64, photographer, title, theme)
+
+            if not verdict or 'error' in verdict:
+                errors.append({'filename': fname, 'error': verdict.get('error', 'Engine error') if verdict else 'No API key'})
+                _cj_os.remove(tmp_path)
+                continue
+
+            db.session.execute(db.text("""
+                INSERT INTO contest_judge_batch
+                    (batch_ref, filename, photographer, image_title, theme,
+                     emotion_score, story_score, composition_score, technique_score,
+                     arrest_score, wow_score, disruption_score, composite_score,
+                     theme_relevant, theme_note, master_ref, gap_note, raw_json)
+                VALUES
+                    (:br, :fn, :ph, :ti, :th,
+                     :em, :st, :co, :te, :ar, :wo, :di, :cs,
+                     :tr, :tn, :mr, :gn, :rj)
+            """), {
+                'br': batch_ref,
+                'fn': fname,
+                'ph': photographer,
+                'ti': title,
+                'th': theme,
+                'em': verdict.get('emotion'),
+                'st': verdict.get('story'),
+                'co': verdict.get('composition'),
+                'te': verdict.get('technique'),
+                'ar': verdict.get('arrest'),
+                'wo': verdict.get('wow'),
+                'di': verdict.get('disruption'),
+                'cs': verdict.get('composite'),
+                'tr': bool(verdict.get('theme_relevant')),
+                'tn': verdict.get('theme_note', ''),
+                'mr': verdict.get('master_ref', ''),
+                'gn': verdict.get('gap_note', ''),
+                'rj': _cj_json.dumps(verdict)
+            })
+            db.session.commit()
+
+            results.append({
+                'filename': fname,
+                'photographer': photographer,
+                'title': title,
+                'composite': verdict.get('composite'),
+                'story': verdict.get('story'),
+                'theme_relevant': verdict.get('theme_relevant')
+            })
+
+        except Exception as e:
+            errors.append({'filename': fname, 'error': str(e)})
+        finally:
+            if _cj_os.path.exists(tmp_path):
+                _cj_os.remove(tmp_path)
+
+    return jsonify({
+        'batch_ref': batch_ref,
+        'judged': len(results),
+        'errors': errors,
+        'results': results
+    })
+
+
+@app.route('/admin/contest-judge/export/<batch_ref>')
+@login_required
+def admin_contest_judge_export(batch_ref):
+    """Export batch results as Excel."""
+    if current_user.role != 'admin':
+        abort(403)
+
+    rows = db.session.execute(db.text("""
+        SELECT filename, photographer, image_title, theme,
+               emotion_score, story_score, composition_score, technique_score,
+               arrest_score, wow_score, disruption_score, composite_score,
+               theme_relevant, theme_note, master_ref, gap_note, judged_at
+        FROM contest_judge_batch
+        WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+
+    if not rows:
+        abort(404)
+
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError:
+        return "openpyxl not installed — run: pip install openpyxl --break-system-packages", 500
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Contest Judging — {batch_ref}"
+
+    GOLD       = 'C8A84B'
+    DARK       = '1A1815'
+    CREAM      = 'FEFCF8'
+    LIGHT      = 'F7F3EA'
+    GREEN_YES  = 'D1FAE5'
+    RED_NO     = 'FEE2E2'
+    HEADER_FG  = 'FFFFFF'
+
+    gold_fill   = PatternFill('solid', fgColor=GOLD)
+    light_fill  = PatternFill('solid', fgColor=LIGHT)
+    cream_fill  = PatternFill('solid', fgColor=CREAM)
+    green_fill  = PatternFill('solid', fgColor=GREEN_YES)
+    red_fill    = PatternFill('solid', fgColor=RED_NO)
+    dark_fill   = PatternFill('solid', fgColor=DARK)
+
+    thin = Side(style='thin', color='E0DDD6')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    ws.merge_cells('A1:Q1')
+    title_cell = ws['A1']
+    title_cell.value = f'Shutter League — Open Call Judging · {batch_ref} · Theme: {rows[0].theme if rows else "Story"}'
+    title_cell.font = Font(name='Calibri', bold=True, size=13, color=DARK)
+    title_cell.fill = PatternFill('solid', fgColor='FFF8E8')
+    title_cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[1].height = 28
+
+    ws.merge_cells('A2:Q2')
+    sub_cell = ws['A2']
+    sub_cell.value = f'Generated {_cj_dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M")} UTC · {len(rows)} entries · Sorted by Composite Score (Story + Arrest weighted 1.5×)'
+    sub_cell.font = Font(name='Calibri', size=10, color='8A8A86', italic=True)
+    sub_cell.fill = PatternFill('solid', fgColor='FAFAF6')
+    sub_cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[2].height = 18
+
+    COLS = [
+        ('Rank',        5),
+        ('Photographer', 18),
+        ('Image Title', 22),
+        ('Emotion',     9),
+        ('Story',       9),
+        ('Composition', 12),
+        ('Technique',   11),
+        ('Arrest',      9),
+        ('Wow',         8),
+        ('Disruption',  11),
+        ('Composite',   11),
+        ('Theme: Story?', 13),
+        ('Theme Note',  30),
+        ('Master Reference', 35),
+        ('Gap',         35),
+        ('Filename',    30),
+        ('Judged At',   18),
+    ]
+
+    for col_idx, (col_name, col_width) in enumerate(COLS, 1):
+        cell = ws.cell(row=3, column=col_idx)
+        cell.value = col_name
+        cell.font = Font(name='Calibri', bold=True, color=HEADER_FG, size=11)
+        cell.fill = dark_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = border
+        ws.column_dimensions[get_column_letter(col_idx)].width = col_width
+
+    ws.row_dimensions[3].height = 30
+    ws.freeze_panes = 'D4'
+
+    SCORE_COLS = [4, 5, 6, 7, 8, 9, 10]
+
+    def score_fill(val):
+        if val is None:
+            return None
+        if val >= 8.5:
+            return PatternFill('solid', fgColor='D1FAE5')
+        elif val >= 7.5:
+            return PatternFill('solid', fgColor='FEF9C3')
+        elif val >= 6.5:
+            return PatternFill('solid', fgColor='FEF3C7')
+        else:
+            return PatternFill('solid', fgColor='FEE2E2')
+
+    for row_idx, row in enumerate(rows, 1):
+        r = row_idx + 3
+        fill = cream_fill if row_idx % 2 == 0 else PatternFill('solid', fgColor='FFFFFF')
+
+        data = [
+            row_idx,
+            row.photographer or 'Unknown',
+            row.image_title or '',
+            row.emotion_score,
+            row.story_score,
+            row.composition_score,
+            row.technique_score,
+            row.arrest_score,
+            row.wow_score,
+            row.disruption_score,
+            row.composite_score,
+            'Yes ✓' if row.theme_relevant else 'No ✗',
+            row.theme_note or '',
+            row.master_ref or '',
+            row.gap_note or '',
+            row.filename or '',
+            row.judged_at.strftime('%Y-%m-%d %H:%M') if row.judged_at else '',
+        ]
+
+        for col_idx, val in enumerate(data, 1):
+            cell = ws.cell(row=r, column=col_idx)
+            cell.value = val
+            cell.border = border
+            cell.font = Font(name='Calibri', size=11)
+
+            if col_idx == 1:
+                cell.font = Font(name='Calibri', bold=True, size=11)
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.fill = fill
+            elif col_idx in SCORE_COLS:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                sf = score_fill(val)
+                cell.fill = sf if sf else fill
+                if isinstance(val, float):
+                    cell.number_format = '0.0'
+            elif col_idx == 11:
+                cell.font = Font(name='Calibri', bold=True, size=12)
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                sf = score_fill(val)
+                cell.fill = sf if sf else fill
+                if isinstance(val, float):
+                    cell.number_format = '0.00'
+            elif col_idx == 12:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.fill = green_fill if row.theme_relevant else red_fill
+                cell.font = Font(name='Calibri', bold=True, size=11,
+                                 color='065F46' if row.theme_relevant else 'B91C1C')
+            elif col_idx in (2, 3, 13, 14, 15):
+                cell.alignment = Alignment(vertical='top', wrap_text=True)
+                cell.fill = fill
+            else:
+                cell.alignment = Alignment(vertical='center')
+                cell.fill = fill
+
+        ws.row_dimensions[r].height = 48
+
+    last_data_row = len(rows) + 3
+    summary_row = last_data_row + 2
+
+    ws.cell(row=summary_row, column=1).value = 'SUMMARY'
+    ws.cell(row=summary_row, column=1).font = Font(name='Calibri', bold=True, size=12, color=DARK)
+
+    theme_yes = sum(1 for r in rows if r.theme_relevant)
+    composites = [r.composite_score for r in rows if r.composite_score]
+    avg_composite = round(sum(composites) / len(composites), 2) if composites else 0
+    avg_story = round(sum(r.story_score for r in rows if r.story_score) / max(1, sum(1 for r in rows if r.story_score)), 2)
+
+    summary_data = [
+        ('Total entries', len(rows)),
+        ('Theme: Story — Yes', f'{theme_yes} / {len(rows)}'),
+        ('Average Composite', avg_composite),
+        ('Average Story score', avg_story),
+        ('Highest Composite', max(composites) if composites else '—'),
+        ('Lowest Composite', min(composites) if composites else '—'),
+    ]
+
+    for i, (label, val) in enumerate(summary_data):
+        ws.cell(row=summary_row + 1 + i, column=1).value = label
+        ws.cell(row=summary_row + 1 + i, column=1).font = Font(name='Calibri', size=11, color='6B6B68')
+        ws.cell(row=summary_row + 1 + i, column=2).value = val
+        ws.cell(row=summary_row + 1 + i, column=2).font = Font(name='Calibri', bold=True, size=11)
+
+    output = _cj_io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f'SL_ContestJudge_{safe_ref}.xlsx'
+    )
+
+
+@app.route('/admin/contest-judge/batches')
+@login_required
+def admin_contest_judge_batches():
+    """Return all batches as JSON for the panel."""
+    if current_user.role != 'admin':
+        abort(403)
+    batches = db.session.execute(db.text("""
+        SELECT batch_ref,
+               COUNT(*) as n,
+               MIN(judged_at) as started,
+               ROUND(AVG(composite_score)::numeric, 2) as avg_composite,
+               SUM(CASE WHEN theme_relevant THEN 1 ELSE 0 END) as theme_yes
+        FROM contest_judge_batch
+        GROUP BY batch_ref
+        ORDER BY started DESC
+    """)).fetchall()
+    return jsonify([{
+        'batch_ref': b.batch_ref,
+        'n': b.n,
+        'started': b.started.strftime('%Y-%m-%d %H:%M') if b.started else '',
+        'avg_composite': float(b.avg_composite) if b.avg_composite else None,
+        'theme_yes': b.theme_yes
+    } for b in batches])
+
+
+@app.route('/admin/contest-judge/results/<batch_ref>')
+@login_required
+def admin_contest_judge_results(batch_ref):
+    """Return batch results as JSON for the live results table."""
+    if current_user.role != 'admin':
+        abort(403)
+    rows = db.session.execute(db.text("""
+        SELECT id, filename, photographer, image_title,
+               emotion_score, story_score, composition_score, technique_score,
+               arrest_score, wow_score, disruption_score, composite_score,
+               theme_relevant, theme_note, master_ref, gap_note, judged_at
+        FROM contest_judge_batch
+        WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    return jsonify([{
+        'id': r.id,
+        'filename': r.filename,
+        'photographer': r.photographer,
+        'title': r.image_title,
+        'emotion': r.emotion_score,
+        'story': r.story_score,
+        'composition': r.composition_score,
+        'technique': r.technique_score,
+        'arrest': r.arrest_score,
+        'wow': r.wow_score,
+        'disruption': r.disruption_score,
+        'composite': r.composite_score,
+        'theme_relevant': r.theme_relevant,
+        'theme_note': r.theme_note,
+        'master_ref': r.master_ref,
+        'gap_note': r.gap_note,
+        'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else ''
+    } for r in rows])
+
+
+@app.route('/admin/contest-judge/delete-batch/<batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_delete_batch(batch_ref):
+    """Delete all rows for a batch."""
+    if current_user.role != 'admin':
+        abort(403)
+    db.session.execute(db.text(
+        "DELETE FROM contest_judge_batch WHERE batch_ref = :br"
+    ), {'br': batch_ref})
+    db.session.commit()
+    return jsonify({'deleted': True, 'batch_ref': batch_ref})
 
 
 # ── BOT REVIEW — /admin/bot-review ──────────────────────────────────────────
