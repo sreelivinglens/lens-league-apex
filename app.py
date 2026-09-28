@@ -1,4 +1,4 @@
-# SL-VERSION: 182.31 (Session 228, 2026-09-28 — FIX: Bulk rescore 2 errors: (1) spaces in filenames caused urllib URL control-character error — fixed with urllib.parse.quote on path component. (2) relative thumb_path (/contest/...) caused 403 — fixed by prepending R2_PUBLIC_URL when path is not already https://. Both single-entry and bulk worker fixed. RETAINS 182.30.)
+# SL-VERSION: 182.32 (Session 228, 2026-09-28 — FIX: Bulk rescore 403 root cause: urllib.urlretrieve over public URL failing (R2 public URL env var may be empty/wrong). Fix: switched to boto3 download_file via storage.download_file() + storage.key_from_url() — fetches directly from R2 bucket, bypasses public URL entirely. Added download_file() and key_from_url() to storage.py. RETAINS 182.31.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
 import os
@@ -16191,23 +16191,17 @@ def admin_contest_judge_rescore_entry(entry_id):
         return jsonify({'error': 'Entry not found'}), 404
 
     try:
-        # Fetch image from R2 thumb_path
+        # Fetch image from R2 via boto3 (bypasses public URL issues)
         if not row.thumb_path:
             return jsonify({'error': 'No image stored for this entry'}), 400
-        import urllib.request as _cj_rescore_ur
-        import urllib.parse as _cj_rescore_up
         import tempfile as _cj_rescore_tmp
         import storage as _cj_r2store
-        # Build full URL and URL-encode spaces
-        _raw_url = row.thumb_path
-        if not _raw_url.startswith('http'):
-            _raw_url = _cj_r2store.R2_PUBLIC_URL.rstrip('/') + '/' + _raw_url.lstrip('/')
-        _parsed_url = _cj_rescore_up.urlparse(_raw_url)
-        _safe_path = _cj_rescore_up.quote(_parsed_url.path, safe='/')
-        _raw_url = _cj_rescore_up.urlunparse(_parsed_url._replace(path=_safe_path))
+        _obj_key = _cj_r2store.key_from_url(row.thumb_path)
         tmp = _cj_rescore_tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
-        _cj_rescore_ur.urlretrieve(_raw_url, tmp.name)
         tmp.close()
+        if not _cj_r2store.download_file(_obj_key, tmp.name):
+            _cj_os.unlink(tmp.name)
+            return jsonify({'error': f'R2 download failed for key: {_obj_key}'}), 500
 
         image_b64 = _cj_thumb_b64(tmp.name)
         _cj_os.unlink(tmp.name)
@@ -16301,8 +16295,6 @@ def admin_contest_judge_bulk_rescore(batch_ref):
     def _bulk_worker(rows, job_id):
         with app.app_context():
             prog = app.config[f'_bulk_rescore_{job_id}']
-            import urllib.request as _ur2
-            import urllib.parse as _up2
             import tempfile as _tmp2
             import storage as _r2store
             for row in rows:
@@ -16311,17 +16303,15 @@ def admin_contest_judge_bulk_rescore(batch_ref):
                         prog['errors'] += 1
                         prog['done'] += 1
                         continue
-                    # Build full URL — thumb_path may be relative (/contest/...) or full https://
-                    raw_url = row.thumb_path
-                    if not raw_url.startswith('http'):
-                        raw_url = _r2store.R2_PUBLIC_URL.rstrip('/') + '/' + raw_url.lstrip('/')
-                    # URL-encode spaces and special chars in the path component only
-                    _parsed = _up2.urlparse(raw_url)
-                    _safe_path = _up2.quote(_parsed.path, safe='/')
-                    raw_url = _up2.urlunparse(_parsed._replace(path=_safe_path))
+                    # Download directly from R2 via boto3 — bypasses public URL/403 issues
+                    _obj_key = _r2store.key_from_url(row.thumb_path)
                     tmp = _tmp2.NamedTemporaryFile(suffix='.jpg', delete=False)
-                    _ur2.urlretrieve(raw_url, tmp.name)
                     tmp.close()
+                    if not _r2store.download_file(_obj_key, tmp.name):
+                        _cj_os.unlink(tmp.name)
+                        prog['errors'] += 1
+                        prog['done'] += 1
+                        continue
                     image_b64 = _cj_thumb_b64(tmp.name)
                     _cj_os.unlink(tmp.name)
                     theme_thr = float(row.theme_threshold) if row.theme_threshold else 6.0
