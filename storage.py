@@ -139,3 +139,38 @@ def delete_file(object_key: str) -> bool:
 def public_url(object_key: str) -> str:
     """Return the public URL for an object key."""
     return f'{R2_PUBLIC_URL}/{object_key}'
+
+
+def download_file(object_key: str, local_path: str) -> bool:
+    """Download an R2 object directly to a local file via boto3 (bypasses public URL).
+    Returns True on success. Use this when the public URL is unavailable or broken.
+    v228 — added for contest bulk rescore.
+    """
+    client = get_client()
+    if client is None:
+        print('[R2] Client not configured — cannot download.')
+        return False
+    try:
+        client.download_file(BUCKET, object_key, local_path)
+        return True
+    except ClientError as e:
+        print(f'[R2] Download failed for {object_key}: {e}')
+        return False
+
+
+def key_from_url(url: str) -> str:
+    """Extract the R2 object key from a public URL or relative path.
+    e.g. 'https://pub-xxx.r2.dev/contest/batch/file.jpg' → 'contest/batch/file.jpg'
+         '/contest/batch/file.jpg' → 'contest/batch/file.jpg'
+    v228 — added for contest bulk rescore.
+    """
+    if url.startswith('http'):
+        # Strip the public base URL
+        base = R2_PUBLIC_URL.rstrip('/')
+        if base and url.startswith(base + '/'):
+            return url[len(base) + 1:]
+        # Fallback: strip scheme+host
+        import urllib.parse as _up
+        return _up.urlparse(url).path.lstrip('/')
+    # Relative path — strip leading slash
+    return url.lstrip('/')
