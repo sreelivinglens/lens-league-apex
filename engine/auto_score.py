@@ -1,4 +1,4 @@
-# SL-VERSION: 171.32 (Session 227, 2026-09-28 — FLAG 1: Open genre added to GENRE_CONTEXT dict with 6-dimension Open Call rubric. get_genre_context() now routes genre=='Open' directly before default fallback — prevents Open images routing to Wildlife weights. SYSTEM_BRIEF Open weights added: Wonder 27%, AQ 19%, Story 18%, Disruption 15%, DoD 13%, DM 8%. RETAINS 171.31.)
+# SL-VERSION: 171.33 (Session 228, 2026-09-28 — Story Transfer rubric fix for Open Call: AQ Story Transfer component now scores EMOTIONAL TRANSFER (does the feeling reach a stranger who cannot name the story?) not NARRATIVE LEGIBILITY (can a stranger name the plot?). Ambiguous images that produce strong emotional response — even when the viewer denies seeing a story — now score HIGH not LOW. Survey proof: n=233, father+newborn silhouette, "No Story" group chose it as Strongest image more than "Yes Story" group. RETAINS 171.32.)
 # SL-VERSION: 171.31 (Session 222, 2026-09-26 — BOW format fix: body_of_work prompt now requires "Frame 1: / Frame 2: / Frame 3: / Frame 4:" labels on separate lines. Prevents prose run-on that broke template frame-splitter. RETAINS 171.30.)
 # SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
@@ -2639,13 +2639,28 @@ GENRE_CONTEXT = {
 
         "AQ — Human Connect (37% = AQ 19% + Story Transfer 18% folded in):\n"
         "Score on two combined signals: (a) Authenticity — is this a genuine moment, "
-        "soul present, not performed for the camera? (b) Story Transfer — how clearly does "
-        "the narrative reach a stranger without a caption?\n"
-        "AQ 9.0+: Undeniable soul AND story lands instantly on a stranger (Raghu Rai Bhopal level)\n"
-        "AQ 7.5-8.9: Genuine emotion + story lands for most viewers\n"
-        "AQ 6.5-7.4: Authentic moment + story needs a moment to read\n"
-        "AQ 5.0-6.4: Present but story needs context or caption to unlock\n"
-        "Below 5.0: Absent — subject without soul or story\n\n"
+        "soul present, not performed for the camera? (b) Story Transfer — does the EMOTIONAL "
+        "CORE reach a stranger who was not there, even if they cannot name the story?\n\n"
+        "CRITICAL — STORY TRANSFER SCORES EMOTIONAL TRANSFER, NOT NARRATIVE LEGIBILITY:\n"
+        "The question is NOT: 'Can a stranger describe the plot?'\n"
+        "The question IS: 'Does a stranger FEEL something specific when they see this image?'\n"
+        "An ambiguous image that produces undeniable feeling in a stranger scores HIGHER than "
+        "a legible image that produces a mild, nameable feeling. Ambiguity is not a penalty — "
+        "it is the story working below the surface. A silhouette of a father cradling a "
+        "3-day-old newborn on a cracked wall: a viewer may say 'I don't know what I'm seeing' "
+        "AND still feel 'something profound happened here.' That IS Story Transfer at its peak.\n"
+        "The test: show this image to a stranger for 3 seconds, cover the label, and ask "
+        "'What do you feel?' If they name a feeling — even if they cannot name the story — "
+        "Story Transfer succeeded. Score accordingly.\n\n"
+        "AMBIGUITY BONUS: If the image is genuinely ambiguous (multiple valid readings) "
+        "AND produces strong emotional response across all readings, add 0.3-0.5 to AQ. "
+        "The image that means different things to different viewers but moves all of them "
+        "is HARDER to make than the image that tells one clear story.\n\n"
+        "AQ 9.0+: Undeniable emotional transfer — a stranger is stopped AND moved, even without knowing why\n"
+        "AQ 7.5-8.9: Strong emotional transfer — most viewers feel something specific\n"
+        "AQ 6.5-7.4: Transfer present — the feeling reaches the viewer but takes a moment\n"
+        "AQ 5.0-6.4: Weak transfer — the emotion is in the image but does not cross to the stranger\n"
+        "Below 5.0: No transfer — subject is present, soul and feeling are absent\n\n"
 
         "DISRUPTION (15%) — Does it reframe something familiar?\n"
         "Does this image make you see something you have seen before as if for the first time? "
