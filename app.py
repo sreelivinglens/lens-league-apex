@@ -1,4 +1,4 @@
-# SL-VERSION: 182.27 (Session 224, 2026-09-28 — Contest Judge: Open Call DDI engine. 6 dimensions: Wonder/Emotion 30%, AQ/Human Connect 22%, Story Transfer 1-10 scale (not Yes/No), Disruption/Wow 15%, DoD/Craft 18%, DM/Moment 8%, NS bonus +0.15/+0.05. Theme gate 1-10 with configurable threshold. Inline edit buttons on review page for Theme Note, Gap, Master Ref, subject ID. DB columns: dod_score, wonder_score, aq_score, story_transfer_score, dm_score (new); genre_detected, theme_score, theme_threshold (new). Old columns retained for migration. RETAINS 182.26.)
+# SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
 import os
 import re
@@ -2449,6 +2449,17 @@ def _run_startup_tasks():
                     db.session.rollback()
                     print(f'contest_judge_batch {_col} warning: {_oce}')
             print('contest_judge_batch v182.27 DDI columns OK.')
+
+            # Session 226 v182.28 — Open Category: genre_locked on images
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS genre_locked BOOLEAN DEFAULT FALSE"
+                ))
+                db.session.commit()
+                print('images.genre_locked v182.28 OK.')
+            except Exception as _gl_err:
+                db.session.rollback()
+                print(f'images.genre_locked warning: {_gl_err}')
 
             print('Database ready.')
 
@@ -9592,7 +9603,10 @@ def upload():
             return redirect(request.url)
 
         raw_genre = request.form.get('genre', 'Wildlife')
-        genre     = normalise_genre(raw_genre)
+        # Open is a special category — must not be normalised into a standard genre.
+        # normalise_genre falls back to 'Wildlife' for unknowns, which would corrupt Open.
+        _is_open_genre = (raw_genre == 'Open')
+        genre = 'Open' if _is_open_genre else normalise_genre(raw_genre)
         raw_sub_genre = request.form.get('sub_genre', '').strip()
         sub_genre = raw_sub_genre if raw_sub_genre in VALID_SUBGENRES else None
 
@@ -9648,6 +9662,9 @@ def upload():
         )
         db.session.add(img)
         img.sub_genre = sub_genre
+        # Open category: lock the genre so it cannot be re-classified later.
+        if _is_open_genre:
+            img.genre_locked = True
         # Increment lifetime upload counter — never decremented on delete.
         # Used to enforce free tier limit even if user deletes images.
         try:
