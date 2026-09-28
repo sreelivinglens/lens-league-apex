@@ -1,4 +1,4 @@
-# SL-VERSION: 182.30 (Session 228, 2026-09-28 — Contest bulk rescore: added /admin/contest-judge/rescore-entry/<id> (single entry), /admin/contest-judge/bulk-rescore/<batch_ref> (all entries, background thread), /admin/contest-judge/bulk-rescore-status/<job_id> (progress poll). UI: Rescore All button in top-actions bar + per-card Rescore button in card header. RETAINS 182.29.)
+# SL-VERSION: 182.31 (Session 228, 2026-09-28 — FIX: Bulk rescore 2 errors: (1) spaces in filenames caused urllib URL control-character error — fixed with urllib.parse.quote on path component. (2) relative thumb_path (/contest/...) caused 403 — fixed by prepending R2_PUBLIC_URL when path is not already https://. Both single-entry and bulk worker fixed. RETAINS 182.30.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
 import os
@@ -16195,9 +16195,18 @@ def admin_contest_judge_rescore_entry(entry_id):
         if not row.thumb_path:
             return jsonify({'error': 'No image stored for this entry'}), 400
         import urllib.request as _cj_rescore_ur
+        import urllib.parse as _cj_rescore_up
         import tempfile as _cj_rescore_tmp
+        import storage as _cj_r2store
+        # Build full URL and URL-encode spaces
+        _raw_url = row.thumb_path
+        if not _raw_url.startswith('http'):
+            _raw_url = _cj_r2store.R2_PUBLIC_URL.rstrip('/') + '/' + _raw_url.lstrip('/')
+        _parsed_url = _cj_rescore_up.urlparse(_raw_url)
+        _safe_path = _cj_rescore_up.quote(_parsed_url.path, safe='/')
+        _raw_url = _cj_rescore_up.urlunparse(_parsed_url._replace(path=_safe_path))
         tmp = _cj_rescore_tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
-        _cj_rescore_ur.urlretrieve(row.thumb_path, tmp.name)
+        _cj_rescore_ur.urlretrieve(_raw_url, tmp.name)
         tmp.close()
 
         image_b64 = _cj_thumb_b64(tmp.name)
@@ -16292,16 +16301,26 @@ def admin_contest_judge_bulk_rescore(batch_ref):
     def _bulk_worker(rows, job_id):
         with app.app_context():
             prog = app.config[f'_bulk_rescore_{job_id}']
+            import urllib.request as _ur2
+            import urllib.parse as _up2
+            import tempfile as _tmp2
+            import storage as _r2store
             for row in rows:
                 try:
                     if not row.thumb_path:
                         prog['errors'] += 1
                         prog['done'] += 1
                         continue
-                    import urllib.request as _ur2
-                    import tempfile as _tmp2
+                    # Build full URL — thumb_path may be relative (/contest/...) or full https://
+                    raw_url = row.thumb_path
+                    if not raw_url.startswith('http'):
+                        raw_url = _r2store.R2_PUBLIC_URL.rstrip('/') + '/' + raw_url.lstrip('/')
+                    # URL-encode spaces and special chars in the path component only
+                    _parsed = _up2.urlparse(raw_url)
+                    _safe_path = _up2.quote(_parsed.path, safe='/')
+                    raw_url = _up2.urlunparse(_parsed._replace(path=_safe_path))
                     tmp = _tmp2.NamedTemporaryFile(suffix='.jpg', delete=False)
-                    _ur2.urlretrieve(row.thumb_path, tmp.name)
+                    _ur2.urlretrieve(raw_url, tmp.name)
                     tmp.close()
                     image_b64 = _cj_thumb_b64(tmp.name)
                     _cj_os.unlink(tmp.name)
