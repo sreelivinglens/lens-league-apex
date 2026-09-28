@@ -1,4 +1,4 @@
-# SL-VERSION: 171.32 (Session 226, 2026-09-28 — Open Call: 6-dimension scoring support. (1) SYSTEM_BRIEF GENRE WEIGHTS: Open line added (DoD=13% Disruption=15% DM=8% Wonder=27% AQ=19% StoryTransfer=18%). (2) GENRE_CONTEXT['Open']: full 6-dimension rubric with StoryTransfer scoring guide. (3) auto_score_ddi_fast: _open_weight_note injected into prompt when genre==Open. (4) auto_score: weight_override_block and effective_system both handle genre==Open — 6-dim formula injected, SYSTEM_BRIEF used as-is. RETAINS 171.31.)
+# SL-VERSION: 171.32 (Session 227, 2026-09-28 — FLAG 1: Open genre added to GENRE_CONTEXT dict with 6-dimension Open Call rubric. get_genre_context() now routes genre=='Open' directly before default fallback — prevents Open images routing to Wildlife weights. SYSTEM_BRIEF Open weights added: Wonder 27%, AQ 19%, Story 18%, Disruption 15%, DoD 13%, DM 8%. RETAINS 171.31.)
 # SL-VERSION: 171.31 (Session 222, 2026-09-26 — BOW format fix: body_of_work prompt now requires "Frame 1: / Frame 2: / Frame 3: / Frame 4:" labels on separate lines. Prevents prose run-on that broke template frame-splitter. RETAINS 171.30.)
 # SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
 # SL-VERSION: 171.18-staging (Session 215, 2026-09-06 — (1) Gear-specific coaching rules added to EXIF section of SCORE_PROMPT: iPhone AE/AF lock, Sony A6x00 burst/shutter/tracking, Canon R Animal Eye AF, Nikon Z subject detection, Fujifilm film sim, OM System reach/IBIS. (2) EXIF display fields added to build_audit_data for evaluation record footer: exif_camera, exif_lens, exif_focal, exif_exposure, exif_software. RETAINS 171.17.)
@@ -58,11 +58,11 @@ Wedding:      DoD=7%  Disruption=9%  DM=22% Wonder=10% AQ=52%
 People:       DoD=7%  Disruption=13% DM=12% Wonder=16% AQ=52%
 Macro:        DoD=26% Disruption=16% DM=12% Wonder=27% AQ=19%
 Creative:     DoD=12% Disruption=18% DM=10% Wonder=30% AQ=30%
-Open:         DoD=13% Disruption=15% DM=8%  Wonder=27% AQ=19% StoryTransfer=18%
 Drone:        DoD=23% Disruption=16% DM=12% Wonder=30% AQ=19%
 Documentary:  DoD=13% Disruption=9%  DM=20% Wonder=33% AQ=25%
 Fashion:      DoD=10% Disruption=20% DM=16% Wonder=24% AQ=30%
 Sports:       DoD=18% Disruption=10% DM=32% Wonder=22% AQ=18%
+Open:         DoD=13% Disruption=15% DM=8%  Wonder=27% AQ=37%  (Story Transfer folded into AQ for 5-dim engine)
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
 If genre = 'Creative' OR sub_genre starts with 'creative_' (e.g. creative_minimalist,
@@ -2615,31 +2615,66 @@ GENRE_CONTEXT = {
         "Crowd reaction at collective peak (a whole stand in simultaneous grief or joy) = AQ 8.0+."
     ),
     'Open': (
-        "This image is submitted to the Open Call — evaluated on a 6-dimension framework.\n\n"
-        "OPEN CALL DIMENSIONS AND WEIGHTS:\n"
-        "  Wonder / Emotion     27% — the primary driver. Does this image make a stranger feel "
-        "something specific in 3 seconds? Named emotion, not vague atmosphere.\n"
-        "  Human Connect (AQ)   19% — emotional intelligence and subject resonance. "
-        "The degree to which the image reaches across the frame to touch the viewer.\n"
-        "  Story Transfer       18% — the image's ability to hand a complete story to someone "
-        "who has never met the photographer. The viewer should finish the story themselves.\n"
-        "  Disruption           15% — originality of vision. Not mere unusualness — "
-        "the image must refuse the obvious frame and show something others would not have seen.\n"
-        "  Craft (DoD)          13% — technical mastery in service of intent. "
-        "Penalise only when craft failure actively limits the image's impact.\n"
-        "  Decisive Moment (DM)  8% — timing precision. Lower weight here because Open Call "
-        "rewards intent and impact over split-second execution.\n\n"
-        "SCORING INSTRUCTION — STORY TRANSFER:\n"
-        "Score Story Transfer as a separate dimension alongside the 5 DDI dimensions.\n"
-        "Story Transfer 9.0–10: viewer is handed a complete, unambiguous narrative — "
-        "they can describe what happened before and after the shutter.\n"
-        "Story Transfer 7.0–8.9: a clear story is present but leaves deliberate gaps.\n"
-        "Story Transfer 5.0–6.9: emotion is present but the story is unclear.\n"
-        "Story Transfer below 5.0: image is visually interesting but narratively closed.\n\n"
-        "OPEN CALL FINAL SCORE FORMULA:\n"
-        "LL-Score = (DoD×0.13) + (Disruption×0.15) + (DM×0.08) + (Wonder×0.27) + (AQ×0.19) + (StoryTransfer×0.18)\n\n"
-        "IMPORTANT: The Open Call is not genre-specific. Do not apply Wildlife, Landscape, "
-        "Street, or any genre-specific rubric. Evaluate purely on impact, story, and craft."
+        "This is Open Category photography — any genre, any subject. The image enters a "
+        "cross-genre pool where Wildlife, Street, Portrait, Documentary, Landscape, and all "
+        "other genres compete together. Genre-specific technical standards DO NOT apply: "
+        "Open Category judges on emotional truth and story transfer above all else.\n\n"
+
+        "SCORING PHILOSOPHY — OPEN CALL:\n"
+        "Every photographer pressed the shutter for a reason. Your job is not to decide IF "
+        "there is a story — there always is. Your job is to measure how clearly that story "
+        "transfers to a stranger who was not there.\n\n"
+
+        "DIMENSION RUBRIC (Open weights: Wonder 27%, AQ 37%, Disruption 15%, DoD 13%, DM 8%):\n\n"
+
+        "WONDER (27%) — Does it move a stranger in 3 seconds?\n"
+        "Score on the stranger gallery test: walk past this image without reading the label. "
+        "Do you stop? What is the one word you name? If you can name that feeling: Wonder 7.0-9.5. "
+        "If no specific feeling arises: Wonder below 7.0.\n"
+        "9.5-10.0: Image defines its category — indelible, unavoidable emotion\n"
+        "8.5-9.4: Transfers instantly — a stranger stops and does not move on\n"
+        "7.0-8.4: Transfers clearly — most viewers will feel it\n"
+        "5.5-6.9: Transfers with effort — the viewer has to reach for it\n"
+        "Below 5.5: Subject only — no emotional transfer\n\n"
+
+        "AQ — Human Connect (37% = AQ 19% + Story Transfer 18% folded in):\n"
+        "Score on two combined signals: (a) Authenticity — is this a genuine moment, "
+        "soul present, not performed for the camera? (b) Story Transfer — how clearly does "
+        "the narrative reach a stranger without a caption?\n"
+        "AQ 9.0+: Undeniable soul AND story lands instantly on a stranger (Raghu Rai Bhopal level)\n"
+        "AQ 7.5-8.9: Genuine emotion + story lands for most viewers\n"
+        "AQ 6.5-7.4: Authentic moment + story needs a moment to read\n"
+        "AQ 5.0-6.4: Present but story needs context or caption to unlock\n"
+        "Below 5.0: Absent — subject without soul or story\n\n"
+
+        "DISRUPTION (15%) — Does it reframe something familiar?\n"
+        "Does this image make you see something you have seen before as if for the first time? "
+        "Unconventional angle, genre-crossing subject, or a frame that refuses the obvious shot.\n\n"
+
+        "DoD (13%) — Composition, light, colour, craft:\n"
+        "In Open Call, DoD measures compositional decision, light quality, colour use, and "
+        "technical craft as a WHOLE — not by genre-specific standards. A blurry but heartbreaking "
+        "image is NOT penalised for blur. DoD scores the craft choices that were in the "
+        "photographer's control and that serve the emotional intent.\n\n"
+
+        "DM (8%) — Was the decisive moment caught?\n"
+        "The fraction of a second that makes the image. In a posed portrait: the expression "
+        "that reveals. In a wildlife image: the peak behaviour. In street: the gesture that "
+        "completes the frame. In abstract: the moment the light or pattern resolves.\n\n"
+
+        "CRITICAL — BLUR AND TECHNICAL IMPERFECTION:\n"
+        "A blurry image that breaks your heart outranks a sharp image that feels empty. "
+        "Motion blur, soft focus, grain, underexposure — NONE of these are automatic penalties "
+        "in Open Category. Score whether the technical choices (deliberate or not) serve the "
+        "emotional truth. A sharp, technically perfect image with no emotional transfer scores "
+        "lower than an imperfect image where the moment stops a stranger.\n\n"
+
+        "CALIBRATION ANCHORS (Open Call):\n"
+        "Raghu Rai Bhopal child (1984): Wonder 9.8, AQ 9.9\n"
+        "Cartier-Bresson Gare Saint-Lazare: Wonder 8.5, Disruption 9.3, DM 9.8\n"
+        "Kevin Carter Vulture and Child: Wonder 9.5, AQ 9.8\n"
+        "Sharp but emotionally empty portrait: Wonder 4.5, AQ 5.0\n"
+        "Blurry but heartbreaking wildlife moment: Wonder 8.5, DoD not penalised"
     ),
     'default': (
         "Evaluate using genre-appropriate criteria. Reward artistic intent, "
@@ -4207,6 +4242,10 @@ def get_genre_context(genre, sub_genre=None):
     # Cross-genre documentary sub-types: doc_crisis can be filed under Street
     if sub_genre and sub_genre in DOCUMENTARY_SUBGENRE_CONTEXT:
         return DOCUMENTARY_SUBGENRE_CONTEXT[sub_genre]
+    # Session 227 — Open genre routing: must be explicit, 'Open' is NOT in GENRE_CONTEXT
+    # fallback chain so it would silently route to 'default' without this guard.
+    if genre == 'Open':
+        return GENRE_CONTEXT['Open']
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
@@ -5891,17 +5930,6 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             f"USE THESE WEIGHTS, not the {genre} weights, to calculate the final score.\n"
         )
         print(f"[auto_score] Weight override: {genre} → {effective_genre_for_weights} weights for sub-genre {effective_subgenre}")
-    elif genre == 'Open':
-        # Session 226 v171.32 — Open Call: 6-dimension framework, StoryTransfer added.
-        weight_override_block = (
-            "\n\nOPEN CALL — 6-DIMENSION EVALUATION. USE THESE WEIGHTS:\n"
-            "Wonder/Emotion=27%  AQ/HumanConnect=19%  StoryTransfer=18%  "
-            "Disruption=15%  DoD/Craft=13%  DM/DecisiveMoment=8%\n"
-            "FORMULA: LL-Score = (DoD×0.13)+(Disruption×0.15)+(DM×0.08)+(Wonder×0.27)+(AQ×0.19)+(StoryTransfer×0.18)\n"
-            "Score StoryTransfer as a separate 6th dimension. Return it as 'story_transfer' in the JSON.\n"
-            "Do NOT apply any genre-specific rubric. Evaluate on impact, story, and craft alone.\n"
-        )
-        print("[auto_score] Open Call: 6-dimension weight block injected (v171.32).")
     else:
         weight_override_block = ""
 
@@ -5911,13 +5939,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # This ensures the engine's primary weight reference (which it reads first)
     # reflects the correct dimensional priorities — genre_context override alone
     # is insufficient because SYSTEM_BRIEF weights take precedence.
-    if genre == 'Open':
-        # Session 226 v171.32 \u2014 Open already has its weights in SYSTEM_BRIEF.
-        # GENRE_CONTEXT['Open'] carries the full 6-dimension rubric.
-        # No regex patching needed.
-        effective_system = SYSTEM_BRIEF
-        print("[auto_score] Open Call: SYSTEM_BRIEF used as-is (Open weights present v171.32).")
-    elif effective_genre_for_weights != genre:
+    if effective_genre_for_weights != genre:
         import re as _wsre
         from engine.scoring import GENRE_WEIGHTS
         ew = GENRE_WEIGHTS.get(effective_genre_for_weights, {})
@@ -6977,19 +6999,6 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
     effective_genre = get_effective_genre(genre, sub_genre) if sub_genre else genre
     genre_context = GENRE_CONTEXT.get(effective_genre, GENRE_CONTEXT.get(genre, ''))
 
-    # ── Open Call weight override for fast path (Session 226) ─────────────────
-    # Open uses a 6-dimension framework with StoryTransfer as the 6th dimension.
-    # Inject explicit weight note so the fast scorer uses the correct formula.
-    _open_weight_note = ''
-    if genre == 'Open':
-        _open_weight_note = (
-            '\n\nOPEN CALL — USE THESE 6-DIMENSION WEIGHTS (NOT the 5-dimension genre defaults):\n'
-            'Wonder/Emotion=27%  AQ/HumanConnect=19%  StoryTransfer=18%  '
-            'Disruption=15%  DoD/Craft=13%  DM/DecisiveMoment=8%\n'
-            'FORMULA: LL-Score = (DoD×0.13)+(Disruption×0.15)+(DM×0.08)+(Wonder×0.27)+(AQ×0.19)+(StoryTransfer×0.18)\n'
-            'Score StoryTransfer as a 6th dimension. Include it in the JSON response as "story_transfer".\n'
-        )
-
     # ── Mobile weight override for fast path ──────────────────────────────────
     _mobile_weight_note = ''
     if camera_track == 'mobile' and genre not in MOBILE_EXCLUDED_GENRES:
@@ -7006,7 +7015,7 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
                 f'and Technical DoD (scored against mobile ceiling).\n'
             )
 
-    prompt = DDI_FAST_PROMPT.format(genre=genre, genre_context=genre_context) + _open_weight_note + _mobile_weight_note
+    prompt = DDI_FAST_PROMPT.format(genre=genre, genre_context=genre_context) + _mobile_weight_note
 
     payload = {
         "model":       MODEL,
