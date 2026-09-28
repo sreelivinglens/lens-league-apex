@@ -1,4 +1,5 @@
 {#
+  SL-VERSION: 182.30 (Session 227, 2026-09-28 — Open genre panel: removed dimension % weights table (competitive intelligence). Replaced with inline comma-separated dimension list. Weights remain internal only. RETAINS 182.19.)
   SL-VERSION: 182.19 (Session 227, 2026-09-28 — SCOPE FIX: _runPreflight/_showPreflightModal/_fireUpload moved to outer script scope (outside submit listener) so _maybeOpenConfirm can call them. 182.18 moved them to top of submit listener — correct for hoisting but wrong scope: _maybeOpenConfirm is defined outside submit listener and cannot reach inside it. Root cause of ReferenceError confirmed via live GitHub file inspection. RETAINS 182.17/182.18 — ROOT CAUSE FIX: Safari ReferenceError "Can't find variable: _runPreflight". Safari does not hoist function declarations inside event listener callbacks — they are block-scoped. Moved _runPreflight, _showPreflightModal, _fireUpload to top of submit listener so they are defined before _resReader.onload calls them. Zero POST requests reached Railway because JS crashed before XHR fired. Open Category feature (182.13) intact. Both safety timers (182.16, 182.17) retained. RETAINS 182.17.)
 #}
 {% extends "base.html" %}
@@ -676,22 +677,10 @@
             Open Evaluation — how your photograph is read
           </div>
           <p style="margin:0 0 10px;">Open uses a 6-dimension framework that weighs emotional and human dimensions more heavily than technical craft.</p>
-          <table style="width:100%; border-collapse:collapse; font-size:14px; margin-bottom:12px;">
-            <thead>
-              <tr style="border-bottom:1px solid #e0d8c8;">
-                <th style="text-align:left; padding:5px 8px; font-weight:600; color:#6a6458;">Dimension</th>
-                <th style="text-align:right; padding:5px 8px; font-weight:600; color:#6a6458;">Weight</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style="padding:5px 8px;">Wonder / Emotion</td><td style="text-align:right; padding:5px 8px; font-weight:600;">27%</td></tr>
-              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Human Connect</td><td style="text-align:right; padding:5px 8px; font-weight:600;">19%</td></tr>
-              <tr><td style="padding:5px 8px;">Story Transfer</td><td style="text-align:right; padding:5px 8px; font-weight:600;">18%</td></tr>
-              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Disruption</td><td style="text-align:right; padding:5px 8px; font-weight:600;">15%</td></tr>
-              <tr><td style="padding:5px 8px;">Craft</td><td style="text-align:right; padding:5px 8px; font-weight:600;">13%</td></tr>
-              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Decisive Moment</td><td style="text-align:right; padding:5px 8px; font-weight:600;">8%</td></tr>
-            </tbody>
-          </table>
+          <p style="margin:0 0 12px; font-size:14px; color:#4a4840;">
+            <span style="font-weight:600; color:#1A1A18;">Dimensions:</span>
+            Wonder / Emotion, Human Connect, Story Transfer, Disruption, Craft, Decisive Moment
+          </p>
           <div style="background:rgba(44,62,107,0.07); border-radius:8px; padding:11px 14px; font-size:14px; color:#2C3E6B; line-height:1.6;">
             <strong>Please note:</strong> Once uploaded as Open, this image cannot be re-entered in a specific photography category and will not qualify for the Annual Excellence Award. This cannot be changed after upload.
           </div>
