@@ -1,4 +1,4 @@
-# SL-VERSION: 160.0 (Session 160 — mim_theme_score + mim_theme_paragraph columns added to Image model)
+# SL-VERSION: 160.1 (Session 226, 2026-09-28 — genre_locked BOOLEAN added to Image model for Open category. RETAINS 160.0.)
 """
 models.py — Lens League Apex
 # Session 160 — mim_theme_score (Float) + mim_theme_paragraph (Text) added to Image model
@@ -310,6 +310,7 @@ class Image(db.Model):
     raw_disqualified          = db.Column(db.Boolean, default=False, nullable=False)
     scoring_flash             = db.Column(db.Text,    nullable=True)   # v34 points flash
     sub_genre                 = db.Column(db.String(60), nullable=True)  # v35 DDI sub-genre
+    genre_locked              = db.Column(db.Boolean, default=False, nullable=True)  # Session 226 — True when uploaded as Open; prevents re-classification
     mission_dimension         = db.Column(db.String(20), nullable=True)  # v34 mission focus dim
     mission_title             = db.Column(db.String(120), nullable=True) # v34 mission title
     mission_principle_id      = db.Column(db.String(10), nullable=True)  # Session 95: links to curriculum_data._CURRICULUM_BY_ID, used to ground mission-fail messages in the actual lesson text
