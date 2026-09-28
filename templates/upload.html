@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 182.14 (Session 226, 2026-09-28 — Preflight safety timer: 30s fallback in _runPreflight guards against canvas.toBlob() / FileReader hang on iOS Safari / mobile WebKit that left button stuck at "Checking…" with no server request ever fired. All branches clear the timer on normal resolution. RETAINS 182.13.)
+  SL-VERSION: 182.15 (Session 226, 2026-09-28 — Safety timer reduced 30s→5s: 30s was too long for users to wait before bypass fired. Trial users skip preflight genre modal (no similar_warning): they already chose their genre, modal was unnecessary gate. RETAINS 182.14.)
   Session 192 · 2026-08-24
   VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
 
@@ -1368,13 +1368,15 @@
     function _runPreflight(originalFile) {
       // v182.14: Safety timer — if canvas.toBlob() or FileReader hangs
       // (known iOS Safari / mobile WebKit issue where neither onload nor
-      // onerror fires), this fires _fireUpload() after 30s so the user
+      // onerror fires), this fires _fireUpload() after 5s so the user
       // is never stuck at "Checking…" with no server request made.
+      // v182.15: Reduced from 30s → 5s. 30s was too slow — users gave up
+      // and reported the button as permanently stuck before the bypass fired.
       // Every normal branch clears this timer before calling _fireUpload().
       var _pfSafetyTimer = setTimeout(function() {
         _pfSafetyTimer = null;
         _fireUpload();
-      }, 30000);
+      }, 5000);
 
       function _pfDone() {
         if (_pfSafetyTimer) { clearTimeout(_pfSafetyTimer); _pfSafetyTimer = null; }
@@ -1412,6 +1414,14 @@
               try { _r = JSON.parse(_pfXhr.responseText); } catch(e) {}
               if (!_r || (!_r.similar_warning && !_r.genre_suggestion)) {
                 // Nothing to warn about — proceed directly
+                _fireUpload();
+                return;
+              }
+              // v182.15: Trial users skip the genre-suggestion modal if there
+              // is no similar_warning. They already chose their genre — the
+              // confirmation modal was an unnecessary gate that left them stuck.
+              var _isTrial = !!(form.dataset.resultBase && form.dataset.resultBase.indexOf('/try/') === 0);
+              if (_isTrial && !_r.similar_warning) {
                 _fireUpload();
                 return;
               }
