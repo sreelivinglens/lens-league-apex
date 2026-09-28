@@ -1,3 +1,4 @@
+# SL-VERSION: 182.29 (Session 227, 2026-09-28 — BUG FIX: Triple duplicate "You have used all 10 free evaluations" flash banner. /try route was calling flash() before redirect; if /try hit multiple times (prefetch, back-nav), message stacked in session. Fix: /try now redirects with ?quota=play|free param; try_welcome reads param and flashes once. RETAINS 182.28.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
 import os
@@ -39926,6 +39927,13 @@ def try_welcome():
     if current_user.role != 'admin' and _is_sonnet_user(current_user):
         return redirect(url_for('dashboard'))
 
+    # v182.29 — quota param set by /try redirect to avoid duplicate flash banners
+    _quota_param = request.args.get('quota', '')
+    if _quota_param == 'play':
+        flash('You have used all your evaluations. Upgrade to Sonnet or purchase another 100 to continue.', 'info')
+    elif _quota_param == 'free':
+        flash(f'You have used all {FREE_IMAGE_LIMIT} free evaluations.', 'info')
+
     _bonus = int(getattr(current_user, 'referral_bonus_uploads', 0) or 0)
     # Effective limit = FREE_IMAGE_LIMIT + _bonus.
     # play plan sets referral_bonus_uploads at purchase so limit = used_at_purchase + 100.
@@ -40459,11 +40467,10 @@ def try_page():
     _bonus_try = getattr(current_user, 'referral_bonus_uploads', 0) or 0
     _effective_limit_try = FREE_IMAGE_LIMIT + _bonus_try
     if evals_used >= _effective_limit_try and current_user.role != 'admin':
-        if _plan_try == 'play':
-            flash('You have used all your evaluations. Upgrade to Sonnet or purchase another 100 to continue.', 'info')
-        else:
-            flash(f'You have used all {FREE_IMAGE_LIMIT} free evaluations.', 'info')
-        return redirect(url_for('try_welcome'))
+        # v182.29 — pass quota=1 as URL param instead of flash() to prevent
+        # duplicate banners when /try is hit multiple times (prefetch, back-nav, etc.)
+        _quota_param = 'play' if _plan_try == 'play' else 'free'
+        return redirect(url_for('try_welcome', quota=_quota_param))
 
     import json as _json
     from engine.scoring import SUBGENRE_MAP, GENRE_IDS
