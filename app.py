@@ -1,4 +1,4 @@
-# SL-VERSION: 182.29 (Session 227, 2026-09-28 — BUG FIX: Triple duplicate "You have used all 10 free evaluations" flash banner. /try route was calling flash() before redirect; if /try hit multiple times (prefetch, back-nav), message stacked in session. Fix: /try now redirects with ?quota=play|free param; try_welcome reads param and flashes once. RETAINS 182.28.)
+# SL-VERSION: 182.30 (Session 228, 2026-09-28 — Contest bulk rescore: added /admin/contest-judge/rescore-entry/<id> (single entry), /admin/contest-judge/bulk-rescore/<batch_ref> (all entries, background thread), /admin/contest-judge/bulk-rescore-status/<job_id> (progress poll). UI: Rescore All button in top-actions bar + per-card Rescore button in card header. RETAINS 182.29.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
 import os
@@ -16171,6 +16171,186 @@ def admin_contest_judge_delete_batch(batch_ref):
     if _cj_os.path.isdir(store_dir):
         _shutil.rmtree(store_dir, ignore_errors=True)
     return jsonify({'deleted': True, 'batch_ref': batch_ref})
+
+
+# ── CONTEST JUDGE — SINGLE ENTRY RESCORE ─────────────────────────────────────
+
+@app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_rescore_entry(entry_id):
+    """Rescore a single contest entry using the current engine. Fetches image from R2.
+    v228.1 — Session 228, 2026-09-28.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+    row = db.session.execute(db.text(
+        "SELECT id, batch_ref, filename, photographer, image_title, theme, "
+        "theme_threshold, thumb_path FROM contest_judge_batch WHERE id = :eid"
+    ), {'eid': entry_id}).fetchone()
+    if not row:
+        return jsonify({'error': 'Entry not found'}), 404
+
+    try:
+        # Fetch image from R2 thumb_path
+        if not row.thumb_path:
+            return jsonify({'error': 'No image stored for this entry'}), 400
+        import urllib.request as _cj_rescore_ur
+        import tempfile as _cj_rescore_tmp
+        tmp = _cj_rescore_tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+        _cj_rescore_ur.urlretrieve(row.thumb_path, tmp.name)
+        tmp.close()
+
+        image_b64 = _cj_thumb_b64(tmp.name)
+        _cj_os.unlink(tmp.name)
+
+        theme_thr = float(row.theme_threshold) if row.theme_threshold else 6.0
+        verdict = _cj_sonnet_judge(image_b64, row.photographer or '', row.image_title or '', row.theme or 'Story', theme_thr)
+
+        if not verdict or 'error' in verdict:
+            return jsonify({'error': verdict.get('error', 'Engine error') if verdict else 'No API key'}), 500
+
+        db.session.execute(db.text("""
+            UPDATE contest_judge_batch SET
+                wonder_score       = :wo,
+                aq_score           = :aq,
+                story_transfer_score = :st,
+                disruption_score   = :di,
+                dod_score          = :dod,
+                dm_score           = :dm,
+                composite_score    = :cs,
+                theme_score        = :tsc,
+                theme_relevant     = :tr,
+                theme_note         = :tn,
+                master_ref         = :mr,
+                gap_note           = :gn,
+                genre_detected     = :gd,
+                raw_json           = :rj,
+                judged_at          = NOW()
+            WHERE id = :eid
+        """), {
+            'wo':  verdict.get('wonder'),
+            'aq':  verdict.get('aq'),
+            'st':  verdict.get('story_transfer'),
+            'di':  verdict.get('disruption'),
+            'dod': verdict.get('dod'),
+            'dm':  verdict.get('dm'),
+            'cs':  verdict.get('composite'),
+            'tsc': verdict.get('theme_score'),
+            'tr':  bool(verdict.get('theme_relevant')),
+            'tn':  verdict.get('theme_note', ''),
+            'mr':  verdict.get('master_ref', ''),
+            'gn':  verdict.get('gap_note', ''),
+            'gd':  verdict.get('genre_detected', ''),
+            'rj':  _cj_json.dumps(verdict),
+            'eid': entry_id,
+        })
+        db.session.commit()
+        return jsonify({
+            'ok': True,
+            'composite': verdict.get('composite'),
+            'story_transfer': verdict.get('story_transfer'),
+            'wonder': verdict.get('wonder'),
+            'aq': verdict.get('aq'),
+        })
+    except Exception as _e:
+        app.logger.error(f'[rescore_entry] entry={entry_id} {_e}')
+        return jsonify({'error': str(_e)}), 500
+
+
+# ── CONTEST JUDGE — BULK RESCORE BATCH ────────────────────────────────────────
+
+@app.route('/admin/contest-judge/bulk-rescore/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_bulk_rescore(batch_ref):
+    """Rescore all entries in a batch using the current engine. Background thread.
+    v228.1 — Session 228, 2026-09-28.
+    POST body: {} (rescore all) or {"ids": [1,2,3]} (rescore specific entry IDs).
+    Returns immediately with job_id; poll /admin/contest-judge/bulk-rescore-status/<job_id>.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+
+    data = request.get_json(silent=True) or {}
+    ids_filter = data.get('ids')  # None = all entries
+
+    rows = db.session.execute(db.text(
+        "SELECT id, filename, photographer, image_title, theme, theme_threshold, thumb_path "
+        "FROM contest_judge_batch WHERE batch_ref = :br" +
+        (" AND id = ANY(:ids)" if ids_filter else "")
+    ), {'br': batch_ref, **(({'ids': ids_filter}) if ids_filter else {})}).fetchall()
+
+    if not rows:
+        return jsonify({'error': 'No entries found for this batch'}), 404
+
+    import uuid as _uuid
+    job_id = _uuid.uuid4().hex[:12]
+    # Store progress in app.config keyed by job_id
+    app.config[f'_bulk_rescore_{job_id}'] = {
+        'total': len(rows), 'done': 0, 'errors': 0, 'finished': False
+    }
+
+    def _bulk_worker(rows, job_id):
+        with app.app_context():
+            prog = app.config[f'_bulk_rescore_{job_id}']
+            for row in rows:
+                try:
+                    if not row.thumb_path:
+                        prog['errors'] += 1
+                        prog['done'] += 1
+                        continue
+                    import urllib.request as _ur2
+                    import tempfile as _tmp2
+                    tmp = _tmp2.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    _ur2.urlretrieve(row.thumb_path, tmp.name)
+                    tmp.close()
+                    image_b64 = _cj_thumb_b64(tmp.name)
+                    _cj_os.unlink(tmp.name)
+                    theme_thr = float(row.theme_threshold) if row.theme_threshold else 6.0
+                    verdict = _cj_sonnet_judge(image_b64, row.photographer or '', row.image_title or '', row.theme or 'Story', theme_thr)
+                    if not verdict or 'error' in verdict:
+                        prog['errors'] += 1
+                    else:
+                        db.session.execute(db.text("""
+                            UPDATE contest_judge_batch SET
+                                wonder_score=:wo, aq_score=:aq, story_transfer_score=:st,
+                                disruption_score=:di, dod_score=:dod, dm_score=:dm,
+                                composite_score=:cs, theme_score=:tsc, theme_relevant=:tr,
+                                theme_note=:tn, master_ref=:mr, gap_note=:gn,
+                                genre_detected=:gd, raw_json=:rj, judged_at=NOW()
+                            WHERE id=:eid
+                        """), {
+                            'wo': verdict.get('wonder'), 'aq': verdict.get('aq'),
+                            'st': verdict.get('story_transfer'), 'di': verdict.get('disruption'),
+                            'dod': verdict.get('dod'), 'dm': verdict.get('dm'),
+                            'cs': verdict.get('composite'), 'tsc': verdict.get('theme_score'),
+                            'tr': bool(verdict.get('theme_relevant')),
+                            'tn': verdict.get('theme_note', ''), 'mr': verdict.get('master_ref', ''),
+                            'gn': verdict.get('gap_note', ''), 'gd': verdict.get('genre_detected', ''),
+                            'rj': _cj_json.dumps(verdict), 'eid': row.id,
+                        })
+                        db.session.commit()
+                except Exception as _be:
+                    app.logger.error(f'[bulk_rescore] entry={row.id} {_be}')
+                    prog['errors'] += 1
+                finally:
+                    prog['done'] += 1
+            prog['finished'] = True
+
+    import threading as _thr2
+    _thr2.Thread(target=_bulk_worker, args=(rows, job_id), daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': len(rows)})
+
+
+@app.route('/admin/contest-judge/bulk-rescore-status/<job_id>')
+@login_required
+def admin_contest_judge_bulk_rescore_status(job_id):
+    """Poll bulk rescore progress."""
+    if current_user.role != 'admin':
+        abort(403)
+    prog = app.config.get(f'_bulk_rescore_{job_id}')
+    if not prog:
+        return jsonify({'error': 'Job not found'}), 404
+    return jsonify(prog)
 
 
 # ── CONTEST JUDGE — REUPLOAD THUMBS TO R2 (zero re-judge) ───────────────────
