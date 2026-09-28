@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 182.12 (Session 213, 2026-09-06 — Wikipedia reference removed from species helper text and processing messages. Poll error tolerance raised 3→8 consecutive failures. Free tier copy updated 3→10 evaluations. RETAINS 181.47.)
+  SL-VERSION: 182.13 (Session 226, 2026-09-28 — Open category added to upload: dropdown option, inline info panel, Open confirmation modal, genre_locked flag on submit. RETAINS 182.12.)
   Session 192 · 2026-08-24
   VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
 
@@ -676,8 +676,38 @@
             <option value="{{ g }}">{{ g }}</option>
             {% endfor %}
           {% endif %}
+          <option value="Open">Open</option>
         </select>
         <div class="genre-hint" id="genre-hint"></div>
+
+        <!-- Open category info panel — shown only when Open is selected -->
+        <div id="open-genre-panel" style="display:none; margin-top:14px; padding:16px 18px;
+             background:#FAFAF7; border:1px solid #C8A84B; border-left:4px solid #C8A84B;
+             border-radius:10px; font-size:15px; color:var(--text-primary); line-height:1.7;">
+          <div style="font-weight:700; font-size:16px; margin-bottom:10px; color:#1A1A18;">
+            Open Evaluation — how your photograph is read
+          </div>
+          <p style="margin:0 0 10px;">Open uses a 6-dimension framework that weighs emotional and human dimensions more heavily than technical craft.</p>
+          <table style="width:100%; border-collapse:collapse; font-size:14px; margin-bottom:12px;">
+            <thead>
+              <tr style="border-bottom:1px solid #e0d8c8;">
+                <th style="text-align:left; padding:5px 8px; font-weight:600; color:#6a6458;">Dimension</th>
+                <th style="text-align:right; padding:5px 8px; font-weight:600; color:#6a6458;">Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:5px 8px;">Wonder / Emotion</td><td style="text-align:right; padding:5px 8px; font-weight:600;">27%</td></tr>
+              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Human Connect</td><td style="text-align:right; padding:5px 8px; font-weight:600;">19%</td></tr>
+              <tr><td style="padding:5px 8px;">Story Transfer</td><td style="text-align:right; padding:5px 8px; font-weight:600;">18%</td></tr>
+              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Disruption</td><td style="text-align:right; padding:5px 8px; font-weight:600;">15%</td></tr>
+              <tr><td style="padding:5px 8px;">Craft</td><td style="text-align:right; padding:5px 8px; font-weight:600;">13%</td></tr>
+              <tr style="background:rgba(200,168,75,0.06);"><td style="padding:5px 8px;">Decisive Moment</td><td style="text-align:right; padding:5px 8px; font-weight:600;">8%</td></tr>
+            </tbody>
+          </table>
+          <div style="background:rgba(44,62,107,0.07); border-radius:8px; padding:11px 14px; font-size:14px; color:#2C3E6B; line-height:1.6;">
+            <strong>Please note:</strong> Once uploaded as Open, this image cannot be re-entered in a specific photography category and will not qualify for the Annual Excellence Award. This cannot be changed after upload.
+          </div>
+        </div>
       </div>
 
       <div id="sub-genre-toggle-row" style="display:none;margin-bottom:8px;">
@@ -790,6 +820,45 @@
     </div>
 
     <div class="preflight-actions" id="preflightActions"></div>
+  </div>
+</div>
+
+<!-- OPEN CATEGORY CONFIRMATION MODAL -->
+<div id="openConfirmOverlay" style="display:none; position:fixed; inset:0; background:rgba(26,26,24,0.72);
+     z-index:9500; align-items:center; justify-content:center; padding:24px;">
+  <div style="background:#FFFFFF; border-radius:14px; max-width:400px; width:100%; padding:28px 24px;
+              box-shadow:0 8px 40px rgba(0,0,0,0.28); font-family:Inter,Arial,sans-serif;">
+    <div style="font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+                color:#854F0B; margin-bottom:14px;">Open Evaluation</div>
+    <div style="font-size:17px; font-weight:700; color:#1A1A18; margin-bottom:14px; line-height:1.4;">
+      You are uploading this image to the Open evaluation.
+    </div>
+    <div style="font-size:15px; color:#3a3a38; line-height:1.7; margin-bottom:18px;">
+      Once uploaded, this image:
+      <ul style="margin:8px 0 0 18px; padding:0; color:#3a3a38;">
+        <li>Will be evaluated using the full 6-dimension Open Call framework</li>
+        <li>Cannot be re-entered in a specific photography category</li>
+        <li>Will not qualify for the Annual Excellence Award</li>
+      </ul>
+    </div>
+    <div style="background:rgba(44,62,107,0.07); border-radius:8px; padding:11px 14px;
+                font-size:14px; color:#2C3E6B; line-height:1.6; margin-bottom:22px;">
+      This cannot be changed after upload.
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button id="openConfirmYes" type="button"
+              style="background:#2C3E6B; color:#F5C518; border:none; border-radius:8px;
+                     font-family:Inter,Arial,sans-serif; font-size:16px; font-weight:700;
+                     letter-spacing:0.5px; padding:14px 20px; cursor:pointer; width:100%;">
+        Yes, upload as Open
+      </button>
+      <button id="openConfirmCancel" type="button"
+              style="background:none; border:1px solid #C8A84B; border-radius:8px;
+                     font-family:Inter,Arial,sans-serif; font-size:15px; font-weight:600;
+                     color:#1A1A18; padding:12px 20px; cursor:pointer; width:100%;">
+        Cancel
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1131,7 +1200,40 @@
     if (speciesRow) {
       speciesRow.style.display = (this.value === 'Wildlife') ? 'block' : 'none';
     }
+    // Show Open info panel when Open is selected
+    var openPanel = document.getElementById('open-genre-panel');
+    if (openPanel) {
+      openPanel.style.display = (this.value === 'Open') ? 'block' : 'none';
+    }
   });
+
+  // ── Open category confirmation gate ─────────────────────────────────────
+  // Intercepts the upload flow when genre === 'Open' and shows a confirmation
+  // modal before proceeding to _runPreflight. If any other genre, proceeds directly.
+  function _maybeOpenConfirm(file) {
+    var genreVal = (document.getElementById('genre') || {}).value || '';
+    if (genreVal !== 'Open') {
+      _runPreflight(file);
+      return;
+    }
+    // Show the Open confirmation modal
+    var openOverlay = document.getElementById('openConfirmOverlay');
+    if (!openOverlay) { _runPreflight(file); return; }
+    openOverlay.style.display = 'flex';
+
+    // Yes — proceed to preflight
+    document.getElementById('openConfirmYes').onclick = function() {
+      openOverlay.style.display = 'none';
+      _runPreflight(file);
+    };
+
+    // Cancel — restore submit button and close modal
+    document.getElementById('openConfirmCancel').onclick = function() {
+      openOverlay.style.display = 'none';
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'Submit for Evaluation';
+    };
+  }
   document.querySelectorAll('input[name="camera_track"]').forEach(r =>
     r.addEventListener('change', () => { trackHint.style.display = 'none'; })
   );
@@ -1254,12 +1356,12 @@
           );
           return;
         }
-        _runPreflight(file);
+        _maybeOpenConfirm(file);
       };
-      _tmpImg.onerror = function() { _runPreflight(file); };
+      _tmpImg.onerror = function() { _maybeOpenConfirm(file); };
       _tmpImg.src = _re.target.result;
     };
-    _resReader.onerror = function() { _runPreflight(file); };
+    _resReader.onerror = function() { _maybeOpenConfirm(file); };
     _resReader.readAsDataURL(file);
 
     // ── Preflight — similar image + genre suggestion ──────────────────────
