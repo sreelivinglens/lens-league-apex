@@ -1,17 +1,5 @@
 {#
-  SL-VERSION: 182.16 (Session 226, 2026-09-28 — FIXES CHECKING… stuck button: 5s safety timer bypasses canvas.toBlob() hang on iOS Safari/mobile WebKit; trial users skip preflight genre modal when no similar_warning. RETAINS 182.13 Open Category feature intact.)
-  Session 192 · 2026-08-24
-  VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
-
-  DELIVERY AUDIT
-  ──────────────────────────────────────────────────────
-  Audit   : Extends base.html ✅ · No own footer/nav — inherits base.html 181.49 ✅ · Jinja2 env.parse() required before deploy ✅ · legal-box Terms & Conditions link present ✅
-  KYC     : Terms link in legal-box ✅ · Programme Rules link in legal-box ✅ · Footer KYC (Terms/Privacy/Refunds/Shipping/Bengaluru/UDYAM) inherited from base.html ✅ · Screenshot shows old base footer — deploy base.html 181.49 first
-  Mobile  : Inherits base.html bottom nav ✅ · Upload form single-column ✅ · 44px tap targets on submit button ✅ · touch-action:manipulation on form controls ✅
-  iPad    : Single-column form ≤900px via base.html ✅ · max-width:680px upload-wrap ✅
-  70yr    : Form labels 16px+ ✅ · Legal checkbox label 16px ✅ · dz-label 17px ✅ · dz-hint 16px ✅ · Submit button 16px+ ✅ · preflight-tag 13px uppercase label only (not body copy) ✅
-  Version : 181.46-staging — matches filename
-  ──────────────────────────────────────────────────────
+  SL-VERSION: 182.17 (Session 226, 2026-09-28 — ROOT CAUSE FIX for CHECKING… stuck button: outer FileReader (_resReader resolution check) also hangs on iOS Safari/mobile WebKit. Added 5s outer safety timer at form submit level — if _resReader.onload never fires, bypass resolution check and proceed to _maybeOpenConfirm(file). Inner _pfSafetyTimer (182.16, canvas.toBlob) retained. Trial genre modal bypass retained. Open Category feature (182.13) intact. Version comment cleaned.)
 #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
@@ -1341,27 +1329,45 @@
     }
 
     // Check resolution client-side before firing XHR (fixes iOS Safari 422 issue)
+    // v182.17: Outer safety timer — _resReader.onload can hang on iOS Safari/
+    // mobile WebKit (same bug as canvas.toBlob). If neither onload nor onerror
+    // fires within 5s, bypass resolution check and go straight to _maybeOpenConfirm.
+    var _resSafetyFired = false;
+    var _resSafetyTimer = setTimeout(function() {
+      if (!_resSafetyFired) {
+        _resSafetyFired = true;
+        _maybeOpenConfirm(file);
+      }
+    }, 5000);
+    function _resDone(fn) {
+      if (_resSafetyFired) return; // safety timer already fired, don't double-invoke
+      _resSafetyFired = true;
+      clearTimeout(_resSafetyTimer);
+      fn();
+    }
     const _resReader = new FileReader();
     _resReader.onload = function(_re) {
       const _tmpImg = new window.Image();
       _tmpImg.onload = function() {
         const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
         if (_sw < 1500) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Submit for Evaluation';
-          showError(
-            'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
-            'The shorter side must be at least 1500px. ' +
-            'Please upload a higher resolution file.'
-          );
+          _resDone(function() {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit for Evaluation';
+            showError(
+              'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
+              'The shorter side must be at least 1500px. ' +
+              'Please upload a higher resolution file.'
+            );
+          });
           return;
         }
-        _maybeOpenConfirm(file);
+        _resDone(function() { _maybeOpenConfirm(file); });
       };
-      _tmpImg.onerror = function() { _maybeOpenConfirm(file); };
+      _tmpImg.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
       _tmpImg.src = _re.target.result;
     };
-    _resReader.onerror = function() { _maybeOpenConfirm(file); };
+    _resReader.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
     _resReader.readAsDataURL(file);
 
     // ── Preflight — similar image + genre suggestion ──────────────────────
