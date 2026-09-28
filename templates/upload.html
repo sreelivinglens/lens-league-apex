@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 182.17 (Session 226, 2026-09-28 — ROOT CAUSE FIX for CHECKING… stuck button: outer FileReader (_resReader resolution check) also hangs on iOS Safari/mobile WebKit. Added 5s outer safety timer at form submit level — if _resReader.onload never fires, bypass resolution check and proceed to _maybeOpenConfirm(file). Inner _pfSafetyTimer (182.16, canvas.toBlob) retained. Trial genre modal bypass retained. Open Category feature (182.13) intact. Version comment cleaned.)
+  SL-VERSION: 182.18 (Session 227, 2026-09-28 — ROOT CAUSE FIX: Safari ReferenceError "Can't find variable: _runPreflight". Safari does not hoist function declarations inside event listener callbacks — they are block-scoped. Moved _runPreflight, _showPreflightModal, _fireUpload to top of submit listener so they are defined before _resReader.onload calls them. Zero POST requests reached Railway because JS crashed before XHR fired. Open Category feature (182.13) intact. Both safety timers (182.16, 182.17) retained. RETAINS 182.17.)
 #}
 {% extends "base.html" %}
 {% block title %}Upload Image — Shutter League{% endblock %}
@@ -1234,141 +1234,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Checking…';
 
-    const file = fileInput.files[0];
-    if (!file) { showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
-
-    // Size check at submit time — more reliable on iOS than at file-select time
-    // iOS Camera Roll photos report size=0 until the asset is fully copied
-    if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-      showError(
-        `⚠️ Your image is ${sizeMB} MB — over the ${MAX_MB} MB limit.\n\n` +
-        `Please resize before uploading:\n` +
-        `• iPhone: use a free app like Compress Photos, or share → Mail → resize\n` +
-        `• Android: use your gallery's "resize" option when sharing\n` +
-        `• Desktop: export at 2000px wide from Lightroom / Photos / any editor`
-      );
-      return;
-    }
-
-    const titleInput = document.getElementById('asset_name');
-    if (!titleInput || !titleInput.value.trim()) {
-      titleInput.focus();
-      titleInput.style.borderColor = 'var(--red)';
-      titleInput.addEventListener('input', () => titleInput.style.borderColor = '', { once: true });
-      showError('Please enter an image title.');
-      return;
-    }
-
-    const photographerInput = document.getElementById('photographer_name');
-    if (!photographerInput || !photographerInput.value.trim()) {
-      photographerInput.focus();
-      photographerInput.style.borderColor = 'var(--red)';
-      photographerInput.addEventListener('input', () => photographerInput.style.borderColor = '', { once: true });
-      showError('Please enter the photographer name.');
-      return;
-    }
-
-    const genreSelect = document.getElementById('genre');
-    if (!genreSelect || !genreSelect.value) {
-      genreSelect.focus();
-      genreSelect.style.borderColor = 'var(--red)';
-      genreSelect.addEventListener('change', () => genreSelect.style.borderColor = '', { once: true });
-      showError('Please select a genre.');
-      return;
-    }
-
-    /* SL-181.1 — location check must read BOTH fields.
-       On the second upload in a session the block near the foot of this file
-       finds sl_last_location, hides the visible #location input, clears its
-       name so it stops submitting, shows the "Bangalore · Change in Profile"
-       pill, and writes the value into #location-hidden.
-       This check only ever looked at #location — the box that had just been
-       emptied and hidden — so it failed every time and blocked submission.
-       Result: the first upload in a session worked, every one after it was
-       refused with a message asking for a location already on screen. */
-    const locationInput  = document.getElementById('location');
-    const locationHidden = document.getElementById('location-hidden');
-    const _locVisible    = locationInput && locationInput.offsetParent !== null;
-    const _locValue      = (locationInput && locationInput.value.trim())
-                        || (locationHidden && locationHidden.value.trim())
-                        || '';
-    if (!_locValue) {
-      if (_locVisible) {
-        locationInput.focus();
-        locationInput.style.borderColor = 'var(--red)';
-        locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
-        showError('Please enter your current location.');
-      } else {
-        /* Field is hidden and the stored value is missing — recoverable only
-           by reloading, so say that rather than pointing at an invisible box. */
-        showError('Your location could not be read. Please reload the page and try again.');
-      }
-      return;
-    }
-    /* Keep the hidden field authoritative for submission. */
-    if (locationHidden && !locationHidden.value.trim()) {
-      locationHidden.value = _locValue;
-    }
-
-    if (!document.querySelector('input[name="camera_track"]:checked')) {
-      trackHint.style.display = 'block';
-      trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
-      return;
-    }
-
-    if (!legalCheck.checked) {
-      legalBox.classList.add('error-highlight');
-      legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      legalCheck.addEventListener('change', () =>
-        legalBox.classList.remove('error-highlight'), { once: true });
-      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
-      return;
-    }
-
-    // Check resolution client-side before firing XHR (fixes iOS Safari 422 issue)
-    // v182.17: Outer safety timer — _resReader.onload can hang on iOS Safari/
-    // mobile WebKit (same bug as canvas.toBlob). If neither onload nor onerror
-    // fires within 5s, bypass resolution check and go straight to _maybeOpenConfirm.
-    var _resSafetyFired = false;
-    var _resSafetyTimer = setTimeout(function() {
-      if (!_resSafetyFired) {
-        _resSafetyFired = true;
-        _maybeOpenConfirm(file);
-      }
-    }, 5000);
-    function _resDone(fn) {
-      if (_resSafetyFired) return; // safety timer already fired, don't double-invoke
-      _resSafetyFired = true;
-      clearTimeout(_resSafetyTimer);
-      fn();
-    }
-    const _resReader = new FileReader();
-    _resReader.onload = function(_re) {
-      const _tmpImg = new window.Image();
-      _tmpImg.onload = function() {
-        const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
-        if (_sw < 1500) {
-          _resDone(function() {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit for Evaluation';
-            showError(
-              'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
-              'The shorter side must be at least 1500px. ' +
-              'Please upload a higher resolution file.'
-            );
-          });
-          return;
-        }
-        _resDone(function() { _maybeOpenConfirm(file); });
-      };
-      _tmpImg.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
-      _tmpImg.src = _re.target.result;
-    };
-    _resReader.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
-    _resReader.readAsDataURL(file);
+    // ── MOVED TO TOP — Safari function-hoisting fix (182.18) ──────────────────
 
     // ── Preflight — similar image + genre suggestion ──────────────────────
     function _runPreflight(originalFile) {
@@ -1717,6 +1583,142 @@
     fd.append('_xhr', '1');  // fallback XHR signal — X-Requested-With stripped by some iOS browsers
     xhr.send(fd);
     } // end _fireUpload
+
+    const file = fileInput.files[0];
+    if (!file) { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
+
+    // Size check at submit time — more reliable on iOS than at file-select time
+    // iOS Camera Roll photos report size=0 until the asset is fully copied
+    if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      showError(
+        `⚠️ Your image is ${sizeMB} MB — over the ${MAX_MB} MB limit.\n\n` +
+        `Please resize before uploading:\n` +
+        `• iPhone: use a free app like Compress Photos, or share → Mail → resize\n` +
+        `• Android: use your gallery's "resize" option when sharing\n` +
+        `• Desktop: export at 2000px wide from Lightroom / Photos / any editor`
+      );
+      return;
+    }
+
+    const titleInput = document.getElementById('asset_name');
+    if (!titleInput || !titleInput.value.trim()) {
+      titleInput.focus();
+      titleInput.style.borderColor = 'var(--red)';
+      titleInput.addEventListener('input', () => titleInput.style.borderColor = '', { once: true });
+      showError('Please enter an image title.');
+      return;
+    }
+
+    const photographerInput = document.getElementById('photographer_name');
+    if (!photographerInput || !photographerInput.value.trim()) {
+      photographerInput.focus();
+      photographerInput.style.borderColor = 'var(--red)';
+      photographerInput.addEventListener('input', () => photographerInput.style.borderColor = '', { once: true });
+      showError('Please enter the photographer name.');
+      return;
+    }
+
+    const genreSelect = document.getElementById('genre');
+    if (!genreSelect || !genreSelect.value) {
+      genreSelect.focus();
+      genreSelect.style.borderColor = 'var(--red)';
+      genreSelect.addEventListener('change', () => genreSelect.style.borderColor = '', { once: true });
+      showError('Please select a genre.');
+      return;
+    }
+
+    /* SL-181.1 — location check must read BOTH fields.
+       On the second upload in a session the block near the foot of this file
+       finds sl_last_location, hides the visible #location input, clears its
+       name so it stops submitting, shows the "Bangalore · Change in Profile"
+       pill, and writes the value into #location-hidden.
+       This check only ever looked at #location — the box that had just been
+       emptied and hidden — so it failed every time and blocked submission.
+       Result: the first upload in a session worked, every one after it was
+       refused with a message asking for a location already on screen. */
+    const locationInput  = document.getElementById('location');
+    const locationHidden = document.getElementById('location-hidden');
+    const _locVisible    = locationInput && locationInput.offsetParent !== null;
+    const _locValue      = (locationInput && locationInput.value.trim())
+                        || (locationHidden && locationHidden.value.trim())
+                        || '';
+    if (!_locValue) {
+      if (_locVisible) {
+        locationInput.focus();
+        locationInput.style.borderColor = 'var(--red)';
+        locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
+        showError('Please enter your current location.');
+      } else {
+        /* Field is hidden and the stored value is missing — recoverable only
+           by reloading, so say that rather than pointing at an invisible box. */
+        showError('Your location could not be read. Please reload the page and try again.');
+      }
+      return;
+    }
+    /* Keep the hidden field authoritative for submission. */
+    if (locationHidden && !locationHidden.value.trim()) {
+      locationHidden.value = _locValue;
+    }
+
+    if (!document.querySelector('input[name="camera_track"]:checked')) {
+      trackHint.style.display = 'block';
+      trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
+      return;
+    }
+
+    if (!legalCheck.checked) {
+      legalBox.classList.add('error-highlight');
+      legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      legalCheck.addEventListener('change', () =>
+        legalBox.classList.remove('error-highlight'), { once: true });
+      submitBtn.disabled = false; submitBtn.textContent = 'Submit for Evaluation';
+      return;
+    }
+
+    // Check resolution client-side before firing XHR (fixes iOS Safari 422 issue)
+    // v182.17: Outer safety timer — _resReader.onload can hang on iOS Safari/
+    // mobile WebKit (same bug as canvas.toBlob). If neither onload nor onerror
+    // fires within 5s, bypass resolution check and go straight to _maybeOpenConfirm.
+    var _resSafetyFired = false;
+    var _resSafetyTimer = setTimeout(function() {
+      if (!_resSafetyFired) {
+        _resSafetyFired = true;
+        _maybeOpenConfirm(file);
+      }
+    }, 5000);
+    function _resDone(fn) {
+      if (_resSafetyFired) return; // safety timer already fired, don't double-invoke
+      _resSafetyFired = true;
+      clearTimeout(_resSafetyTimer);
+      fn();
+    }
+    const _resReader = new FileReader();
+    _resReader.onload = function(_re) {
+      const _tmpImg = new window.Image();
+      _tmpImg.onload = function() {
+        const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
+        if (_sw < 1500) {
+          _resDone(function() {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit for Evaluation';
+            showError(
+              'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
+              'The shorter side must be at least 1500px. ' +
+              'Please upload a higher resolution file.'
+            );
+          });
+          return;
+        }
+        _resDone(function() { _maybeOpenConfirm(file); });
+      };
+      _tmpImg.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
+      _tmpImg.src = _re.target.result;
+    };
+    _resReader.onerror = function() { _resDone(function() { _maybeOpenConfirm(file); }); };
+    _resReader.readAsDataURL(file);
   });
 
   // ── Score polling — checks /score-status every 2s after upload ──────────
