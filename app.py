@@ -1,3 +1,4 @@
+# SL-VERSION: 182.33 (Session 228, 2026-09-28 — FIX: Bulk rescore progress invisible across gunicorn workers: app.config is per-process; switched to site_settings DB for job progress so all 4 workers can read/write it. Progress bar now works. RETAINS 182.32.)
 # SL-VERSION: 182.32 (Session 228, 2026-09-28 — FIX: Bulk rescore 403 root cause: urllib.urlretrieve over public URL failing (R2 public URL env var may be empty/wrong). Fix: switched to boto3 download_file via storage.download_file() + storage.key_from_url() — fetches directly from R2 bucket, bypasses public URL entirely. Added download_file() and key_from_url() to storage.py. RETAINS 182.31.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
 
@@ -16262,12 +16263,42 @@ def admin_contest_judge_rescore_entry(entry_id):
 
 # ── CONTEST JUDGE — BULK RESCORE BATCH ────────────────────────────────────────
 
+def _bulk_rescore_prog_write(job_id, total, done, errors, finished):
+    """Write bulk rescore progress to site_settings (DB) so all gunicorn workers can read it.
+    v182.33 — fixes multi-worker progress loss (app.config is per-worker).
+    """
+    import json as _bj
+    val = _bj.dumps({'total': total, 'done': done, 'errors': errors, 'finished': finished})
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO site_settings (key, value) VALUES (:k, :v) "
+            "ON CONFLICT (key) DO UPDATE SET value = :v"
+        ), {'k': f'bulk_rescore_{job_id}', 'v': val})
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _bulk_rescore_prog_read(job_id):
+    """Read bulk rescore progress from site_settings."""
+    import json as _bj
+    try:
+        row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = :k"
+        ), {'k': f'bulk_rescore_{job_id}'}).fetchone()
+        if row:
+            return _bj.loads(row[0])
+    except Exception:
+        pass
+    return None
+
+
 @app.route('/admin/contest-judge/bulk-rescore/<path:batch_ref>', methods=['POST'])
 @login_required
 def admin_contest_judge_bulk_rescore(batch_ref):
     """Rescore all entries in a batch using the current engine. Background thread.
-    v228.1 — Session 228, 2026-09-28.
-    POST body: {} (rescore all) or {"ids": [1,2,3]} (rescore specific entry IDs).
+    v182.33 — Session 228, 2026-09-28. Progress stored in site_settings DB (not app.config)
+    so all gunicorn workers see it. POST body: {} (rescore all) or {"ids": [1,2,3]}.
     Returns immediately with job_id; poll /admin/contest-judge/bulk-rescore-status/<job_id>.
     """
     if current_user.role != 'admin':
@@ -16287,37 +16318,45 @@ def admin_contest_judge_bulk_rescore(batch_ref):
 
     import uuid as _uuid
     job_id = _uuid.uuid4().hex[:12]
-    # Store progress in app.config keyed by job_id
-    app.config[f'_bulk_rescore_{job_id}'] = {
-        'total': len(rows), 'done': 0, 'errors': 0, 'finished': False
-    }
+    total = len(rows)
+    # Write initial state to DB — visible to all workers
+    _bulk_rescore_prog_write(job_id, total, 0, 0, False)
 
-    def _bulk_worker(rows, job_id):
+    def _bulk_worker(rows, job_id, total):
         with app.app_context():
-            prog = app.config[f'_bulk_rescore_{job_id}']
             import tempfile as _tmp2
             import storage as _r2store
+            done = 0
+            errors = 0
             for row in rows:
                 try:
                     if not row.thumb_path:
-                        prog['errors'] += 1
-                        prog['done'] += 1
+                        errors += 1
+                        done += 1
+                        _bulk_rescore_prog_write(job_id, total, done, errors, False)
                         continue
                     # Download directly from R2 via boto3 — bypasses public URL/403 issues
                     _obj_key = _r2store.key_from_url(row.thumb_path)
                     tmp = _tmp2.NamedTemporaryFile(suffix='.jpg', delete=False)
                     tmp.close()
                     if not _r2store.download_file(_obj_key, tmp.name):
-                        _cj_os.unlink(tmp.name)
-                        prog['errors'] += 1
-                        prog['done'] += 1
+                        try:
+                            _cj_os.unlink(tmp.name)
+                        except Exception:
+                            pass
+                        errors += 1
+                        done += 1
+                        _bulk_rescore_prog_write(job_id, total, done, errors, False)
                         continue
                     image_b64 = _cj_thumb_b64(tmp.name)
-                    _cj_os.unlink(tmp.name)
+                    try:
+                        _cj_os.unlink(tmp.name)
+                    except Exception:
+                        pass
                     theme_thr = float(row.theme_threshold) if row.theme_threshold else 6.0
                     verdict = _cj_sonnet_judge(image_b64, row.photographer or '', row.image_title or '', row.theme or 'Story', theme_thr)
                     if not verdict or 'error' in verdict:
-                        prog['errors'] += 1
+                        errors += 1
                     else:
                         db.session.execute(db.text("""
                             UPDATE contest_judge_batch SET
@@ -16340,23 +16379,28 @@ def admin_contest_judge_bulk_rescore(batch_ref):
                         db.session.commit()
                 except Exception as _be:
                     app.logger.error(f'[bulk_rescore] entry={row.id} {_be}')
-                    prog['errors'] += 1
+                    errors += 1
                 finally:
-                    prog['done'] += 1
-            prog['finished'] = True
+                    done += 1
+                    _bulk_rescore_prog_write(job_id, total, done, errors, False)
+            # Mark finished
+            _bulk_rescore_prog_write(job_id, total, done, errors, True)
+            app.logger.info(f'[bulk_rescore] job={job_id} complete — {done}/{total} done, {errors} errors')
 
     import threading as _thr2
-    _thr2.Thread(target=_bulk_worker, args=(rows, job_id), daemon=True).start()
-    return jsonify({'job_id': job_id, 'total': len(rows)})
+    _thr2.Thread(target=_bulk_worker, args=(rows, job_id, total), daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': total})
 
 
 @app.route('/admin/contest-judge/bulk-rescore-status/<job_id>')
 @login_required
 def admin_contest_judge_bulk_rescore_status(job_id):
-    """Poll bulk rescore progress."""
+    """Poll bulk rescore progress — reads from site_settings DB (shared across all workers).
+    v182.33.
+    """
     if current_user.role != 'admin':
         abort(403)
-    prog = app.config.get(f'_bulk_rescore_{job_id}')
+    prog = _bulk_rescore_prog_read(job_id)
     if not prog:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(prog)
