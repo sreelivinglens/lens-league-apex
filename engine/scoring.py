@@ -1,9 +1,10 @@
+# SL-VERSION: scoring-227.1 (Session 227, 2026-09-28 — FLAG 1: Open genre added to GENRE_WEIGHTS and GENRE_LIST. 5-dim weights: wonder=0.27, aq=0.37 (story_transfer 0.18 folded into AQ), disruption=0.15, dod=0.13, dm=0.08. Open added to GENRE_IDS so normalise_genre() passes through correctly instead of falling to Wildlife fallback. RETAINS scoring-222.1.)
 # SL-VERSION: scoring-222.1 (Session 222, 2026-09-26 — NS scoring bonus: YES +0.15, NOT_SURE +0.05, NO +0.00. Applied after all other modifiers. Cap at 9.9 retained.)
 """
 Apex DDI Engine — core scoring module
 Shutter League · May 2026
 
-Genres (14 confirmed):
+Genres (14 confirmed + Open):
   1. Architecture    — Built environment: buildings, interiors, structures, urban geometry
   2. Astrophotography — Night sky: Milky Way, star trails, planets, nebulae, eclipses
   3. Creative        — Technique-driven, abstract, artistic intent
@@ -13,11 +14,12 @@ Genres (14 confirmed):
   7. Landscape       — Land, sea, sky as the primary subject
   8. Macro           — Extreme close-up — any subject
   9. Nature          — Plants, fungi, ecosystems, weather, natural phenomena
- 10. People          — Portraits, faces, human expression
- 11. Sports          — Athletic action, competition, and physical performance
- 12. Street          — Human life in public spaces
- 13. Wedding         — Ceremonies and celebrations
- 14. Wildlife        — Animals in natural behaviour
+ 10. Open            — Cross-genre open category: wonder + human connect weighted
+ 11. People          — Portraits, faces, human expression
+ 12. Sports          — Athletic action, competition, and physical performance
+ 13. Street          — Human life in public spaces
+ 14. Wedding         — Ceremonies and celebrations
+ 15. Wildlife        — Animals in natural behaviour
 """
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
@@ -32,6 +34,12 @@ GENRE_WEIGHTS = {
     'Landscape':        {'dod': 0.13, 'disruption': 0.12, 'dm': 0.11, 'wonder': 0.32, 'aq': 0.32},
     'Macro':            {'dod': 0.26, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.27, 'aq': 0.19},
     'Nature':           {'dod': 0.13, 'disruption': 0.11, 'dm': 0.13, 'wonder': 0.37, 'aq': 0.26},
+    # Session 227 — Open genre: 5-dim DDI weights adapted from Open Call 6-dim constitution.
+    # Story Transfer (0.18) folded into AQ (human connect) as nearest 5-dim equivalent.
+    # Full 6-dim formula uses _cj_opencall_composite() in app.py for admin contest judging.
+    # This 5-dim version is for regular /try and /upload scoring paths.
+    # Wonder 0.27 + AQ 0.37 + Disruption 0.15 + DoD 0.13 + DM 0.08 = 1.00 ✓
+    'Open':             {'dod': 0.13, 'disruption': 0.15, 'dm': 0.08, 'wonder': 0.27, 'aq': 0.37},
     'People':           {'dod': 0.07, 'disruption': 0.13, 'dm': 0.12, 'wonder': 0.16, 'aq': 0.52},
     'Sports':           {'dod': 0.18, 'disruption': 0.10, 'dm': 0.32, 'wonder': 0.22, 'aq': 0.18},
     'Street':           {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
@@ -116,6 +124,12 @@ GENRE_LIST = [
         'label':       'Nature',
         'description': 'Plants, fungi, ecosystems, weather, rivers, night sky, coral — the living natural world',
         'aliases':     ['nature', 'flora', 'botanical', 'plants', 'fungi', 'weather', 'ecosystem'],
+    },
+    {
+        'id':          'Open',
+        'label':       'Open',
+        'description': 'Cross-genre open category — any subject, judged on emotional truth and story transfer above technical precision',
+        'aliases':     ['open', 'open category', 'open call', 'opencall'],
     },
     {
         'id':          'People',
