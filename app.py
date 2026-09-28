@@ -1,3 +1,4 @@
+# SL-VERSION: 182.34 (Session 228, 2026-09-28 — REMOVE NS Bonus from Open Call composite: Story Transfer is already a full 18% weighted dimension; the +0.15/+0.05 bonus was a legacy of the old Yes/No NS field and was double-counting Story Transfer. Removed cleanly — future contests score correctly for any theme. RETAINS 182.33.)
 # SL-VERSION: 182.33 (Session 228, 2026-09-28 — FIX: Bulk rescore progress invisible across gunicorn workers: app.config is per-process; switched to site_settings DB for job progress so all 4 workers can read/write it. Progress bar now works. RETAINS 182.32.)
 # SL-VERSION: 182.32 (Session 228, 2026-09-28 — FIX: Bulk rescore 403 root cause: urllib.urlretrieve over public URL failing (R2 public URL env var may be empty/wrong). Fix: switched to boto3 download_file via storage.download_file() + storage.key_from_url() — fetches directly from R2 bucket, bypasses public URL entirely. Added download_file() and key_from_url() to storage.py. RETAINS 182.31.)
 # SL-VERSION: 182.28 (Session 226, 2026-09-28 — Open Category: genre_locked column added to images, DB migration on startup, upload route handles Open genre (bypasses normalise_genre, sets genre_locked=True), Open images excluded from member standings and routed to Open DDI weights. RETAINS 182.27.)
@@ -15334,8 +15335,7 @@ def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_v
       Disruption (Wow factor)  15%
       DoD (Composition/Light)  18%  — composition + light + colour + craft
       DM (Moment)               8%   — decisiveness, timing
-      NS bonus (after):        +0.15 if story_transfer >= 8.0 (story lands instantly)
-                               +0.05 if story_transfer >= 6.0 (story implied)
+      NS bonus:                REMOVED v182.34 — Story Transfer at 18% weight handles this
 
     All modifiers from SL DDI engine apply:
       Soul Bonus      : AQ >= 8.0 — image has undeniable soul; technical penalties waived
@@ -15408,20 +15408,12 @@ def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_v
         checks['excellence_bonus'] = True
         notes.append('Excellence Bonus: Wonder + AQ both >= 9.5 (+0.15)')
 
-    # NS Bonus — based on story_transfer score (replaces Yes/No field)
-    # story_transfer >= 8.0 → story lands on a stranger instantly = YES (+0.15)
-    # story_transfer >= 6.0 → story implied, most viewers feel it = NOT SURE (+0.05)
-    # story_transfer < 6.0  → story readable only with context = NO (+0.00)
-    if story_transfer >= 8.0:
-        raw += 0.15
-        checks['ns_bonus'] = 'yes'
-        notes.append('NS Bonus: story transfers instantly (+0.15)')
-    elif story_transfer >= 6.0:
-        raw += 0.05
-        checks['ns_bonus'] = 'not_sure'
-        notes.append('NS Bonus: story implied (+0.05)')
-    else:
-        checks['ns_bonus'] = 'no'
+    # NS Bonus — REMOVED v182.34 (Session 228, 2026-09-28)
+    # Story Transfer is already a full weighted dimension at 18% of composite.
+    # The bonus was a legacy of the old Yes/No NS field and double-counts Story Transfer.
+    # For theme-based contests (Silence, Solitude, Waiting) a high Story Transfer score
+    # is harder to earn and the bonus would penalise the best images for those themes.
+    checks['ns_bonus'] = 'removed'
 
     raw = min(raw, 9.9)
     checks['notes'] = notes
