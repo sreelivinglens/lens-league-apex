@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_review-2.0 (Session 224, 2026-09-28 — Full DDI rewrite: 6 dimension pills (Wonder/AQ/StoryXfr/Disruption/Craft/Moment), Story Transfer scale label, genre detected, theme score/gate badge, inline edit buttons for Theme Note/Gap/Master Ref/Subject ID via AJAX POST to /admin/contest-judge/save-override/<id>. RETAINS v1.1 layout structure.) #}
+{# SL-VERSION: admin_contest_review-2.1 (Session 228, 2026-09-28 — Rescore All button in top-actions bar + per-card Rescore button in card header. Calls /admin/contest-judge/bulk-rescore/<batch_ref> and /admin/contest-judge/rescore-entry/<id>. Progress bar on bulk rescore. RETAINS v2.0.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -208,10 +208,29 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <a href="/admin/contest-judge/scorecards/{{ batch_ref|urlencode }}" class="btn btn-gold">
         <i class="ti ti-id"></i> Scorecards ZIP
       </a>
+      <button class="btn btn-outline" id="rescore-all-btn" onclick="rescoreAll()" style="border-color:#1A2744;color:#1A2744">
+        <i class="ti ti-refresh"></i> Rescore All ({{ total }})
+      </button>
       <a href="/admin/contest-judge" class="btn btn-outline">
         <i class="ti ti-arrow-left"></i> Back
       </a>
     </div>
+
+    <!-- Bulk rescore progress bar (hidden until triggered) -->
+    <div id="bulk-rescore-bar" style="display:none;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:16px 20px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:600;color:#1A2744;margin-bottom:8px">
+        <i class="ti ti-refresh" id="bulk-spin" style="animation:spin 1s linear infinite;display:inline-block"></i>
+        Rescoring — <span id="bulk-done">0</span> / <span id="bulk-total">{{ total }}</span> done
+        <span id="bulk-errors-label" style="color:#B45309;margin-left:8px;display:none">· <span id="bulk-errors">0</span> errors</span>
+      </div>
+      <div style="background:#F0EDE6;border-radius:6px;height:8px;overflow:hidden">
+        <div id="bulk-bar-fill" style="background:#1A2744;height:8px;width:0%;transition:width .3s"></div>
+      </div>
+      <div id="bulk-done-msg" style="display:none;margin-top:10px;font-size:14px;color:#065F46;font-weight:600">
+        ✓ All done — <a href="" onclick="location.reload();return false" style="color:#1A2744">Reload page to see updated scores</a>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
     {% for e in entries %}
     {% set is_top = e.rank <= 3 %}
@@ -243,9 +262,19 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             {% endif %}
           </div>
         </div>
-        <div class="entry-composite">
-          {{ '%.2f'|format(e.composite_score) }}
-          <small>/10 Composite</small>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="entry-composite" style="display:inline-block">
+            {{ '%.2f'|format(e.composite_score) }}
+            <small>/10 Composite</small>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-outline" id="rescore-btn-{{ e.id }}"
+              onclick="rescoreEntry({{ e.id }})"
+              style="font-size:12px;padding:5px 12px;border-color:#C8C5BE;color:#3A3A38">
+              <i class="ti ti-refresh"></i> Rescore
+            </button>
+            <span id="rescore-status-{{ e.id }}" style="font-size:12px;color:#8A8A86;display:none;margin-left:6px"></span>
+          </div>
         </div>
       </div>
 
@@ -516,6 +545,86 @@ function esc(s) {
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+// ── Single entry rescore ──────────────────────────────────────────────────────
+async function rescoreEntry(id) {
+  const btn = document.getElementById('rescore-btn-' + id);
+  const status = document.getElementById('rescore-status-' + id);
+  if (!confirm('Rescore this entry with the current engine? This overwrites all AI scores.')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin 1s linear infinite;display:inline-block"></i> Scoring…';
+  status.style.display = 'inline';
+  status.style.color = '#8A8A86';
+  status.textContent = '';
+  try {
+    const resp = await fetch('/admin/contest-judge/rescore-entry/' + id, { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      status.style.color = '#065F46';
+      status.textContent = '✓ Done — composite ' + (data.composite ? data.composite.toFixed(2) : '?');
+      btn.innerHTML = '<i class="ti ti-check"></i> Done';
+      setTimeout(() => {
+        status.textContent = 'Reload to see full update';
+        status.style.color = '#8A8A86';
+      }, 2000);
+    } else {
+      status.style.color = '#B45309';
+      status.textContent = '✗ ' + (data.error || 'Error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-refresh"></i> Retry';
+    }
+  } catch(e) {
+    status.style.color = '#B45309';
+    status.textContent = 'Network error';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-refresh"></i> Retry';
+  }
+}
+
+// ── Bulk rescore all ──────────────────────────────────────────────────────────
+async function rescoreAll() {
+  const total = {{ total }};
+  if (!confirm('Rescore all ' + total + ' entries with the current engine?\n\nThis overwrites all AI scores and runs in the background — takes ~15 seconds per image.\n\nDo not close this page until done.')) return;
+  const btn = document.getElementById('rescore-all-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin 1s linear infinite;display:inline-block"></i> Starting…';
+  document.getElementById('bulk-rescore-bar').style.display = 'block';
+
+  let jobId;
+  try {
+    const resp = await fetch('/admin/contest-judge/bulk-rescore/{{ batch_ref|urlencode }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    const data = await resp.json();
+    if (data.error) { alert('Error: ' + data.error); btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Rescore All ({{ total }})'; return; }
+    jobId = data.job_id;
+    document.getElementById('bulk-total').textContent = data.total;
+  } catch(e) {
+    alert('Network error starting rescore');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-refresh"></i> Rescore All ({{ total }})';
+    return;
+  }
+
+  // Poll progress
+  const poll = setInterval(async () => {
+    try {
+      const pr = await fetch('/admin/contest-judge/bulk-rescore-status/' + jobId);
+      const pd = await pr.json();
+      const pct = pd.total > 0 ? Math.round(100 * pd.done / pd.total) : 0;
+      document.getElementById('bulk-done').textContent = pd.done;
+      document.getElementById('bulk-bar-fill').style.width = pct + '%';
+      if (pd.errors > 0) {
+        document.getElementById('bulk-errors-label').style.display = 'inline';
+        document.getElementById('bulk-errors').textContent = pd.errors;
+      }
+      if (pd.finished) {
+        clearInterval(poll);
+        document.getElementById('bulk-spin').style.animation = 'none';
+        document.getElementById('bulk-done-msg').style.display = 'block';
+        btn.innerHTML = '✓ Done — reload page';
+      }
+    } catch(e) { /* ignore transient poll errors */ }
+  }, 3000);
 }
 </script>
 </body>
