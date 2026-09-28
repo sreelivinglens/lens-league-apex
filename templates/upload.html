@@ -1,5 +1,5 @@
 {#
-  SL-VERSION: 182.13 (Session 226, 2026-09-28 — Open category added to upload: dropdown option, inline info panel, Open confirmation modal, genre_locked flag on submit. RETAINS 182.12.)
+  SL-VERSION: 182.14 (Session 226, 2026-09-28 — Preflight safety timer: 30s fallback in _runPreflight guards against canvas.toBlob() / FileReader hang on iOS Safari / mobile WebKit that left button stuck at "Checking…" with no server request ever fired. All branches clear the timer on normal resolution. RETAINS 182.13.)
   Session 192 · 2026-08-24
   VERSION CLEANUP: old version chain stripped — 7 lines → 1. No functional changes. Extends base.html; footer, nav, and font inherited from base.html 181.49 (Aptos, green footer, full KYC). RETAINS 181.6e.
 
@@ -1366,6 +1366,21 @@
 
     // ── Preflight — similar image + genre suggestion ──────────────────────
     function _runPreflight(originalFile) {
+      // v182.14: Safety timer — if canvas.toBlob() or FileReader hangs
+      // (known iOS Safari / mobile WebKit issue where neither onload nor
+      // onerror fires), this fires _fireUpload() after 30s so the user
+      // is never stuck at "Checking…" with no server request made.
+      // Every normal branch clears this timer before calling _fireUpload().
+      var _pfSafetyTimer = setTimeout(function() {
+        _pfSafetyTimer = null;
+        _fireUpload();
+      }, 30000);
+
+      function _pfDone() {
+        if (_pfSafetyTimer) { clearTimeout(_pfSafetyTimer); _pfSafetyTimer = null; }
+        _fireUpload();
+      }
+
       // Resize to ≤600px in-browser before sending — fast, saves bandwidth
       var _pfReader = new FileReader();
       _pfReader.onload = function(_pfE) {
@@ -1378,11 +1393,11 @@
           _canvas.height = Math.round(_pfImg.naturalHeight * _scale);
           _canvas.getContext('2d').drawImage(_pfImg, 0, 0, _canvas.width, _canvas.height);
           _canvas.toBlob(function(_blob) {
-            if (!_blob) { _fireUpload(); return; }
+            if (!_blob) { _pfDone(); return; }
             // Skip genre preflight if user explicitly chose their genre
             if (window._slSkipGenrePreflight) {
               window._slSkipGenrePreflight = false;
-              _fireUpload();
+              _pfDone();
               return;
             }
             var _fd = new FormData();
@@ -1392,6 +1407,7 @@
             _pfXhr.withCredentials = true;
             _pfXhr.timeout = 20000;
             _pfXhr.onload = function() {
+              if (_pfSafetyTimer) { clearTimeout(_pfSafetyTimer); _pfSafetyTimer = null; }
               var _r = null;
               try { _r = JSON.parse(_pfXhr.responseText); } catch(e) {}
               if (!_r || (!_r.similar_warning && !_r.genre_suggestion)) {
@@ -1401,15 +1417,15 @@
               }
               _showPreflightModal(_r, originalFile);
             };
-            _pfXhr.onerror   = function() { _fireUpload(); };
-            _pfXhr.ontimeout = function() { _fireUpload(); };
+            _pfXhr.onerror   = function() { _pfDone(); };
+            _pfXhr.ontimeout = function() { _pfDone(); };
             _pfXhr.send(_fd);
           }, 'image/jpeg', 0.82);
         };
-        _pfImg.onerror = function() { _fireUpload(); };
+        _pfImg.onerror = function() { _pfDone(); };
         _pfImg.src = _pfE.target.result;
       };
-      _pfReader.onerror = function() { _fireUpload(); };
+      _pfReader.onerror = function() { _pfDone(); };
       _pfReader.readAsDataURL(originalFile);
     }
 
