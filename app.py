@@ -1,3 +1,4 @@
+# SL-VERSION: 182.35 (Session 229, 2026-09-29 — FIX: Download Scorecards (ZIP) crashed on the 47-entry Fuji Collective open call. Route fetched every photograph one after another over the public link (10s timeout each), which is blocked by storage bot protection and ran past the gunicorn worker time limit, killing the worker. Now: photographs fetched directly from storage via storage.download_file() + key_from_url() (same as Session 228 Rescore), 8 at a time, 8s cap per photograph; whole ZIP built in a background thread with a 25s hard cap; one Railway console summary line per run. Card design unchanged. RETAINS 182.34.)
 # SL-VERSION: 182.34 (Session 228, 2026-09-28 — REMOVE NS Bonus from Open Call composite: Story Transfer is already a full 18% weighted dimension; the +0.15/+0.05 bonus was a legacy of the old Yes/No NS field and was double-counting Story Transfer. Removed cleanly — future contests score correctly for any theme. RETAINS 182.33.)
 # SL-VERSION: 182.33 (Session 228, 2026-09-28 — FIX: Bulk rescore progress invisible across gunicorn workers: app.config is per-process; switched to site_settings DB for job progress so all 4 workers can read/write it. Progress bar now works. RETAINS 182.32.)
 # SL-VERSION: 182.32 (Session 228, 2026-09-28 — FIX: Bulk rescore 403 root cause: urllib.urlretrieve over public URL failing (R2 public URL env var may be empty/wrong). Fix: switched to boto3 download_file via storage.download_file() + storage.key_from_url() — fetches directly from R2 bucket, bypasses public URL entirely. Added download_file() and key_from_url() to storage.py. RETAINS 182.31.)
@@ -16684,166 +16685,261 @@ def admin_contest_judge_scorecards(batch_ref):
     def _wrap(text, width=70):
         return '\n'.join(_textwrap.wrap(text or '', width))
 
-    with _zipfile.ZipFile(zip_buf, 'w', _zipfile.ZIP_DEFLATED) as zf:
-        for rank, row in enumerate(rows, 1):
-            img_card = _PILSC.new('RGB', (W, H), LIGHT_BG)
-            d = _PILID.Draw(img_card)
+    # ── v182.35: fetch photographs directly from storage, 8 at a time ──────
+    # Old code fetched each photograph over the public link, one after
+    # another, 10s timeout each. Blocked by storage bot protection and far
+    # past the gunicorn worker time limit on a 47-entry open call — the
+    # worker was killed mid-build. Same fix pattern as Session 228 Rescore.
+    import time as _sc_time
+    import threading as _sc_threading
+    import tempfile as _sc_tmp
+    import concurrent.futures as _sc_cf
+    import storage as _sc_store
 
-            # ── Gold top bar
-            d.rectangle([(0, 0), (W, 8)], fill=GOLD)
+    _sc_t0 = _sc_time.time()
+    _sc_photos = {}   # row.id -> BytesIO (downsized JPEG)
+    _sc_result = {'cards': 0, 'exc': None, 'fetched': 0, 'fetch_failed': 0}
 
-            # ── Contest name + date (top left / right)
-            contest_label = batch_ref
-            date_label = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
-            d.text((PAD, 28), contest_label, font=fnt_title, fill=DARK)
-            date_w = d.textlength(date_label, font=fnt_title)
-            d.text((W - PAD - date_w, 28), date_label, font=fnt_title, fill=MID)
-
-            # ── Thin rule under header
-            d.rectangle([(PAD, 76), (W - PAD, 78)], fill=(224, 221, 214))
-
-            # ── Image (if available — thumb_path is now an R2 https:// URL)
-            img_y = 95
-            IMG_H = 420
-            if row.thumb_path:
-                try:
-                    import io as _scio
-                    import requests as _screq
-                    if row.thumb_path.startswith('http'):
-                        _img_resp = _screq.get(row.thumb_path, timeout=10)
-                        _img_resp.raise_for_status()
-                        _img_bytes = _scio.BytesIO(_img_resp.content)
-                    else:
-                        # Legacy: relative local path
-                        full_path = _cj_os.path.join(app.root_path, 'static', row.thumb_path)
-                        with open(full_path, 'rb') as _lf:
-                            _img_bytes = _scio.BytesIO(_lf.read())
-                    with _PILSC.open(_img_bytes) as src:
-                        src = src.convert('RGB')
-                        box_w = W - 2 * PAD
-                        src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
-                        x_off = PAD + (box_w - src.width) // 2
-                        img_card.paste(src, (x_off, img_y))
-                except Exception:
-                    d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
-                    d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
+    def _sc_fetch_one(_row):
+        """Return (row.id, BytesIO or None). Never raises."""
+        _tp = _row.thumb_path
+        if not _tp:
+            return _row.id, None
+        _tmp_name = None
+        try:
+            if _tp.startswith('http'):
+                _key = _sc_store.key_from_url(_tp)
+                _t = _sc_tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+                _t.close()
+                _tmp_name = _t.name
+                if not _sc_store.download_file(_key, _tmp_name):
+                    return _row.id, None
+                _src_path = _tmp_name
             else:
-                d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+                # Legacy: relative local path
+                _src_path = _cj_os.path.join(app.root_path, 'static', _tp)
+            # Downsize immediately so 47 full photographs never sit in memory
+            with _PILSC.open(_src_path) as _im:
+                _im = _im.convert('RGB')
+                _im.thumbnail((W - 2 * PAD, 420), _PILSC.LANCZOS)
+                _out = _cj_io.BytesIO()
+                _im.save(_out, format='JPEG', quality=92)
+                _out.seek(0)
+                return _row.id, _out
+        except Exception as _fe:
+            app.logger.warning(f'[scorecards_zip] photograph fetch failed entry={_row.id}: {_fe}')
+            return _row.id, None
+        finally:
+            if _tmp_name:
+                try:
+                    _cj_os.unlink(_tmp_name)
+                except Exception:
+                    pass
 
-            y = img_y + IMG_H + 28
+    def _sc_build():
+        try:
+            _pool = _sc_cf.ThreadPoolExecutor(max_workers=8)
+            try:
+                _futs = [_pool.submit(_sc_fetch_one, _r) for _r in rows]
+                _deadline = _sc_time.time() + 15
+                for _f in _futs:
+                    try:
+                        _rid, _buf = _f.result(timeout=max(0.1, min(8, _deadline - _sc_time.time())))
+                    except Exception:
+                        _sc_result['fetch_failed'] += 1
+                        continue
+                    if _buf is not None:
+                        _sc_photos[_rid] = _buf
+                        _sc_result['fetched'] += 1
+                    else:
+                        _sc_result['fetch_failed'] += 1
+            finally:
+                # Do not wait for stragglers — their cards get the plain panel
+                _pool.shutdown(wait=False, cancel_futures=True)
 
-            # ── Overall score + optional rank/percentile
-            score_str = f'{row.composite_score:.2f}' if row.composite_score else '—'
-            d.text((PAD, y), 'Overall Score', font=fnt_label, fill=MID)
-            d.text((PAD, y + 24), score_str, font=fnt_h1, fill=DARK)
+            with _zipfile.ZipFile(zip_buf, 'w', _zipfile.ZIP_DEFLATED) as zf:
+                for rank, row in enumerate(rows, 1):
+                    img_card = _PILSC.new('RGB', (W, H), LIGHT_BG)
+                    d = _PILID.Draw(img_card)
 
-            if rank <= 10:
-                pct = round(100 * (total - rank) / total)
-                rank_str = f'Rank #{rank}  ·  {pct}th percentile of {total}'
-                d.text((PAD + 180, y + 38), rank_str, font=fnt_h2, fill=GOLD)
+                    # ── Gold top bar
+                    d.rectangle([(0, 0), (W, 8)], fill=GOLD)
 
-            # Theme badge — shows theme score + pass/fail
-            thr_val = float(row.theme_threshold) if row.theme_threshold else 6.0
-            t_score = row.theme_score or 0
-            t_pass  = bool(row.theme_relevant)
-            theme_txt = f'Theme {t_score:.1f}/10  {"✓ Qualified" if t_pass else "✗ Below threshold"}'
-            theme_col = GREEN_THEME if t_pass else RED_THEME
-            badge_w = int(d.textlength(theme_txt, font=fnt_body)) + 24
-            badge_x = W - PAD - badge_w
-            d.rounded_rectangle([(badge_x, y + 6), (badge_x + badge_w, y + 44)], radius=6,
-                                 fill=(209, 250, 229) if t_pass else (254, 226, 226))
-            d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
-            # Genre detected (small, below badge)
-            if row.genre_detected:
-                gd_txt = f'Genre detected: {row.genre_detected}'
-                gd_w = int(d.textlength(gd_txt, font=fnt_label))
-                d.text((W - PAD - gd_w, y + 52), gd_txt, font=fnt_label, fill=MID)
+                    # ── Contest name + date (top left / right)
+                    contest_label = batch_ref
+                    date_label = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
+                    d.text((PAD, 28), contest_label, font=fnt_title, fill=DARK)
+                    date_w = d.textlength(date_label, font=fnt_title)
+                    d.text((W - PAD - date_w, 28), date_label, font=fnt_title, fill=MID)
 
-            y += 110
+                    # ── Thin rule under header
+                    d.rectangle([(PAD, 76), (W - PAD, 78)], fill=(224, 221, 214))
 
-            # ── Photographer name
-            d.text((PAD, y), row.photographer or 'Unknown', font=fnt_h2, fill=DARK)
-            y += 50
+                    # ── Image (if available — thumb_path is now an R2 https:// URL)
+                    img_y = 95
+                    IMG_H = 420
+                    if row.thumb_path:
+                        try:
+                            # v182.35: photograph already fetched in parallel above
+                            _img_bytes = _sc_photos.get(row.id)
+                            if _img_bytes is None:
+                                raise ValueError('photograph not fetched')
+                            _img_bytes.seek(0)
+                            with _PILSC.open(_img_bytes) as src:
+                                src = src.convert('RGB')
+                                box_w = W - 2 * PAD
+                                src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
+                                x_off = PAD + (box_w - src.width) // 2
+                                img_card.paste(src, (x_off, img_y))
+                        except Exception:
+                            d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+                            d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
+                    else:
+                        d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
 
-            # ── Thin rule
-            d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
-            y += 18
+                    y = img_y + IMG_H + 28
 
-            # ── 6 Open Call DDI scores in a row
-            labels = ['Wonder', 'Human\nConnect', 'Story\nTransfer', 'Disrupt', 'Craft', 'Moment']
-            vals = [row.wonder_score, row.aq_score, row.story_transfer_score,
-                    row.disruption_score, row.dod_score, row.dm_score]
-            col_w = (W - 2 * PAD) // 6
-            for i, (lbl, val) in enumerate(zip(labels, vals)):
-                cx = PAD + i * col_w + col_w // 2
-                score_txt = f'{val:.1f}' if val else '—'
-                sw = int(d.textlength(score_txt, font=fnt_score_s))
-                lw = int(d.textlength(lbl, font=fnt_label))
-                d.text((cx - sw // 2, y), score_txt, font=fnt_score_s, fill=DARK)
-                d.text((cx - lw // 2, y + 36), lbl, font=fnt_label, fill=MID)
+                    # ── Overall score + optional rank/percentile
+                    score_str = f'{row.composite_score:.2f}' if row.composite_score else '—'
+                    d.text((PAD, y), 'Overall Score', font=fnt_label, fill=MID)
+                    d.text((PAD, y + 24), score_str, font=fnt_h1, fill=DARK)
 
-            y += 80
+                    if rank <= 10:
+                        pct = round(100 * (total - rank) / total)
+                        rank_str = f'Rank #{rank}  ·  {pct}th percentile of {total}'
+                        d.text((PAD + 180, y + 38), rank_str, font=fnt_h2, fill=GOLD)
 
-            # ── Thin rule
-            d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
-            y += 18
+                    # Theme badge — shows theme score + pass/fail
+                    thr_val = float(row.theme_threshold) if row.theme_threshold else 6.0
+                    t_score = row.theme_score or 0
+                    t_pass  = bool(row.theme_relevant)
+                    theme_txt = f'Theme {t_score:.1f}/10  {"✓ Qualified" if t_pass else "✗ Below threshold"}'
+                    theme_col = GREEN_THEME if t_pass else RED_THEME
+                    badge_w = int(d.textlength(theme_txt, font=fnt_body)) + 24
+                    badge_x = W - PAD - badge_w
+                    d.rounded_rectangle([(badge_x, y + 6), (badge_x + badge_w, y + 44)], radius=6,
+                                         fill=(209, 250, 229) if t_pass else (254, 226, 226))
+                    d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
+                    # Genre detected (small, below badge)
+                    if row.genre_detected:
+                        gd_txt = f'Genre detected: {row.genre_detected}'
+                        gd_w = int(d.textlength(gd_txt, font=fnt_label))
+                        d.text((W - PAD - gd_w, y + 52), gd_txt, font=fnt_label, fill=MID)
 
-            # ── Theme note
-            if row.theme_note:
-                d.text((PAD, y), 'Theme Note', font=fnt_label, fill=MID)
-                y += 22
-                for line in _textwrap.wrap(row.theme_note, 80):
-                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                    y += 32
-                y += 6
+                    y += 110
 
-            # ── Master ref
-            if row.master_ref:
-                d.text((PAD, y), 'Master Reference', font=fnt_label, fill=MID)
-                y += 22
-                for line in _textwrap.wrap(row.master_ref, 80):
-                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                    y += 32
-                y += 6
+                    # ── Photographer name
+                    d.text((PAD, y), row.photographer or 'Unknown', font=fnt_h2, fill=DARK)
+                    y += 50
 
-            # ── Gap
-            if row.gap_note:
-                d.text((PAD, y), 'Gap', font=fnt_label, fill=MID)
-                y += 22
-                for line in _textwrap.wrap(row.gap_note, 80):
-                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                    y += 32
-                y += 6
+                    # ── Thin rule
+                    d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
+                    y += 18
 
-            # ── Mentor Notes (founder_note)
-            if getattr(row, 'founder_note', None):
-                y += 4
-                d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=GOLD)
-                y += 12
-                d.text((PAD, y), 'Mentor Notes', font=fnt_h2, fill=GOLD)
-                y += 44
-                for line in _textwrap.wrap(row.founder_note, 80):
-                    d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                    y += 32
-                y += 6
+                    # ── 6 Open Call DDI scores in a row
+                    labels = ['Wonder', 'Human\nConnect', 'Story\nTransfer', 'Disrupt', 'Craft', 'Moment']
+                    vals = [row.wonder_score, row.aq_score, row.story_transfer_score,
+                            row.disruption_score, row.dod_score, row.dm_score]
+                    col_w = (W - 2 * PAD) // 6
+                    for i, (lbl, val) in enumerate(zip(labels, vals)):
+                        cx = PAD + i * col_w + col_w // 2
+                        score_txt = f'{val:.1f}' if val else '—'
+                        sw = int(d.textlength(score_txt, font=fnt_score_s))
+                        lw = int(d.textlength(lbl, font=fnt_label))
+                        d.text((cx - sw // 2, y), score_txt, font=fnt_score_s, fill=DARK)
+                        d.text((cx - lw // 2, y + 36), lbl, font=fnt_label, fill=MID)
 
-            # ── Footer: filename + judged at
-            footer_y = H - 48
-            d.rectangle([(0, footer_y - 8), (W, footer_y - 7)], fill=(224, 221, 214))
-            d.text((PAD, footer_y), row.filename or '', font=fnt_label, fill=MID)
-            jat = row.judged_at.strftime('%Y-%m-%d %H:%M UTC') if row.judged_at else ''
-            jw = int(d.textlength(jat, font=fnt_label))
-            d.text((W - PAD - jw, footer_y), jat, font=fnt_label, fill=MID)
+                    y += 80
 
-            # ── Gold bottom bar
-            d.rectangle([(0, H - 6), (W, H)], fill=GOLD)
+                    # ── Thin rule
+                    d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
+                    y += 18
 
-            # Save to ZIP
-            sc_buf = _cj_io.BytesIO()
-            img_card.save(sc_buf, format='JPEG', quality=92)
-            sc_buf.seek(0)
-            safe_name = (row.photographer or 'Unknown').replace(' ', '_')
-            zf.writestr(f'{rank:02d}_{safe_name}_scorecard.jpg', sc_buf.read())
+                    # ── Theme note
+                    if row.theme_note:
+                        d.text((PAD, y), 'Theme Note', font=fnt_label, fill=MID)
+                        y += 22
+                        for line in _textwrap.wrap(row.theme_note, 80):
+                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                            y += 32
+                        y += 6
+
+                    # ── Master ref
+                    if row.master_ref:
+                        d.text((PAD, y), 'Master Reference', font=fnt_label, fill=MID)
+                        y += 22
+                        for line in _textwrap.wrap(row.master_ref, 80):
+                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                            y += 32
+                        y += 6
+
+                    # ── Gap
+                    if row.gap_note:
+                        d.text((PAD, y), 'Gap', font=fnt_label, fill=MID)
+                        y += 22
+                        for line in _textwrap.wrap(row.gap_note, 80):
+                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                            y += 32
+                        y += 6
+
+                    # ── Mentor Notes (founder_note)
+                    if getattr(row, 'founder_note', None):
+                        y += 4
+                        d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=GOLD)
+                        y += 12
+                        d.text((PAD, y), 'Mentor Notes', font=fnt_h2, fill=GOLD)
+                        y += 44
+                        for line in _textwrap.wrap(row.founder_note, 80):
+                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
+                            y += 32
+                        y += 6
+
+                    # ── Footer: filename + judged at
+                    footer_y = H - 48
+                    d.rectangle([(0, footer_y - 8), (W, footer_y - 7)], fill=(224, 221, 214))
+                    d.text((PAD, footer_y), row.filename or '', font=fnt_label, fill=MID)
+                    jat = row.judged_at.strftime('%Y-%m-%d %H:%M UTC') if row.judged_at else ''
+                    jw = int(d.textlength(jat, font=fnt_label))
+                    d.text((W - PAD - jw, footer_y), jat, font=fnt_label, fill=MID)
+
+                    # ── Gold bottom bar
+                    d.rectangle([(0, H - 6), (W, H)], fill=GOLD)
+
+                    # Save to ZIP
+                    sc_buf = _cj_io.BytesIO()
+                    img_card.save(sc_buf, format='JPEG', quality=92)
+                    sc_buf.seek(0)
+                    safe_name = (row.photographer or 'Unknown').replace(' ', '_')
+                    zf.writestr(f'{rank:02d}_{safe_name}_scorecard.jpg', sc_buf.read())
+                    _sc_result['cards'] += 1
+
+        except Exception as _be:
+            _sc_result['exc'] = _be
+
+    # 25s hard cap — under the gunicorn worker time limit, so a slow batch
+    # fails cleanly with a message instead of killing the worker.
+    _sc_thread = _sc_threading.Thread(target=_sc_build, daemon=True)
+    _sc_thread.start()
+    _sc_thread.join(timeout=25)
+    _sc_secs = round(_sc_time.time() - _sc_t0, 1)
+
+    if _sc_thread.is_alive():
+        app.logger.error(
+            f'[scorecards_zip] TIMEOUT batch="{batch_ref}" cards={_sc_result["cards"]}/{total} '
+            f'photographs={_sc_result["fetched"]}/{total} seconds={_sc_secs}')
+        flash(f'The scorecard download took too long and was stopped '
+              f'({_sc_result["cards"]} of {total} cards made). '
+              f'Please select fewer entries and try again.', 'error')
+        return redirect(url_for('admin_contest_judge_review', batch_ref=batch_ref))
+
+    if _sc_result['exc'] is not None:
+        app.logger.error(f'[scorecards_zip] FAILED batch="{batch_ref}": {_sc_result["exc"]}')
+        flash('The scorecard download failed unexpectedly. Please try again.', 'error')
+        return redirect(url_for('admin_contest_judge_review', batch_ref=batch_ref))
+
+    app.logger.info(
+        f'[scorecards_zip] OK batch="{batch_ref}" cards={_sc_result["cards"]}/{total} '
+        f'photographs={_sc_result["fetched"]}/{total} seconds={_sc_secs}')
 
     zip_buf.seek(0)
     safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
