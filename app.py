@@ -1,3 +1,4 @@
+# SL-VERSION: 182.37 (Session 229, 2026-09-30 — NEW: Haiku comparison run for open calls. New admin page /admin/contest-judge/haiku-compare/<batch> with a Run Haiku button: evaluates every entry with Haiku using the SAME open call rubric as Sonnet, plus a longer written reading (impression, one observation per dimension, strength, next leap). Stored in new columns haiku_json / haiku_composite / haiku_run_at — Sonnet evaluations and standings are never touched. Page shows per-entry difference from Sonnet (plus/minus) for all six dimensions and the overall evaluation, both standings, summary agreement figures, and Haiku's narrative beside Sonnet's. _cj_sonnet_judge() gains optional model / max_tokens / extra_instructions arguments; existing Sonnet calls unchanged. RETAINS 182.36.)
 # SL-VERSION: 182.36 (Session 229, 2026-09-30 — FIX: Scorecard ZIP still failed on staging with 'can't measure length of multiline text'. The two-line dimension labels (Human/Connect, Story/Transfer) were measured with textlength(), which rejects multi-line text — this was the underlying crash all along. Each label line is now measured and centred separately; genre label flattened to one line. Nothing else changed. RETAINS 182.35.)
 # SL-VERSION: 182.35 (Session 229, 2026-09-29 — FIX: Download Scorecards (ZIP) crashed on the 47-entry Fuji Collective open call. Route fetched every photograph one after another over the public link (10s timeout each), which is blocked by storage bot protection and ran past the gunicorn worker time limit, killing the worker. Now: photographs fetched directly from storage via storage.download_file() + key_from_url() (same as Session 228 Rescore), 8 at a time, 8s cap per photograph; whole ZIP built in a background thread with a 25s hard cap; one Railway console summary line per run. Card design unchanged. RETAINS 182.34.)
 # SL-VERSION: 182.34 (Session 228, 2026-09-28 — REMOVE NS Bonus from Open Call composite: Story Transfer is already a full 18% weighted dimension; the +0.15/+0.05 bonus was a legacy of the old Yes/No NS field and was double-counting Story Transfer. Removed cleanly — future contests score correctly for any theme. RETAINS 182.33.)
@@ -2438,6 +2439,10 @@ def _run_startup_tasks():
                 ("genre_detected",       "VARCHAR(80)"),
                 ("theme_score",          "FLOAT"),
                 ("theme_threshold",      "FLOAT DEFAULT 6.0"),
+                # v182.37 — Haiku comparison run (never overwrites Sonnet)
+                ("haiku_json",           "TEXT"),
+                ("haiku_composite",      "FLOAT"),
+                ("haiku_run_at",         "TIMESTAMP"),
                 # human override columns (edit buttons)
                 ("override_theme_note",  "TEXT"),
                 ("override_gap_note",    "TEXT"),
@@ -15422,7 +15427,12 @@ def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_v
     return round(raw, 2), soul_bonus, checks
 
 
-def _cj_sonnet_judge(image_b64, photographer, title, theme='Story', theme_threshold=6.0):
+def _cj_sonnet_judge(image_b64, photographer, title, theme='Story', theme_threshold=6.0,
+                     model=None, max_tokens=500, extra_instructions=''):
+    # v182.37: model / max_tokens / extra_instructions are optional. Defaults keep the
+    # Sonnet open call call byte-for-byte identical. The Haiku comparison run passes
+    # model=_HAIKU_MODEL and asks for extra narrative keys via extra_instructions —
+    # the scoring rubric (system prompt) is shared, so the numbers are comparable.
     """
     Open Call DDI scoring — v182.27.
     Single Sonnet call returning 6 Open Call DDI dimensions + theme gate + narrative fields.
@@ -15565,10 +15575,12 @@ Return ONLY valid JSON:
   "master_ref": "one sentence max 25 words — master photographer echo and why",
   "gap_note": "one sentence max 25 words — single weakest element, specific"
 }}"""
+    if extra_instructions:
+        prompt = prompt + "\n\n" + extra_instructions
 
     payload = _cj_json.dumps({
-        'model': 'claude-sonnet-4-6',
-        'max_tokens': 500,
+        'model': model or 'claude-sonnet-4-6',
+        'max_tokens': max_tokens,
         'temperature': 0,
         'system': system,
         'messages': [{
@@ -16398,6 +16410,219 @@ def admin_contest_judge_bulk_rescore_status(job_id):
     if not prog:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(prog)
+
+
+# ── CONTEST JUDGE — HAIKU COMPARISON RUN (v182.37, Session 229) ────────────
+# Runs Haiku over every entry in an open call using the same rubric as Sonnet,
+# plus a longer written reading. Results live ONLY in haiku_json /
+# haiku_composite / haiku_run_at. Sonnet scores, notes and standings are never
+# written by this code.
+
+_CJ_HAIKU_EXTRA = """ALSO include these additional keys in the SAME JSON object (plain sentences, no bullet points, never use the words "AI" or "score"):
+  "impression": "two or three sentences — what a stranger walking past this in a gallery would feel, and why",
+  "obs_wonder": "one sentence — why Wonder earned this number, naming what in the frame drives it",
+  "obs_aq": "one sentence — why Human Connect earned this number",
+  "obs_story_transfer": "one sentence — why Story Transfer earned this number",
+  "obs_disruption": "one sentence — why Disruption earned this number",
+  "obs_dod": "one sentence — why Craft (composition, light, colour) earned this number",
+  "obs_dm": "one sentence — why Moment earned this number",
+  "strength": "one sentence — the single strongest decision the photographer made",
+  "next_leap": "one sentence — the one change that would lift this photograph most"
+Keep every other key exactly as specified above."""
+
+_CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
+                  ('aq', 'aq_score', 'Human Connect'),
+                  ('story_transfer', 'story_transfer_score', 'Story Transfer'),
+                  ('disruption', 'disruption_score', 'Disruption'),
+                  ('dod', 'dod_score', 'Craft'),
+                  ('dm', 'dm_score', 'Moment')]
+
+
+def _cj_haiku_ensure_columns():
+    """Idempotent safety net in case the pre-deploy migration has not run yet."""
+    for _col, _typ in (('haiku_json', 'TEXT'), ('haiku_composite', 'FLOAT'), ('haiku_run_at', 'TIMESTAMP')):
+        try:
+            db.session.execute(db.text(
+                f"ALTER TABLE contest_judge_batch ADD COLUMN IF NOT EXISTS {_col} {_typ}"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+
+@app.route('/admin/contest-judge/haiku-run/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_haiku_run(batch_ref):
+    """Start the Haiku comparison run. Background thread, 3 entries at a time.
+    Progress reuses the bulk rescore progress store and status endpoint."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_haiku_ensure_columns()
+    rows = db.session.execute(db.text(
+        "SELECT id, photographer, image_title, theme, theme_threshold, thumb_path "
+        "FROM contest_judge_batch WHERE batch_ref = :br"
+    ), {'br': batch_ref}).fetchall()
+    if not rows:
+        return jsonify({'error': 'No entries found for this open call'}), 404
+
+    import uuid as _uuid
+    job_id = 'haiku_' + _uuid.uuid4().hex[:12]
+    total = len(rows)
+    _bulk_rescore_prog_write(job_id, total, 0, 0, False)
+    _rows = [dict(id=r.id, photographer=r.photographer, image_title=r.image_title, theme=r.theme,
+                  theme_threshold=r.theme_threshold, thumb_path=r.thumb_path) for r in rows]
+
+    def _judge_one(r):
+        """Download + Haiku call. No database access here (runs in a helper thread)."""
+        import tempfile as _htmp
+        import storage as _hstore
+        if not r['thumb_path']:
+            return r['id'], {'error': 'no photograph stored'}
+        t = _htmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+        t.close()
+        try:
+            if not _hstore.download_file(_hstore.key_from_url(r['thumb_path']), t.name):
+                return r['id'], {'error': 'photograph download failed'}
+            b64 = _cj_thumb_b64(t.name)
+        finally:
+            try:
+                _cj_os.unlink(t.name)
+            except Exception:
+                pass
+        thr = float(r['theme_threshold']) if r['theme_threshold'] else 6.0
+        v = _cj_sonnet_judge(b64, r['photographer'] or '', r['image_title'] or '',
+                             r['theme'] or 'Story', thr,
+                             model=_HAIKU_MODEL, max_tokens=1600,
+                             extra_instructions=_CJ_HAIKU_EXTRA)
+        return r['id'], (v or {'error': 'no response'})
+
+    def _worker():
+        import time as _ht
+        import concurrent.futures as _hcf
+        _t0 = _ht.time()
+        with app.app_context():
+            done = errors = 0
+            with _hcf.ThreadPoolExecutor(max_workers=3) as pool:
+                futs = [pool.submit(_judge_one, r) for r in _rows]
+                for f in _hcf.as_completed(futs):
+                    try:
+                        eid, v = f.result()
+                        if 'error' in v:
+                            errors += 1
+                            app.logger.warning(f'[haiku_compare] entry={eid} {v.get("error")}')
+                        else:
+                            db.session.execute(db.text(
+                                "UPDATE contest_judge_batch SET haiku_json=:j, haiku_composite=:c, "
+                                "haiku_run_at=NOW() WHERE id=:eid"
+                            ), {'j': _cj_json.dumps(v), 'c': v.get('composite'), 'eid': eid})
+                            db.session.commit()
+                    except Exception as _he:
+                        db.session.rollback()
+                        errors += 1
+                        app.logger.error(f'[haiku_compare] {_he}')
+                    finally:
+                        done += 1
+                        _bulk_rescore_prog_write(job_id, total, done, errors, False)
+            _bulk_rescore_prog_write(job_id, total, done, errors, True)
+            app.logger.info(f'[haiku_compare] batch="{batch_ref}" job={job_id} complete — '
+                            f'{done - errors}/{total} evaluated, {errors} errors, '
+                            f'{round(_ht.time() - _t0)}s')
+
+    import threading as _hthr
+    _hthr.Thread(target=_worker, daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/contest-judge/haiku-compare', defaults={'batch_ref': None})
+@app.route('/admin/contest-judge/haiku-compare/<path:batch_ref>')
+@login_required
+def admin_contest_judge_haiku_compare(batch_ref):
+    """Comparison page: Haiku vs Sonnet for every entry, plus summary agreement figures.
+    With no open call chosen, lists every open call with how many entries Haiku has done."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_haiku_ensure_columns()
+    if not batch_ref:
+        batches = db.session.execute(db.text(
+            "SELECT batch_ref, COUNT(*) AS n, COUNT(haiku_composite) AS h, MIN(judged_at) AS started "
+            "FROM contest_judge_batch GROUP BY batch_ref ORDER BY started DESC"
+        )).fetchall()
+        return render_template('admin_contest_haiku_compare.html',
+                               batch_ref=None, batches=batches, entries=[], summary=None)
+    rows = db.session.execute(db.text("""
+        SELECT id, photographer, image_title, thumb_path,
+               wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
+               composite_score, haiku_json, haiku_composite, haiku_run_at,
+               COALESCE(override_theme_note, theme_note) AS theme_note,
+               COALESCE(override_master_ref, master_ref) AS master_ref,
+               COALESCE(override_gap_note, gap_note) AS gap_note
+        FROM contest_judge_batch WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    if not rows:
+        abort(404)
+
+    entries = []
+    for i, r in enumerate(rows, 1):
+        try:
+            h = _cj_json.loads(r.haiku_json) if r.haiku_json else None
+        except Exception:
+            h = None
+        dims = []
+        for hk, col, label in _CJ_HAIKU_DIMS:
+            sv = getattr(r, col)
+            hv = h.get(hk) if h else None
+            diff = round(hv - sv, 1) if (hv is not None and sv is not None) else None
+            dims.append({'label': label, 'sonnet': sv, 'haiku': hv, 'diff': diff,
+                         'obs': (h or {}).get('obs_' + hk, '')})
+        cdiff = (round(r.haiku_composite - r.composite_score, 2)
+                 if (r.haiku_composite is not None and r.composite_score is not None) else None)
+        entries.append({
+            'id': r.id, 'photographer': r.photographer or 'Unknown', 'title': r.image_title or '',
+            'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
+            'sonnet_standing': i, 'haiku_standing': None,
+            'sonnet_c': r.composite_score, 'haiku_c': r.haiku_composite, 'cdiff': cdiff,
+            'dims': dims, 'h': h or {},
+            's_theme_note': r.theme_note or '', 's_master_ref': r.master_ref or '', 's_gap_note': r.gap_note or '',
+        })
+
+    done = [e for e in entries if e['haiku_c'] is not None and e['sonnet_c'] is not None]
+    for j, e in enumerate(sorted(done, key=lambda x: -x['haiku_c']), 1):
+        e['haiku_standing'] = j
+    for e in entries:
+        e['standing_move'] = (e['sonnet_standing'] - e['haiku_standing']) if e['haiku_standing'] else None
+
+    summary = None
+    if done:
+        n = len(done)
+        def _mean(xs):
+            return round(sum(xs) / len(xs), 2) if xs else None
+        cd = [e['cdiff'] for e in done]
+        per_dim = []
+        for k, (_hk, _col, label) in enumerate(_CJ_HAIKU_DIMS):
+            ds = [e['dims'][k]['diff'] for e in done if e['dims'][k]['diff'] is not None]
+            per_dim.append({'label': label, 'mad': _mean([abs(x) for x in ds]), 'bias': _mean(ds)})
+        # Spearman rank correlation between the two standings (entries both engines evaluated)
+        s_rank = {e['id']: k for k, e in enumerate(sorted(done, key=lambda x: -x['sonnet_c']), 1)}
+        h_rank = {e['id']: e['haiku_standing'] for e in done}
+        rho = None
+        if n > 2:
+            d2 = sum((s_rank[i] - h_rank[i]) ** 2 for i in s_rank)
+            rho = round(1 - (6 * d2) / (n * (n * n - 1)), 2)
+        top_s = {e['id'] for e in done if s_rank[e['id']] <= 10}
+        top_h = {e['id'] for e in done if h_rank[e['id']] <= 10}
+        summary = {
+            'n': n, 'total': len(entries),
+            'mad': _mean([abs(x) for x in cd]), 'bias': _mean(cd),
+            'max': max(cd, key=abs),
+            'within_01': sum(1 for x in cd if abs(x) <= 0.1),
+            'within_03': sum(1 for x in cd if abs(x) <= 0.3),
+            'rho': rho, 'top10_overlap': len(top_s & top_h), 'top10_size': min(10, n),
+            'per_dim': per_dim,
+            'run_at': max((r.haiku_run_at for r in rows if r.haiku_run_at), default=None),
+        }
+
+    return render_template('admin_contest_haiku_compare.html',
+                           batch_ref=batch_ref, batches=[], entries=entries, summary=summary)
 
 
 # ── CONTEST JUDGE — REUPLOAD THUMBS TO R2 (zero re-judge) ───────────────────
