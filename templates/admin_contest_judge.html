@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.6 (Session 230, 2026-09-30 — FEAT: Haiku card redesigned: obs_ fields dropped; 4 sections shown: Reading/impression, Score Read/score_read, Master Reference with URL link, Strength, Next Leap. viewer language. RETAINS 2.5.)
 {# SL-VERSION: admin_contest_judge-2.5 (Session 230, 2026-09-30 — FEAT: Haiku tab: (1) master_ref line shown below standing on each entry card; (2) Judge Notes textarea + Save per entry (POST to admin_contest_judge_haiku_edit, saves haiku_judge_note); (3) URL_HAIKU_EDIT JS constant added; saveHaikuNote() JS function in raw block. SL Audit pass: all new elements ≥15px font, save btn 44px tap target. RETAINS 2.4.)
 {# SL-VERSION: admin_contest_judge-2.4 (Session 230, 2026-09-30 — SL AUDIT FIX: fonts raised to 15px min (note-text, th weight labels, title subtitle, Review btn); Review tap target raised to 44px; haiku dims 'haiku' key added. All 3 tabs render-tested clean. RETAINS 2.3.)
 {# SL-VERSION: admin_contest_judge-2.3 (Session 230, 2026-09-30 — FIX: url_for('admin') → url_for('admin_dashboard'). SL Audit: all 12 url_for endpoints verified against app.py, all 3 tabs render-tested clean. RETAINS 2.2.)
@@ -113,6 +114,7 @@ summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size
 .narr h4{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#92400E;margin:12px 0 4px}
 .narr p{font-size:16px;line-height:1.65}
 .narr .col-h{font-size:15px;font-weight:600;padding:6px 10px;border-radius:6px;background:#F3E8FF;color:#6B21A8;display:inline-block}
+.score-read-note{font-size:15px;line-height:1.6;color:#78350F;font-style:italic;background:#FEF3C7;border-left:3px solid #D97706;padding:8px 12px;border-radius:0 4px 4px 0;margin:6px 0 14px}
 .narr .col-s{background:#E8EEF8;color:#1A2744}
 
 /* ── MASTER REF + JUDGE NOTES ── */
@@ -431,10 +433,25 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
           <div class="narr" style="grid-template-columns:1fr">
             <div>
               <span class="col-h">Haiku</span>
-              {% if e.h.impression %}<h4>First impression</h4><p>{{ e.h.impression }}</p>{% endif %}
-              {% for d in e.dims %}{% if d.obs %}<h4>{{ d.label }} · {{ fmt(d.haiku) }}</h4><p>{{ d.obs }}</p>{% endif %}{% endfor %}
-              {% if e.h.strength %}<h4>Strength</h4><p>{{ e.h.strength }}</p>{% endif %}
-              {% if e.h.next_leap %}<h4>Next leap</h4><p>{{ e.h.next_leap }}</p>{% endif %}
+              {% if e.h.impression %}
+              <h4>Reading</h4>
+              <p>{{ e.h.impression }}</p>
+              {% endif %}
+              {% if e.h.score_read %}
+              <p class="score-read-note">{{ e.h.score_read }}</p>
+              {% endif %}
+              {% if e.master_ref %}
+              <h4>Master Reference</h4>
+              <p>{% set _mr = e.master_ref %}{% if '(http' in _mr %}{% set _parts = _mr.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr }}{% endif %}</p>
+              {% endif %}
+              {% if e.h.strength %}
+              <h4>Strength</h4>
+              <p>{{ e.h.strength }}</p>
+              {% endif %}
+              {% if e.h.next_leap %}
+              <h4>Next Leap</h4>
+              <p>{{ e.h.next_leap }}</p>
+              {% endif %}
             </div>
           </div>
         </details>
