@@ -1,3 +1,5 @@
+# SL-VERSION: 182.40 (Session 229, 2026-09-30 — FIX: SL Audit on haiku_compare HTML: font sizes raised to 15px minimum, tap target min-height raised to 44px. ADD: standalone Haiku-only CSV route /admin/contest-judge/haiku-only-csv/<batch_ref> and matching button — exports Haiku evaluation scores and full narrative without any Sonnet comparison columns. RETAINS 182.39.)
+# SL-VERSION: 182.39 (Session 229, 2026-09-30 — NEW: Haiku comparison CSV export. New route /admin/contest-judge/haiku-compare/<batch_ref>/csv downloads all 47 entries as a CSV with both standings, six-dimension Sonnet/Haiku/gap columns, and all Haiku written fields (impression, strength, next_leap, one observation per dimension). No Sonnet data is ever written. RETAINS 182.38.)
 # SL-VERSION: 182.38 (Session 229, 2026-09-30 — NEW: Mock B scorecard design. Replaces DejaVu system-font card with a premium dark-panel layout: dark gallery panel with centred photograph + shadow, Playfair Display for name and overall evaluation, Inter for dimensions, Cormorant Garamond Italic for master reference and mentor note. Eight SL-bundled fonts in static/fonts/ (no Railway system-font dependency). Standing pill badge for top 10; mentor note in gold-bordered ivory panel signed by founder; gold bottom bar; footer shutterleague.com · Making Images Matter. RETAINS 182.37.)
 # SL-VERSION: 182.37 (Session 229, 2026-09-30 — NEW: Haiku comparison run for open calls. New admin page /admin/contest-judge/haiku-compare/<batch> with a Run Haiku button: evaluates every entry with Haiku using the SAME open call rubric as Sonnet, plus a longer written reading (impression, one observation per dimension, strength, next leap). Stored in new columns haiku_json / haiku_composite / haiku_run_at — Sonnet evaluations and standings are never touched. Page shows per-entry difference from Sonnet (plus/minus) for all six dimensions and the overall evaluation, both standings, summary agreement figures, and Haiku's narrative beside Sonnet's. _cj_sonnet_judge() gains optional model / max_tokens / extra_instructions arguments; existing Sonnet calls unchanged. RETAINS 182.36.)
 # SL-VERSION: 182.36 (Session 229, 2026-09-30 — FIX: Scorecard ZIP still failed on staging with 'can't measure length of multiline text'. The two-line dimension labels (Human/Connect, Story/Transfer) were measured with textlength(), which rejects multi-line text — this was the underlying crash all along. Each label line is now measured and centred separately; genre label flattened to one line. Nothing else changed. RETAINS 182.35.)
@@ -16624,6 +16626,193 @@ def admin_contest_judge_haiku_compare(batch_ref):
 
     return render_template('admin_contest_haiku_compare.html',
                            batch_ref=batch_ref, batches=[], entries=entries, summary=summary)
+
+
+# ── CONTEST JUDGE — HAIKU COMPARISON CSV EXPORT ──────────────────────────────
+
+@app.route('/admin/contest-judge/haiku-compare/<path:batch_ref>/csv')
+@login_required
+def admin_contest_judge_haiku_csv(batch_ref):
+    """Download a CSV of Sonnet vs Haiku evaluation for every entry in the open call.
+    Columns: standing_sonnet, standing_haiku, standing_change, photographer,
+    image_title, sonnet_overall, haiku_overall, overall_gap,
+    per dimension: <dim>_sonnet, <dim>_haiku, <dim>_gap,
+    sonnet_theme_note, sonnet_master_ref, sonnet_gap_note,
+    haiku_impression, haiku_strength, haiku_next_leap,
+    haiku_obs_wonder, haiku_obs_human_connect, haiku_obs_story_transfer,
+    haiku_obs_disruption, haiku_obs_craft, haiku_obs_moment.
+    Sonnet scores are never written by this route."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_haiku_ensure_columns()
+    rows = db.session.execute(db.text("""
+        SELECT id, photographer, image_title,
+               wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
+               composite_score, haiku_json, haiku_composite,
+               COALESCE(override_theme_note, theme_note) AS theme_note,
+               COALESCE(override_master_ref, master_ref) AS master_ref,
+               COALESCE(override_gap_note, gap_note) AS gap_note
+        FROM contest_judge_batch WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    if not rows:
+        abort(404)
+
+    import csv as _csv
+    import io as _csv_io
+
+    # Build entries with standings (same logic as compare page)
+    entries = []
+    for i, r in enumerate(rows, 1):
+        try:
+            h = _cj_json.loads(r.haiku_json) if r.haiku_json else None
+        except Exception:
+            h = None
+        entries.append({'rank_s': i, 'r': r, 'h': h or {},
+                         'hc': r.haiku_composite})
+
+    done = [e for e in entries if e['hc'] is not None]
+    for j, e in enumerate(sorted(done, key=lambda x: -(x['hc'] or 0)), 1):
+        e['rank_h'] = j
+    for e in entries:
+        if 'rank_h' not in e:
+            e['rank_h'] = None
+
+    DIM_MAP = [
+        ('Wonder',         'wonder_score',         'wonder'),
+        ('Human Connect',  'aq_score',             'aq'),
+        ('Story Transfer', 'story_transfer_score', 'story_transfer'),
+        ('Disruption',     'disruption_score',     'disruption'),
+        ('Craft',          'dod_score',            'dod'),
+        ('Moment',         'dm_score',             'dm'),
+    ]
+
+    out = _csv_io.StringIO()
+    w = _csv.writer(out)
+
+    # Header row
+    header = ['standing_sonnet', 'standing_haiku', 'standing_change',
+              'photographer', 'image_title', 'sonnet_overall', 'haiku_overall', 'overall_gap']
+    for label, _, _ in DIM_MAP:
+        col = label.lower().replace(' ', '_')
+        header += [f'{col}_sonnet', f'{col}_haiku', f'{col}_gap']
+    header += ['sonnet_theme_note', 'sonnet_master_ref', 'sonnet_gap_note',
+               'haiku_impression', 'haiku_strength', 'haiku_next_leap',
+               'haiku_obs_wonder', 'haiku_obs_human_connect', 'haiku_obs_story_transfer',
+               'haiku_obs_disruption', 'haiku_obs_craft', 'haiku_obs_moment']
+    w.writerow(header)
+
+    for e in entries:
+        r, h = e['r'], e['h']
+        sc = r.composite_score
+        hc = r.haiku_composite
+        gap = round(hc - sc, 2) if (hc is not None and sc is not None) else ''
+        mv  = (e['rank_s'] - e['rank_h']) if e['rank_h'] else ''
+        row_data = [
+            e['rank_s'], e['rank_h'] or '', mv,
+            r.photographer or '', r.image_title or '',
+            round(sc, 2) if sc else '', round(hc, 2) if hc else '', gap,
+        ]
+        for _, col, hk in DIM_MAP:
+            sv = getattr(r, col)
+            hv = h.get(hk)
+            dv = round(hv - sv, 1) if (hv is not None and sv is not None) else ''
+            row_data += [round(sv, 1) if sv else '', round(hv, 1) if hv else '', dv]
+        row_data += [
+            r.theme_note or '', r.master_ref or '', r.gap_note or '',
+            h.get('impression', ''), h.get('strength', ''), h.get('next_leap', ''),
+            h.get('obs_wonder', ''), h.get('obs_aq', ''), h.get('obs_story_transfer', ''),
+            h.get('obs_disruption', ''), h.get('obs_dod', ''), h.get('obs_dm', ''),
+        ]
+        w.writerow(row_data)
+
+    out.seek(0)
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        out.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="SL_HaikuCompare_{safe_ref}.csv"'}
+    )
+
+
+# ── CONTEST JUDGE — HAIKU-ONLY CSV EXPORT ───────────────────────────────────
+
+@app.route('/admin/contest-judge/haiku-only-csv/<path:batch_ref>')
+@login_required
+def admin_contest_judge_haiku_only_csv(batch_ref):
+    """Download a CSV of Haiku-only evaluation for every entry that has been run.
+    No Sonnet comparison columns — pure Haiku output suitable for sharing or analysis.
+    Columns: standing_haiku, photographer, image_title,
+    haiku_overall, wonder, human_connect, story_transfer, disruption, craft, moment,
+    haiku_impression, haiku_strength, haiku_next_leap,
+    haiku_obs_wonder, haiku_obs_human_connect, haiku_obs_story_transfer,
+    haiku_obs_disruption, haiku_obs_craft, haiku_obs_moment,
+    haiku_theme_note, haiku_master_ref, haiku_gap_note."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_haiku_ensure_columns()
+    rows = db.session.execute(db.text("""
+        SELECT photographer, image_title, haiku_json, haiku_composite
+        FROM contest_judge_batch
+        WHERE batch_ref = :br AND haiku_composite IS NOT NULL
+        ORDER BY haiku_composite DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    if not rows:
+        abort(404)
+
+    import csv as _csv2
+    import io as _csv2_io
+
+    out = _csv2_io.StringIO()
+    w = _csv2.writer(out)
+
+    w.writerow([
+        'standing_haiku', 'photographer', 'image_title', 'haiku_overall',
+        'wonder', 'human_connect', 'story_transfer', 'disruption', 'craft', 'moment',
+        'impression', 'strength', 'next_leap',
+        'obs_wonder', 'obs_human_connect', 'obs_story_transfer',
+        'obs_disruption', 'obs_craft', 'obs_moment',
+        'theme_note', 'master_ref', 'gap_note',
+    ])
+
+    _hk_map = [
+        ('wonder',         'wonder'),
+        ('aq',             'human_connect'),
+        ('story_transfer', 'story_transfer'),
+        ('disruption',     'disruption'),
+        ('dod',            'craft'),
+        ('dm',             'moment'),
+    ]
+
+    for rank, r in enumerate(rows, 1):
+        try:
+            h = _cj_json.loads(r.haiku_json) if r.haiku_json else {}
+        except Exception:
+            h = {}
+        row_data = [
+            rank,
+            r.photographer or '',
+            r.image_title or '',
+            round(r.haiku_composite, 2) if r.haiku_composite else '',
+        ]
+        for hk, _ in _hk_map:
+            v = h.get(hk)
+            row_data.append(round(v, 1) if v is not None else '')
+        row_data += [
+            h.get('impression', ''), h.get('strength', ''), h.get('next_leap', ''),
+            h.get('obs_wonder', ''), h.get('obs_aq', ''), h.get('obs_story_transfer', ''),
+            h.get('obs_disruption', ''), h.get('obs_dod', ''), h.get('obs_dm', ''),
+            h.get('theme_note', ''), h.get('master_ref', ''), h.get('gap_note', ''),
+        ]
+        w.writerow(row_data)
+
+    out.seek(0)
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        out.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="SL_HaikuOnly_{safe_ref}.csv"'}
+    )
 
 
 # ── CONTEST JUDGE — REUPLOAD THUMBS TO R2 (zero re-judge) ───────────────────
