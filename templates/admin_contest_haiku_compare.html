@@ -1,0 +1,302 @@
+{# SL-VERSION: admin_contest_haiku_compare-1.0 (Session 229, 2026-09-30 — NEW: Haiku comparison page for open calls. Run Haiku button with progress bar; per-entry plus/minus against Sonnet on all six dimensions and the overall evaluation; both standings; summary agreement figures; Haiku written reading beside Sonnet notes. Admin only. Sonnet data is read, never written.) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Haiku comparison — Shutter League Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 90px}
+a{color:#1A2744}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:16px;text-decoration:none;color:#6B6B68}
+.back:hover{color:#1A1A18}
+h1{font-size:26px;font-weight:600;margin:4px 0 2px}
+.sub{font-size:16px;color:#6B6B68;margin-bottom:18px;word-break:break-word}
+.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:18px;font-size:16px;line-height:1.65}
+.guide strong{color:#92400E}
+.card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:18px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B6B68;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 24px;border-radius:10px;border:none;font:600 17px 'Inter',sans-serif;cursor:pointer;text-decoration:none}
+.btn-gold{background:#1A1A18;color:#fff}
+.btn-gold:hover{background:#333}
+.btn-gold:disabled{background:#8A8A86;cursor:wait}
+.btn-line{background:#fff;color:#1A1A18;border:1px solid #CFCBC2;min-height:48px;font-size:16px;padding:0 18px}
+.btn-line.on{background:#FFF8E8;border-color:#C8A84B}
+.run-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.run-note{font-size:15px;color:#6B6B68}
+.prog{display:none;margin-top:16px}
+.prog-track{height:14px;background:#F0EDE6;border-radius:7px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:#C8A84B;transition:width .4s}
+.prog-text{font-size:16px;margin-top:8px}
+.msg{display:none;margin-top:12px;font-size:16px;padding:12px 14px;border-radius:8px}
+.msg.err{display:block;background:#FEF2F2;color:#991B1B}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E0DDD6;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.stat{background:#fff;padding:16px}
+.stat-l{font-size:14px;color:#6B6B68;margin-bottom:6px}
+.stat-n{font-size:26px;font-weight:600;line-height:1.15}
+.stat-d{font-size:14px;color:#6B6B68;margin-top:4px}
+table.dimt{width:100%;border-collapse:collapse;font-size:16px}
+.dimt th{text-align:left;font-size:14px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:1px solid #E0DDD6}
+.dimt td{padding:10px;border-bottom:1px solid #F0EDE6}
+.pos{color:#1E6B34}.mid{color:#A15C07}.neg{color:#B91C1C}
+.sortbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 14px}
+.sortbar span{font-size:15px;color:#6B6B68}
+.entry{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:16px;margin-bottom:14px}
+.e-top{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center}
+.e-thumb{width:96px;height:96px;border-radius:8px;object-fit:cover;background:#EEE}
+.e-name{font-size:19px;font-weight:600}
+.e-title{font-size:15px;color:#6B6B68}
+.e-stand{font-size:15px;color:#3A3A38;margin-top:4px}
+.e-overall{text-align:right}
+.e-overall .lbl{font-size:13px;color:#6B6B68;text-transform:uppercase;letter-spacing:.05em}
+.e-overall .vals{font-size:18px;white-space:nowrap}
+.e-overall .diff{font-size:24px;font-weight:600}
+.dims{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
+.dim{background:#FAF8F4;border-radius:8px;padding:10px 8px;text-align:center}
+.dim .n{font-size:14px;color:#6B6B68;line-height:1.3;min-height:36px}
+.dim .sv{font-size:15px;color:#3A3A38}
+.dim .d{font-size:19px;font-weight:600;margin-top:2px}
+details{margin-top:14px;border-top:1px solid #F0EDE6;padding-top:6px}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:500;color:#1A2744}
+.narr{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+.narr h4{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#92400E;margin:12px 0 4px}
+.narr p{font-size:16px;line-height:1.65}
+.narr .col-h{font-size:15px;font-weight:600;padding:6px 10px;border-radius:6px;background:#F3E8FF;color:#6B21A8;display:inline-block}
+.narr .col-s{background:#E8EEF8;color:#1A2744}
+.muted{color:#8A8A86}
+.list a{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:60px;padding:12px 4px;border-bottom:1px solid #F0EDE6;text-decoration:none;color:#1A1A18;font-size:17px}
+.list a:hover{background:#FAF8F4}
+.pill{font-size:14px;padding:4px 10px;border-radius:99px;background:#F3E8FF;color:#6B21A8;white-space:nowrap}
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .dims{grid-template-columns:repeat(3,1fr)}
+  .narr{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .e-top{grid-template-columns:72px 1fr}
+  .e-thumb{width:72px;height:72px}
+  .e-overall{grid-column:1 / -1;text-align:left;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+  .dims{grid-template-columns:repeat(2,1fr)}
+  .btn{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{{ url_for('admin_contest_judge') }}"><i class="ti ti-arrow-left"></i> Contest Judge</a>
+  <h1>Haiku comparison</h1>
+
+{% if not batch_ref %}
+  <div class="sub">Choose an open call.</div>
+  <div class="card list">
+    {% for b in batches %}
+      <a href="{{ url_for('admin_contest_judge_haiku_compare', batch_ref=b.batch_ref) }}">
+        <span>{{ b.batch_ref }}<br><span class="muted" style="font-size:15px">{{ b.n }} entries</span></span>
+        <span class="pill">{% if b.h %}Haiku done: {{ b.h }} of {{ b.n }}{% else %}Not run yet{% endif %}</span>
+      </a>
+    {% else %}
+      <p class="muted">No open calls have been judged yet.</p>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="sub">{{ batch_ref }}</div>
+
+  <div class="guide">
+    <strong>What this does.</strong> Haiku evaluates every entry using exactly the same open call rubric as Sonnet, and also writes a longer reading.
+    Sonnet's evaluations, notes and standings are <strong>never changed</strong> — this is a side-by-side test only.
+    <br><strong>Plus / minus</strong> = Haiku minus Sonnet. <span class="pos">Green</span> within 0.3 · <span class="mid">amber</span> within 0.6 · <span class="neg">red</span> more than 0.6 apart.
+  </div>
+
+  <div class="card">
+    <div class="run-row">
+      <button class="btn btn-gold" id="runBtn" onclick="runHaiku()">
+        <i class="ti ti-player-play"></i>
+        {% if summary %}Run Haiku again ({{ entries|length }} entries){% else %}Run Haiku on all {{ entries|length }} entries{% endif %}
+      </button>
+      <span class="run-note">Takes about 3 to 5 minutes. Keep this page open.{% if summary and summary.run_at %} Last run {{ summary.run_at.strftime('%d %b %Y, %H:%M') }} UTC.{% endif %}</span>
+    </div>
+    <div class="prog" id="prog">
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-text" id="progText">Starting…</div>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  {% macro sgn(v, dp=1) -%}
+    {%- if v is none -%}—{%- elif v > 0 -%}+{{ ('%.' ~ dp ~ 'f')|format(v) }}{%- elif v < 0 -%}−{{ ('%.' ~ dp ~ 'f')|format(-v) }}{%- else -%}{{ ('%.' ~ dp ~ 'f')|format(0) }}{%- endif -%}
+  {%- endmacro %}
+  {% macro tone(v) -%}
+    {%- if v is none -%}muted{%- elif (v if v >= 0 else -v) <= 0.3 -%}pos{%- elif (v if v >= 0 else -v) <= 0.6 -%}mid{%- else -%}neg{%- endif -%}
+  {%- endmacro %}
+  {% macro fmt(v) -%}{%- if v is none -%}—{%- else -%}{{ '%.1f'|format(v) }}{%- endif -%}{%- endmacro %}
+
+  {% if summary %}
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-l">Entries compared</div>
+      <div class="stat-n">{{ summary.n }} of {{ summary.total }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Average gap, overall evaluation</div>
+      <div class="stat-n {{ tone(summary.mad) }}">± {{ '%.2f'|format(summary.mad) }}</div>
+      <div class="stat-d">Largest: {{ sgn(summary.max, 2) }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Haiku leans</div>
+      <div class="stat-n">{% if summary.bias > 0.05 %}Higher{% elif summary.bias < -0.05 %}Lower{% else %}Level{% endif %}</div>
+      <div class="stat-d">by {{ sgn(summary.bias, 2) }} on average</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Same order as Sonnet?</div>
+      <div class="stat-n">{% if summary.rho is none %}—{% elif summary.rho >= 0.9 %}Very close{% elif summary.rho >= 0.75 %}Close{% elif summary.rho >= 0.5 %}Loose{% else %}Different{% endif %}</div>
+      <div class="stat-d">Rank agreement {{ summary.rho if summary.rho is not none else '—' }} (1.0 = identical)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Top 10 in both</div>
+      <div class="stat-n">{{ summary.top10_overlap }} of {{ summary.top10_size }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Within 0.1 of Sonnet</div>
+      <div class="stat-n">{{ summary.within_01 }}</div>
+      <div class="stat-d">entries</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Within 0.3 of Sonnet</div>
+      <div class="stat-n">{{ summary.within_03 }}</div>
+      <div class="stat-d">entries</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Not yet compared</div>
+      <div class="stat-n">{{ summary.total - summary.n }}</div>
+      <div class="stat-d">entries</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-bar"></i> Dimension by dimension</div>
+    <table class="dimt">
+      <tr><th>Dimension</th><th>Average gap</th><th>Haiku leans</th></tr>
+      {% for d in summary.per_dim %}
+      <tr>
+        <td>{{ d.label }}</td>
+        <td class="{{ tone(d.mad) }}">{% if d.mad is none %}—{% else %}± {{ '%.2f'|format(d.mad) }}{% endif %}</td>
+        <td>{% if d.bias is none %}—{% elif d.bias > 0.05 %}Higher {{ sgn(d.bias, 2) }}{% elif d.bias < -0.05 %}Lower {{ sgn(d.bias, 2) }}{% else %}Level{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="sortbar">
+    <span>Order by:</span>
+    <button class="btn btn-line on" id="sortS" onclick="sortBy('s')">Sonnet standing</button>
+    <button class="btn btn-line" id="sortD" onclick="sortBy('d')">Biggest difference</button>
+  </div>
+
+  <div id="entries">
+  {% for e in entries %}
+    <div class="entry" data-s="{{ e.sonnet_standing }}" data-d="{{ (e.cdiff if e.cdiff is not none and e.cdiff >= 0 else (-e.cdiff if e.cdiff is not none else -1)) }}">
+      <div class="e-top">
+        {% if e.thumb %}<img class="e-thumb" src="{{ e.thumb }}" alt="" loading="lazy">{% else %}<div class="e-thumb"></div>{% endif %}
+        <div>
+          <div class="e-name">{{ e.photographer }}</div>
+          {% if e.title %}<div class="e-title">{{ e.title }}</div>{% endif %}
+          <div class="e-stand">
+            Sonnet standing <strong>{{ e.sonnet_standing }}</strong>
+            {% if e.haiku_standing %} · Haiku standing <strong>{{ e.haiku_standing }}</strong>
+              {% if e.standing_move > 0 %}<span class="pos">(up {{ e.standing_move }})</span>{% elif e.standing_move < 0 %}<span class="neg">(down {{ -e.standing_move }})</span>{% else %}<span class="muted">(same)</span>{% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="e-overall">
+          <div class="lbl">Overall</div>
+          <div class="vals">Sonnet {{ '%.2f'|format(e.sonnet_c) if e.sonnet_c is not none else '—' }} · Haiku {{ '%.2f'|format(e.haiku_c) if e.haiku_c is not none else '—' }}</div>
+          <div class="diff {{ tone(e.cdiff) }}">{{ sgn(e.cdiff, 2) }}</div>
+        </div>
+      </div>
+
+      <div class="dims">
+        {% for d in e.dims %}
+        <div class="dim">
+          <div class="n">{{ d.label }}</div>
+          <div class="sv">{{ fmt(d.sonnet) }} → {{ fmt(d.haiku) }}</div>
+          <div class="d {{ tone(d.diff) }}">{{ sgn(d.diff) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if e.h %}
+      <details>
+        <summary><i class="ti ti-file-text" style="margin-right:8px"></i> Read Haiku's written evaluation beside Sonnet's notes</summary>
+        <div class="narr">
+          <div>
+            <span class="col-h">Haiku</span>
+            {% if e.h.impression %}<h4>First impression</h4><p>{{ e.h.impression }}</p>{% endif %}
+            {% for d in e.dims %}{% if d.obs %}<h4>{{ d.label }} · {{ fmt(d.haiku) }}</h4><p>{{ d.obs }}</p>{% endif %}{% endfor %}
+            {% if e.h.strength %}<h4>Strength</h4><p>{{ e.h.strength }}</p>{% endif %}
+            {% if e.h.next_leap %}<h4>Next leap</h4><p>{{ e.h.next_leap }}</p>{% endif %}
+            {% if e.h.theme_note %}<h4>Theme note</h4><p>{{ e.h.theme_note }}</p>{% endif %}
+            {% if e.h.master_ref %}<h4>Master reference</h4><p>{{ e.h.master_ref }}</p>{% endif %}
+            {% if e.h.gap_note %}<h4>Gap</h4><p>{{ e.h.gap_note }}</p>{% endif %}
+            {% if e.h.subject_id %}<h4>Subject identified — please verify</h4><p>{{ e.h.subject_id }}</p>{% endif %}
+          </div>
+          <div>
+            <span class="col-h col-s">Sonnet</span>
+            <h4>Theme note</h4><p>{{ e.s_theme_note or '—' }}</p>
+            <h4>Master reference</h4><p>{{ e.s_master_ref or '—' }}</p>
+            <h4>Gap</h4><p>{{ e.s_gap_note or '—' }}</p>
+          </div>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+{% endif %}
+</div>
+
+{% if batch_ref %}
+<script>
+var RUN_URL = {{ url_for('admin_contest_judge_haiku_run', batch_ref=batch_ref)|tojson }};
+function statusUrl(id){ return {{ url_for('admin_contest_judge_bulk_rescore_status', job_id='JOBID')|tojson }}.replace('JOBID', id); }
+function showErr(t){ var m=document.getElementById('msg'); m.className='msg err'; m.textContent=t; }
+function runHaiku(){
+  if(!confirm('Run Haiku on every entry in this open call?\n\nSonnet evaluations and standings will not change.')) return;
+  var btn=document.getElementById('runBtn'); btn.disabled=true;
+  document.getElementById('prog').style.display='block';
+  fetch(RUN_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:'{}',credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.job_id){ btn.disabled=false; showErr(d.error||'Could not start the run.'); return; }
+      poll(d.job_id);
+    })
+    .catch(function(){ btn.disabled=false; showErr('Could not start the run. Please try again.'); });
+}
+function poll(id){
+  fetch(statusUrl(id),{credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(p){
+    if(p.total){
+      document.getElementById('progFill').style.width=Math.round(100*p.done/p.total)+'%';
+      document.getElementById('progText').textContent=p.done+' of '+p.total+' entries done'+(p.errors?(' · '+p.errors+' could not be evaluated'):'');
+    }
+    if(p.finished){ document.getElementById('progText').textContent+=' — finished. Loading results…'; setTimeout(function(){ location.reload(); },1200); }
+    else setTimeout(function(){ poll(id); },3000);
+  }).catch(function(){ setTimeout(function(){ poll(id); },5000); });
+}
+function sortBy(k){
+  var box=document.getElementById('entries');
+  var items=[].slice.call(box.children);
+  items.sort(function(a,b){ return k==='s' ? (+a.dataset.s)-(+b.dataset.s) : (+b.dataset.d)-(+a.dataset.d); });
+  items.forEach(function(it){ box.appendChild(it); });
+  document.getElementById('sortS').classList.toggle('on',k==='s');
+  document.getElementById('sortD').classList.toggle('on',k==='d');
+}
+</script>
+{% endif %}
+</body>
+</html>
