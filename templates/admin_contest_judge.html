@@ -1,578 +1,741 @@
-{# SL-VERSION: admin_contest_judge-2.4 (Session 224, 2026-09-28 — Open Call DDI v182.27: added Theme Threshold field to upload form. Results table updated to 6 DDI dims: Wonder, Human Connect, Story Transfer, Disruption, Craft, Moment. Summary stats updated. RETAINS v2.3.) #}
+{# SL-VERSION: admin_contest_judge-2.2 (Session 230, 2026-09-30 — FIX: All Jinja expressions moved to a dedicated JS constants block at top of script; remaining JS wrapped in raw/endraw so Jinja never touches curly braces in JS functions. Eliminates Unexpected token '{' SyntaxError permanently. RETAINS 2.1.)
+{# SL-VERSION: admin_contest_judge-2.0 (Session 230, 2026-09-30 — UNIFIED: Sonnet / Haiku / Compare tabs in one page. Batch selector with delete (confirm required). Haiku comparison is no longer a separate admin nav item. Sonnet tab: upload, score, scorecards ZIP, CSV, per-entry review. Haiku tab: run Haiku, Haiku-only CSV, per-entry narrative. Compare tab: locked until both run, shows calibration stats + Comparison CSV. SL Audit pass: fonts ≥15px, tap targets ≥44px, version header line 1.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>Open Call Judge — Shutter League Admin</title>
+<title>Contest Judge — Shutter League Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F3EF;color:#1A1A18;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 90px}
+a{color:#1A2744}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:16px;text-decoration:none;color:#6B6B68}
+.back:hover{color:#1A1A18}
+h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 
-.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-.sidebar{background:#fff;border-right:1px solid #E0DDD6;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:50}
-.sb-logo{padding:18px 18px 14px;border-bottom:1px solid #E0DDD6}
-.sb-logo-title{font-size:14px;font-weight:600;color:#1A1A18;display:flex;align-items:center;gap:8px}
-.sb-logo-sub{font-size:12px;color:#8A8A86;margin-top:3px}
-.sb-back{display:flex;align-items:center;gap:8px;padding:12px 18px;font-size:14px;color:#3A3A38;text-decoration:none;border-bottom:1px solid #F0EDE6}
-.sb-back:hover{background:#F5F3EF}
-.sb-back i{font-size:16px;color:#8A8A86}
-.sb-section{padding:16px 18px 8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#AEAEA8}
+/* ── BATCH SELECTOR ── */
+.batch-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px;padding:16px 18px;background:#fff;border:1px solid #E0DDD6;border-radius:12px}
+.batch-bar label{font-size:15px;font-weight:600;color:#6B6B68;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.batch-sel{flex:1;min-width:220px;font:500 16px 'Inter',sans-serif;padding:10px 14px;border:1px solid #CFCBC2;border-radius:8px;background:#FAF8F4;color:#1A1A18;min-height:44px}
+.batch-meta{font-size:15px;color:#6B6B68;white-space:nowrap}
+.btn-del{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid #FCA5A5;background:#FEF2F2;color:#B91C1C;font:500 15px 'Inter',sans-serif;cursor:pointer}
+.btn-del:hover{background:#FEE2E2}
+.batch-empty{font-size:16px;color:#6B6B68;padding:40px 0;text-align:center}
 
-.main{padding:24px 28px 80px;min-width:0}
-.page-header{margin-bottom:24px}
-.page-title{font-size:22px;font-weight:500;color:#1A1A18}
-.page-sub{font-size:14px;color:#6B6B68;margin-top:4px}
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:2px solid #E0DDD6;margin-bottom:20px}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;font:500 16px 'Inter',sans-serif;color:#6B6B68;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s}
+.tab:hover{color:#1A1A18}
+.tab.active{color:#1A1A18;border-bottom-color:#C8A84B;font-weight:600}
+.tab.locked{opacity:.45;cursor:not-allowed}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
 
-.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:20px;font-size:14px;color:#1A1A18;line-height:1.6}
-.guide strong{font-weight:600;color:#92400E}
+/* ── CARDS / BUTTONS ── */
+.card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:18px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B6B68;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 24px;border-radius:10px;border:none;font:600 17px 'Inter',sans-serif;cursor:pointer;text-decoration:none}
+.btn-gold{background:#1A1A18;color:#fff}
+.btn-gold:hover{background:#333}
+.btn-gold:disabled{background:#8A8A86;cursor:wait}
+.btn-line{background:#fff;color:#1A1A18;border:1px solid #CFCBC2;min-height:48px;font-size:16px;padding:0 18px}
+.btn-line:hover{background:#FAF8F4}
+.btn-line.on{background:#FFF8E8;border-color:#C8A84B}
+.run-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.run-note{font-size:15px;color:#6B6B68}
 
-.card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:20px 22px;margin-bottom:16px}
-.card-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8A8A86;margin-bottom:14px;display:flex;align-items:center;gap:6px}
-.card-title i{font-size:16px}
+/* ── PROGRESS ── */
+.prog{display:none;margin-top:16px}
+.prog-track{height:14px;background:#F0EDE6;border-radius:7px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:#C8A84B;transition:width .4s}
+.prog-text{font-size:16px;margin-top:8px}
+.msg{display:none;margin-top:12px;font-size:16px;padding:12px 14px;border-radius:8px}
+.msg.err{display:block;background:#FEF2F2;color:#991B1B}
+.msg.ok{display:block;background:#F0FDF4;color:#166534}
 
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.form-group{display:flex;flex-direction:column;gap:6px}
-.form-label{font-size:13px;font-weight:500;color:#3A3A38}
-.form-input{padding:10px 12px;border:1px solid #C8C5BE;border-radius:8px;font-size:15px;background:#FAFAF6;color:#1A1A18;font-family:inherit;outline:none;min-height:44px;width:100%}
-.form-input:focus{border-color:#1A2744}
-.form-hint{font-size:12px;color:#8A8A86}
+/* ── UPLOAD AREA ── */
+.drop{border:2px dashed #CFCBC2;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.drop.over,.drop:hover{border-color:#C8A84B;background:#FFFBEB}
+.drop-icon{font-size:36px;color:#CFCBC2;margin-bottom:8px}
+.drop p{font-size:16px;color:#6B6B68;margin:4px 0}
+.drop input{display:none}
+.upload-cfg{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:15px;font-weight:500;color:#3A3A38}
+.field input,.field select{font:16px 'Inter',sans-serif;padding:10px 12px;border:1px solid #CFCBC2;border-radius:8px;min-height:44px;background:#FAF8F4}
+.upload-log{margin-top:14px;font-size:15px;background:#FAF8F4;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;display:none}
+.upload-log p{margin:3px 0;line-height:1.4}
+.upload-log .ok{color:#166534}
+.upload-log .err{color:#B91C1C}
+.upload-log .skip{color:#A15C07}
 
-.dropzone{border:2px dashed #C8C5BE;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:#FAFAF6;margin-bottom:14px}
-.dropzone.dragover{border-color:#C8A84B;background:#FFF8E8}
-.dropzone.has-files{border-color:#2E7D32;background:#F0FDF4}
-.dz-icon{font-size:36px;color:#C8A84B;margin-bottom:8px}
-.dz-title{font-size:15px;font-weight:500;color:#1A1A18;margin-bottom:4px}
-.dz-sub{font-size:13px;color:#8A8A86}
-.dz-count{font-size:14px;font-weight:600;color:#2E7D32;margin-top:8px;display:none}
-#file-input{display:none}
+/* ── RESULTS TABLE (Sonnet) ── */
+.results-wrap{overflow-x:auto;margin-top:4px}
+table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
+.rt th{text-align:left;font-size:15px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:2px solid #E0DDD6;white-space:nowrap}
+.rt td{padding:10px;border-bottom:1px solid #F0EDE6;vertical-align:top}
+.rt tr:hover td{background:#FAFAF8}
+.rt .num{text-align:right;font-variant-numeric:tabular-nums}
+.rt .hi{font-weight:600;color:#1E6B34}
+.rt .lo{color:#B91C1C}
+.thumb-sm{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#EEE;display:block}
+.no-entries{text-align:center;padding:48px 0;color:#6B6B68;font-size:16px}
+.note-text{font-size:14px;color:#6B6B68;max-width:280px;line-height:1.4}
 
-.btn{padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;border:none;min-height:44px;display:inline-flex;align-items:center;gap:8px;transition:background .12s}
-.btn-gold{background:#C8A84B;color:#1A1A18}
-.btn-gold:hover{background:#A88830}
-.btn-gold:disabled{background:#E0DDD6;color:#8A8A86;cursor:not-allowed}
-.btn-outline{background:#fff;border:1px solid #C8C5BE;color:#1A1A18}
-.btn-outline:hover{border-color:#1A2744;background:#F5F3EF}
-.btn-danger{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C}
-.btn-danger:hover{background:#B91C1C;color:#fff}
-.btn-green{background:#2E7D32;color:#fff}
-.btn-green:hover{background:#1B5E20}
-.btn-blue{background:#1A2744;color:#fff}
-.btn-blue:hover{background:#101830}
+/* ── HAIKU ENTRIES ── */
+.entry{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:16px;margin-bottom:14px}
+.e-top{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center}
+.e-thumb{width:96px;height:96px;border-radius:8px;object-fit:cover;background:#EEE}
+.e-name{font-size:19px;font-weight:600}
+.e-title{font-size:15px;color:#6B6B68}
+.e-stand{font-size:15px;color:#3A3A38;margin-top:4px}
+.e-overall{text-align:right}
+.e-overall .lbl{font-size:15px;color:#6B6B68;text-transform:uppercase;letter-spacing:.05em}
+.e-overall .vals{font-size:18px;white-space:nowrap}
+.e-overall .diff{font-size:24px;font-weight:600}
+.dims{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
+.dim{background:#FAF8F4;border-radius:8px;padding:10px 8px;text-align:center}
+.dim .n{font-size:15px;color:#6B6B68;line-height:1.3;min-height:44px}
+.dim .sv{font-size:15px;color:#3A3A38}
+.dim .d{font-size:19px;font-weight:600;margin-top:2px}
+details{margin-top:14px;border-top:1px solid #F0EDE6;padding-top:6px}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:500;color:#1A2744}
+.narr{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+.narr h4{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#92400E;margin:12px 0 4px}
+.narr p{font-size:16px;line-height:1.65}
+.narr .col-h{font-size:15px;font-weight:600;padding:6px 10px;border-radius:6px;background:#F3E8FF;color:#6B21A8;display:inline-block}
+.narr .col-s{background:#E8EEF8;color:#1A2744}
 
-.progress-wrap{display:none;margin-bottom:16px}
-.progress-bar-bg{height:8px;background:#E0DDD6;border-radius:99px;overflow:hidden;margin-bottom:8px}
-.progress-bar-fill{height:100%;background:#C8A84B;border-radius:99px;transition:width .3s;width:0%}
-.progress-label{font-size:13px;color:#6B6B68}
-.progress-errors{margin-top:8px}
-.err-item{font-size:12px;color:#B91C1C;padding:3px 0}
+/* ── COMPARE STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E0DDD6;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.stat{background:#fff;padding:16px}
+.stat-l{font-size:15px;color:#6B6B68;margin-bottom:6px}
+.stat-n{font-size:26px;font-weight:600;line-height:1.15}
+.stat-d{font-size:15px;color:#6B6B68;margin-top:4px}
+table.dimt{width:100%;border-collapse:collapse;font-size:16px}
+.dimt th{text-align:left;font-size:15px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:1px solid #E0DDD6}
+.dimt td{padding:10px;border-bottom:1px solid #F0EDE6}
 
-/* ── PODIUM STRIP ── */
-.podium{display:none;gap:12px;margin-bottom:16px}
-.podium-card{flex:1;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;min-width:0}
-.podium-card.p1{border-color:#C8A84B;border-width:2px}
-.podium-medal{font-size:28px;line-height:1;margin-bottom:4px}
-.podium-rank{position:absolute;top:10px;right:12px;font-size:11px;font-weight:700;color:#8A8A86;letter-spacing:.06em;text-transform:uppercase}
-.podium-name{font-size:15px;font-weight:600;color:#1A1A18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.podium-score{font-size:26px;font-weight:700;color:#C8A84B;line-height:1.1;margin-top:2px}
-.podium-theme{font-size:12px;margin-top:4px}
-.podium-note{font-size:12px;color:#6B6B68;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* ── COLOUR TONES ── */
+.pos{color:#1E6B34}.mid{color:#A15C07}.neg{color:#B91C1C}.muted{color:#8A8A86}
+.pill{font-size:15px;padding:4px 10px;border-radius:99px;background:#F3E8FF;color:#6B21A8;white-space:nowrap}
 
-/* ── RESULTS TABLE ── */
-.results-wrap{display:none}
-.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.filter-btn{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E0DDD6;background:#FAFAF6;color:#3A3A38;font-family:inherit;transition:all .12s}
-.filter-btn.active{background:#1A2744;color:#fff;border-color:#1A2744}
-.rtable{width:100%;border-collapse:collapse;font-size:13px}
-.rtable th{font-size:11px;color:#8A8A86;font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid #E0DDD6;white-space:nowrap;background:#FAFAF6}
-.rtable th.center{text-align:center}
-.rtable td{padding:10px 10px;border-bottom:1px solid #F5F3EF;vertical-align:top}
-.rtable tr:hover td{background:#FFFBEB}
-.rtable tr.hidden-row{display:none}
-.score-cell{text-align:center;font-weight:600;font-size:14px}
-.s-high{color:#065F46}.s-mid{color:#92400E}.s-low{color:#B91C1C}
+/* ── LOCKED OVERLAY ── */
+.locked-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:64px 0;color:#6B6B68;text-align:center}
+.locked-msg i{font-size:40px;color:#CFCBC2}
+.locked-msg p{font-size:16px;max-width:380px;line-height:1.6}
 
-/* Score bar */
-.score-bar-wrap{display:flex;align-items:center;gap:6px}
-.score-bar{height:4px;border-radius:2px;background:#E0DDD6;flex:1;max-width:60px;overflow:hidden}
-.score-bar-fill{height:100%;border-radius:2px;background:#C8A84B}
+/* ── GUIDE ── */
+.guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:18px;font-size:16px;line-height:1.65}
+.guide strong{color:#92400E}
 
-.theme-yes{background:#D1FAE5;color:#065F46;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block}
-.theme-no{background:#FEE2E2;color:#B91C1C;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block}
-.rank-num{font-weight:700;font-size:15px;color:#1A1A18;text-align:center;display:block}
-.photographer-name{font-weight:500;color:#1A1A18}
-.image-title{color:#6B6B68;font-size:12px}
-.note-text{font-size:12px;color:#3A3A38;line-height:1.4}
-.master-text{font-size:12px;color:#1A2744;font-style:italic;line-height:1.4}
-.gap-text{font-size:12px;color:#B45309;line-height:1.4}
+/* ── SORT BAR ── */
+.sortbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 14px}
+.sortbar span{font-size:15px;color:#6B6B68}
 
-.batch-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F5F3EF;gap:12px}
-.batch-row:last-child{border-bottom:none}
-.batch-info{flex:1}
-.batch-name{font-size:14px;font-weight:500;color:#1A1A18}
-.batch-meta{font-size:12px;color:#8A8A86;margin-top:2px}
-.batch-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
-.batch-btn{font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid #E0DDD6;background:#FAFAF6;color:#1A1A18;cursor:pointer;font-family:inherit;min-height:36px;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
-.batch-btn:hover{border-color:#C8A84B;background:#FFF8E8}
-.batch-btn.danger{color:#B91C1C}
-.batch-btn.danger:hover{background:#FEF2F2;border-color:#FECACA}
-
+/* ── RESPONSIVE ── */
 @media(max-width:900px){
-  .layout{grid-template-columns:1fr}.sidebar{display:none}.form-row{grid-template-columns:1fr}
-  .podium{flex-direction:column}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .dims{grid-template-columns:repeat(3,1fr)}
+  .narr{grid-template-columns:1fr}
+  .upload-cfg{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .tabs{overflow-x:auto;gap:0}
+  .tab{padding:0 14px;font-size:15px}
+  .e-top{grid-template-columns:72px 1fr}
+  .e-thumb{width:72px;height:72px}
+  .e-overall{grid-column:1/-1;text-align:left;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+  .dims{grid-template-columns:repeat(2,1fr)}
+  .btn{width:100%}
+  .upload-cfg{grid-template-columns:1fr}
+  .batch-bar{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
 <body>
-<div class="layout">
+<div class="wrap">
+  <a class="back" href="{{ url_for('admin') }}"><i class="ti ti-arrow-left"></i> Admin</a>
+  <h1>Contest Judge</h1>
 
-<div class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-title"><i class="ti ti-camera" style="color:#C8A84B"></i> Shutter League</div>
-    <div class="sb-logo-sub">Open Call Judge</div>
-  </div>
-  <a class="sb-back" href="/admin"><i class="ti ti-arrow-left"></i> Back to Admin</a>
-  <div class="sb-section">In this tool</div>
-  <div style="padding:8px 18px;font-size:13px;color:#6B6B68;line-height:1.7">
-    <p style="margin-bottom:8px">Bulk upload → Sonnet evaluates each image → Download Excel + Scorecards.</p>
-    <p style="margin-bottom:8px"><strong style="color:#1A1A18">Isolated.</strong> No member data touched.</p>
-    <p style="margin-bottom:8px"><strong style="color:#1A1A18">Filename:</strong><br>
-    <code style="background:#F5F3EF;padding:2px 5px;border-radius:4px;font-size:12px">Photographer_Title.jpg</code></p>
-    <p style="margin-bottom:8px">Example:<br>
-    <code style="background:#F5F3EF;padding:2px 5px;border-radius:4px;font-size:12px">Mahesh_Contest.jpg</code></p>
-    <p><strong style="color:#1A1A18">Images</strong> are kept until you press Delete Batch.</p>
-  </div>
-</div>
-
-<div class="main">
-  <div class="page-header">
-    <div class="page-title"><i class="ti ti-gavel" style="color:#C8A84B;margin-right:8px"></i>Open Call Judge</div>
-    <div class="page-sub">Upload → Sonnet judges each image → Export Excel + individual scorecards. Isolated from member accounts.</div>
+  {# ── BATCH SELECTOR ── #}
+  <div class="batch-bar">
+    <label for="batchSel">Open call</label>
+    <select class="batch-sel" id="batchSel" onchange="switchBatch(this.value)">
+      <option value="">— choose an open call —</option>
+      {% for b in batches %}
+      <option value="{{ b.batch_ref }}"{% if b.batch_ref == batch_ref %} selected{% endif %}>
+        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %}{% if b.haiku_run %} · Haiku ✓{% endif %})
+      </option>
+      {% endfor %}
+    </select>
+    {% if batch_ref %}
+    <span class="batch-meta">{{ batch_meta.n }} entries</span>
+    <button class="btn-del" onclick="deleteBatch({{ batch_ref|tojson }})">
+      <i class="ti ti-trash"></i> Delete call
+    </button>
+    {% endif %}
   </div>
 
-  <div class="guide">
-    <strong>How to use:</strong> Name files <code>PhotographerName_Title.jpg</code>. Upload all images. One Sonnet call per image — 30 images ≈ 2–3 min. Images are stored until you delete the batch. Top 10 scorecards include rank and percentile.
+  {% if not batch_ref %}
+  {# ── EMPTY STATE: no call selected ── #}
+  <div class="batch-empty">
+    <i class="ti ti-folder-open" style="font-size:40px;color:#CFCBC2;display:block;margin-bottom:12px"></i>
+    <p>Choose an open call above, or upload images below to start a new one.</p>
   </div>
 
-  <!-- UPLOAD FORM -->
+  {# ── UPLOAD CARD (always visible so new calls can be created) ── #}
   <div class="card">
-    <div class="card-title"><i class="ti ti-upload"></i> New Judging Batch</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Batch name / reference</label>
-        <input type="text" class="form-input" id="batch-ref" placeholder="e.g. Story_Oct2026" maxlength="40">
-        <div class="form-hint">This becomes the Contest Name on scorecards</div>
+    <div class="card-title"><i class="ti ti-upload"></i> Upload images — new or existing open call</div>
+    <div class="upload-cfg">
+      <div class="field">
+        <label for="batchName">Open call name</label>
+        <input id="batchName" type="text" placeholder="e.g. Fuji Collective Open Call" style="font-size:16px">
       </div>
-      <div class="form-group">
-        <label class="form-label">Theme</label>
-        <input type="text" class="form-input" id="theme-input" value="Story" maxlength="80">
-        <div class="form-hint">Sonnet assesses theme relevance against this</div>
+      <div class="field">
+        <label for="themeInput">Theme</label>
+        <input id="themeInput" type="text" value="Story" style="font-size:16px">
       </div>
-    </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
-      <div class="form-group">
-        <label class="form-label">Theme threshold (1–10)</label>
-        <input type="number" class="form-input" id="theme-threshold" value="6.0" min="1" max="10" step="0.5">
-        <div class="form-hint">Images scoring below this do not qualify on theme. Default: 6.0</div>
+      <div class="field">
+        <label for="threshInput">Theme threshold</label>
+        <input id="threshInput" type="number" value="6.0" min="1" max="10" step="0.5" style="font-size:16px">
       </div>
     </div>
-
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-      <div class="dz-icon"><i class="ti ti-photo"></i></div>
-      <div class="dz-title">Drop images here or click to browse</div>
-      <div class="dz-sub">JPG, PNG, TIFF, WebP · No minimum size · No count limit</div>
-      <div class="dz-count" id="dz-count"></div>
+    <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="ev(event,'over')" ondragleave="ev(event,'out')" ondrop="ev(event,'drop')">
+      <div class="drop-icon"><i class="ti ti-photo"></i></div>
+      <p><strong>Click to choose images</strong> or drag and drop here</p>
+      <p>JPG or PNG · Multiple files · Already-scored entries are skipped (no re-cost)</p>
+      <input type="file" id="fileInput" multiple accept="image/jpeg,image/png" onchange="uploadFiles(this.files)">
     </div>
-    <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.tif,.tiff,.webp">
-
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
-      <div class="progress-label" id="progress-label">Preparing...</div>
-      <div class="progress-errors" id="progress-errors"></div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn btn-gold" id="judge-btn" disabled onclick="startJudging()">
-        <i class="ti ti-sparkles"></i> Judge batch
-      </button>
-      <button class="btn btn-outline" onclick="clearForm()">
-        <i class="ti ti-x"></i> Clear
-      </button>
-    </div>
+    <div class="upload-log" id="uploadLog"></div>
+    <div class="msg" id="uploadMsg"></div>
   </div>
 
-  <!-- PODIUM STRIP -->
-  <div class="podium" id="podium" style="display:none;flex-direction:row"></div>
+  {% else %}
+  {# ── TABS ── #}
+  <div class="tabs">
+    <button class="tab{% if active_tab == 'sonnet' %} active{% endif %}" id="tabSonnet" onclick="showTab('sonnet')">
+      <i class="ti ti-brain"></i> Sonnet
+    </button>
+    <button class="tab{% if active_tab == 'haiku' %} active{% endif %}" id="tabHaiku" onclick="showTab('haiku')">
+      <i class="ti ti-feather"></i> Haiku
+    </button>
+    <button class="tab{% if active_tab == 'compare' %} active{% endif %}{% if not compare_unlocked %} locked{% endif %}"
+            id="tabCompare"
+            onclick="{% if compare_unlocked %}showTab('compare'){% else %}alert('Run both Sonnet and Haiku first to unlock the Compare tab.'){% endif %}">
+      <i class="ti ti-scale"></i> Compare{% if not compare_unlocked %} <i class="ti ti-lock" style="font-size:13px"></i>{% endif %}
+    </button>
+  </div>
 
-  <!-- LIVE RESULTS -->
-  <div class="card results-wrap" id="results-card">
-    <div class="card-title"><i class="ti ti-list-check"></i> Results — <span id="results-batch-name"></span></div>
+  {# ══════════════════════════════════════════════
+     TAB 1 — SONNET
+  ══════════════════════════════════════════════ #}
+  <div class="tab-panel{% if active_tab == 'sonnet' %} active{% endif %}" id="panelSonnet">
 
-    <div id="results-summary" style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:#FAFAF6;border-radius:8px;border:1px solid #E0DDD6"></div>
-
-    <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button class="btn btn-green" id="export-btn" onclick="exportBatch()">
-        <i class="ti ti-file-spreadsheet"></i> Download Excel
-      </button>
-      <button class="btn btn-blue" id="scorecards-btn" onclick="downloadScorecards()">
-        <i class="ti ti-id"></i> Download Scorecards (ZIP)
-      </button>
-      <span style="font-size:13px;color:#6B6B68">Sorted by Composite · Open Call DDI: Wonder 27% · Connect 19% · Story 18% · Disrupt 15% · Craft 13% · Moment 8%</span>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-upload"></i> Add more images to this call</div>
+      <div class="upload-cfg">
+        <div class="field">
+          <label>Open call</label>
+          <input type="text" value="{{ batch_ref }}" readonly style="font-size:16px;background:#F0EDE6">
+        </div>
+        <div class="field">
+          <label for="themeInput2">Theme</label>
+          <input id="themeInput2" type="text" value="{{ batch_meta.theme or 'Story' }}" style="font-size:16px">
+        </div>
+        <div class="field">
+          <label for="threshInput2">Threshold</label>
+          <input id="threshInput2" type="number" value="{{ batch_meta.threshold or 6.0 }}" min="1" max="10" step="0.5" style="font-size:16px">
+        </div>
+      </div>
+      <div class="drop" id="dropZone2" onclick="document.getElementById('fileInput2').click()" ondragover="ev2(event,'over')" ondragleave="ev2(event,'out')" ondrop="ev2(event,'drop')">
+        <div class="drop-icon"><i class="ti ti-photo"></i></div>
+        <p><strong>Click to add images</strong> or drag and drop</p>
+        <p>Already-scored entries in this call are skipped (no re-cost)</p>
+        <input type="file" id="fileInput2" multiple accept="image/jpeg,image/png" onchange="uploadFiles2(this.files)">
+      </div>
+      <div class="upload-log" id="uploadLog2"></div>
     </div>
 
-    <!-- Theme filter -->
-    <div class="filter-bar">
-      <span style="font-size:13px;color:#6B6B68;font-weight:500">Show:</span>
-      <button class="filter-btn active" onclick="setFilter('all', this)">All entries</button>
-      <button class="filter-btn" onclick="setFilter('theme', this)">Theme ✓ only</button>
-      <button class="filter-btn" onclick="setFilter('top10', this)">Top 10</button>
+    <div class="card">
+      <div class="run-row">
+        <a class="btn btn-gold" href="{{ url_for('admin_contest_judge_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-download"></i> Scorecards ZIP
+        </a>
+        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_export', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-file-spreadsheet"></i> Sonnet CSV
+        </a>
+        <button class="btn btn-line" onclick="rescoreAll()">
+          <i class="ti ti-refresh"></i> Rescore all
+        </button>
+        <span class="run-note">{{ batch_meta.n }} entries · Sonnet {% if batch_meta.sonnet_run %}run {{ batch_meta.sonnet_run }}{% else %}not yet run{% endif %}</span>
+      </div>
+      <div class="prog" id="rescoreProg">
+        <div class="prog-track"><div class="prog-fill" id="rescoreProgFill"></div></div>
+        <div class="prog-text" id="rescoreProgText">Starting…</div>
+      </div>
+      <div class="msg" id="rescoreMsg"></div>
     </div>
 
-    <div style="overflow-x:auto">
-      <table class="rtable" id="results-table">
+    <div class="results-wrap">
+      <table class="rt" id="resultsTable">
         <thead>
           <tr>
-            <th class="center">#</th>
-            <th style="width:68px"></th>
+            <th>#</th>
+            <th></th>
             <th>Photographer</th>
-            <th class="center" title="Wonder / Emotion — 27%">Wonder</th>
-            <th class="center" title="Human Connect / AQ — 19%">Connect</th>
-            <th class="center" title="Story Transfer Scale 1–10 — 18%">Story Xfr</th>
-            <th class="center" title="Disruption / Wow — 15%">Disrupt</th>
-            <th class="center" title="Craft / DoD — 13%">Craft</th>
-            <th class="center" title="Decisive Moment / DM — 8%">Moment</th>
-            <th class="center">Composite</th>
-            <th class="center">Theme</th>
-            <th class="center">Genre</th>
-            <th>Theme Note</th>
-            <th>Master Ref</th>
-            <th>Gap</th>
+            <th class="num">Overall</th>
+            <th class="num">Wonder<br><span style="font-weight:400;font-size:13px">27%</span></th>
+            <th class="num">H.Connect<br><span style="font-weight:400;font-size:13px">19%</span></th>
+            <th class="num">Story<br><span style="font-weight:400;font-size:13px">18%</span></th>
+            <th class="num">Disrupt<br><span style="font-weight:400;font-size:13px">15%</span></th>
+            <th class="num">Craft<br><span style="font-weight:400;font-size:13px">13%</span></th>
+            <th class="num">Moment<br><span style="font-weight:400;font-size:13px">8%</span></th>
+            <th>Theme</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="results-tbody"></tbody>
+        <tbody id="resultsTbody">
+          {% if sonnet_entries %}
+            {% for e in sonnet_entries %}
+            <tr>
+              <td class="muted" style="font-size:15px">{{ loop.index }}</td>
+              <td><img class="thumb-sm" src="{{ e.thumb_url }}" alt="" loading="lazy"></td>
+              <td>
+                <div style="font-weight:500">{{ e.photographer or '—' }}</div>
+                <div class="muted" style="font-size:14px">{{ e.title or '' }}</div>
+              </td>
+              <td class="num"><strong>{{ '%.2f'|format(e.composite) if e.composite else '—' }}</strong></td>
+              <td class="num">{{ '%.1f'|format(e.wonder) if e.wonder else '—' }}</td>
+              <td class="num">{{ '%.1f'|format(e.aq) if e.aq else '—' }}</td>
+              <td class="num">{{ '%.1f'|format(e.story_transfer) if e.story_transfer else '—' }}</td>
+              <td class="num">{{ '%.1f'|format(e.disruption) if e.disruption else '—' }}</td>
+              <td class="num">{{ '%.1f'|format(e.dod) if e.dod else '—' }}</td>
+              <td class="num">{{ '%.1f'|format(e.dm) if e.dm else '—' }}</td>
+              <td>
+                {% if e.theme_relevant %}<span class="pos" style="font-size:15px">✓</span>{% else %}<span class="muted" style="font-size:15px">—</span>{% endif %}
+                {% if e.theme_note %}<div class="note-text">{{ e.theme_note[:80] }}{% if e.theme_note|length > 80 %}…{% endif %}</div>{% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('admin_contest_judge_review', batch_ref=batch_ref) }}#e{{ e.id }}" class="btn-line btn" style="min-height:36px;padding:0 12px;font-size:14px;text-decoration:none">Review</a>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+          <tr><td colspan="12" class="no-entries">No entries scored yet. Upload images above.</td></tr>
+          {% endif %}
+        </tbody>
       </table>
     </div>
   </div>
 
-  <!-- PREVIOUS BATCHES -->
-  <div class="card" id="batches-card">
-    <div class="card-title"><i class="ti ti-history"></i> Previous batches</div>
-    <div id="batches-list"><div style="font-size:14px;color:#8A8A86">Loading...</div></div>
+  {# ══════════════════════════════════════════════
+     TAB 2 — HAIKU
+  ══════════════════════════════════════════════ #}
+  <div class="tab-panel{% if active_tab == 'haiku' %} active{% endif %}" id="panelHaiku">
+
+    <div class="guide">
+      <strong>Independent Haiku evaluation.</strong> Haiku scores every entry using the same open call rubric as Sonnet, plus a longer written reading.
+      Sonnet's evaluations, notes and standings are <strong>never changed</strong> — this is always a separate, independent run.
+    </div>
+
+    <div class="card">
+      <div class="run-row">
+        <button class="btn btn-gold" id="haikuRunBtn" onclick="runHaiku()">
+          <i class="ti ti-player-play"></i>
+          {% if haiku_summary %}Run Haiku again ({{ haiku_entries|length }} entries){% else %}Run Haiku on all {{ haiku_entries|length }} entries{% endif %}
+        </button>
+        {% if haiku_summary and haiku_summary.n > 0 %}
+        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_only_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-download"></i> Haiku-only CSV
+        </a>
+        {% endif %}
+        <span class="run-note">Takes 3–5 minutes. Keep this page open.</span>
+      </div>
+      <div class="prog" id="haikuProg">
+        <div class="prog-track"><div class="prog-fill" id="haikuProgFill"></div></div>
+        <div class="prog-text" id="haikuProgText">Starting…</div>
+      </div>
+      <div class="msg" id="haikuMsg"></div>
+    </div>
+
+    {% macro sgn(v, dp=1) -%}
+      {%- if v is none -%}—{%- elif v > 0 -%}+{{ ('%.' ~ dp ~ 'f')|format(v) }}{%- elif v < 0 -%}−{{ ('%.' ~ dp ~ 'f')|format(-v) }}{%- else -%}0.{{ '0'*dp }}{%- endif -%}
+    {%- endmacro %}
+    {% macro fmt(v) -%}{%- if v is none -%}—{%- else -%}{{ '%.1f'|format(v) }}{%- endif -%}{%- endmacro %}
+
+    <div class="sortbar" id="haikuSortbar" {% if not haiku_summary %}style="display:none"{% endif %}>
+      <span>Order by:</span>
+      <button class="btn btn-line on" id="haikuSortS" onclick="haikuSort('s')">Haiku standing</button>
+      <button class="btn btn-line" id="haikuSortD" onclick="haikuSort('score')">Highest score</button>
+    </div>
+
+    <div id="haikuEntries">
+    {% for e in haiku_entries %}
+      <div class="entry" data-s="{{ loop.index }}" data-score="{{ e.haiku_c or 0 }}">
+        <div class="e-top">
+          {% if e.thumb %}<img class="e-thumb" src="{{ e.thumb }}" alt="" loading="lazy">{% else %}<div class="e-thumb"></div>{% endif %}
+          <div>
+            <div class="e-name">{{ e.photographer }}</div>
+            {% if e.title %}<div class="e-title">{{ e.title }}</div>{% endif %}
+            <div class="e-stand">
+              {% if e.haiku_c is not none %}
+                Haiku standing <strong>{{ loop.index }}</strong> · Score <strong>{{ '%.2f'|format(e.haiku_c) }}</strong>
+              {% else %}
+                <span class="muted">Not yet evaluated</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if e.haiku_c is not none %}
+          <div class="e-overall">
+            <div class="lbl">Haiku score</div>
+            <div class="diff">{{ '%.2f'|format(e.haiku_c) }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if e.h %}
+        <div class="dims">
+          {% for d in e.dims %}
+          <div class="dim">
+            <div class="n">{{ d.label }}</div>
+            <div class="sv">{{ fmt(d.haiku) }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        <details>
+          <summary><i class="ti ti-file-text" style="margin-right:8px"></i> Read Haiku's written evaluation</summary>
+          <div class="narr" style="grid-template-columns:1fr">
+            <div>
+              <span class="col-h">Haiku</span>
+              {% if e.h.impression %}<h4>First impression</h4><p>{{ e.h.impression }}</p>{% endif %}
+              {% for d in e.dims %}{% if d.obs %}<h4>{{ d.label }} · {{ fmt(d.haiku) }}</h4><p>{{ d.obs }}</p>{% endif %}{% endfor %}
+              {% if e.h.strength %}<h4>Strength</h4><p>{{ e.h.strength }}</p>{% endif %}
+              {% if e.h.next_leap %}<h4>Next leap</h4><p>{{ e.h.next_leap }}</p>{% endif %}
+            </div>
+          </div>
+        </details>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="no-entries">No Haiku evaluations yet. Hit Run Haiku above.</div>
+    {% endfor %}
+    </div>
   </div>
 
-</div>
+  {# ══════════════════════════════════════════════
+     TAB 3 — COMPARE
+  ══════════════════════════════════════════════ #}
+  <div class="tab-panel{% if active_tab == 'compare' %} active{% endif %}" id="panelCompare">
+
+    {% if not compare_unlocked %}
+    <div class="locked-msg">
+      <i class="ti ti-lock"></i>
+      <p>Run both Sonnet and Haiku on this open call to unlock the Compare tab.</p>
+    </div>
+    {% else %}
+
+    <div class="guide">
+      <strong>Calibration view.</strong> How closely do Sonnet and Haiku agree?
+      <strong>Plus / minus</strong> = Haiku minus Sonnet. <span class="pos">Green</span> within 0.3 · <span class="mid">Amber</span> within 0.6 · <span class="neg">Red</span> more than 0.6 apart.
+    </div>
+
+    <div class="card">
+      <div class="run-row">
+        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-download"></i> Comparison CSV
+        </a>
+        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_only_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-download"></i> Haiku-only CSV
+        </a>
+      </div>
+    </div>
+
+    {% if compare_summary %}
+    {% macro tone(v) -%}
+      {%- if v is none -%}muted{%- elif (v if v >= 0 else -v) <= 0.3 -%}pos{%- elif (v if v >= 0 else -v) <= 0.6 -%}mid{%- else -%}neg{%- endif -%}
+    {%- endmacro %}
+    {% macro csgn(v, dp=1) -%}
+      {%- if v is none -%}—{%- elif v > 0 -%}+{{ ('%.' ~ dp ~ 'f')|format(v) }}{%- elif v < 0 -%}−{{ ('%.' ~ dp ~ 'f')|format(-v) }}{%- else -%}0.{{ '0'*dp }}{%- endif -%}
+    {%- endmacro %}
+    {% macro cfmt(v) -%}{%- if v is none -%}—{%- else -%}{{ '%.1f'|format(v) }}{%- endif -%}{%- endmacro %}
+
+    <div class="stats">
+      <div class="stat"><div class="stat-l">Entries compared</div><div class="stat-n">{{ compare_summary.n }} of {{ compare_summary.total }}</div></div>
+      <div class="stat">
+        <div class="stat-l">Average gap, overall</div>
+        <div class="stat-n {{ tone(compare_summary.mad) }}">± {{ '%.2f'|format(compare_summary.mad) }}</div>
+        <div class="stat-d">Largest: {{ csgn(compare_summary.max, 2) }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-l">Haiku leans</div>
+        <div class="stat-n">{% if compare_summary.bias > 0.05 %}Higher{% elif compare_summary.bias < -0.05 %}Lower{% else %}Level{% endif %}</div>
+        <div class="stat-d">by {{ csgn(compare_summary.bias, 2) }} on average</div>
+      </div>
+      <div class="stat">
+        <div class="stat-l">Rank agreement</div>
+        <div class="stat-n">{% if compare_summary.rho is none %}—{% elif compare_summary.rho >= 0.9 %}Very close{% elif compare_summary.rho >= 0.75 %}Close{% elif compare_summary.rho >= 0.5 %}Loose{% else %}Different{% endif %}</div>
+        <div class="stat-d">Spearman ρ = {{ compare_summary.rho if compare_summary.rho is not none else '—' }}</div>
+      </div>
+      <div class="stat"><div class="stat-l">Top 10 in both</div><div class="stat-n">{{ compare_summary.top10_overlap }} of {{ compare_summary.top10_size }}</div></div>
+      <div class="stat"><div class="stat-l">Within 0.1 of Sonnet</div><div class="stat-n">{{ compare_summary.within_01 }}</div><div class="stat-d">entries</div></div>
+      <div class="stat"><div class="stat-l">Within 0.3 of Sonnet</div><div class="stat-n">{{ compare_summary.within_03 }}</div><div class="stat-d">entries</div></div>
+      <div class="stat"><div class="stat-l">Not yet compared</div><div class="stat-n">{{ compare_summary.total - compare_summary.n }}</div><div class="stat-d">entries</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Dimension by dimension</div>
+      <table class="dimt">
+        <tr><th>Dimension</th><th>Average gap</th><th>Haiku leans</th></tr>
+        {% for d in compare_summary.per_dim %}
+        <tr>
+          <td>{{ d.label }}</td>
+          <td class="{{ tone(d.mad) }}">{% if d.mad is none %}—{% else %}± {{ '%.2f'|format(d.mad) }}{% endif %}</td>
+          <td>{% if d.bias is none %}—{% elif d.bias > 0.05 %}Higher {{ csgn(d.bias, 2) }}{% elif d.bias < -0.05 %}Lower {{ csgn(d.bias, 2) }}{% else %}Level{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+
+    <div class="sortbar">
+      <span>Order by:</span>
+      <button class="btn btn-line on" id="cmpSortS" onclick="cmpSort('s')">Sonnet standing</button>
+      <button class="btn btn-line" id="cmpSortD" onclick="cmpSort('d')">Biggest difference</button>
+    </div>
+
+    <div id="cmpEntries">
+    {% for e in compare_entries %}
+      <div class="entry" data-s="{{ e.sonnet_standing }}" data-d="{{ (e.cdiff if e.cdiff is not none and e.cdiff >= 0 else (-(e.cdiff) if e.cdiff is not none else -1)) }}">
+        <div class="e-top">
+          {% if e.thumb %}<img class="e-thumb" src="{{ e.thumb }}" alt="" loading="lazy">{% else %}<div class="e-thumb"></div>{% endif %}
+          <div>
+            <div class="e-name">{{ e.photographer }}</div>
+            {% if e.title %}<div class="e-title">{{ e.title }}</div>{% endif %}
+            <div class="e-stand">
+              Sonnet <strong>{{ e.sonnet_standing }}</strong>
+              {% if e.haiku_standing %} · Haiku <strong>{{ e.haiku_standing }}</strong>
+                {% if e.standing_move > 0 %}<span class="pos">(up {{ e.standing_move }})</span>{% elif e.standing_move < 0 %}<span class="neg">(down {{ -e.standing_move }})</span>{% else %}<span class="muted">(same)</span>{% endif %}
+              {% endif %}
+            </div>
+          </div>
+          <div class="e-overall">
+            <div class="lbl">Overall</div>
+            <div class="vals">{{ '%.2f'|format(e.sonnet_c) if e.sonnet_c is not none else '—' }} → {{ '%.2f'|format(e.haiku_c) if e.haiku_c is not none else '—' }}</div>
+            <div class="diff {{ tone(e.cdiff) }}">{{ csgn(e.cdiff, 2) }}</div>
+          </div>
+        </div>
+
+        <div class="dims">
+          {% for d in e.dims %}
+          <div class="dim">
+            <div class="n">{{ d.label }}</div>
+            <div class="sv">{{ cfmt(d.sonnet) }} → {{ cfmt(d.haiku) }}</div>
+            <div class="d {{ tone(d.diff) }}">{{ csgn(d.diff) }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if e.h %}
+        <details>
+          <summary><i class="ti ti-file-text" style="margin-right:8px"></i> Read Haiku beside Sonnet</summary>
+          <div class="narr">
+            <div>
+              <span class="col-h">Haiku</span>
+              {% if e.h.impression %}<h4>First impression</h4><p>{{ e.h.impression }}</p>{% endif %}
+              {% for d in e.dims %}{% if d.obs %}<h4>{{ d.label }} · {{ cfmt(d.haiku) }}</h4><p>{{ d.obs }}</p>{% endif %}{% endfor %}
+              {% if e.h.strength %}<h4>Strength</h4><p>{{ e.h.strength }}</p>{% endif %}
+              {% if e.h.next_leap %}<h4>Next leap</h4><p>{{ e.h.next_leap }}</p>{% endif %}
+            </div>
+            <div>
+              <span class="col-h col-s">Sonnet</span>
+              <h4>Theme note</h4><p>{{ e.s_theme_note or '—' }}</p>
+              <h4>Master reference</h4><p>{{ e.s_master_ref or '—' }}</p>
+              <h4>Gap</h4><p>{{ e.s_gap_note or '—' }}</p>
+            </div>
+          </div>
+        </details>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+
+    {% endif %}{# compare_unlocked #}
+  </div>
+
+  {% endif %}{# batch_ref #}
 </div>
 
 <script>
-let selectedFiles = [];
-let currentBatch = '';
-let currentFilter = 'all';
-
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('file-input');
-
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-dropzone.addEventListener('drop', e => {
-  e.preventDefault(); dropzone.classList.remove('dragover');
-  setFiles(Array.from(e.dataTransfer.files));
-});
-fileInput.addEventListener('change', e => setFiles(Array.from(e.target.files)));
-
-function setFiles(files) {
-  selectedFiles = files.filter(f => /\.(jpg|jpeg|png|tif|tiff|webp)$/i.test(f.name));
-  if (selectedFiles.length > 0) {
-    dropzone.classList.add('has-files');
-    const el = document.getElementById('dz-count');
-    el.textContent = `${selectedFiles.length} image${selectedFiles.length === 1 ? '' : 's'} selected`;
-    el.style.display = 'block';
-    document.getElementById('judge-btn').disabled = false;
-  }
-}
-
-function clearForm() {
-  selectedFiles = []; fileInput.value = '';
-  dropzone.classList.remove('has-files','dragover');
-  document.getElementById('dz-count').style.display = 'none';
-  document.getElementById('judge-btn').disabled = true;
-  document.getElementById('progress-wrap').style.display = 'none';
-  document.getElementById('progress-errors').innerHTML = '';
-}
-
-async function startJudging() {
-  if (!selectedFiles.length) return;
-  const batchRef = document.getElementById('batch-ref').value.trim() || '';
-  const theme = document.getElementById('theme-input').value.trim() || 'Story';
-  const themeThreshold = parseFloat(document.getElementById('theme-threshold').value) || 6.0;
-
-  document.getElementById('judge-btn').disabled = true;
-  document.getElementById('progress-wrap').style.display = 'block';
-  document.getElementById('progress-errors').innerHTML = '';
-
-  const total = selectedFiles.length;
-  let done = 0, allResults = [], allErrors = [];
-  const CHUNK = 5;
-  let usedBatchRef = batchRef;
-
-  for (let i = 0; i < selectedFiles.length; i += CHUNK) {
-    const chunk = selectedFiles.slice(i, i + CHUNK);
-    updateProgress(done, total, `Judging images ${i+1}–${Math.min(i+CHUNK,total)} of ${total}...`);
-    const fd = new FormData();
-    fd.append('batch_ref', usedBatchRef);
-    fd.append('theme', theme);
-    fd.append('theme_threshold', themeThreshold);
-    chunk.forEach(f => fd.append('images', f));
-    try {
-      const resp = await fetch('/admin/contest-judge/upload', { method:'POST', body:fd });
-      const data = await resp.json();
-      if (data.batch_ref && !usedBatchRef) usedBatchRef = data.batch_ref;
-      allResults = allResults.concat(data.results || []);
-      allErrors = allErrors.concat(data.errors || []);
-      done += chunk.length;
-    } catch(e) {
-      allErrors.push({ filename:'chunk '+(i/CHUNK+1), error:e.message });
-      done += chunk.length;
-    }
-    updateProgress(done, total, done >= total ? 'Done!' : `${done} of ${total} judged...`);
-  }
-
-  currentBatch = usedBatchRef;
-
-  if (allErrors.length) {
-    const errEl = document.getElementById('progress-errors');
-    allErrors.forEach(e => {
-      errEl.innerHTML += `<div class="err-item"><i class="ti ti-alert-circle"></i> <strong>${e.filename}</strong>: ${e.error}</div>`;
-    });
-  }
-
-  updateProgress(total, total, `✓ ${allResults.length} images judged${allErrors.length ? ` · ${allErrors.length} error(s)` : ''}`);
-
-  if (currentBatch) { await loadResults(currentBatch); loadBatches(); }
-  document.getElementById('judge-btn').disabled = false;
-}
-
-function updateProgress(done, total, label) {
-  const pct = total > 0 ? (done/total)*100 : 0;
-  document.getElementById('progress-fill').style.width = pct+'%';
-  document.getElementById('progress-label').textContent = label;
-}
-
-// ── Results ──────────────────────────────────────────────────────────────────
-async function loadResults(batchRef) {
-  const resp = await fetch(`/admin/contest-judge/results/${encodeURIComponent(batchRef)}`);
-  const rows = await resp.json();
-
-  document.getElementById('results-batch-name').textContent = batchRef;
-  document.getElementById('export-btn').dataset.batchRef = batchRef;
-  document.getElementById('scorecards-btn').dataset.batchRef = batchRef;
-
-  // Summary strip — DDI v182.27
-  const composites = rows.map(r => r.composite).filter(v => v != null);
-  const themeYes = rows.filter(r => r.theme_relevant).length;
-  const wonders = rows.map(r => r.wonder).filter(v => v != null);
-  const storyTrs = rows.map(r => r.story_transfer).filter(v => v != null);
-  const avgWonder = wonders.length ? (wonders.reduce((a,b)=>a+b,0)/wonders.length).toFixed(1) : '—';
-  const avgStoryTr = storyTrs.length ? (storyTrs.reduce((a,b)=>a+b,0)/storyTrs.length).toFixed(1) : '—';
-  document.getElementById('results-summary').innerHTML = `
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Entries</div><div style="font-size:22px;font-weight:500">${rows.length}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Avg Composite</div><div style="font-size:22px;font-weight:500">${composites.length?(composites.reduce((a,b)=>a+b,0)/composites.length).toFixed(2):'—'}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Avg Wonder</div><div style="font-size:22px;font-weight:500">${avgWonder}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Avg Story Xfr</div><div style="font-size:22px;font-weight:500">${avgStoryTr}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Theme ✓</div><div style="font-size:22px;font-weight:500">${themeYes} / ${rows.length}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Highest</div><div style="font-size:22px;font-weight:500;color:#065F46">${composites.length?Math.max(...composites).toFixed(2):'—'}</div></div>
-    <div><div style="font-size:11px;color:#8A8A86;text-transform:uppercase;letter-spacing:.08em">Lowest</div><div style="font-size:22px;font-weight:500;color:#B91C1C">${composites.length?Math.min(...composites).toFixed(2):'—'}</div></div>
-  `;
-
-  // Podium (top 3)
-  const medals = ['🥇','🥈','🥉'];
-  const podiumEl = document.getElementById('podium');
-  podiumEl.innerHTML = rows.slice(0,3).map((r,i) => `
-    <div class="podium-card ${i===0?'p1':''}">
-      <div class="podium-medal">${medals[i]}</div>
-      <div class="podium-rank">RANK ${i+1}</div>
-      <div class="podium-name">${esc(r.photographer||'Unknown')}</div>
-      <div class="podium-score">${r.composite!=null?r.composite.toFixed(2):'—'}</div>
-      <div class="podium-theme">${r.theme_relevant
-        ? '<span class="theme-yes">Theme ✓</span>'
-        : '<span class="theme-no">Theme ✗</span>'}</div>
-      <div class="podium-note">${esc(r.gap_note||'')}</div>
-    </div>
-  `).join('');
-  podiumEl.style.display = 'flex';
-
-  // Table
-  const tbody = document.getElementById('results-tbody');
-  tbody.innerHTML = '';
-  rows.forEach((r, idx) => {
-    const rank = idx + 1;
-    const tr = document.createElement('tr');
-    tr.dataset.themeRelevant = r.theme_relevant ? '1' : '0';
-    tr.dataset.rank = rank;
-    tr.innerHTML = `
-      <td><span class="rank-num">${rank}</span></td>
-      <td style="padding:4px 6px;vertical-align:middle;">
-        ${r.thumb_url
-          ? `<img src="${r.thumb_url}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:5px;display:block;">`
-          : `<div style="width:60px;height:60px;background:#e8e4dc;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">—</div>`}
-      </td>
-      <td>
-        <div class="photographer-name">${esc(r.photographer||'Unknown')}</div>
-        <div class="image-title">${esc(r.title||r.filename)}</div>
-      </td>
-      ${scoreCell(r.wonder)}
-      ${scoreCell(r.aq)}
-      ${scoreCell(r.story_transfer)}
-      ${scoreCell(r.disruption)}
-      ${scoreCell(r.dod)}
-      ${scoreCell(r.dm)}
-      <td class="score-cell" style="font-size:16px">${scoreSpan(r.composite)}</td>
-      <td style="text-align:center">
-        ${r.theme_relevant
-          ? `<span class="theme-yes">✓ ${r.theme_score!=null?r.theme_score.toFixed(1):''}</span>`
-          : `<span class="theme-no">✗ ${r.theme_score!=null?r.theme_score.toFixed(1):''}</span>`}
-      </td>
-      <td style="text-align:center;font-size:12px;color:#6B6B68">${esc(r.genre_detected||'—')}</td>
-      <td><div class="note-text">${esc(r.theme_note||'')}</div></td>
-      <td><div class="master-text">${esc(r.master_ref||'')}</div></td>
-      <td><div class="gap-text">${esc(r.gap_note||'')}</div></td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  applyFilter(currentFilter);
-
-  document.getElementById('results-card').style.display = 'block';
-  document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-function scoreCell(val) {
-  if (val == null) return '<td class="score-cell">—</td>';
-  const pct = Math.round((val / 10) * 100);
-  const cls = val >= 8.5 ? 's-high' : val >= 7.0 ? 's-mid' : 's-low';
-  return `<td class="score-cell">
-    <div class="score-bar-wrap">
-      <span class="${cls}">${val.toFixed(1)}</span>
-      <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%"></div></div>
-    </div>
-  </td>`;
-}
-function scoreSpan(val) {
-  if (val == null) return '—';
-  const cls = val >= 8.5 ? 's-high' : val >= 7.0 ? 's-mid' : 's-low';
-  return `<span class="${cls}">${val.toFixed(1)}</span>`;
-}
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Filter ───────────────────────────────────────────────────────────────────
-function setFilter(mode, btn) {
-  currentFilter = mode;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilter(mode);
-}
-
-function applyFilter(mode) {
-  const rows = document.querySelectorAll('#results-tbody tr');
-  rows.forEach(tr => {
-    const rank = parseInt(tr.dataset.rank || '99');
-    const themeOk = tr.dataset.themeRelevant === '1';
-    let show = true;
-    if (mode === 'theme') show = themeOk;
-    if (mode === 'top10') show = rank <= 10;
-    tr.classList.toggle('hidden-row', !show);
-  });
-}
-
-// ── Export ───────────────────────────────────────────────────────────────────
-function exportBatch() {
-  const ref = document.getElementById('export-btn').dataset.batchRef || currentBatch;
-  if (!ref) return;
-  window.location = `/admin/contest-judge/export/${encodeURIComponent(ref)}`;
-}
-
-function downloadScorecards() {
-  const ref = document.getElementById('scorecards-btn').dataset.batchRef || currentBatch;
-  if (!ref) return;
-  window.location = `/admin/contest-judge/scorecards/${encodeURIComponent(ref)}`;
-}
-
-// ── Batch list ────────────────────────────────────────────────────────────────
-async function loadBatches() {
-  const resp = await fetch('/admin/contest-judge/batches');
-  const batches = await resp.json();
-  const el = document.getElementById('batches-list');
-  if (!batches.length) {
-    el.innerHTML = '<div style="font-size:14px;color:#8A8A86">No batches yet.</div>';
-    return;
-  }
-  el.innerHTML = batches.map(b => `
-    <div class="batch-row">
-      <div class="batch-info">
-        <div class="batch-name">${esc(b.batch_ref)}</div>
-        <div class="batch-meta">${b.n} images · Avg composite: ${b.avg_composite??'—'} · Theme ✓: ${b.theme_yes}/${b.n} · ${b.started}</div>
-      </div>
-      <div class="batch-actions">
-        <button class="batch-btn" onclick="loadResults('${esc(b.batch_ref)}')"><i class="ti ti-eye"></i> View</button>
-        <a class="batch-btn" href="/admin/contest-judge/review/${encodeURIComponent(b.batch_ref)}" style="background:#c8a84b;color:#1a1815;font-weight:600;"><i class="ti ti-notebook"></i> Review &amp; Notes</a>
-        <a class="batch-btn" href="/admin/contest-judge/export/${encodeURIComponent(b.batch_ref)}"><i class="ti ti-file-spreadsheet"></i> Excel</a>
-        <a class="batch-btn" href="/admin/contest-judge/scorecards/${encodeURIComponent(b.batch_ref)}"><i class="ti ti-id"></i> Scorecards</a>
-        <button class="batch-btn" style="background:#1e3a5f;color:#93c5fd;" onclick="fixThumbs('${esc(b.batch_ref)}')"><i class="ti ti-photo-up"></i> Fix Thumbs</button>
-        <button class="batch-btn danger" onclick="deleteBatch('${esc(b.batch_ref)}')"><i class="ti ti-trash"></i> Delete</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function deleteBatch(ref) {
-  if (!confirm(`Delete all results and images for "${ref}"? This cannot be undone.`)) return;
-  await fetch(`/admin/contest-judge/delete-batch/${encodeURIComponent(ref)}`, { method:'POST' });
-  loadBatches();
-  if (currentBatch === ref) {
-    document.getElementById('results-card').style.display = 'none';
-    document.getElementById('podium').style.display = 'none';
-  }
-}
-
-// ── Fix Thumbnails — zero Sonnet calls, R2 reupload only ──
-function fixThumbs(ref) {
-  // Hidden file input
-  const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = 'image/*';
-  inp.multiple = true;
-  inp.onchange = async () => {
-    if (!inp.files.length) return;
-    const label = document.createElement('div');
-    label.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1a2744;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999;font-size:14px;';
-    label.textContent = `Uploading ${inp.files.length} images to R2…`;
-    document.body.appendChild(label);
-    const fd = new FormData();
-    for (const f of inp.files) fd.append('images', f);
-    try {
-      const resp = await fetch(`/admin/contest-judge/reupload-thumbs/${encodeURIComponent(ref)}`, {
-        method: 'POST', body: fd
-      });
-      const data = await resp.json();
-      label.style.background = '#065f46';
-      label.textContent = `✓ ${data.updated} thumbnails fixed on R2. ${data.skipped?.length ? data.skipped.length + ' skipped (not in batch).' : ''}`;
-      setTimeout(() => label.remove(), 5000);
-      if (currentBatch === ref) loadResults(ref);
-    } catch(e) {
-      label.style.background = '#7f1d1d';
-      label.textContent = 'Upload failed: ' + e.message;
-      setTimeout(() => label.remove(), 5000);
-    }
-  };
-  inp.click();
-}
-
-loadBatches();
+/* ── JINJA VALUES → JS CONSTANTS (all template expressions isolated here) ── */
+var URL_BASE      = {{ url_for('admin_contest_judge')|tojson }};
+var URL_UPLOAD    = {{ url_for('admin_contest_judge_upload')|tojson }};
+var URL_RESCORE   = {{ url_for('admin_contest_judge_bulk_rescore', batch_ref=batch_ref or '_')|tojson }};
+var URL_STATUS    = {{ url_for('admin_contest_judge_bulk_rescore_status', job_id='JOBID')|tojson }};
+var URL_DELETE    = {{ url_for('admin_contest_judge_delete_batch', batch_ref=batch_ref or '_')|tojson }};
+var BATCH_REF     = {{ batch_ref|tojson if batch_ref else 'null' }};
+var BATCH_N       = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
+{% if batch_ref %}
+var URL_HAIKU_RUN = {{ url_for('admin_contest_judge_haiku_run', batch_ref=batch_ref)|tojson }};
+{% else %}
+var URL_HAIKU_RUN = '';
+{% endif %}
 </script>
+{% raw %}
+<script>
+/* ── BATCH SWITCH & DELETE ── */
+function switchBatch(v){
+  if(v) window.location = URL_BASE + '?batch=' + encodeURIComponent(v);
+  else window.location = URL_BASE;
+}
+function deleteBatch(ref){
+  if(!confirm('Delete "' + ref + '" and all ' + BATCH_N + ' scored entries?\n\nThis removes all Sonnet scores, Haiku scores and stored images. It cannot be undone.')) return;
+  fetch(URL_DELETE, {method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(){ window.location = URL_BASE; })
+    .catch(function(){ alert('Delete failed. Please try again.'); });
+}
+
+/* ── TABS ── */
+function showTab(t){
+  ['sonnet','haiku','compare'].forEach(function(k){
+    document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active', k===t);
+    document.getElementById('panel'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active', k===t);
+  });
+  history.replaceState(null,'','?batch='+encodeURIComponent(BATCH_REF||'')+'&tab='+t);
+}
+
+/* ── DRAG + DROP HELPERS ── */
+function ev(e,a){ e.preventDefault(); document.getElementById('dropZone').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles(e.dataTransfer.files); }
+function ev2(e,a){ e.preventDefault(); document.getElementById('dropZone2').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles2(e.dataTransfer.files); }
+
+/* ── UPLOAD (new call) ── */
+function uploadFiles(files){
+  if(!files||!files.length) return;
+  var name=document.getElementById('batchName').value.trim();
+  if(!name){ alert('Enter an open call name first.'); return; }
+  _doUpload(files, name,
+    document.getElementById('themeInput').value.trim()||'Story',
+    document.getElementById('threshInput').value||'6.0',
+    'uploadLog','uploadMsg');
+}
+/* ── UPLOAD (add to existing call) ── */
+function uploadFiles2(files){
+  if(!files||!files.length) return;
+  _doUpload(files, BATCH_REF||'',
+    document.getElementById('themeInput2') ? document.getElementById('themeInput2').value.trim() : 'Story',
+    document.getElementById('threshInput2') ? document.getElementById('threshInput2').value : '6.0',
+    'uploadLog2','');
+}
+function _doUpload(files, batchRef, theme, thresh, logId, msgId){
+  var log=document.getElementById(logId);
+  if(log){ log.style.display='block'; log.innerHTML='<p>Uploading '+files.length+' image'+(files.length===1?'':'s')+'…</p>'; }
+  var fd=new FormData();
+  for(var i=0;i<files.length;i++) fd.append('images',files[i]);
+  fd.append('batch_ref',batchRef);
+  fd.append('theme',theme);
+  fd.append('theme_threshold',thresh);
+  fetch(URL_UPLOAD,{method:'POST',body:fd,credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(log){
+        var html='';
+        (d.results||[]).forEach(function(r){ html+='<p class="ok">✓ '+r.photographer+' — '+r.filename+' ('+r.composite.toFixed(2)+')</p>'; });
+        (d.reused||[]).forEach(function(r){ html+='<p class="skip">↩ '+r+' (already scored, skipped)</p>'; });
+        (d.errors||[]).forEach(function(r){ html+='<p class="err">✗ '+(r.filename||r)+'</p>'; });
+        log.innerHTML=html||'<p class="ok">Done.</p>';
+      }
+      if(d.batch_ref) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(d.batch_ref)+'&tab=sonnet'; },1200);
+    })
+    .catch(function(){ if(log) log.innerHTML='<p class="err">Upload failed. Please try again.</p>'; });
+}
+
+/* ── RESCORE ALL (Sonnet) ── */
+function rescoreAll(){
+  if(!confirm('Rescore all entries in this open call with Sonnet?\nExisting scores will be overwritten.')) return;
+  var btn=event.target; btn.disabled=true;
+  document.getElementById('rescoreProg').style.display='block';
+  fetch(URL_RESCORE,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.job_id){ btn.disabled=false; return; }
+      pollRescore(d.job_id, btn);
+    });
+}
+function pollRescore(id,btn){
+  fetch(URL_STATUS.replace('JOBID',id),{credentials:'same-origin'})
+    .then(function(r){ return r.json(); }).then(function(p){
+      if(p.total){
+        document.getElementById('rescoreProgFill').style.width=Math.round(100*p.done/p.total)+'%';
+        document.getElementById('rescoreProgText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' errors':'');
+      }
+      if(p.finished){ location.reload(); }
+      else setTimeout(function(){ pollRescore(id,btn); },3000);
+    }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
+}
+
+/* ── RUN HAIKU ── */
+function runHaiku(){
+  if(!URL_HAIKU_RUN){ alert('No open call selected.'); return; }
+  if(!confirm('Run Haiku on every entry in this open call?\n\nSonnet evaluations and standings will not change.')) return;
+  var btn=document.getElementById('haikuRunBtn'); btn.disabled=true;
+  document.getElementById('haikuProg').style.display='block';
+  fetch(URL_HAIKU_RUN,{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({}),credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.job_id){ btn.disabled=false; document.getElementById('haikuMsg').className='msg err'; document.getElementById('haikuMsg').textContent=d.error||'Could not start.'; document.getElementById('haikuMsg').style.display='block'; return; }
+      pollHaiku(d.job_id);
+    })
+    .catch(function(){ btn.disabled=false; });
+}
+function pollHaiku(id){
+  fetch(URL_STATUS.replace('JOBID',id),{credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(p){
+    if(p.total){
+      document.getElementById('haikuProgFill').style.width=Math.round(100*p.done/p.total)+'%';
+      document.getElementById('haikuProgText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' errors':'');
+    }
+    if(p.finished){ document.getElementById('haikuProgText').textContent+=' — done. Reloading…'; setTimeout(function(){ location.reload(); },1200); }
+    else setTimeout(function(){ pollHaiku(id); },3000);
+  }).catch(function(){ setTimeout(function(){ pollHaiku(id); },5000); });
+}
+
+/* ── SORT: HAIKU TAB ── */
+function haikuSort(k){
+  var box=document.getElementById('haikuEntries');
+  var items=[].slice.call(box.querySelectorAll('.entry'));
+  items.sort(function(a,b){ return k==='s'?(+a.dataset.s)-(+b.dataset.s):(+b.dataset.score)-(+a.dataset.score); });
+  items.forEach(function(it){ box.appendChild(it); });
+  document.getElementById('haikuSortS').classList.toggle('on',k==='s');
+  document.getElementById('haikuSortD').classList.toggle('on',k==='score');
+}
+
+/* ── SORT: COMPARE TAB ── */
+function cmpSort(k){
+  var box=document.getElementById('cmpEntries');
+  if(!box) return;
+  var items=[].slice.call(box.querySelectorAll('.entry'));
+  items.sort(function(a,b){ return k==='s'?(+a.dataset.s)-(+b.dataset.s):(+b.dataset.d)-(+a.dataset.d); });
+  items.forEach(function(it){ box.appendChild(it); });
+  document.getElementById('cmpSortS').classList.toggle('on',k==='s');
+  document.getElementById('cmpSortD').classList.toggle('on',k==='d');
+}
+
+/* ── RESTORE TAB FROM URL ── */
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var t=p.get('tab');
+  if(t&&['sonnet','haiku','compare'].indexOf(t)>-1){
+    var el=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(el&&!el.classList.contains('locked')) showTab(t);
+  }
+})();
+</script>
+{% endraw %}
 </body>
 </html>
