@@ -1,3 +1,4 @@
+# SL-VERSION: 182.41 (Session 230, 2026-09-30 — FIX: Haiku contest judge max_tokens raised 1600→2800. At 1600 tokens Haiku ran out of room before writing obs_dod/dod in its JSON output, causing dod (Craft) to silently fall back to 6.0 for ~66% of entries and obs_craft to be blank. Now all 6 dimensions score correctly. RETAINS 182.40.)
 # SL-VERSION: 182.40 (Session 229, 2026-09-30 — FIX: SL Audit on haiku_compare HTML: font sizes raised to 15px minimum, tap target min-height raised to 44px. ADD: standalone Haiku-only CSV route /admin/contest-judge/haiku-only-csv/<batch_ref> and matching button — exports Haiku evaluation scores and full narrative without any Sonnet comparison columns. RETAINS 182.39.)
 # SL-VERSION: 182.39 (Session 229, 2026-09-30 — NEW: Haiku comparison CSV export. New route /admin/contest-judge/haiku-compare/<batch_ref>/csv downloads all 47 entries as a CSV with both standings, six-dimension Sonnet/Haiku/gap columns, and all Haiku written fields (impression, strength, next_leap, one observation per dimension). No Sonnet data is ever written. RETAINS 182.38.)
 # SL-VERSION: 182.38 (Session 229, 2026-09-30 — NEW: Mock B scorecard design. Replaces DejaVu system-font card with a premium dark-panel layout: dark gallery panel with centred photograph + shadow, Playfair Display for name and overall evaluation, Inter for dimensions, Cormorant Garamond Italic for master reference and mentor note. Eight SL-bundled fonts in static/fonts/ (no Railway system-font dependency). Standing pill badge for top 10; mentor note in gold-bordered ivory panel signed by founder; gold bottom bar; footer shutterleague.com · Making Images Matter. RETAINS 182.37.)
@@ -16494,7 +16495,7 @@ def admin_contest_judge_haiku_run(batch_ref):
         thr = float(r['theme_threshold']) if r['theme_threshold'] else 6.0
         v = _cj_sonnet_judge(b64, r['photographer'] or '', r['image_title'] or '',
                              r['theme'] or 'Story', thr,
-                             model=_HAIKU_MODEL, max_tokens=1600,
+                             model=_HAIKU_MODEL, max_tokens=2800,
                              extra_instructions=_CJ_HAIKU_EXTRA)
         return r['id'], (v or {'error': 'no response'})
 
