@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.11 (Session 232, 2026-10-01 -- FIX: Replaced all U+2500 box-drawing chars in JS comment dividers with ASCII -- equivalents. Root cause of editHaikuField ReferenceError: browser JS parser aborted on non-ASCII in raw block. Also fixed garbled version header. RETAINS 2.10.) #}
+{# SL-VERSION: admin_contest_judge-2.12 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP button added to Haiku tab (visible after Haiku run). Links to admin_contest_judge_haiku_sonnet_scorecards route. RETAINS 2.11.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +49,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .run-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
 .run-note{font-size:15px;color:#6B6B68}
 
-/* ── PROGRESS ── */
+/* -- PROGRESS -- */
 .prog{display:none;margin-top:16px}
 .prog-track{height:14px;background:#F0EDE6;border-radius:7px;overflow:hidden}
 .prog-fill{height:100%;width:0;background:#C8A84B;transition:width .4s}
@@ -58,7 +58,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .msg.err{display:block;background:#FEF2F2;color:#991B1B}
 .msg.ok{display:block;background:#F0FDF4;color:#166534}
 
-/* ── UPLOAD AREA ── */
+/* -- UPLOAD AREA -- */
 .drop{border:2px dashed #CFCBC2;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
 .drop.over,.drop:hover{border-color:#C8A84B;background:#FFFBEB}
 .drop-icon{font-size:36px;color:#CFCBC2;margin-bottom:8px}
@@ -74,7 +74,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .upload-log .err{color:#B91C1C}
 .upload-log .skip{color:#A15C07}
 
-/* ── RESULTS TABLE (Sonnet) ── */
+/* -- RESULTS TABLE (Sonnet) -- */
 .results-wrap{overflow-x:auto;margin-top:4px}
 table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .rt th{text-align:left;font-size:15px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:2px solid #E0DDD6;white-space:nowrap}
@@ -87,7 +87,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .no-entries{text-align:center;padding:48px 0;color:#6B6B68;font-size:16px}
 .note-text{font-size:15px;color:#6B6B68;max-width:280px;line-height:1.4}
 
-/* ── HAIKU ENTRIES ── */
+/* -- HAIKU ENTRIES -- */
 .entry{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:16px;margin-bottom:14px}
 .e-top{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center}
 .e-thumb{width:96px;height:96px;border-radius:8px;object-fit:cover;background:#EEE}
@@ -122,7 +122,7 @@ summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size
 .btn-save-hf:hover{background:#6D28D9}
 .btn-cancel-hf{min-height:44px;padding:0 14px;background:none;color:#6B7280;border:1px solid #D1D5DB;border-radius:6px;font-size:15px;cursor:pointer}
 
-/* ── MASTER REF + JUDGE NOTES ── */
+/* -- MASTER REF + JUDGE NOTES -- */
 .e-master{font-size:15px;color:#6B6B68;margin-top:6px;padding:7px 10px;background:#FFFBEB;border-left:3px solid #C8A84B;border-radius:0 6px 6px 0;line-height:1.5}
 .e-master strong{color:#92400E}
 .judge-note-box{margin-top:14px;border-top:1px solid #F0EDE6;padding-top:14px}
@@ -133,7 +133,7 @@ summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size
 .btn-save-note:hover{background:#333}
 .btn-save-note:disabled{background:#8A8A86;cursor:wait}
 
-/* ── COMPARE STATS ── */
+/* -- COMPARE STATS -- */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E0DDD6;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
 .stat{background:#fff;padding:16px}
 .stat-l{font-size:15px;color:#6B6B68;margin-bottom:6px}
@@ -143,24 +143,24 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
 .dimt th{text-align:left;font-size:15px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:1px solid #E0DDD6}
 .dimt td{padding:10px;border-bottom:1px solid #F0EDE6}
 
-/* ── COLOUR TONES ── */
+/* -- COLOUR TONES -- */
 .pos{color:#1E6B34}.mid{color:#A15C07}.neg{color:#B91C1C}.muted{color:#8A8A86}
 .pill{font-size:15px;padding:4px 10px;border-radius:99px;background:#F3E8FF;color:#6B21A8;white-space:nowrap}
 
-/* ── LOCKED OVERLAY ── */
+/* -- LOCKED OVERLAY -- */
 .locked-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:64px 0;color:#6B6B68;text-align:center}
 .locked-msg i{font-size:40px;color:#CFCBC2}
 .locked-msg p{font-size:16px;max-width:380px;line-height:1.6}
 
-/* ── GUIDE ── */
+/* -- GUIDE -- */
 .guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:18px;font-size:16px;line-height:1.65}
 .guide strong{color:#92400E}
 
-/* ── SORT BAR ── */
+/* -- SORT BAR -- */
 .sortbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 14px}
 .sortbar span{font-size:15px;color:#6B6B68}
 
-/* ── RESPONSIVE ── */
+/* -- RESPONSIVE -- */
 @media(max-width:900px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .dims{grid-template-columns:repeat(3,1fr)}
@@ -185,7 +185,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
   <a class="back" href="{{ url_for('admin_dashboard') }}"><i class="ti ti-arrow-left"></i> Admin</a>
   <h1>Contest Judge</h1>
 
-  {# ── BATCH SELECTOR ── #}
+  {# -- BATCH SELECTOR -- #}
   <div class="batch-bar">
     <label for="batchSel">Open call</label>
     <select class="batch-sel" id="batchSel" onchange="switchBatch(this.value)">
@@ -205,13 +205,13 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
   </div>
 
   {% if not batch_ref %}
-  {# ── EMPTY STATE: no call selected ── #}
+  {# -- EMPTY STATE: no call selected -- #}
   <div class="batch-empty">
     <i class="ti ti-folder-open" style="font-size:40px;color:#CFCBC2;display:block;margin-bottom:12px"></i>
     <p>Choose an open call above, or upload images below to start a new one.</p>
   </div>
 
-  {# ── UPLOAD CARD (always visible so new calls can be created) ── #}
+  {# -- UPLOAD CARD (always visible so new calls can be created) -- #}
   <div class="card">
     <div class="card-title"><i class="ti ti-upload"></i> Upload images — new or existing open call</div>
     <div class="upload-cfg">
@@ -239,7 +239,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
   </div>
 
   {% else %}
-  {# ── TABS ── #}
+  {# -- TABS -- #}
   <div class="tabs">
     <button class="tab{% if active_tab == 'sonnet' %} active{% endif %}" id="tabSonnet" onclick="showTab('sonnet')">
       <i class="ti ti-brain"></i> Sonnet
@@ -375,6 +375,9 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
         {% if haiku_summary and haiku_summary.n > 0 %}
         <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_only_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
           <i class="ti ti-download"></i> Haiku-only CSV
+        </a>
+        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_sonnet_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
+          <i class="ti ti-file-zip"></i> Haiku+Sonnet Scorecards
         </a>
         {% endif %}
         <span class="run-note">Takes 3–5 minutes. Keep this page open.</span>
@@ -665,7 +668,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
 </div>
 
 <script>
-/* ── JINJA VALUES → JS CONSTANTS (all template expressions isolated here) ── */
+/* -- JINJA VALUES → JS CONSTANTS (all template expressions isolated here) -- */
 var URL_BASE        = {{ url_for('admin_contest_judge')|tojson }};
 var URL_UPLOAD      = {{ url_for('admin_contest_judge_upload')|tojson }};
 var URL_RESCORE     = {{ url_for('admin_contest_judge_bulk_rescore', batch_ref=batch_ref or '_')|tojson }};
@@ -682,7 +685,7 @@ var URL_HAIKU_RUN   = '';
 </script>
 {% raw %}
 <script>
-/* ── BATCH SWITCH & DELETE ── */
+/* -- BATCH SWITCH & DELETE -- */
 function switchBatch(v){
   if(v) window.location = URL_BASE + '?batch=' + encodeURIComponent(v);
   else window.location = URL_BASE;
@@ -695,7 +698,7 @@ function deleteBatch(ref){
     .catch(function(){ alert('Delete failed. Please try again.'); });
 }
 
-/* ── TABS ── */
+/* -- TABS -- */
 function showTab(t){
   ['sonnet','haiku','compare'].forEach(function(k){
     document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active', k===t);
@@ -704,11 +707,11 @@ function showTab(t){
   history.replaceState(null,'','?batch='+encodeURIComponent(BATCH_REF||'')+'&tab='+t);
 }
 
-/* ── DRAG + DROP HELPERS ── */
+/* -- DRAG + DROP HELPERS -- */
 function ev(e,a){ e.preventDefault(); document.getElementById('dropZone').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles(e.dataTransfer.files); }
 function ev2(e,a){ e.preventDefault(); document.getElementById('dropZone2').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles2(e.dataTransfer.files); }
 
-/* ── UPLOAD (new call) ── */
+/* -- UPLOAD (new call) -- */
 function uploadFiles(files){
   if(!files||!files.length) return;
   var name=document.getElementById('batchName').value.trim();
@@ -718,7 +721,7 @@ function uploadFiles(files){
     document.getElementById('threshInput').value||'6.0',
     'uploadLog','uploadMsg');
 }
-/* ── UPLOAD (add to existing call) ── */
+/* -- UPLOAD (add to existing call) -- */
 function uploadFiles2(files){
   if(!files||!files.length) return;
   _doUpload(files, BATCH_REF||'',
@@ -749,7 +752,7 @@ function _doUpload(files, batchRef, theme, thresh, logId, msgId){
     .catch(function(){ if(log) log.innerHTML='<p class="err">Upload failed. Please try again.</p>'; });
 }
 
-/* ── RESCORE ALL (Sonnet) ── */
+/* -- RESCORE ALL (Sonnet) -- */
 function rescoreAll(){
   if(!confirm('Rescore all entries in this open call with Sonnet?\nExisting scores will be overwritten.')) return;
   var btn=event.target; btn.disabled=true;
@@ -773,7 +776,7 @@ function pollRescore(id,btn){
     }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
 }
 
-/* ── RUN HAIKU ── */
+/* -- RUN HAIKU -- */
 function runHaiku(){
   if(!URL_HAIKU_RUN){ alert('No open call selected.'); return; }
   if(!confirm('Run Haiku on every entry in this open call?\n\nSonnet evaluations and standings will not change.')) return;
@@ -798,7 +801,7 @@ function pollHaiku(id){
   }).catch(function(){ setTimeout(function(){ pollHaiku(id); },5000); });
 }
 
-/* ── SORT: HAIKU TAB ── */
+/* -- SORT: HAIKU TAB -- */
 function haikuSort(k){
   var box=document.getElementById('haikuEntries');
   var items=[].slice.call(box.querySelectorAll('.entry'));
@@ -808,7 +811,7 @@ function haikuSort(k){
   document.getElementById('haikuSortD').classList.toggle('on',k==='score');
 }
 
-/* ── SORT: COMPARE TAB ── */
+/* -- SORT: COMPARE TAB -- */
 function cmpSort(k){
   var box=document.getElementById('cmpEntries');
   if(!box) return;
@@ -819,7 +822,7 @@ function cmpSort(k){
   document.getElementById('cmpSortD').classList.toggle('on',k==='d');
 }
 
-/* ── HAIKU JUDGE NOTE SAVE ── */
+/* -- HAIKU JUDGE NOTE SAVE -- */
 function saveHaikuNote(entryId, btn){
   var ta = document.getElementById('hnote-' + entryId);
   if(!ta) return;
@@ -903,7 +906,7 @@ function saveHaikuField(entryId, field, btn){
   });
 }
 
-/* ── RESTORE TAB FROM URL ── */
+/* -- RESTORE TAB FROM URL -- */
 (function(){
   var p=new URLSearchParams(window.location.search);
   var t=p.get('tab');
