@@ -1,4 +1,4 @@
-# SL-VERSION: 182.45 (Session 230, 2026-09-30 — FIX: haiku_entries dims missing 'haiku' key — template accesses d.haiku in haiku tab; added haiku=hv alias alongside score=hv. RETAINS 182.44.)
+# SL-VERSION: 182.46 (Session 230, 2026-09-30 — FEAT: Haiku tab 3 features: (1) master_ref + haiku_judge_note pulled into haiku_entries; (2) _CJ_HAIKU_EXTRA subject-identity constraint added — model must not assert relationships; (3) new route admin_contest_judge_haiku_edit POST saves haiku_judge_note; haiku_judge_note column added to _cj_haiku_ensure_columns. RETAINS 182.45.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -15737,7 +15737,9 @@ def admin_contest_judge():
         _hr = db.session.execute(db.text("""
             SELECT id, photographer, image_title, thumb_path,
                    wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
-                   composite_score, haiku_json, haiku_composite, haiku_run_at
+                   composite_score, haiku_json, haiku_composite, haiku_run_at,
+                   COALESCE(override_master_ref, master_ref) AS master_ref,
+                   haiku_judge_note
             FROM contest_judge_batch WHERE batch_ref = :br
             ORDER BY haiku_composite DESC NULLS LAST, composite_score DESC NULLS LAST
         """), {'br': batch_ref}).fetchall()
@@ -15764,6 +15766,8 @@ def admin_contest_judge():
                 'strength': (h or {}).get('strength', ''),
                 'next_leap': (h or {}).get('next_leap', ''),
                 'run_at': r.haiku_run_at.strftime('%Y-%m-%d %H:%M') if r.haiku_run_at else '',
+                'master_ref': r.master_ref or '',
+                'judge_note': r.haiku_judge_note or '',
             })
         h_done = [e for e in haiku_entries if e['haiku_c'] is not None]
         if h_done:
@@ -16618,7 +16622,9 @@ _CJ_HAIKU_EXTRA = """ALSO include these additional keys in the SAME JSON object 
   "obs_dm": "one sentence — why Moment earned this number",
   "strength": "one sentence — the single strongest decision the photographer made",
   "next_leap": "one sentence — the one change that would lift this photograph most"
-Keep every other key exactly as specified above."""
+Keep every other key exactly as specified above.
+
+IMPORTANT — SUBJECT IDENTITY: Do not assert the identity, relationship, or role of people in the image. Describe only what is visually observable. Do not say "a father", "a mother", "a child", "her son", "his daughter" or any relationship unless it is explicitly written in the image. Instead say "a figure", "a person", "an older man", "a young woman" — describe only what you can see. If a relationship feels implied, use "who appears to be" or "possibly" — never state it as fact."""
 
 _CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
                   ('aq', 'aq_score', 'Human Connect'),
@@ -16630,7 +16636,8 @@ _CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
 
 def _cj_haiku_ensure_columns():
     """Idempotent safety net in case the pre-deploy migration has not run yet."""
-    for _col, _typ in (('haiku_json', 'TEXT'), ('haiku_composite', 'FLOAT'), ('haiku_run_at', 'TIMESTAMP')):
+    for _col, _typ in (('haiku_json', 'TEXT'), ('haiku_composite', 'FLOAT'), ('haiku_run_at', 'TIMESTAMP'),
+                       ('haiku_judge_note', 'TEXT')):
         try:
             db.session.execute(db.text(
                 f"ALTER TABLE contest_judge_batch ADD COLUMN IF NOT EXISTS {_col} {_typ}"))
@@ -16720,6 +16727,28 @@ def admin_contest_judge_haiku_run(batch_ref):
     import threading as _hthr
     _hthr.Thread(target=_worker, daemon=True).start()
     return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/contest-judge/haiku-edit/<int:entry_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_haiku_edit(entry_id):
+    """Save judge note for a Haiku entry. JSON: {note: str}. Returns {ok: true}."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_haiku_ensure_columns()
+    data = request.get_json(silent=True) or {}
+    note = (data.get('note') or '').strip()
+    try:
+        db.session.execute(db.text(
+            "UPDATE contest_judge_batch SET haiku_judge_note = :n WHERE id = :eid"
+        ), {'n': note or None, 'eid': entry_id})
+        db.session.commit()
+        app.logger.info(f'[haiku_edit] entry={entry_id} judge note saved ({len(note)} chars)')
+        return jsonify({'ok': True})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[haiku_edit] {e}')
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 @app.route('/admin/contest-judge/haiku-compare', defaults={'batch_ref': None})
