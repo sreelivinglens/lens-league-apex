@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.3 (Session 230, 2026-09-30 — UNIFIED: Removed Haiku comparison sidebar item (desktop + mobile) — functionality merged into Contest Judge 3-tab page. RETAINS admin-3.2.) #}
 {# SL-VERSION: admin-3.2 (Session 229, 2026-09-30 — Open Call: Haiku comparison sidebar item added; Contest Judge and Haiku comparison added to the mobile menu (new mob-nav-out class so the scroll highlighter is unaffected). RETAINS admin-3.1.) #}
 {# SL-VERSION: admin-3.1 (Session 223, 2026-09-27 — Open Call: Contest Judge sidebar item added. RETAINS admin-3.0.) #}
 <!DOCTYPE html>
@@ -485,7 +486,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <a class="mob-nav-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Audit</a>
   <a class="mob-nav-item" onclick="navTo('danger','b-dz-body','cDZ')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
   <a class="mob-nav-out" href="{{ url_for('admin_contest_judge') }}"><i class="ti ti-gavel"></i> Contest Judge</a>
-  <a class="mob-nav-out" href="{{ url_for('admin_contest_judge_haiku_compare') }}"><i class="ti ti-scale"></i> Haiku comparison</a>
 </div>
 
 <div class="layout">
@@ -574,9 +574,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Open Call</div>
     <a class="sb-item" href="{{ url_for('admin_contest_judge') }}" style="text-decoration:none">
       <i class="ti ti-gavel"></i> Contest Judge
-    </a>
-    <a class="sb-item" href="{{ url_for('admin_contest_judge_haiku_compare') }}" style="text-decoration:none">
-      <i class="ti ti-scale"></i> Haiku comparison
     </a>
   </div>
 
