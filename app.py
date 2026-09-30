@@ -1,3 +1,4 @@
+# SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
 # SL-VERSION: 182.41 (Session 230, 2026-09-30 — FIX: Haiku contest judge max_tokens raised 1600→2800. At 1600 tokens Haiku ran out of room before writing obs_dod/dod in its JSON output, causing dod (Craft) to silently fall back to 6.0 for ~66% of entries and obs_craft to be blank. Now all 6 dimensions score correctly. RETAINS 182.40.)
@@ -15693,7 +15694,7 @@ def admin_contest_judge():
         if _bm:
             # Also pull theme/threshold from first entry
             _bm_extra = db.session.execute(db.text(
-                "SELECT theme, theme_threshold, MIN(judged_at) as first_run FROM contest_judge_batch WHERE batch_ref = :br LIMIT 1"
+                "SELECT theme, theme_threshold FROM contest_judge_batch WHERE batch_ref = :br LIMIT 1"
             ), {'br': batch_ref}).fetchone()
             batch_meta = {
                 'ref': batch_ref, 'n': _bm.n, 'h': _bm.h,
