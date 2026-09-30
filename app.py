@@ -1,4 +1,4 @@
-# SL-VERSION: 182.49 (Session 230, 2026-09-30 — FIX: "stranger" banned globally from all Haiku narrative fields; "viewer" or "a person" enforced throughout. RETAINS 182.48.)
+# SL-VERSION: 182.50 (Session 230, 2026-09-30 — FIX: master_ref genre-match rule added: cited photographer must work in the SAME genre as the image. Wildlife ref for a human portrait is a hallucination failure. RETAINS 182.49.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -16625,7 +16625,9 @@ IMPORTANT — SUBJECT IDENTITY: Do not assert the identity, relationship, or rol
 
 IMPORTANT — SPECIES NAMING: When you can identify the specific animal species, bird breed, or plant in the image, name it directly — "two terns", "a red kite", "a Bengal tiger". Do not retreat to genus language ("two birds", "a large cat") when you know the species. If you genuinely cannot identify the species, use the genus ("birds", "a big cat") — never say "living things" or "creatures".
 
-IMPORTANT — MASTER REFERENCE: The master_ref field must include: (1) the photographer's name, (2) the specific body of work or approach that echoes this image, and (3) their homepage URL in parentheses so the photographer can find their work. Format: "Name's [body of work] — [one sentence on the echo]. (https://their-site.com)" Use only the photographer's main homepage URL — never a specific portfolio page or sub-URL that may change."""
+IMPORTANT — MASTER REFERENCE: The master_ref field must include: (1) the photographer's name, (2) the specific body of work or approach that echoes this image, and (3) their homepage URL in parentheses so the photographer can find their work. Format: "Name's [body of work] — [one sentence on the echo]. (https://their-site.com)" Use only the photographer's main homepage URL — never a specific portfolio page or sub-URL that may change.
+
+CRITICAL — MASTER REFERENCE GENRE MATCH: The master photographer you cite must work in the SAME genre as the image. A cultural portrait requires a documentary or portrait photographer (e.g. Raghu Rai, Dayanita Singh, Mary Ellen Mark, Sebastião Salgado). A wildlife image requires a wildlife photographer (Frans Lanting, Nick Brandt). A landscape requires a landscape photographer. Never cite a wildlife photographer for a human portrait, never cite a portrait photographer for a landscape. If you are uncertain of the photographer's genre, choose a different reference you are confident about."""
 
 _CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
                   ('aq', 'aq_score', 'Human Connect'),
