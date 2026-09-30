@@ -1,4 +1,4 @@
-# SL-VERSION: 182.48 (Session 230, 2026-09-30 — FIX: score_read prompt rule: no abbreviations — write full dimension names (Wonder, Human Connection, Story Transfer, Disruption, Craft, Decisive Moment). Never AQ, DM, DOD. RETAINS 182.47.)
+# SL-VERSION: 182.49 (Session 230, 2026-09-30 — FIX: "stranger" banned globally from all Haiku narrative fields; "viewer" or "a person" enforced throughout. RETAINS 182.48.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -16613,11 +16613,13 @@ def admin_contest_judge_bulk_rescore_status(job_id):
 # written by this code.
 
 _CJ_HAIKU_EXTRA = """ALSO include these additional keys in the SAME JSON object (plain sentences, no bullet points, never use the words "AI" or "score"):
-  "impression": "two or three sentences — what a viewer walking past this in a gallery would feel, and why",
+  "impression": "two or three sentences — what a viewer walking past this in a gallery would feel, and why. Never use the word 'stranger' — always say 'viewer' or 'a person'.",
   "score_read": "one or two sentences — read the pattern across the six dimension evaluations: name what leads, what lags, and what that combination says about the character of this photograph. Do not list numbers; interpret them. NEVER use abbreviations — write the full dimension name: Wonder, Human Connection, Story Transfer, Disruption, Craft, Decisive Moment. Never write AQ, DM, DOD, or any other shorthand.",
   "strength": "one sentence — the single strongest decision the photographer made",
   "next_leap": "one sentence — the one change that would lift this photograph most"
 Keep every other key exactly as specified above.
+
+IMPORTANT — LANGUAGE: Never use the word "stranger" anywhere in any field. Always say "viewer", "a person", or "someone". This applies to impression, score_read, strength, next_leap, and master_ref.
 
 IMPORTANT — SUBJECT IDENTITY: Do not assert the identity, relationship, or role of people in the image. Describe only what is visually observable. Do not say "a father", "a mother", "a child", "her son", "his daughter" or any relationship unless it is explicitly written in the image. Instead say "a figure", "a person", "an older man", "a young woman" — describe only what you can see. If a relationship feels implied, use "who appears to be" or "possibly" — never state it as fact.
 
