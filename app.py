@@ -1,3 +1,4 @@
+# SL-VERSION: 182.55 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP -- new route admin_contest_judge_haiku_sonnet_scorecards. Same Mock B card design, Sonnet scores authoritative, narrative from haiku_json (impression/master_ref/next_leap), Sonnet fallback if missing. Button on Haiku tab only. RETAINS 182.54.)
 # SL-VERSION: 182.54 (Session 231, 2026-10-01 — FEATURE: Haiku narrative inline edit — haiku_edit route extended to patch individual haiku_json fields (impression, score_read, master_ref, strength, next_leap). RETAINS 182.53.)
 # SL-VERSION: 182.53 (Session 231, 2026-10-01 — FIX: _CJ_HAIKU_EXTRA genre rule strengthened: "judge by what the PHOTOGRAPH is about, not what appears in it" — painting of a tiger = craft/documentary, not wildlife. Explicit ban on Steve Winter/Frans Lanting/Nick Brandt for human/painting/body art subjects. RETAINS 182.52.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
@@ -17722,6 +17723,390 @@ def admin_contest_judge_scorecards(batch_ref):
         as_attachment=True,
         download_name=f'SL_Scorecards_{safe_ref}.zip'
     )
+
+
+# -- HAIKU+SONNET SCORECARDS ZIP -- /admin/contest-judge/haiku-sonnet-scorecards/<batch_ref> --
+# v182.55 (Session 232, 2026-10-01)
+# Same Mock B card design as Sonnet ZIP. Narrative fields pulled from haiku_json
+# (impression -> The Reading, master_ref -> Master Reference, next_leap -> Where It Could Go Further).
+# If a Haiku field is missing/empty, falls back to the Sonnet field. Sonnet scores and
+# standings are authoritative throughout. Photographer-facing card is visually identical.
+@app.route('/admin/contest-judge/haiku-sonnet-scorecards/<path:batch_ref>')
+@login_required
+def admin_contest_judge_haiku_sonnet_scorecards(batch_ref):
+    """ZIP of JPG scorecards using Sonnet scores + Haiku narrative fields (Mock B design).
+    Falls back to Sonnet narrative fields when Haiku fields are absent.
+    """
+    if current_user.role != 'admin':
+        abort(403)
+
+    import json as _hs_json_mod
+
+    rows = db.session.execute(db.text("""
+        SELECT id, filename, photographer, image_title, theme, batch_ref,
+               wonder_score, aq_score, story_transfer_score,
+               disruption_score, dod_score, dm_score,
+               composite_score, theme_score, theme_threshold,
+               theme_relevant, thumb_path, judged_at, founder_note,
+               COALESCE(override_theme_note, theme_note) AS theme_note,
+               COALESCE(override_master_ref, master_ref) AS master_ref,
+               COALESCE(override_gap_note, gap_note) AS gap_note,
+               genre_detected, override_subject_id,
+               haiku_json
+        FROM contest_judge_batch
+        WHERE batch_ref = :br
+        ORDER BY composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+
+    if not rows:
+        abort(404)
+
+    _has_haiku = any(r.haiku_json for r in rows)
+    if not _has_haiku:
+        flash('No Haiku data found for this open call. Run Haiku first.', 'error')
+        return redirect(url_for('admin_contest_judge') + '?batch=' + batch_ref + '&tab=haiku')
+
+    try:
+        from PIL import Image as _PILHS, ImageDraw as _PILHD, ImageFont as _PILHF, ImageFilter as _PILHFF
+        import zipfile as _hs_zipfile
+    except ImportError as e:
+        return f"Missing library: {e}", 500
+
+    total = len(rows)
+    zip_buf = _cj_io.BytesIO()
+
+    _HS_W  = 1600
+    _HS_M  = 120
+    _HS_IVORY   = (247, 243, 234)
+    _HS_INK     = (28, 26, 23)
+    _HS_MUTED   = (110, 107, 104)
+    _HS_GOLD    = (201, 165, 90)
+    _HS_GOLDTXT = (150, 112, 38)
+    _HS_TRACK   = (222, 216, 204)
+    _HS_DARKBG  = (21, 19, 16)
+    _HS_GREEN   = (22, 130, 60)
+    _HS_RED     = (185, 28, 28)
+    _HS_DIMS = [
+        ('Wonder',          'wonder_score',         27),
+        ('Human Connect',   'aq_score',             19),
+        ('Story Transfer',  'story_transfer_score', 18),
+        ('Disruption',      'disruption_score',     15),
+        ('Craft',           'dod_score',            13),
+        ('Moment',          'dm_score',              8),
+    ]
+    _HS_FDIR = _cj_os.path.join(app.root_path, 'static', 'fonts')
+
+    def _hs_f(name, size):
+        path = _cj_os.path.join(_HS_FDIR, name)
+        try:
+            return _PILHF.truetype(path, size)
+        except Exception:
+            return _PILHF.load_default()
+
+    def _hs_tracked(d, xy, text, font, fill, spacing=0.18, anchor_right=False):
+        text = text.upper()
+        extra = font.size * spacing
+        total_w = sum(d.textlength(c, font=font) for c in text) + extra * max(0, len(text) - 1)
+        x, y = xy
+        if anchor_right:
+            x -= total_w
+        for c in text:
+            d.text((x, y), c, font=font, fill=fill)
+            x += d.textlength(c, font=font) + extra
+        return total_w
+
+    def _hs_wrap(d, text, font, width, max_lines=None):
+        words = (text or '').replace('\n', ' ').split()
+        lines, cur = [], ''
+        for w in words:
+            t = (cur + ' ' + w).strip()
+            if d.textlength(t, font=font) <= width:
+                cur = t
+            else:
+                lines.append(cur); cur = w
+        if cur:
+            lines.append(cur)
+        if max_lines and len(lines) > max_lines:
+            lines = lines[:max_lines]
+            last = lines[-1]
+            while last and d.textlength(last + '...', font=font) > width:
+                last = last.rsplit(' ', 1)[0]
+            lines[-1] = last.rstrip(',;:') + '...'
+        return lines
+
+    def _hs_checkmark(d, x, y, s, fill):
+        d.line([(x, y + s * 0.55), (x + s * 0.38, y + s * 0.9), (x + s, y + s * 0.1)],
+               fill=fill, width=max(3, s // 7), joint='curve')
+
+    import time as _hs_time
+    import threading as _hs_threading
+    import tempfile as _hs_tmp
+    import concurrent.futures as _hs_cf
+    import storage as _hs_store
+
+    _hs_t0 = _hs_time.time()
+    _hs_photos = {}
+    _hs_result = {'cards': 0, 'exc': None, 'fetched': 0, 'fetch_failed': 0}
+
+    def _hs_fetch_one(_row):
+        _tp = _row.thumb_path
+        if not _tp:
+            return _row.id, None
+        _tmp_name = None
+        try:
+            if _tp.startswith('http'):
+                _key = _hs_store.key_from_url(_tp)
+                _t = _hs_tmp.NamedTemporaryFile(suffix='.jpg', delete=False)
+                _t.close()
+                _tmp_name = _t.name
+                if not _hs_store.download_file(_key, _tmp_name):
+                    return _row.id, None
+                _src_path = _tmp_name
+            else:
+                _src_path = _cj_os.path.join(app.root_path, 'static', _tp)
+            with _PILHS.open(_src_path) as _im:
+                _im = _im.convert('RGB')
+                _im.thumbnail((_HS_W - 2 * _HS_M, 860), _PILHS.LANCZOS)
+                _out = _cj_io.BytesIO()
+                _im.save(_out, format='JPEG', quality=92)
+                _out.seek(0)
+                return _row.id, _out
+        except Exception as _fe:
+            app.logger.warning(f'[haiku_sonnet_zip] photograph fetch failed entry={_row.id}: {_fe}')
+            return _row.id, None
+        finally:
+            if _tmp_name:
+                try:
+                    _cj_os.unlink(_tmp_name)
+                except Exception:
+                    pass
+
+    def _hs_build():
+        try:
+            _pool = _hs_cf.ThreadPoolExecutor(max_workers=8)
+            try:
+                _futs = [_pool.submit(_hs_fetch_one, _r) for _r in rows]
+                _deadline = _hs_time.time() + 15
+                for _f in _futs:
+                    try:
+                        _rid, _buf = _f.result(timeout=max(0.1, min(8, _deadline - _hs_time.time())))
+                    except Exception:
+                        _hs_result['fetch_failed'] += 1
+                        continue
+                    if _buf is not None:
+                        _hs_photos[_rid] = _buf
+                        _hs_result['fetched'] += 1
+                    else:
+                        _hs_result['fetch_failed'] += 1
+            finally:
+                _pool.shutdown(wait=False, cancel_futures=True)
+
+            with _hs_zipfile.ZipFile(zip_buf, 'w', _hs_zipfile.ZIP_DEFLATED) as zf:
+                for rank, row in enumerate(rows, 1):
+                    _hj = {}
+                    if row.haiku_json:
+                        try:
+                            _hj = _hs_json_mod.loads(row.haiku_json)
+                        except Exception:
+                            _hj = {}
+
+                    _reading = (_hj.get('impression') or '').strip() or (row.theme_note or '')
+                    _master  = (_hj.get('master_ref') or '').strip() or (row.master_ref or '')
+                    _gap     = (_hj.get('next_leap') or '').strip() or (row.gap_note or '')
+
+                    if not _hj.get('impression'):
+                        app.logger.info(f'[haiku_sonnet_zip] fallback sonnet theme_note entry={row.id}')
+                    if not _hj.get('master_ref'):
+                        app.logger.info(f'[haiku_sonnet_zip] fallback sonnet master_ref entry={row.id}')
+                    if not _hj.get('next_leap'):
+                        app.logger.info(f'[haiku_sonnet_zip] fallback sonnet gap_note entry={row.id}')
+
+                    _sc_min_h = 2200
+                    canvas = _PILHS.new('RGB', (_HS_W, 3400), _HS_IVORY)
+                    d = _PILHD.Draw(canvas)
+
+                    _PANEL_H = 1010
+                    d.rectangle([(0, 0), (_HS_W, _PANEL_H)], fill=_HS_DARKBG)
+                    _hs_tracked(d, (_HS_M, 62), batch_ref, _hs_f('SL-Inter-SemiBold.ttf', 22), _HS_GOLD, 0.28)
+                    _sc_date = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
+                    _hs_tracked(d, (_HS_W - _HS_M, 64), _sc_date, _hs_f('SL-Inter-Medium.ttf', 20), (200, 192, 178), 0.14, anchor_right=True)
+                    d.line([(_HS_M, 116), (_HS_W - _HS_M, 116)], fill=(70, 62, 48), width=2)
+
+                    _box_w = _HS_W - 2 * _HS_M
+                    _box_h = _PANEL_H - 150 - 60
+                    _img_bytes = _hs_photos.get(row.id)
+                    if _img_bytes is not None:
+                        try:
+                            _img_bytes.seek(0)
+                            with _PILHS.open(_img_bytes) as _ph:
+                                _ph = _ph.convert('RGB')
+                                _scale = min(_box_w / _ph.width, _box_h / _ph.height)
+                                _ph = _ph.resize((int(_ph.width * _scale), int(_ph.height * _scale)), _PILHS.LANCZOS)
+                                _px = (_HS_W - _ph.width) // 2
+                                _py = 150 + (_box_h - _ph.height) // 2
+                                _shd = _PILHS.new('RGBA', (_ph.width + 80, _ph.height + 80), (0, 0, 0, 0))
+                                _PILHD.Draw(_shd).rectangle([(40, 48), (_ph.width + 40, _ph.height + 48)], fill=(0, 0, 0, 150))
+                                _shd = _shd.filter(_PILHFF.GaussianBlur(18))
+                                canvas.paste(_shd, (_px - 40, _py - 40), _shd)
+                                canvas.paste(_ph, (_px, _py))
+                        except Exception:
+                            d.rectangle([(_HS_M, 150), (_HS_W - _HS_M, 150 + _box_h)], outline=(60, 54, 44), width=2)
+                    else:
+                        d.rectangle([(_HS_M, 150), (_HS_W - _HS_M, 150 + _box_h)], outline=(60, 54, 44), width=2)
+
+                    y = _PANEL_H + 70
+                    d = _PILHD.Draw(canvas)
+                    _hs_tracked(d, (_HS_M, y), 'Photographer', _hs_f('SL-Inter-SemiBold.ttf', 22), _HS_GOLDTXT, 0.22)
+                    _name_f = _hs_f('SL-Playfair-SemiBold.ttf', 84)
+                    _name_lines = _hs_wrap(d, (row.photographer or 'Unknown'), _name_f, 820, max_lines=2)
+                    _ny = y + 36
+                    for _nl in _name_lines:
+                        d.text((_HS_M - 4, _ny), _nl, font=_name_f, fill=_HS_INK)
+                        _ny += 100
+                    _sub_f = _hs_f('SL-Inter-Regular.ttf', 30)
+                    _sy = _ny + 22
+                    _genre = (row.genre_detected or '').replace('\n', ' ')
+                    _t_score = row.theme_score or 0
+                    _sub = f"{_genre}   .   Theme {_t_score:.1f} / 10"
+                    d.text((_HS_M, _sy), _sub, font=_sub_f, fill=_HS_MUTED)
+                    _tx = _HS_M + d.textlength(_sub + '   ', font=_sub_f)
+                    if bool(row.theme_relevant):
+                        _hs_checkmark(d, _tx, _sy + 6, 26, _HS_GREEN)
+                        d.text((_tx + 38, _sy), 'Qualified', font=_hs_f('SL-Inter-Medium.ttf', 30), fill=_HS_GREEN)
+                    else:
+                        d.text((_tx, _sy), 'Below theme threshold', font=_hs_f('SL-Inter-Medium.ttf', 30), fill=_HS_RED)
+
+                    _hs_tracked(d, (_HS_W - _HS_M, y), 'Overall Evaluation', _hs_f('SL-Inter-SemiBold.ttf', 22), _HS_GOLDTXT, 0.22, anchor_right=True)
+                    _big_f = _hs_f('SL-Playfair-SemiBold.ttf', 168)
+                    _val = f"{row.composite_score:.2f}" if row.composite_score else '--'
+                    d.text((_HS_W - _HS_M - d.textlength(_val, font=_big_f), y + 10), _val, font=_big_f, fill=_HS_INK)
+                    if rank <= 10:
+                        _pct_top = max(1, round(100 * rank / total))
+                        _pill = f'Standing {rank} of {total}   .   Top {_pct_top}%'
+                        _pf = _hs_f('SL-Inter-SemiBold.ttf', 26)
+                        _pw = d.textlength(_pill, font=_pf) + 56
+                        _px1 = _HS_W - _HS_M - _pw
+                        _py1 = y + 230
+                        d.rounded_rectangle([(_px1, _py1), (_HS_W - _HS_M, _py1 + 62)], radius=31,
+                                             fill=(241, 230, 204), outline=_HS_GOLD, width=2)
+                        d.text((_px1 + 28, _py1 + 14), _pill, font=_pf, fill=(92, 66, 18))
+
+                    y = max(_sy + 90, y + 330)
+                    d.line([(_HS_M, y), (_HS_W - _HS_M, y)], fill=_HS_TRACK, width=2)
+
+                    y += 48
+                    _hs_tracked(d, (_HS_M, y), 'The six dimensions', _hs_f('SL-Inter-SemiBold.ttf', 22), _HS_GOLDTXT, 0.22)
+                    _hs_tracked(d, (_HS_W - _HS_M, y), 'Open call weighting in brackets', _hs_f('SL-Inter-Medium.ttf', 20), _HS_MUTED, 0.12, anchor_right=True)
+                    y += 66
+                    _col_gap = 110
+                    _col_w = (_HS_W - 2 * _HS_M - _col_gap) // 2
+                    _lab_f = _hs_f('SL-Inter-Medium.ttf', 32)
+                    _wt_f  = _hs_f('SL-Inter-Regular.ttf', 26)
+                    _hs_f2 = _hs_f('SL-Inter-SemiBold.ttf', 44)
+                    for _di, (_dlabel, _dkey, _dwt) in enumerate(_HS_DIMS):
+                        _cx = _HS_M + (_di % 2) * (_col_w + _col_gap)
+                        _cy = y + (_di // 2) * 126
+                        _v = getattr(row, _dkey, None) or 0
+                        d.text((_cx, _cy + 14), _dlabel, font=_lab_f, fill=_HS_INK)
+                        d.text((_cx + d.textlength(_dlabel + '  ', font=_lab_f), _cy + 20), f'({_dwt}%)', font=_wt_f, fill=_HS_MUTED)
+                        _vs = f'{_v:.1f}' if _v else '--'
+                        d.text((_cx + _col_w - d.textlength(_vs, font=_hs_f2), _cy + 6), _vs, font=_hs_f2, fill=_HS_INK)
+                        _by = _cy + 72
+                        d.rounded_rectangle([(_cx, _by), (_cx + _col_w, _by + 10)], radius=5, fill=_HS_TRACK)
+                        if _v:
+                            d.rounded_rectangle([(_cx, _by), (_cx + int(_col_w * _v / 10), _by + 10)], radius=5, fill=_HS_GOLD)
+                    y += 3 * 126 + 20
+                    d.line([(_HS_M, y), (_HS_W - _HS_M, y)], fill=_HS_TRACK, width=2)
+
+                    y += 48
+                    _body_f = _hs_f('SL-Inter-Regular.ttf', 34)
+                    _lab_cap_f = _hs_f('SL-Inter-SemiBold.ttf', 22)
+                    _cor_f = _hs_f('SL-Cormorant-Italic.ttf', 44)
+
+                    def _hs_block(title, text, font, colour, max_lines, indent=0, rule=False):
+                        nonlocal y
+                        if not text:
+                            return
+                        _hs_tracked(d, (_HS_M, y), title, _lab_cap_f, _HS_GOLDTXT, 0.22)
+                        y += 44
+                        _wlines = _hs_wrap(d, text, font, _HS_W - 2 * _HS_M - indent, max_lines)
+                        _top_y = y
+                        for _wl in _wlines:
+                            d.text((_HS_M + indent, y), _wl, font=font, fill=colour)
+                            y += int(font.size * 1.45)
+                        if rule:
+                            d.rectangle([(_HS_M, _top_y + 4), (_HS_M + 5, y - 10)], fill=_HS_GOLD)
+                        y += 34
+
+                    _hs_block('The Reading',               _reading, _body_f, _HS_INK, 4)
+                    _hs_block('Master Reference',          _master,  _cor_f,  _HS_INK, 3, indent=34, rule=True)
+                    _hs_block('Where It Could Go Further', _gap,     _body_f, _HS_INK, 4)
+
+                    if getattr(row, 'founder_note', None):
+                        _mn_f = _hs_f('SL-Cormorant-Italic.ttf', 44)
+                        _mn_lines = _hs_wrap(d, row.founder_note, _mn_f, _HS_W - 2 * _HS_M - 100, 6)
+                        _mn_h = 70 + len(_mn_lines) * 62 + 90
+                        d.rounded_rectangle([(_HS_M, y), (_HS_W - _HS_M, y + _mn_h)], radius=18,
+                                             fill=(243, 234, 214), outline=_HS_GOLD, width=2)
+                        _hs_tracked(d, (_HS_M + 50, y + 40), 'Mentor Note', _lab_cap_f, _HS_GOLDTXT, 0.22)
+                        _mty = y + 86
+                        for _ml in _mn_lines:
+                            d.text((_HS_M + 50, _mty), _ml, font=_mn_f, fill=_HS_INK)
+                            _mty += 62
+                        _sig = '-- Sreekumar Krishnan, Founder'
+                        _sig_f = _hs_f('SL-Inter-Medium.ttf', 28)
+                        d.text((_HS_W - _HS_M - 50 - d.textlength(_sig, font=_sig_f), _mty + 12), _sig, font=_sig_f, fill=_HS_MUTED)
+                        y += _mn_h + 40
+
+                    _sc_card_h = max(_sc_min_h, y + 110)
+                    _fy = _sc_card_h - 92
+                    d.line([(_HS_M, _fy), (_HS_W - _HS_M, _fy)], fill=_HS_TRACK, width=2)
+                    _hs_tracked(d, (_HS_M, _fy + 34), 'shutterleague.com  --  Making Images Matter', _hs_f('SL-Inter-SemiBold.ttf', 20), _HS_GOLDTXT, 0.18)
+                    _ev_txt = f"Evaluated {row.judged_at.strftime('%d %b %Y') if row.judged_at else ''}"
+                    _hs_tracked(d, (_HS_W - _HS_M, _fy + 34), _ev_txt, _hs_f('SL-Inter-Medium.ttf', 20), _HS_MUTED, 0.14, anchor_right=True)
+                    canvas = canvas.crop((0, 0, _HS_W, _sc_card_h))
+                    _PILHD.Draw(canvas).rectangle([(0, _sc_card_h - 10), (_HS_W, _sc_card_h)], fill=_HS_GOLD)
+
+                    sc_buf = _cj_io.BytesIO()
+                    canvas.save(sc_buf, format='JPEG', quality=93)
+                    sc_buf.seek(0)
+                    safe_name = (row.photographer or 'Unknown').replace(' ', '_')
+                    zf.writestr(f'{rank:02d}_{safe_name}_scorecard.jpg', sc_buf.read())
+                    _hs_result['cards'] += 1
+
+        except Exception as _be:
+            _hs_result['exc'] = _be
+
+    _hs_thread = _hs_threading.Thread(target=_hs_build, daemon=True)
+    _hs_thread.start()
+    _hs_thread.join(timeout=25)
+    _hs_secs = round(_hs_time.time() - _hs_t0, 1)
+
+    if _hs_thread.is_alive():
+        app.logger.error(
+            f'[haiku_sonnet_zip] TIMEOUT batch="{batch_ref}" cards={_hs_result["cards"]}/{total} '
+            f'seconds={_hs_secs}')
+        flash(f'Download took too long ({_hs_result["cards"]} of {total} cards). Please try again.', 'error')
+        return redirect(url_for('admin_contest_judge') + '?batch=' + batch_ref + '&tab=haiku')
+
+    if _hs_result['exc'] is not None:
+        app.logger.error(f'[haiku_sonnet_zip] FAILED batch="{batch_ref}": {_hs_result["exc"]}')
+        flash('The download failed unexpectedly. Please try again.', 'error')
+        return redirect(url_for('admin_contest_judge') + '?batch=' + batch_ref + '&tab=haiku')
+
+    app.logger.info(
+        f'[haiku_sonnet_zip] OK batch="{batch_ref}" cards={_hs_result["cards"]}/{total} '
+        f'photographs={_hs_result["fetched"]}/{total} seconds={_hs_secs}')
+
+    zip_buf.seek(0)
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return send_file(
+        zip_buf,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=f'SL_HaikuSonnet_Scorecards_{safe_ref}.zip'
+    )
+
 
 
 # ── BOT REVIEW — /admin/bot-review ──────────────────────────────────────────
