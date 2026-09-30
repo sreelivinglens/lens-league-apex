@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.7 (Session 230, 2026-09-30 — FIX: score_read prompt updated to ban abbreviations AQ/DM/DOD; full dimension names enforced in narrative text. RETAINS 2.6.)
+{# SL-VERSION: admin_contest_judge-2.8 (Session 230, 2026-09-30 — FIX: Master Reference now uses e.h.master_ref (Haiku field, has URL) first, falls back to e.master_ref (Sonnet, no URL). Link renders correctly when Haiku has run. RETAINS 2.7.)
 {# SL-VERSION: admin_contest_judge-2.5 (Session 230, 2026-09-30 — FEAT: Haiku tab: (1) master_ref line shown below standing on each entry card; (2) Judge Notes textarea + Save per entry (POST to admin_contest_judge_haiku_edit, saves haiku_judge_note); (3) URL_HAIKU_EDIT JS constant added; saveHaikuNote() JS function in raw block. SL Audit pass: all new elements ≥15px font, save btn 44px tap target. RETAINS 2.4.)
 {# SL-VERSION: admin_contest_judge-2.4 (Session 230, 2026-09-30 — SL AUDIT FIX: fonts raised to 15px min (note-text, th weight labels, title subtitle, Review btn); Review tap target raised to 44px; haiku dims 'haiku' key added. All 3 tabs render-tested clean. RETAINS 2.3.)
 {# SL-VERSION: admin_contest_judge-2.3 (Session 230, 2026-09-30 — FIX: url_for('admin') → url_for('admin_dashboard'). SL Audit: all 12 url_for endpoints verified against app.py, all 3 tabs render-tested clean. RETAINS 2.2.)
@@ -440,9 +440,10 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
               {% if e.h.score_read %}
               <p class="score-read-note">{{ e.h.score_read }}</p>
               {% endif %}
-              {% if e.master_ref %}
+              {% set _mr_raw = e.h.master_ref if e.h.master_ref else e.master_ref %}
+              {% if _mr_raw %}
               <h4>Master Reference</h4>
-              <p>{% set _mr = e.master_ref %}{% if '(http' in _mr %}{% set _parts = _mr.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr }}{% endif %}</p>
+              <p>{% if '(http' in _mr_raw %}{% set _parts = _mr_raw.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr_raw }}{% endif %}</p>
               {% endif %}
               {% if e.h.strength %}
               <h4>Strength</h4>
