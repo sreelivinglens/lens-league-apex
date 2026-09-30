@@ -1,9 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.8 (Session 230, 2026-09-30 — FIX: Master Reference now uses e.h.master_ref (Haiku field, has URL) first, falls back to e.master_ref (Sonnet, no URL). Link renders correctly when Haiku has run. RETAINS 2.7.)
-{# SL-VERSION: admin_contest_judge-2.5 (Session 230, 2026-09-30 — FEAT: Haiku tab: (1) master_ref line shown below standing on each entry card; (2) Judge Notes textarea + Save per entry (POST to admin_contest_judge_haiku_edit, saves haiku_judge_note); (3) URL_HAIKU_EDIT JS constant added; saveHaikuNote() JS function in raw block. SL Audit pass: all new elements ≥15px font, save btn 44px tap target. RETAINS 2.4.)
-{# SL-VERSION: admin_contest_judge-2.4 (Session 230, 2026-09-30 — SL AUDIT FIX: fonts raised to 15px min (note-text, th weight labels, title subtitle, Review btn); Review tap target raised to 44px; haiku dims 'haiku' key added. All 3 tabs render-tested clean. RETAINS 2.3.)
-{# SL-VERSION: admin_contest_judge-2.3 (Session 230, 2026-09-30 — FIX: url_for('admin') → url_for('admin_dashboard'). SL Audit: all 12 url_for endpoints verified against app.py, all 3 tabs render-tested clean. RETAINS 2.2.)
-{# SL-VERSION: admin_contest_judge-2.2 (Session 230, 2026-09-30 — FIX: All Jinja expressions moved to a dedicated JS constants block at top of script; remaining JS wrapped in raw/endraw so Jinja never touches curly braces in JS functions. Eliminates Unexpected token '{' SyntaxError permanently. RETAINS 2.1.)
-{# SL-VERSION: admin_contest_judge-2.0 (Session 230, 2026-09-30 — UNIFIED: Sonnet / Haiku / Compare tabs in one page. Batch selector with delete (confirm required). Haiku comparison is no longer a separate admin nav item. Sonnet tab: upload, score, scorecards ZIP, CSV, per-entry review. Haiku tab: run Haiku, Haiku-only CSV, per-entry narrative. Compare tab: locked until both run, shows calibration stats + Comparison CSV. SL Audit pass: fonts ≥15px, tap targets ≥44px, version header line 1.) #}
+{# SL-VERSION: admin_contest_judge-2.11 (Session 232, 2026-10-01 -- FIX: Replaced all U+2500 box-drawing chars in JS comment dividers with ASCII -- equivalents. Root cause of editHaikuField ReferenceError: browser JS parser aborted on non-ASCII in raw block. Also fixed garbled version header. RETAINS 2.10.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,7 +18,7 @@ a{color:#1A2744}
 .back:hover{color:#1A1A18}
 h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 
-/* ── BATCH SELECTOR ── */
+/* -- BATCH SELECTOR -- */
 .batch-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px;padding:16px 18px;background:#fff;border:1px solid #E0DDD6;border-radius:12px}
 .batch-bar label{font-size:15px;font-weight:600;color:#6B6B68;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
 .batch-sel{flex:1;min-width:220px;font:500 16px 'Inter',sans-serif;padding:10px 14px;border:1px solid #CFCBC2;border-radius:8px;background:#FAF8F4;color:#1A1A18;min-height:44px}
@@ -32,7 +27,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .btn-del:hover{background:#FEE2E2}
 .batch-empty{font-size:16px;color:#6B6B68;padding:40px 0;text-align:center}
 
-/* ── TABS ── */
+/* -- TABS -- */
 .tabs{display:flex;gap:0;border-bottom:2px solid #E0DDD6;margin-bottom:20px}
 .tab{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;font:500 16px 'Inter',sans-serif;color:#6B6B68;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s}
 .tab:hover{color:#1A1A18}
@@ -41,7 +36,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
-/* ── CARDS / BUTTONS ── */
+/* -- CARDS / BUTTONS -- */
 .card{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:18px;margin-bottom:16px}
 .card-title{font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B6B68;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 24px;border-radius:10px;border:none;font:600 17px 'Inter',sans-serif;cursor:pointer;text-decoration:none}
@@ -798,7 +793,7 @@ function pollHaiku(id){
       document.getElementById('haikuProgFill').style.width=Math.round(100*p.done/p.total)+'%';
       document.getElementById('haikuProgText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' errors':'');
     }
-    if(p.finished){ document.getElementById('haikuProgText').textContent+=' — done. Reloading…'; setTimeout(function(){ location.reload(); },1200); }
+    if(p.finished){ document.getElementById('haikuProgText').textContent+=' - done. Reloading...'; setTimeout(function(){ location.reload(); },1200); }
     else setTimeout(function(){ pollHaiku(id); },3000);
   }).catch(function(){ setTimeout(function(){ pollHaiku(id); },5000); });
 }
@@ -831,7 +826,7 @@ function saveHaikuNote(entryId, btn){
   var note = ta.value;
   var url = URL_HAIKU_EDIT.replace('/0', '/' + entryId);
   btn.disabled = true;
-  btn.textContent = 'Saving…';
+  btn.textContent = 'Saving...';
   fetch(url, {
     method: 'POST',
     headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
@@ -841,15 +836,69 @@ function saveHaikuNote(entryId, btn){
   .then(function(r){ return r.json(); })
   .then(function(d){
     if(d.ok){
-      btn.textContent = 'Saved ✓';
+      btn.textContent = 'Saved';
       setTimeout(function(){ btn.disabled=false; btn.textContent='Save note'; }, 2000);
     } else {
-      btn.textContent = 'Error — retry';
+      btn.textContent = 'Error - retry';
       btn.disabled = false;
     }
   })
   .catch(function(){
-    btn.textContent = 'Error — retry';
+    btn.textContent = 'Error - retry';
+    btn.disabled = false;
+  });
+}
+
+/* -- HAIKU NARRATIVE FIELD INLINE EDIT -- */
+function editHaikuField(entryId, field, btn){
+  var wrap = document.getElementById('hf-' + field + '-' + entryId);
+  if(!wrap) return;
+  var disp = wrap.querySelector('.haiku-field-display');
+  var edit = wrap.querySelector('.haiku-field-edit');
+  if(!disp || !edit) return;
+  disp.hidden = true;
+  edit.hidden = false;
+  var ta = edit.querySelector('.haiku-edit-ta');
+  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+function cancelHaikuField(field, entryId){
+  var wrap = document.getElementById('hf-' + field + '-' + entryId);
+  if(!wrap) return;
+  var disp = wrap.querySelector('.haiku-field-display');
+  var edit = wrap.querySelector('.haiku-field-edit');
+  if(disp) disp.hidden = false;
+  if(edit) edit.hidden = true;
+}
+function saveHaikuField(entryId, field, btn){
+  var wrap = document.getElementById('hf-' + field + '-' + entryId);
+  if(!wrap) return;
+  var ta = wrap.querySelector('.haiku-edit-ta');
+  if(!ta) return;
+  var value = ta.value.trim();
+  var url = URL_HAIKU_EDIT.replace('/0', '/' + entryId);
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+    credentials: 'same-origin',
+    body: JSON.stringify({field: field, value: value})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok){
+      var disp = wrap.querySelector('.haiku-field-display');
+      if(disp){ disp.textContent = value; }
+      cancelHaikuField(field, entryId);
+      btn.disabled = false;
+      btn.textContent = 'Save';
+    } else {
+      btn.textContent = 'Error - retry';
+      btn.disabled = false;
+    }
+  })
+  .catch(function(){
+    btn.textContent = 'Error - retry';
     btn.disabled = false;
   });
 }
