@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.4 (Session 230, 2026-09-30 — SL AUDIT FIX: fonts raised to 15px min (note-text, th weight labels, title subtitle, Review btn); Review tap target raised to 44px; haiku dims 'haiku' key added. All 3 tabs render-tested clean. RETAINS 2.3.)
 {# SL-VERSION: admin_contest_judge-2.3 (Session 230, 2026-09-30 — FIX: url_for('admin') → url_for('admin_dashboard'). SL Audit: all 12 url_for endpoints verified against app.py, all 3 tabs render-tested clean. RETAINS 2.2.)
 {# SL-VERSION: admin_contest_judge-2.2 (Session 230, 2026-09-30 — FIX: All Jinja expressions moved to a dedicated JS constants block at top of script; remaining JS wrapped in raw/endraw so Jinja never touches curly braces in JS functions. Eliminates Unexpected token '{' SyntaxError permanently. RETAINS 2.1.)
 {# SL-VERSION: admin_contest_judge-2.0 (Session 230, 2026-09-30 — UNIFIED: Sonnet / Haiku / Compare tabs in one page. Batch selector with delete (confirm required). Haiku comparison is no longer a separate admin nav item. Sonnet tab: upload, score, scorecards ZIP, CSV, per-entry review. Haiku tab: run Haiku, Haiku-only CSV, per-entry narrative. Compare tab: locked until both run, shows calibration stats + Comparison CSV. SL Audit pass: fonts ≥15px, tap targets ≥44px, version header line 1.) #}
@@ -87,7 +88,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .rt .lo{color:#B91C1C}
 .thumb-sm{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#EEE;display:block}
 .no-entries{text-align:center;padding:48px 0;color:#6B6B68;font-size:16px}
-.note-text{font-size:14px;color:#6B6B68;max-width:280px;line-height:1.4}
+.note-text{font-size:15px;color:#6B6B68;max-width:280px;line-height:1.4}
 
 /* ── HAIKU ENTRIES ── */
 .entry{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:16px;margin-bottom:14px}
@@ -230,7 +231,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
     <button class="tab{% if active_tab == 'compare' %} active{% endif %}{% if not compare_unlocked %} locked{% endif %}"
             id="tabCompare"
             onclick="{% if compare_unlocked %}showTab('compare'){% else %}alert('Run both Sonnet and Haiku first to unlock the Compare tab.'){% endif %}">
-      <i class="ti ti-scale"></i> Compare{% if not compare_unlocked %} <i class="ti ti-lock" style="font-size:13px"></i>{% endif %}
+      <i class="ti ti-scale"></i> Compare{% if not compare_unlocked %} <i class="ti ti-lock" style="font-size:15px"></i>{% endif %}
     </button>
   </div>
 
@@ -292,12 +293,12 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
             <th></th>
             <th>Photographer</th>
             <th class="num">Overall</th>
-            <th class="num">Wonder<br><span style="font-weight:400;font-size:13px">27%</span></th>
-            <th class="num">H.Connect<br><span style="font-weight:400;font-size:13px">19%</span></th>
-            <th class="num">Story<br><span style="font-weight:400;font-size:13px">18%</span></th>
-            <th class="num">Disrupt<br><span style="font-weight:400;font-size:13px">15%</span></th>
-            <th class="num">Craft<br><span style="font-weight:400;font-size:13px">13%</span></th>
-            <th class="num">Moment<br><span style="font-weight:400;font-size:13px">8%</span></th>
+            <th class="num">Wonder<br><span style="font-weight:400;font-size:15px">27%</span></th>
+            <th class="num">H.Connect<br><span style="font-weight:400;font-size:15px">19%</span></th>
+            <th class="num">Story<br><span style="font-weight:400;font-size:15px">18%</span></th>
+            <th class="num">Disrupt<br><span style="font-weight:400;font-size:15px">15%</span></th>
+            <th class="num">Craft<br><span style="font-weight:400;font-size:15px">13%</span></th>
+            <th class="num">Moment<br><span style="font-weight:400;font-size:15px">8%</span></th>
             <th>Theme</th>
             <th></th>
           </tr>
@@ -310,7 +311,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
               <td><img class="thumb-sm" src="{{ e.thumb_url }}" alt="" loading="lazy"></td>
               <td>
                 <div style="font-weight:500">{{ e.photographer or '—' }}</div>
-                <div class="muted" style="font-size:14px">{{ e.title or '' }}</div>
+                <div class="muted" style="font-size:15px">{{ e.title or '' }}</div>
               </td>
               <td class="num"><strong>{{ '%.2f'|format(e.composite) if e.composite else '—' }}</strong></td>
               <td class="num">{{ '%.1f'|format(e.wonder) if e.wonder else '—' }}</td>
@@ -324,7 +325,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
                 {% if e.theme_note %}<div class="note-text">{{ e.theme_note[:80] }}{% if e.theme_note|length > 80 %}…{% endif %}</div>{% endif %}
               </td>
               <td>
-                <a href="{{ url_for('admin_contest_judge_review', batch_ref=batch_ref) }}#e{{ e.id }}" class="btn-line btn" style="min-height:36px;padding:0 12px;font-size:14px;text-decoration:none">Review</a>
+                <a href="{{ url_for('admin_contest_judge_review', batch_ref=batch_ref) }}#e{{ e.id }}" class="btn-line btn" style="min-height:44px;padding:0 12px;font-size:15px;text-decoration:none">Review</a>
               </td>
             </tr>
             {% endfor %}
