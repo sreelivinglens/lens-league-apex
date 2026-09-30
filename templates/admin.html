@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.2 (Session 229, 2026-09-30 — Open Call: Haiku comparison sidebar item added; Contest Judge and Haiku comparison added to the mobile menu (new mob-nav-out class so the scroll highlighter is unaffected). RETAINS admin-3.1.) #}
 {# SL-VERSION: admin-3.1 (Session 223, 2026-09-27 — Open Call: Contest Judge sidebar item added. RETAINS admin-3.0.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +49,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
 /* ── MOBILE TOP NAV (scrollable, shown <900px) ── */
 .mob-nav{display:none;background:#fff;border-bottom:1px solid #E0DDD6;overflow-x:auto;white-space:nowrap;padding:0 8px;-webkit-overflow-scrolling:touch;position:sticky;top:0;z-index:60}
-.mob-nav-item{display:inline-flex;align-items:center;gap:5px;padding:12px 12px;font-size:14px;color:#3A3A38;cursor:pointer;border-bottom:2px solid transparent;min-height:44px;text-decoration:none;white-space:nowrap}
+.mob-nav-item,.mob-nav-out{display:inline-flex;align-items:center;gap:5px;padding:12px 12px;font-size:14px;color:#3A3A38;cursor:pointer;border-bottom:2px solid transparent;min-height:44px;text-decoration:none;white-space:nowrap}
 .mob-nav-item.active{border-bottom-color:#C8A84B;color:#1A1A18;font-weight:500}
 
 /* ── MAIN ── */
@@ -483,6 +484,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <a class="mob-nav-item" onclick="navTo('haiku-members','b-haiku-body','cHM')"><i class="ti ti-users"></i> Haiku</a>
   <a class="mob-nav-item" onclick="navTo('audit-log','b-audit-body','cAL')"><i class="ti ti-shield"></i> Audit</a>
   <a class="mob-nav-item" onclick="navTo('danger','b-dz-body','cDZ')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
+  <a class="mob-nav-out" href="{{ url_for('admin_contest_judge') }}"><i class="ti ti-gavel"></i> Contest Judge</a>
+  <a class="mob-nav-out" href="{{ url_for('admin_contest_judge_haiku_compare') }}"><i class="ti ti-scale"></i> Haiku comparison</a>
 </div>
 
 <div class="layout">
@@ -571,6 +574,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <div class="sb-group-label">Open Call</div>
     <a class="sb-item" href="{{ url_for('admin_contest_judge') }}" style="text-decoration:none">
       <i class="ti ti-gavel"></i> Contest Judge
+    </a>
+    <a class="sb-item" href="{{ url_for('admin_contest_judge_haiku_compare') }}" style="text-decoration:none">
+      <i class="ti ti-scale"></i> Haiku comparison
     </a>
   </div>
 
