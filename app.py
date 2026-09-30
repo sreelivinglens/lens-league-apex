@@ -1,3 +1,4 @@
+# SL-VERSION: 182.36 (Session 229, 2026-09-30 — FIX: Scorecard ZIP still failed on staging with 'can't measure length of multiline text'. The two-line dimension labels (Human/Connect, Story/Transfer) were measured with textlength(), which rejects multi-line text — this was the underlying crash all along. Each label line is now measured and centred separately; genre label flattened to one line. Nothing else changed. RETAINS 182.35.)
 # SL-VERSION: 182.35 (Session 229, 2026-09-29 — FIX: Download Scorecards (ZIP) crashed on the 47-entry Fuji Collective open call. Route fetched every photograph one after another over the public link (10s timeout each), which is blocked by storage bot protection and ran past the gunicorn worker time limit, killing the worker. Now: photographs fetched directly from storage via storage.download_file() + key_from_url() (same as Session 228 Rescore), 8 at a time, 8s cap per photograph; whole ZIP built in a background thread with a 25s hard cap; one Railway console summary line per run. Card design unchanged. RETAINS 182.34.)
 # SL-VERSION: 182.34 (Session 228, 2026-09-28 — REMOVE NS Bonus from Open Call composite: Story Transfer is already a full 18% weighted dimension; the +0.15/+0.05 bonus was a legacy of the old Yes/No NS field and was double-counting Story Transfer. Removed cleanly — future contests score correctly for any theme. RETAINS 182.33.)
 # SL-VERSION: 182.33 (Session 228, 2026-09-28 — FIX: Bulk rescore progress invisible across gunicorn workers: app.config is per-process; switched to site_settings DB for job progress so all 4 workers can read/write it. Progress bar now works. RETAINS 182.32.)
@@ -16822,7 +16823,7 @@ def admin_contest_judge_scorecards(batch_ref):
                     d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
                     # Genre detected (small, below badge)
                     if row.genre_detected:
-                        gd_txt = f'Genre detected: {row.genre_detected}'
+                        gd_txt = f'Genre detected: {row.genre_detected}'.replace('\n', ' ')
                         gd_w = int(d.textlength(gd_txt, font=fnt_label))
                         d.text((W - PAD - gd_w, y + 52), gd_txt, font=fnt_label, fill=MID)
 
@@ -16845,9 +16846,12 @@ def admin_contest_judge_scorecards(batch_ref):
                         cx = PAD + i * col_w + col_w // 2
                         score_txt = f'{val:.1f}' if val else '—'
                         sw = int(d.textlength(score_txt, font=fnt_score_s))
-                        lw = int(d.textlength(lbl, font=fnt_label))
                         d.text((cx - sw // 2, y), score_txt, font=fnt_score_s, fill=DARK)
-                        d.text((cx - lw // 2, y + 36), lbl, font=fnt_label, fill=MID)
+                        # v182.36: labels like 'Human\nConnect' are two lines —
+                        # textlength() refuses multi-line text, so centre each line.
+                        for _li, _ln in enumerate(lbl.split('\n')):
+                            _lw = int(d.textlength(_ln, font=fnt_label))
+                            d.text((cx - _lw // 2, y + 36 + _li * 24), _ln, font=fnt_label, fill=MID)
 
                     y += 80
 
