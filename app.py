@@ -1,3 +1,4 @@
+# SL-VERSION: 182.45 (Session 230, 2026-09-30 — FIX: haiku_entries dims missing 'haiku' key — template accesses d.haiku in haiku tab; added haiku=hv alias alongside score=hv. RETAINS 182.44.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -15748,7 +15749,7 @@ def admin_contest_judge():
             dims = []
             for hk, col, label in _CJ_HAIKU_DIMS:
                 hv = h.get(hk) if h else None
-                dims.append({'label': label, 'score': hv,
+                dims.append({'label': label, 'score': hv, 'haiku': hv,
                              'obs': (h or {}).get('obs_' + hk, '')})
             haiku_entries.append({
                 'rank': i if r.haiku_composite else None,
