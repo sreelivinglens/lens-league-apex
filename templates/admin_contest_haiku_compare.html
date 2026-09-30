@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_haiku_compare-1.0 (Session 229, 2026-09-30 — NEW: Haiku comparison page for open calls. Run Haiku button with progress bar; per-entry plus/minus against Sonnet on all six dimensions and the overall evaluation; both standings; summary agreement figures; Haiku written reading beside Sonnet notes. Admin only. Sonnet data is read, never written.) #}
+{# SL-VERSION: admin_contest_haiku_compare-1.1 (Session 229, 2026-09-30 — ADD: Download CSV button alongside Run Haiku button. Downloads all entries with both standings, six-dimension Sonnet/Haiku/gap columns, and all Haiku written fields. RETAINS 1.0.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,6 +119,11 @@ summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size
         <i class="ti ti-player-play"></i>
         {% if summary %}Run Haiku again ({{ entries|length }} entries){% else %}Run Haiku on all {{ entries|length }} entries{% endif %}
       </button>
+      {% if summary and summary.n > 0 %}
+      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-download"></i> Download CSV
+      </a>
+      {% endif %}
       <span class="run-note">Takes about 3 to 5 minutes. Keep this page open.{% if summary and summary.run_at %} Last run {{ summary.run_at.strftime('%d %b %Y, %H:%M') }} UTC.{% endif %}</span>
     </div>
     <div class="prog" id="prog">
