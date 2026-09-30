@@ -1,4 +1,4 @@
-# SL-VERSION: 182.46 (Session 230, 2026-09-30 — FEAT: Haiku tab 3 features: (1) master_ref + haiku_judge_note pulled into haiku_entries; (2) _CJ_HAIKU_EXTRA subject-identity constraint added — model must not assert relationships; (3) new route admin_contest_judge_haiku_edit POST saves haiku_judge_note; haiku_judge_note column added to _cj_haiku_ensure_columns. RETAINS 182.45.)
+# SL-VERSION: 182.47 (Session 230, 2026-09-30 — FEAT: _CJ_HAIKU_EXTRA redesigned: (1) obs_ fields removed, replaced with score_read synthesis field; (2) stranger→viewer throughout; (3) species-naming rule added — name species when known, genus when not, never "living things"; (4) master_ref must include homepage URL. RETAINS 182.46.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -16613,18 +16613,17 @@ def admin_contest_judge_bulk_rescore_status(job_id):
 # written by this code.
 
 _CJ_HAIKU_EXTRA = """ALSO include these additional keys in the SAME JSON object (plain sentences, no bullet points, never use the words "AI" or "score"):
-  "impression": "two or three sentences — what a stranger walking past this in a gallery would feel, and why",
-  "obs_wonder": "one sentence — why Wonder earned this number, naming what in the frame drives it",
-  "obs_aq": "one sentence — why Human Connect earned this number",
-  "obs_story_transfer": "one sentence — why Story Transfer earned this number",
-  "obs_disruption": "one sentence — why Disruption earned this number",
-  "obs_dod": "one sentence — why Craft (composition, light, colour) earned this number",
-  "obs_dm": "one sentence — why Moment earned this number",
+  "impression": "two or three sentences — what a viewer walking past this in a gallery would feel, and why",
+  "score_read": "one or two sentences — read the pattern across the six dimension evaluations: name what leads, what lags, and what that combination says about the character of this photograph. Do not list numbers; interpret them.",
   "strength": "one sentence — the single strongest decision the photographer made",
   "next_leap": "one sentence — the one change that would lift this photograph most"
 Keep every other key exactly as specified above.
 
-IMPORTANT — SUBJECT IDENTITY: Do not assert the identity, relationship, or role of people in the image. Describe only what is visually observable. Do not say "a father", "a mother", "a child", "her son", "his daughter" or any relationship unless it is explicitly written in the image. Instead say "a figure", "a person", "an older man", "a young woman" — describe only what you can see. If a relationship feels implied, use "who appears to be" or "possibly" — never state it as fact."""
+IMPORTANT — SUBJECT IDENTITY: Do not assert the identity, relationship, or role of people in the image. Describe only what is visually observable. Do not say "a father", "a mother", "a child", "her son", "his daughter" or any relationship unless it is explicitly written in the image. Instead say "a figure", "a person", "an older man", "a young woman" — describe only what you can see. If a relationship feels implied, use "who appears to be" or "possibly" — never state it as fact.
+
+IMPORTANT — SPECIES NAMING: When you can identify the specific animal species, bird breed, or plant in the image, name it directly — "two terns", "a red kite", "a Bengal tiger". Do not retreat to genus language ("two birds", "a large cat") when you know the species. If you genuinely cannot identify the species, use the genus ("birds", "a big cat") — never say "living things" or "creatures".
+
+IMPORTANT — MASTER REFERENCE: The master_ref field must include: (1) the photographer's name, (2) the specific body of work or approach that echoes this image, and (3) their homepage URL in parentheses so the photographer can find their work. Format: "Name's [body of work] — [one sentence on the echo]. (https://their-site.com)" Use only the photographer's main homepage URL — never a specific portfolio page or sub-URL that may change."""
 
 _CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
                   ('aq', 'aq_score', 'Human Connect'),
