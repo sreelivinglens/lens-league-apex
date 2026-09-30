@@ -1,4 +1,5 @@
-# SL-VERSION: 182.51 (Session 231, 2026-10-01 — FEAT: _validate_master_ref() added — Sonnet micro-call after each Haiku entry validates master_ref genre match before DB write. Wrong genre → auto-corrected silently. ~₹0.27/image. RETAINS 182.50.)
+# SL-VERSION: 182.54 (Session 231, 2026-10-01 — FEATURE: Haiku narrative inline edit — haiku_edit route extended to patch individual haiku_json fields (impression, score_read, master_ref, strength, next_leap). RETAINS 182.53.)
+# SL-VERSION: 182.53 (Session 231, 2026-10-01 — FIX: _CJ_HAIKU_EXTRA genre rule strengthened: "judge by what the PHOTOGRAPH is about, not what appears in it" — painting of a tiger = craft/documentary, not wildlife. Explicit ban on Steve Winter/Frans Lanting/Nick Brandt for human/painting/body art subjects. RETAINS 182.52.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -16627,7 +16628,17 @@ IMPORTANT — SPECIES NAMING: When you can identify the specific animal species,
 
 IMPORTANT — MASTER REFERENCE: The master_ref field must include: (1) the photographer's name, (2) the specific body of work or approach that echoes this image, and (3) their homepage URL in parentheses so the photographer can find their work. Format: "Name's [body of work] — [one sentence on the echo]. (https://their-site.com)" Use only the photographer's main homepage URL — never a specific portfolio page or sub-URL that may change.
 
-CRITICAL — MASTER REFERENCE GENRE MATCH: The master photographer you cite must work in the SAME genre as the image. A cultural portrait requires a documentary or portrait photographer (e.g. Raghu Rai, Dayanita Singh, Mary Ellen Mark, Sebastião Salgado). A wildlife image requires a wildlife photographer (Frans Lanting, Nick Brandt). A landscape requires a landscape photographer. Never cite a wildlife photographer for a human portrait, never cite a portrait photographer for a landscape. If you are uncertain of the photographer's genre, choose a different reference you are confident about."""
+CRITICAL — MASTER REFERENCE GENRE MATCH: The master photographer you cite must work in the SAME genre as the image. Judge by what the PHOTOGRAPH is about — not what appears in it.
+
+If the image shows a person painting, drawing, tattooing, or creating art — even if the painted subject is an animal or tiger — the genre is CRAFT/DOCUMENTARY/PORTRAIT. Cite a documentary or portrait photographer (e.g. Raghu Rai, Dayanita Singh, Mary Ellen Mark, Sebastião Salgado, Steve McCurry). NEVER cite a wildlife photographer for this.
+
+If the image shows a live animal in nature — cite a wildlife photographer (Frans Lanting, Nick Brandt).
+If the image shows a landscape — cite a landscape photographer.
+If the image shows street life or documentary human subjects — cite a documentary photographer.
+
+Steve Winter, Frans Lanting, and Nick Brandt are wildlife photographers. Never cite them for any image where the primary subject is a human being, a painting, body art, or a craft scene — even if an animal appears in the painted or drawn artwork within the image.
+
+If you are uncertain of a photographer's genre, choose a different reference you are confident about."""
 
 _CJ_HAIKU_DIMS = [('wonder', 'wonder_score', 'Wonder'),
                   ('aq', 'aq_score', 'Human Connect'),
@@ -16679,13 +16690,21 @@ def admin_contest_judge_haiku_run(batch_ref):
             _vp = (
                 f"A photography judge has written this image reading:\n\"{impression}\"\n\n"
                 f"They cited this master reference:\n\"{master_ref}\"\n\n"
-                "Task: Is the cited photographer genuinely known for the same genre as the image described? "
-                "For example, a wildlife photographer should NOT be cited for a human portrait, and vice versa.\n\n"
-                "If the genre matches: reply with exactly the word OK on the first line, nothing else.\n"
-                "If the genre does NOT match: reply with REPLACE on the first line, then on the second line "
+                "Task — TWO checks, both must pass:\n"
+                "1. What is the PRIMARY genre of the IMAGE based on the reading? (e.g. wildlife, human portrait, street, landscape, craft/art, documentary)\n"
+                "2. What is the PRIMARY genre that the cited PHOTOGRAPHER is actually known for in real life? "
+                "Steve McCurry = human portrait/documentary. Frans Lanting = wildlife. Steve Winter = wildlife (big cats). "
+                "Nick Brandt = wildlife. Raghu Rai = documentary/people. Sebastião Salgado = documentary/people. "
+                "Mary Ellen Mark = documentary/people. Dayanita Singh = documentary/people. "
+                "Ansel Adams = landscape. Michael Kenna = landscape. "
+                "If you are not certain what genre a photographer is known for, treat it as a mismatch.\n\n"
+                "If BOTH genres match: reply with exactly the word OK on the first line, nothing else.\n"
+                "If they do NOT match (e.g. wildlife photographer cited for a painting or human subject): "
+                "reply with REPLACE on the first line, then on the second line "
                 "provide a corrected master_ref in exactly this format: "
                 "\"Name's [body of work] — [one sentence on the echo]. (https://their-site.com)\" "
-                "Use only the photographer's main homepage URL. Match the genre of the image precisely."
+                "Use only the photographer's main homepage URL. Match the genre of the image precisely. "
+                "Never cite Steve Winter, Frans Lanting, or Nick Brandt for any image where the primary subject is a human being or a painting."
             )
             _vr = _anthropic_client().messages.create(
                 model='claude-sonnet-4-5',
@@ -16769,23 +16788,54 @@ def admin_contest_judge_haiku_run(batch_ref):
 @app.route('/admin/contest-judge/haiku-edit/<int:entry_id>', methods=['POST'])
 @login_required
 def admin_contest_judge_haiku_edit(entry_id):
-    """Save judge note for a Haiku entry. JSON: {note: str}. Returns {ok: true}."""
+    """Save judge note or a haiku_json narrative field for a Haiku entry.
+    JSON: {note: str} — saves haiku_judge_note column.
+    JSON: {field: str, value: str} — patches a key inside haiku_json (impression, score_read, master_ref, strength, next_leap).
+    Returns {ok: true}."""
     if current_user.role != 'admin':
         abort(403)
     _cj_haiku_ensure_columns()
     data = request.get_json(silent=True) or {}
-    note = (data.get('note') or '').strip()
-    try:
-        db.session.execute(db.text(
-            "UPDATE contest_judge_batch SET haiku_judge_note = :n WHERE id = :eid"
-        ), {'n': note or None, 'eid': entry_id})
-        db.session.commit()
-        app.logger.info(f'[haiku_edit] entry={entry_id} judge note saved ({len(note)} chars)')
-        return jsonify({'ok': True})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'[haiku_edit] {e}')
-        return jsonify({'ok': False, 'error': str(e)}), 500
+    _ALLOWED_FIELDS = {'impression', 'score_read', 'master_ref', 'strength', 'next_leap'}
+    field = (data.get('field') or '').strip()
+    if field:
+        # Patch a specific key inside haiku_json
+        if field not in _ALLOWED_FIELDS:
+            return jsonify({'ok': False, 'error': f'Field "{field}" not editable'}), 400
+        value = (data.get('value') or '').strip()
+        try:
+            row = db.session.execute(db.text(
+                "SELECT haiku_json FROM contest_judge_batch WHERE id = :eid"
+            ), {'eid': entry_id}).fetchone()
+            if not row or not row[0]:
+                return jsonify({'ok': False, 'error': 'Entry not found or no haiku_json'}), 404
+            import json as _json
+            existing = _json.loads(row[0]) if isinstance(row[0], str) else dict(row[0])
+            existing[field] = value or None
+            db.session.execute(db.text(
+                "UPDATE contest_judge_batch SET haiku_json = :j WHERE id = :eid"
+            ), {'j': _json.dumps(existing), 'eid': entry_id})
+            db.session.commit()
+            app.logger.info(f'[haiku_edit] entry={entry_id} field={field} updated ({len(value)} chars)')
+            return jsonify({'ok': True})
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[haiku_edit] field patch: {e}')
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    else:
+        # Legacy: save judge note
+        note = (data.get('note') or '').strip()
+        try:
+            db.session.execute(db.text(
+                "UPDATE contest_judge_batch SET haiku_judge_note = :n WHERE id = :eid"
+            ), {'n': note or None, 'eid': entry_id})
+            db.session.commit()
+            app.logger.info(f'[haiku_edit] entry={entry_id} judge note saved ({len(note)} chars)')
+            return jsonify({'ok': True})
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[haiku_edit] {e}')
+            return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 @app.route('/admin/contest-judge/haiku-compare', defaults={'batch_ref': None})
