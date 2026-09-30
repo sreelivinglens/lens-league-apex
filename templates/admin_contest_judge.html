@@ -116,6 +116,16 @@ summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size
 .narr .col-h{font-size:15px;font-weight:600;padding:6px 10px;border-radius:6px;background:#F3E8FF;color:#6B21A8;display:inline-block}
 .score-read-note{font-size:15px;line-height:1.6;color:#78350F;font-style:italic;background:#FEF3C7;border-left:3px solid #D97706;padding:8px 12px;border-radius:0 4px 4px 0;margin:6px 0 14px}
 .narr .col-s{background:#E8EEF8;color:#1A2744}
+/* Haiku inline edit */
+.btn-edit-haiku{background:none;border:none;cursor:pointer;color:#9333EA;padding:2px 4px;border-radius:4px;font-size:14px;line-height:1;vertical-align:middle;margin-left:4px;opacity:.7;transition:opacity .15s}
+.btn-edit-haiku:hover{opacity:1;background:#F3E8FF}
+.btn-edit-haiku.inline-edit{font-size:13px}
+.haiku-field-wrap .haiku-field-edit{margin-top:6px}
+.haiku-edit-ta{width:100%;box-sizing:border-box;font-size:15px;line-height:1.6;border:1.5px solid #9333EA;border-radius:6px;padding:8px 10px;resize:vertical;font-family:inherit}
+.haiku-edit-actions{display:flex;gap:8px;margin-top:6px;align-items:center}
+.btn-save-hf{min-height:44px;padding:0 18px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;font-weight:600}
+.btn-save-hf:hover{background:#6D28D9}
+.btn-cancel-hf{min-height:44px;padding:0 14px;background:none;color:#6B7280;border:1px solid #D1D5DB;border-radius:6px;font-size:15px;cursor:pointer}
 
 /* ── MASTER REF + JUDGE NOTES ── */
 .e-master{font-size:15px;color:#6B6B68;margin-top:6px;padding:7px 10px;background:#FFFBEB;border-left:3px solid #C8A84B;border-radius:0 6px 6px 0;line-height:1.5}
@@ -434,24 +444,69 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
             <div>
               <span class="col-h">Haiku</span>
               {% if e.h.impression %}
-              <h4>Reading</h4>
-              <p>{{ e.h.impression }}</p>
+              <h4>Reading <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'impression',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
+              <div class="haiku-field-wrap" id="hf-impression-{{ e.id }}">
+                <p class="haiku-field-display">{{ e.h.impression }}</p>
+                <div class="haiku-field-edit" hidden>
+                  <textarea class="haiku-edit-ta" rows="4">{{ e.h.impression }}</textarea>
+                  <div class="haiku-edit-actions">
+                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'impression',this)"><i class="ti ti-device-floppy"></i> Save</button>
+                    <button class="btn-cancel-hf" onclick="cancelHaikuField('impression',{{ e.id }})">Cancel</button>
+                  </div>
+                </div>
+              </div>
               {% endif %}
               {% if e.h.score_read %}
-              <p class="score-read-note">{{ e.h.score_read }}</p>
+              <div class="haiku-field-wrap" id="hf-score_read-{{ e.id }}">
+                <p class="score-read-note haiku-field-display">{{ e.h.score_read }} <button class="btn-edit-haiku inline-edit" onclick="editHaikuField({{ e.id }},'score_read',this)" title="Edit"><i class="ti ti-pencil"></i></button></p>
+                <div class="haiku-field-edit" hidden>
+                  <textarea class="haiku-edit-ta" rows="3">{{ e.h.score_read }}</textarea>
+                  <div class="haiku-edit-actions">
+                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'score_read',this)"><i class="ti ti-device-floppy"></i> Save</button>
+                    <button class="btn-cancel-hf" onclick="cancelHaikuField('score_read',{{ e.id }})">Cancel</button>
+                  </div>
+                </div>
+              </div>
               {% endif %}
               {% set _mr_raw = e.h.master_ref if e.h.master_ref else e.master_ref %}
               {% if _mr_raw %}
-              <h4>Master Reference</h4>
-              <p>{% if '(http' in _mr_raw %}{% set _parts = _mr_raw.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr_raw }}{% endif %}</p>
+              <h4>Master Reference <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'master_ref',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
+              <div class="haiku-field-wrap" id="hf-master_ref-{{ e.id }}">
+                <p class="haiku-field-display">{% if '(http' in _mr_raw %}{% set _parts = _mr_raw.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr_raw }}{% endif %}</p>
+                <div class="haiku-field-edit" hidden>
+                  <textarea class="haiku-edit-ta" rows="3">{{ _mr_raw }}</textarea>
+                  <div class="haiku-edit-actions">
+                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'master_ref',this)"><i class="ti ti-device-floppy"></i> Save</button>
+                    <button class="btn-cancel-hf" onclick="cancelHaikuField('master_ref',{{ e.id }})">Cancel</button>
+                  </div>
+                </div>
+              </div>
               {% endif %}
               {% if e.h.strength %}
-              <h4>Strength</h4>
-              <p>{{ e.h.strength }}</p>
+              <h4>Strength <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'strength',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
+              <div class="haiku-field-wrap" id="hf-strength-{{ e.id }}">
+                <p class="haiku-field-display">{{ e.h.strength }}</p>
+                <div class="haiku-field-edit" hidden>
+                  <textarea class="haiku-edit-ta" rows="2">{{ e.h.strength }}</textarea>
+                  <div class="haiku-edit-actions">
+                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'strength',this)"><i class="ti ti-device-floppy"></i> Save</button>
+                    <button class="btn-cancel-hf" onclick="cancelHaikuField('strength',{{ e.id }})">Cancel</button>
+                  </div>
+                </div>
+              </div>
               {% endif %}
               {% if e.h.next_leap %}
-              <h4>Next Leap</h4>
-              <p>{{ e.h.next_leap }}</p>
+              <h4>Next Leap <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'next_leap',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
+              <div class="haiku-field-wrap" id="hf-next_leap-{{ e.id }}">
+                <p class="haiku-field-display">{{ e.h.next_leap }}</p>
+                <div class="haiku-field-edit" hidden>
+                  <textarea class="haiku-edit-ta" rows="2">{{ e.h.next_leap }}</textarea>
+                  <div class="haiku-edit-actions">
+                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'next_leap',this)"><i class="ti ti-device-floppy"></i> Save</button>
+                    <button class="btn-cancel-hf" onclick="cancelHaikuField('next_leap',{{ e.id }})">Cancel</button>
+                  </div>
+                </div>
+              </div>
               {% endif %}
             </div>
           </div>
