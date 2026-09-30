@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.3 (Session 230, 2026-09-30 — FIX: url_for('admin') → url_for('admin_dashboard'). SL Audit: all 12 url_for endpoints verified against app.py, all 3 tabs render-tested clean. RETAINS 2.2.)
 {# SL-VERSION: admin_contest_judge-2.2 (Session 230, 2026-09-30 — FIX: All Jinja expressions moved to a dedicated JS constants block at top of script; remaining JS wrapped in raw/endraw so Jinja never touches curly braces in JS functions. Eliminates Unexpected token '{' SyntaxError permanently. RETAINS 2.1.)
 {# SL-VERSION: admin_contest_judge-2.0 (Session 230, 2026-09-30 — UNIFIED: Sonnet / Haiku / Compare tabs in one page. Batch selector with delete (confirm required). Haiku comparison is no longer a separate admin nav item. Sonnet tab: upload, score, scorecards ZIP, CSV, per-entry review. Haiku tab: run Haiku, Haiku-only CSV, per-entry narrative. Compare tab: locked until both run, shows calibration stats + Comparison CSV. SL Audit pass: fonts ≥15px, tap targets ≥44px, version header line 1.) #}
 <!DOCTYPE html>
@@ -161,7 +162,7 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="{{ url_for('admin') }}"><i class="ti ti-arrow-left"></i> Admin</a>
+  <a class="back" href="{{ url_for('admin_dashboard') }}"><i class="ti ti-arrow-left"></i> Admin</a>
   <h1>Contest Judge</h1>
 
   {# ── BATCH SELECTOR ── #}
