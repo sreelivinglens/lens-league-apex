@@ -1,3 +1,4 @@
+# SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
 # SL-VERSION: 182.41 (Session 230, 2026-09-30 — FIX: Haiku contest judge max_tokens raised 1600→2800. At 1600 tokens Haiku ran out of room before writing obs_dod/dod in its JSON output, causing dod (Craft) to silently fall back to 6.0 for ~66% of entries and obs_craft to be blank. Now all 6 dimensions score correctly. RETAINS 182.40.)
 # SL-VERSION: 182.40 (Session 229, 2026-09-30 — FIX: SL Audit on haiku_compare HTML: font sizes raised to 15px minimum, tap target min-height raised to 44px. ADD: standalone Haiku-only CSV route /admin/contest-judge/haiku-only-csv/<batch_ref> and matching button — exports Haiku evaluation scores and full narrative without any Sonnet comparison columns. RETAINS 182.39.)
@@ -15666,13 +15667,13 @@ def admin_contest_judge():
         "SELECT batch_ref, COUNT(*) as n, COUNT(haiku_composite) as h, MIN(judged_at) as started "
         "FROM contest_judge_batch GROUP BY batch_ref ORDER BY started DESC"
     )).fetchall()
-    batches = [{'ref': r.batch_ref, 'n': r.n, 'h': r.h,
-                'label': r.batch_ref + f' ({r.n} entries)'} for r in batch_rows]
+    batches = [{'batch_ref': r.batch_ref, 'n': r.n, 'h': r.h,
+                'sonnet_run': r.n > 0, 'haiku_run': r.h > 0} for r in batch_rows]
 
     # Active batch from query param (default to most recent)
     batch_ref = request.args.get('batch', '')
     if not batch_ref and batches:
-        batch_ref = batches[0]['ref']
+        batch_ref = batches[0]['batch_ref']
     active_tab = request.args.get('tab', 'sonnet')
 
     batch_meta = None
@@ -15690,7 +15691,17 @@ def admin_contest_judge():
             "FROM contest_judge_batch WHERE batch_ref = :br GROUP BY batch_ref"
         ), {'br': batch_ref}).fetchone()
         if _bm:
-            batch_meta = {'ref': _bm.batch_ref, 'n': _bm.n, 'h': _bm.h}
+            # Also pull theme/threshold from first entry
+            _bm_extra = db.session.execute(db.text(
+                "SELECT theme, theme_threshold, MIN(judged_at) as first_run FROM contest_judge_batch WHERE batch_ref = :br LIMIT 1"
+            ), {'br': batch_ref}).fetchone()
+            batch_meta = {
+                'ref': batch_ref, 'n': _bm.n, 'h': _bm.h,
+                'sonnet_run': _bm.n > 0,
+                'haiku_run': _bm.h > 0,
+                'theme': (_bm_extra.theme if _bm_extra else None) or 'Story',
+                'threshold': float(_bm_extra.theme_threshold) if (_bm_extra and _bm_extra.theme_threshold) else 6.0,
+            }
 
         # Sonnet entries
         _sr = db.session.execute(db.text("""
@@ -15715,6 +15726,7 @@ def admin_contest_judge():
                 'gap_note': r.override_gap_note or r.gap_note or '',
                 'genre': r.genre_detected or '',
                 'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else '',
+                'thumb_url': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
                 'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
                 'override_subject_id': r.override_subject_id or '',
             })
@@ -15743,19 +15755,21 @@ def admin_contest_judge():
                 'photographer': r.photographer or 'Unknown',
                 'title': r.image_title or '',
                 'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
-                'composite': r.haiku_composite,
+                'haiku_c': r.haiku_composite,
+                'h': h or {},
                 'dims': dims,
                 'impression': (h or {}).get('impression', ''),
                 'strength': (h or {}).get('strength', ''),
                 'next_leap': (h or {}).get('next_leap', ''),
                 'run_at': r.haiku_run_at.strftime('%Y-%m-%d %H:%M') if r.haiku_run_at else '',
             })
-        h_done = [e for e in haiku_entries if e['composite'] is not None]
+        h_done = [e for e in haiku_entries if e['haiku_c'] is not None]
         if h_done:
-            h_scores = [e['composite'] for e in h_done]
+            h_scores = [e['haiku_c'] for e in h_done]
             def _hmean(xs): return round(sum(xs)/len(xs), 2) if xs else None
             haiku_summary = {'n': len(h_done), 'total': len(haiku_entries),
-                             'mean': _hmean(h_scores), 'max': max(h_scores), 'min': min(h_scores)}
+                             'mean': _hmean(h_scores), 'max': max(h_scores), 'min': min(h_scores),
+                             'run_at': None}
 
         # Compare tab (reuse logic from admin_contest_judge_haiku_compare)
         _cr = db.session.execute(db.text("""
