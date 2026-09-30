@@ -1,3 +1,4 @@
+# SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
 # SL-VERSION: 182.41 (Session 230, 2026-09-30 — FIX: Haiku contest judge max_tokens raised 1600→2800. At 1600 tokens Haiku ran out of room before writing obs_dod/dod in its JSON output, causing dod (Craft) to silently fall back to 6.0 for ~66% of entries and obs_craft to be blank. Now all 6 dimensions score correctly. RETAINS 182.40.)
 # SL-VERSION: 182.40 (Session 229, 2026-09-30 — FIX: SL Audit on haiku_compare HTML: font sizes raised to 15px minimum, tap target min-height raised to 44px. ADD: standalone Haiku-only CSV route /admin/contest-judge/haiku-only-csv/<batch_ref> and matching button — exports Haiku evaluation scores and full narrative without any Sonnet comparison columns. RETAINS 182.39.)
 # SL-VERSION: 182.39 (Session 229, 2026-09-30 — NEW: Haiku comparison CSV export. New route /admin/contest-judge/haiku-compare/<batch_ref>/csv downloads all 47 entries as a CSV with both standings, six-dimension Sonnet/Haiku/gap columns, and all Haiku written fields (impression, strength, next_leap, one observation per dimension). No Sonnet data is ever written. RETAINS 182.38.)
@@ -15659,11 +15660,180 @@ Return ONLY valid JSON:
 def admin_contest_judge():
     if current_user.role != 'admin':
         abort(403)
-    batches = db.session.execute(db.text(
-        "SELECT DISTINCT batch_ref, COUNT(*) as n, MIN(judged_at) as started "
+    _cj_haiku_ensure_columns()
+    # All batches for selector
+    batch_rows = db.session.execute(db.text(
+        "SELECT batch_ref, COUNT(*) as n, COUNT(haiku_composite) as h, MIN(judged_at) as started "
         "FROM contest_judge_batch GROUP BY batch_ref ORDER BY started DESC"
     )).fetchall()
-    return render_template('admin_contest_judge.html', batches=batches)
+    batches = [{'ref': r.batch_ref, 'n': r.n, 'h': r.h,
+                'label': r.batch_ref + f' ({r.n} entries)'} for r in batch_rows]
+
+    # Active batch from query param (default to most recent)
+    batch_ref = request.args.get('batch', '')
+    if not batch_ref and batches:
+        batch_ref = batches[0]['ref']
+    active_tab = request.args.get('tab', 'sonnet')
+
+    batch_meta = None
+    sonnet_entries = []
+    haiku_entries = []
+    haiku_summary = None
+    compare_entries = []
+    compare_summary = None
+    compare_unlocked = False
+
+    if batch_ref:
+        # Batch meta
+        _bm = db.session.execute(db.text(
+            "SELECT batch_ref, COUNT(*) as n, COUNT(haiku_composite) as h, MIN(judged_at) as started "
+            "FROM contest_judge_batch WHERE batch_ref = :br GROUP BY batch_ref"
+        ), {'br': batch_ref}).fetchone()
+        if _bm:
+            batch_meta = {'ref': _bm.batch_ref, 'n': _bm.n, 'h': _bm.h}
+
+        # Sonnet entries
+        _sr = db.session.execute(db.text("""
+            SELECT id, filename, photographer, image_title, theme, theme_threshold,
+                   wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
+                   composite_score, theme_score, theme_relevant, theme_note, master_ref, gap_note,
+                   override_theme_note, override_master_ref, override_gap_note,
+                   genre_detected, judged_at, thumb_path, override_subject_id
+            FROM contest_judge_batch WHERE batch_ref = :br ORDER BY composite_score DESC NULLS LAST
+        """), {'br': batch_ref}).fetchall()
+        for i, r in enumerate(_sr, 1):
+            sonnet_entries.append({
+                'rank': i, 'id': r.id, 'filename': r.filename,
+                'photographer': r.photographer or 'Unknown',
+                'title': r.image_title or r.filename or '',
+                'wonder': r.wonder_score, 'aq': r.aq_score,
+                'story_transfer': r.story_transfer_score, 'disruption': r.disruption_score,
+                'dod': r.dod_score, 'dm': r.dm_score, 'composite': r.composite_score,
+                'theme_score': r.theme_score, 'theme_relevant': r.theme_relevant,
+                'theme_note': r.override_theme_note or r.theme_note or '',
+                'master_ref': r.override_master_ref or r.master_ref or '',
+                'gap_note': r.override_gap_note or r.gap_note or '',
+                'genre': r.genre_detected or '',
+                'judged_at': r.judged_at.strftime('%H:%M') if r.judged_at else '',
+                'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
+                'override_subject_id': r.override_subject_id or '',
+            })
+
+        # Haiku entries
+        _hr = db.session.execute(db.text("""
+            SELECT id, photographer, image_title, thumb_path,
+                   wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
+                   composite_score, haiku_json, haiku_composite, haiku_run_at
+            FROM contest_judge_batch WHERE batch_ref = :br
+            ORDER BY haiku_composite DESC NULLS LAST, composite_score DESC NULLS LAST
+        """), {'br': batch_ref}).fetchall()
+        for i, r in enumerate(_hr, 1):
+            try:
+                h = _cj_json.loads(r.haiku_json) if r.haiku_json else None
+            except Exception:
+                h = None
+            dims = []
+            for hk, col, label in _CJ_HAIKU_DIMS:
+                hv = h.get(hk) if h else None
+                dims.append({'label': label, 'score': hv,
+                             'obs': (h or {}).get('obs_' + hk, '')})
+            haiku_entries.append({
+                'rank': i if r.haiku_composite else None,
+                'id': r.id,
+                'photographer': r.photographer or 'Unknown',
+                'title': r.image_title or '',
+                'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
+                'composite': r.haiku_composite,
+                'dims': dims,
+                'impression': (h or {}).get('impression', ''),
+                'strength': (h or {}).get('strength', ''),
+                'next_leap': (h or {}).get('next_leap', ''),
+                'run_at': r.haiku_run_at.strftime('%Y-%m-%d %H:%M') if r.haiku_run_at else '',
+            })
+        h_done = [e for e in haiku_entries if e['composite'] is not None]
+        if h_done:
+            h_scores = [e['composite'] for e in h_done]
+            def _hmean(xs): return round(sum(xs)/len(xs), 2) if xs else None
+            haiku_summary = {'n': len(h_done), 'total': len(haiku_entries),
+                             'mean': _hmean(h_scores), 'max': max(h_scores), 'min': min(h_scores)}
+
+        # Compare tab (reuse logic from admin_contest_judge_haiku_compare)
+        _cr = db.session.execute(db.text("""
+            SELECT id, photographer, image_title, thumb_path,
+                   wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
+                   composite_score, haiku_json, haiku_composite, haiku_run_at,
+                   COALESCE(override_theme_note, theme_note) AS theme_note,
+                   COALESCE(override_master_ref, master_ref) AS master_ref,
+                   COALESCE(override_gap_note, gap_note) AS gap_note
+            FROM contest_judge_batch WHERE batch_ref = :br
+            ORDER BY composite_score DESC NULLS LAST
+        """), {'br': batch_ref}).fetchall()
+        for i, r in enumerate(_cr, 1):
+            try:
+                h = _cj_json.loads(r.haiku_json) if r.haiku_json else None
+            except Exception:
+                h = None
+            dims = []
+            for hk, col, label in _CJ_HAIKU_DIMS:
+                sv = getattr(r, col)
+                hv = h.get(hk) if h else None
+                diff = round(hv - sv, 1) if (hv is not None and sv is not None) else None
+                dims.append({'label': label, 'sonnet': sv, 'haiku': hv, 'diff': diff,
+                             'obs': (h or {}).get('obs_' + hk, '')})
+            cdiff = (round(r.haiku_composite - r.composite_score, 2)
+                     if (r.haiku_composite is not None and r.composite_score is not None) else None)
+            compare_entries.append({
+                'id': r.id, 'photographer': r.photographer or 'Unknown', 'title': r.image_title or '',
+                'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
+                'sonnet_standing': i, 'haiku_standing': None,
+                'sonnet_c': r.composite_score, 'haiku_c': r.haiku_composite, 'cdiff': cdiff,
+                'dims': dims, 'h': h or {},
+                's_theme_note': r.theme_note or '', 's_master_ref': r.master_ref or '',
+                's_gap_note': r.gap_note or '',
+            })
+        c_done = [e for e in compare_entries if e['haiku_c'] is not None and e['sonnet_c'] is not None]
+        for j, e in enumerate(sorted(c_done, key=lambda x: -x['haiku_c']), 1):
+            e['haiku_standing'] = j
+        for e in compare_entries:
+            e['standing_move'] = (e['sonnet_standing'] - e['haiku_standing']) if e['haiku_standing'] else None
+        compare_unlocked = len(sonnet_entries) > 0 and len(h_done) > 0
+        if c_done:
+            n = len(c_done)
+            def _cmean(xs): return round(sum(xs)/len(xs), 2) if xs else None
+            cd = [e['cdiff'] for e in c_done]
+            per_dim = []
+            for k, (_hk, _col, label) in enumerate(_CJ_HAIKU_DIMS):
+                ds = [e['dims'][k]['diff'] for e in c_done if e['dims'][k]['diff'] is not None]
+                per_dim.append({'label': label, 'mad': _cmean([abs(x) for x in ds]), 'bias': _cmean(ds)})
+            s_rank = {e['id']: e['sonnet_standing'] for e in c_done}
+            h_rank = {e['id']: e['haiku_standing'] for e in c_done}
+            rho = None
+            if n > 2:
+                d2 = sum((s_rank[i] - h_rank[i]) ** 2 for i in s_rank)
+                rho = round(1 - (6 * d2) / (n * (n * n - 1)), 2)
+            top_s = {e['id'] for e in c_done if s_rank[e['id']] <= 10}
+            top_h = {e['id'] for e in c_done if h_rank[e['id']] <= 10}
+            compare_summary = {
+                'n': n, 'total': len(compare_entries),
+                'mad': _cmean([abs(x) for x in cd]), 'bias': _cmean(cd),
+                'max': max(cd, key=abs) if cd else None,
+                'within_01': sum(1 for x in cd if abs(x) <= 0.1),
+                'within_03': sum(1 for x in cd if abs(x) <= 0.3),
+                'rho': rho, 'top10_overlap': len(top_s & top_h), 'top10_size': min(10, n),
+                'per_dim': per_dim,
+            }
+
+    return render_template('admin_contest_judge.html',
+                           batches=batches,
+                           batch_ref=batch_ref,
+                           batch_meta=batch_meta,
+                           active_tab=active_tab,
+                           compare_unlocked=compare_unlocked,
+                           sonnet_entries=sonnet_entries,
+                           haiku_entries=haiku_entries,
+                           haiku_summary=haiku_summary,
+                           compare_entries=compare_entries,
+                           compare_summary=compare_summary)
 
 
 @app.route('/admin/contest-judge/upload', methods=['POST'])
@@ -16540,10 +16710,13 @@ def admin_contest_judge_haiku_run(batch_ref):
 @app.route('/admin/contest-judge/haiku-compare/<path:batch_ref>')
 @login_required
 def admin_contest_judge_haiku_compare(batch_ref):
-    """Comparison page: Haiku vs Sonnet for every entry, plus summary agreement figures.
-    With no open call chosen, lists every open call with how many entries Haiku has done."""
+    """Redirect to unified Contest Judge page (tab=compare). Legacy route kept for bookmarks."""
     if current_user.role != 'admin':
         abort(403)
+    if batch_ref:
+        return redirect(url_for('admin_contest_judge', batch=batch_ref, tab='compare'))
+    return redirect(url_for('admin_contest_judge', tab='compare'))
+    # ── LEGACY CODE BELOW (kept for reference, unreachable) ──────────────────
     _cj_haiku_ensure_columns()
     if not batch_ref:
         batches = db.session.execute(db.text(
