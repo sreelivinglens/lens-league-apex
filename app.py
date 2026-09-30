@@ -1,4 +1,4 @@
-# SL-VERSION: 182.50 (Session 230, 2026-09-30 — FIX: master_ref genre-match rule added: cited photographer must work in the SAME genre as the image. Wildlife ref for a human portrait is a hallucination failure. RETAINS 182.49.)
+# SL-VERSION: 182.51 (Session 231, 2026-10-01 — FEAT: _validate_master_ref() added — Sonnet micro-call after each Haiku entry validates master_ref genre match before DB write. Wrong genre → auto-corrected silently. ~₹0.27/image. RETAINS 182.50.)
 # SL-VERSION: 182.44 (Session 230, 2026-09-30 — FIX: PostgreSQL GroupingError in admin_contest_judge batch_meta query: removed MIN(judged_at) aggregate from SELECT with non-grouped theme/theme_threshold columns. RETAINS 182.43.)
 # SL-VERSION: 182.43 (Session 230, 2026-09-30 — FIX: admin_contest_judge route key mismatches fixed: batches dict uses batch_ref/sonnet_run/haiku_run keys; batch_meta adds theme/threshold/sonnet_run/haiku_run; sonnet_entries adds thumb_url alias. RETAINS 182.42.)
 # SL-VERSION: 182.42 (Session 230, 2026-09-30 — UNIFIED: admin_contest_judge route expanded to pass all template vars (batch_ref, batch_meta, active_tab, sonnet_entries, haiku_entries, haiku_summary, compare_entries, compare_summary, compare_unlocked) for new 3-tab Contest Judge page. Old haiku-compare route now redirects to unified page with tab=compare. RETAINS 182.41.)
@@ -16671,6 +16671,37 @@ def admin_contest_judge_haiku_run(batch_ref):
     _rows = [dict(id=r.id, photographer=r.photographer, image_title=r.image_title, theme=r.theme,
                   theme_threshold=r.theme_threshold, thumb_path=r.thumb_path) for r in rows]
 
+    def _validate_master_ref(impression, master_ref):
+        """Sonnet micro-call: verify master_ref genre matches the image. Returns corrected string or original."""
+        if not master_ref:
+            return master_ref
+        try:
+            _vp = (
+                f"A photography judge has written this image reading:\n\"{impression}\"\n\n"
+                f"They cited this master reference:\n\"{master_ref}\"\n\n"
+                "Task: Is the cited photographer genuinely known for the same genre as the image described? "
+                "For example, a wildlife photographer should NOT be cited for a human portrait, and vice versa.\n\n"
+                "If the genre matches: reply with exactly the word OK on the first line, nothing else.\n"
+                "If the genre does NOT match: reply with REPLACE on the first line, then on the second line "
+                "provide a corrected master_ref in exactly this format: "
+                "\"Name's [body of work] — [one sentence on the echo]. (https://their-site.com)\" "
+                "Use only the photographer's main homepage URL. Match the genre of the image precisely."
+            )
+            _vr = _anthropic_client().messages.create(
+                model='claude-sonnet-4-5',
+                max_tokens=300,
+                messages=[{'role': 'user', 'content': _vp}]
+            )
+            _vtext = (_vr.content[0].text or '').strip()
+            if _vtext.startswith('REPLACE'):
+                lines = _vtext.split('\n', 1)
+                if len(lines) > 1 and lines[1].strip():
+                    app.logger.info(f'[haiku_master_ref] replaced: {master_ref!r} → {lines[1].strip()!r}')
+                    return lines[1].strip()
+        except Exception as _ve:
+            app.logger.warning(f'[haiku_master_ref] validation skipped: {_ve}')
+        return master_ref
+
     def _judge_one(r):
         """Download + Haiku call. No database access here (runs in a helper thread)."""
         import tempfile as _htmp
@@ -16710,6 +16741,9 @@ def admin_contest_judge_haiku_run(batch_ref):
                             errors += 1
                             app.logger.warning(f'[haiku_compare] entry={eid} {v.get("error")}')
                         else:
+                            # Validate master_ref genre before writing
+                            if v.get('master_ref') and v.get('impression'):
+                                v['master_ref'] = _validate_master_ref(v['impression'], v['master_ref'])
                             db.session.execute(db.text(
                                 "UPDATE contest_judge_batch SET haiku_json=:j, haiku_composite=:c, "
                                 "haiku_run_at=NOW() WHERE id=:eid"
