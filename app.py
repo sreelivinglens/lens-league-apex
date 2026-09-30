@@ -1,3 +1,4 @@
+# SL-VERSION: 182.38 (Session 229, 2026-09-30 — NEW: Mock B scorecard design. Replaces DejaVu system-font card with a premium dark-panel layout: dark gallery panel with centred photograph + shadow, Playfair Display for name and overall evaluation, Inter for dimensions, Cormorant Garamond Italic for master reference and mentor note. Eight SL-bundled fonts in static/fonts/ (no Railway system-font dependency). Standing pill badge for top 10; mentor note in gold-bordered ivory panel signed by founder; gold bottom bar; footer shutterleague.com · Making Images Matter. RETAINS 182.37.)
 # SL-VERSION: 182.37 (Session 229, 2026-09-30 — NEW: Haiku comparison run for open calls. New admin page /admin/contest-judge/haiku-compare/<batch> with a Run Haiku button: evaluates every entry with Haiku using the SAME open call rubric as Sonnet, plus a longer written reading (impression, one observation per dimension, strength, next leap). Stored in new columns haiku_json / haiku_composite / haiku_run_at — Sonnet evaluations and standings are never touched. Page shows per-entry difference from Sonnet (plus/minus) for all six dimensions and the overall evaluation, both standings, summary agreement figures, and Haiku's narrative beside Sonnet's. _cj_sonnet_judge() gains optional model / max_tokens / extra_instructions arguments; existing Sonnet calls unchanged. RETAINS 182.36.)
 # SL-VERSION: 182.36 (Session 229, 2026-09-30 — FIX: Scorecard ZIP still failed on staging with 'can't measure length of multiline text'. The two-line dimension labels (Human/Connect, Story/Transfer) were measured with textlength(), which rejects multi-line text — this was the underlying crash all along. Each label line is now measured and centred separately; genre label flattened to one line. Nothing else changed. RETAINS 182.35.)
 # SL-VERSION: 182.35 (Session 229, 2026-09-29 — FIX: Download Scorecards (ZIP) crashed on the 47-entry Fuji Collective open call. Route fetched every photograph one after another over the public link (10s timeout each), which is blocked by storage bot protection and ran past the gunicorn worker time limit, killing the worker. Now: photographs fetched directly from storage via storage.download_file() + key_from_url() (same as Session 228 Rescore), 8 at a time, 8s cap per photograph; whole ZIP built in a background thread with a 25s hard cap; one Railway console summary line per run. Card design unchanged. RETAINS 182.34.)
@@ -16866,7 +16867,7 @@ def admin_contest_judge_scorecards(batch_ref):
         abort(404)
 
     try:
-        from PIL import Image as _PILSC, ImageDraw as _PILID, ImageFont as _PILIF
+        from PIL import Image as _PILSC, ImageDraw as _PILID, ImageFont as _PILIF, ImageFilter as _PILIFF
         import zipfile as _zipfile
         import textwrap as _textwrap
     except ImportError as e:
@@ -16875,38 +16876,74 @@ def admin_contest_judge_scorecards(batch_ref):
     total = len(rows)
     zip_buf = _cj_io.BytesIO()
 
-    # Card dimensions
-    W, H = 1200, 1600
-    PAD = 60
-    GOLD = (200, 168, 75)
-    DARK = (26, 24, 21)
-    MID  = (90, 90, 86)
-    LIGHT_BG = (254, 252, 248)
-    WHITE = (255, 255, 255)
-    RED_THEME = (185, 28, 28)
-    GREEN_THEME = (6, 95, 70)
+    # ── Mock B card constants (v182.38) ──────────────────────────────────
+    _SC_W  = 1600
+    _SC_M  = 120       # side margin
+    _SC_IVORY   = (247, 243, 234)
+    _SC_INK     = (28, 26, 23)
+    _SC_MUTED   = (104, 98, 89)
+    _SC_GOLDTXT = (134, 99, 33)   # small gold text — 4.5:1 on ivory
+    _SC_GOLD    = (201, 165, 90)  # rules, bars, standing pill
+    _SC_TRACK   = (228, 220, 204)
+    _SC_DARKBG  = (21, 19, 16)
+    _SC_GREEN   = (22, 101, 52)
+    _SC_RED     = (160, 40, 30)
 
-    def _load_font(size, bold=False):
+    _SC_DIMS = [
+        ('Wonder',         'wonder_score',         27),
+        ('Human Connect',  'aq_score',             19),
+        ('Story Transfer', 'story_transfer_score', 18),
+        ('Disruption',     'disruption_score',     15),
+        ('Craft',          'dod_score',            13),
+        ('Moment',         'dm_score',              8),
+    ]
+
+    # ── Load bundled SL fonts from static/fonts/ ─────────────────────────
+    _SC_FDIR = _cj_os.path.join(app.root_path, 'static', 'fonts')
+
+    def _sc_f(name, size):
+        path = _cj_os.path.join(_SC_FDIR, name)
         try:
-            # Try common system fonts
-            for name in (['DejaVuSans-Bold.ttf', 'DejaVuSans.ttf'] if bold else ['DejaVuSans.ttf', 'DejaVuSans-Bold.ttf']):
-                for path in [f'/usr/share/fonts/truetype/dejavu/{name}',
-                             f'/usr/share/fonts/dejavu/{name}',
-                             f'/usr/share/fonts/{name}']:
-                    if _cj_os.path.exists(path):
-                        return _PILIF.truetype(path, size)
+            return _PILIF.truetype(path, size)
         except Exception:
-            pass
-        return _PILIF.load_default()
+            return _PILIF.load_default()
 
-    fnt_title   = _load_font(32, bold=True)
-    fnt_h1      = _load_font(52, bold=True)
-    fnt_h2      = _load_font(36, bold=True)
-    fnt_body    = _load_font(26)
-    fnt_small   = _load_font(22)
-    fnt_label   = _load_font(20)
-    fnt_score   = _load_font(44, bold=True)
-    fnt_score_s = _load_font(30, bold=True)
+    # Letter-spaced small capitals helper
+    def _sc_tracked(d, xy, text, font, fill, spacing=0.18, anchor_right=False):
+        text = text.upper()
+        extra = font.size * spacing
+        total_w = sum(d.textlength(c, font=font) for c in text) + extra * max(0, len(text) - 1)
+        x, y = xy
+        if anchor_right:
+            x -= total_w
+        for c in text:
+            d.text((x, y), c, font=font, fill=fill)
+            x += d.textlength(c, font=font) + extra
+        return total_w
+
+    # Word-wrap to pixel width, optional max_lines with ellipsis
+    def _sc_wrap(d, text, font, width, max_lines=None):
+        words = (text or '').replace('\n', ' ').split()
+        lines, cur = [], ''
+        for w in words:
+            t = (cur + ' ' + w).strip()
+            if d.textlength(t, font=font) <= width:
+                cur = t
+            else:
+                lines.append(cur); cur = w
+        if cur:
+            lines.append(cur)
+        if max_lines and len(lines) > max_lines:
+            lines = lines[:max_lines]
+            last = lines[-1]
+            while last and d.textlength(last + '…', font=font) > width:
+                last = last.rsplit(' ', 1)[0]
+            lines[-1] = last.rstrip(',;:—-') + '…'
+        return lines
+
+    def _sc_checkmark(d, x, y, s, fill):
+        d.line([(x, y + s * 0.55), (x + s * 0.38, y + s * 0.9), (x + s, y + s * 0.1)],
+               fill=fill, width=max(3, s // 7), joint='curve')
 
     def _wrap(text, width=70):
         return '\n'.join(_textwrap.wrap(text or '', width))
@@ -16947,7 +16984,7 @@ def admin_contest_judge_scorecards(batch_ref):
             # Downsize immediately so 47 full photographs never sit in memory
             with _PILSC.open(_src_path) as _im:
                 _im = _im.convert('RGB')
-                _im.thumbnail((W - 2 * PAD, 420), _PILSC.LANCZOS)
+                _im.thumbnail((_SC_W - 2 * _SC_M, 860), _PILSC.LANCZOS)
                 _out = _cj_io.BytesIO()
                 _im.save(_out, format='JPEG', quality=92)
                 _out.seek(0)
@@ -16985,158 +17022,170 @@ def admin_contest_judge_scorecards(batch_ref):
 
             with _zipfile.ZipFile(zip_buf, 'w', _zipfile.ZIP_DEFLATED) as zf:
                 for rank, row in enumerate(rows, 1):
-                    img_card = _PILSC.new('RGB', (W, H), LIGHT_BG)
-                    d = _PILID.Draw(img_card)
+                    # ── Mock B card (v182.38) — dark gallery panel + ivory body ──
+                    _sc_min_h = 2200
+                    canvas = _PILSC.new('RGB', (_SC_W, 3400), _SC_IVORY)
+                    d = _PILID.Draw(canvas)
 
-                    # ── Gold top bar
-                    d.rectangle([(0, 0), (W, 8)], fill=GOLD)
+                    # ── Dark gallery panel ───────────────────────────────────────
+                    _PANEL_H = 1010
+                    d.rectangle([(0, 0), (_SC_W, _PANEL_H)], fill=_SC_DARKBG)
 
-                    # ── Contest name + date (top left / right)
-                    contest_label = batch_ref
-                    date_label = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
-                    d.text((PAD, 28), contest_label, font=fnt_title, fill=DARK)
-                    date_w = d.textlength(date_label, font=fnt_title)
-                    d.text((W - PAD - date_w, 28), date_label, font=fnt_title, fill=MID)
+                    # Header: open call name left, evaluated date right
+                    _sc_tracked(d, (_SC_M, 62), batch_ref, _sc_f('SL-Inter-SemiBold.ttf', 22), _SC_GOLD, 0.28)
+                    _sc_date = row.judged_at.strftime('%d %b %Y') if row.judged_at else ''
+                    _sc_tracked(d, (_SC_W - _SC_M, 64), _sc_date, _sc_f('SL-Inter-Medium.ttf', 20), (200, 192, 178), 0.14, anchor_right=True)
+                    d.line([(_SC_M, 116), (_SC_W - _SC_M, 116)], fill=(70, 62, 48), width=2)
 
-                    # ── Thin rule under header
-                    d.rectangle([(PAD, 76), (W - PAD, 78)], fill=(224, 221, 214))
-
-                    # ── Image (if available — thumb_path is now an R2 https:// URL)
-                    img_y = 95
-                    IMG_H = 420
-                    if row.thumb_path:
+                    # Photograph — as large as the panel allows, never cropped
+                    _box_w = _SC_W - 2 * _SC_M
+                    _box_h = _PANEL_H - 150 - 60
+                    _img_bytes = _sc_photos.get(row.id)
+                    if _img_bytes is not None:
                         try:
-                            # v182.35: photograph already fetched in parallel above
-                            _img_bytes = _sc_photos.get(row.id)
-                            if _img_bytes is None:
-                                raise ValueError('photograph not fetched')
                             _img_bytes.seek(0)
-                            with _PILSC.open(_img_bytes) as src:
-                                src = src.convert('RGB')
-                                box_w = W - 2 * PAD
-                                src.thumbnail((box_w, IMG_H), _PILSC.LANCZOS)
-                                x_off = PAD + (box_w - src.width) // 2
-                                img_card.paste(src, (x_off, img_y))
+                            with _PILSC.open(_img_bytes) as _ph:
+                                _ph = _ph.convert('RGB')
+                                _scale = min(_box_w / _ph.width, _box_h / _ph.height)
+                                _ph = _ph.resize((int(_ph.width * _scale), int(_ph.height * _scale)), _PILSC.LANCZOS)
+                                _px = (_SC_W - _ph.width) // 2
+                                _py = 150 + (_box_h - _ph.height) // 2
+                                # Soft drop shadow
+                                _shd = _PILSC.new('RGBA', (_ph.width + 80, _ph.height + 80), (0, 0, 0, 0))
+                                _PILID.Draw(_shd).rectangle([(40, 48), (_ph.width + 40, _ph.height + 48)], fill=(0, 0, 0, 150))
+                                _shd = _shd.filter(_PILIFF.GaussianBlur(18))
+                                canvas.paste(_shd, (_px - 40, _py - 40), _shd)
+                                canvas.paste(_ph, (_px, _py))
                         except Exception:
-                            d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
-                            d.text((PAD + 20, img_y + IMG_H // 2 - 15), '[image unavailable]', font=fnt_body, fill=MID)
+                            d.rectangle([(_SC_M, 150), (_SC_W - _SC_M, 150 + _box_h)], outline=(60, 54, 44), width=2)
                     else:
-                        d.rectangle([(PAD, img_y), (W - PAD, img_y + IMG_H)], outline=(200, 197, 190), width=1)
+                        d.rectangle([(_SC_M, 150), (_SC_W - _SC_M, 150 + _box_h)], outline=(60, 54, 44), width=2)
 
-                    y = img_y + IMG_H + 28
+                    # ── Photographer + overall evaluation (below dark panel) ──────
+                    y = _PANEL_H + 70
+                    d = _PILID.Draw(canvas)  # redraw handle (paste invalidates nothing but keep fresh)
+                    _sc_tracked(d, (_SC_M, y), 'Photographer', _sc_f('SL-Inter-SemiBold.ttf', 22), _SC_GOLDTXT, 0.22)
+                    _name_f = _sc_f('SL-Playfair-SemiBold.ttf', 84)
+                    _name_lines = _sc_wrap(d, (row.photographer or 'Unknown'), _name_f, 820, max_lines=2)
+                    _ny = y + 36
+                    for _nl in _name_lines:
+                        d.text((_SC_M - 4, _ny), _nl, font=_name_f, fill=_SC_INK)
+                        _ny += 100
+                    # Genre + theme line
+                    _sub_f = _sc_f('SL-Inter-Regular.ttf', 30)
+                    _sy = _ny + 22
+                    _genre = (row.genre_detected or '').replace('\n', ' ')
+                    _t_score = row.theme_score or 0
+                    _sub = f"{_genre}   ·   Theme {_t_score:.1f} / 10"
+                    d.text((_SC_M, _sy), _sub, font=_sub_f, fill=_SC_MUTED)
+                    _tx = _SC_M + d.textlength(_sub + '   ', font=_sub_f)
+                    if bool(row.theme_relevant):
+                        _sc_checkmark(d, _tx, _sy + 6, 26, _SC_GREEN)
+                        d.text((_tx + 38, _sy), 'Qualified', font=_sc_f('SL-Inter-Medium.ttf', 30), fill=_SC_GREEN)
+                    else:
+                        d.text((_tx, _sy), 'Below theme threshold', font=_sc_f('SL-Inter-Medium.ttf', 30), fill=_SC_RED)
 
-                    # ── Overall score + optional rank/percentile
-                    score_str = f'{row.composite_score:.2f}' if row.composite_score else '—'
-                    d.text((PAD, y), 'Overall Score', font=fnt_label, fill=MID)
-                    d.text((PAD, y + 24), score_str, font=fnt_h1, fill=DARK)
-
+                    # Right: Overall Evaluation (large Playfair number)
+                    _sc_tracked(d, (_SC_W - _SC_M, y), 'Overall Evaluation', _sc_f('SL-Inter-SemiBold.ttf', 22), _SC_GOLDTXT, 0.22, anchor_right=True)
+                    _big_f = _sc_f('SL-Playfair-SemiBold.ttf', 168)
+                    _val = f"{row.composite_score:.2f}" if row.composite_score else '—'
+                    d.text((_SC_W - _SC_M - d.textlength(_val, font=_big_f), y + 10), _val, font=_big_f, fill=_SC_INK)
+                    # Standing pill — top 10 only
                     if rank <= 10:
-                        pct = round(100 * (total - rank) / total)
-                        rank_str = f'Rank #{rank}  ·  {pct}th percentile of {total}'
-                        d.text((PAD + 180, y + 38), rank_str, font=fnt_h2, fill=GOLD)
+                        _pct_top = max(1, round(100 * rank / total))
+                        _pill = f'Standing {rank} of {total}   ·   Top {_pct_top}%'
+                        _pf = _sc_f('SL-Inter-SemiBold.ttf', 26)
+                        _pw = d.textlength(_pill, font=_pf) + 56
+                        _px1 = _SC_W - _SC_M - _pw
+                        _py1 = y + 230
+                        d.rounded_rectangle([(_px1, _py1), (_SC_W - _SC_M, _py1 + 62)], radius=31,
+                                             fill=(241, 230, 204), outline=_SC_GOLD, width=2)
+                        d.text((_px1 + 28, _py1 + 14), _pill, font=_pf, fill=(92, 66, 18))
 
-                    # Theme badge — shows theme score + pass/fail
-                    thr_val = float(row.theme_threshold) if row.theme_threshold else 6.0
-                    t_score = row.theme_score or 0
-                    t_pass  = bool(row.theme_relevant)
-                    theme_txt = f'Theme {t_score:.1f}/10  {"✓ Qualified" if t_pass else "✗ Below threshold"}'
-                    theme_col = GREEN_THEME if t_pass else RED_THEME
-                    badge_w = int(d.textlength(theme_txt, font=fnt_body)) + 24
-                    badge_x = W - PAD - badge_w
-                    d.rounded_rectangle([(badge_x, y + 6), (badge_x + badge_w, y + 44)], radius=6,
-                                         fill=(209, 250, 229) if t_pass else (254, 226, 226))
-                    d.text((badge_x + 12, y + 10), theme_txt, font=fnt_body, fill=theme_col)
-                    # Genre detected (small, below badge)
-                    if row.genre_detected:
-                        gd_txt = f'Genre detected: {row.genre_detected}'.replace('\n', ' ')
-                        gd_w = int(d.textlength(gd_txt, font=fnt_label))
-                        d.text((W - PAD - gd_w, y + 52), gd_txt, font=fnt_label, fill=MID)
+                    y = max(_sy + 90, y + 330)
+                    d.line([(_SC_M, y), (_SC_W - _SC_M, y)], fill=_SC_TRACK, width=2)
 
-                    y += 110
+                    # ── Six dimensions ───────────────────────────────────────────
+                    y += 48
+                    _sc_tracked(d, (_SC_M, y), 'The six dimensions', _sc_f('SL-Inter-SemiBold.ttf', 22), _SC_GOLDTXT, 0.22)
+                    _sc_tracked(d, (_SC_W - _SC_M, y), 'Open call weighting in brackets', _sc_f('SL-Inter-Medium.ttf', 20), _SC_MUTED, 0.12, anchor_right=True)
+                    y += 66
+                    _col_gap = 110
+                    _col_w = (_SC_W - 2 * _SC_M - _col_gap) // 2
+                    _lab_f = _sc_f('SL-Inter-Medium.ttf', 32)
+                    _wt_f  = _sc_f('SL-Inter-Regular.ttf', 26)
+                    _sc_f2 = _sc_f('SL-Inter-SemiBold.ttf', 44)
+                    for _di, (_dlabel, _dkey, _dwt) in enumerate(_SC_DIMS):
+                        _cx = _SC_M + (_di % 2) * (_col_w + _col_gap)
+                        _cy = y + (_di // 2) * 126
+                        _v = getattr(row, _dkey, None) or 0
+                        d.text((_cx, _cy + 14), _dlabel, font=_lab_f, fill=_SC_INK)
+                        d.text((_cx + d.textlength(_dlabel + '  ', font=_lab_f), _cy + 20), f'({_dwt}%)', font=_wt_f, fill=_SC_MUTED)
+                        _vs = f'{_v:.1f}' if _v else '—'
+                        d.text((_cx + _col_w - d.textlength(_vs, font=_sc_f2), _cy + 6), _vs, font=_sc_f2, fill=_SC_INK)
+                        _by = _cy + 72
+                        d.rounded_rectangle([(_cx, _by), (_cx + _col_w, _by + 10)], radius=5, fill=_SC_TRACK)
+                        if _v:
+                            d.rounded_rectangle([(_cx, _by), (_cx + int(_col_w * _v / 10), _by + 10)], radius=5, fill=_SC_GOLD)
+                    y += 3 * 126 + 20
+                    d.line([(_SC_M, y), (_SC_W - _SC_M, y)], fill=_SC_TRACK, width=2)
 
-                    # ── Photographer name
-                    d.text((PAD, y), row.photographer or 'Unknown', font=fnt_h2, fill=DARK)
-                    y += 50
+                    # ── Written evaluation ───────────────────────────────────────
+                    y += 48
+                    _body_f = _sc_f('SL-Inter-Regular.ttf', 34)
+                    _lab_cap_f = _sc_f('SL-Inter-SemiBold.ttf', 22)
+                    _cor_f = _sc_f('SL-Cormorant-Italic.ttf', 44)
 
-                    # ── Thin rule
-                    d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
-                    y += 18
-
-                    # ── 6 Open Call DDI scores in a row
-                    labels = ['Wonder', 'Human\nConnect', 'Story\nTransfer', 'Disrupt', 'Craft', 'Moment']
-                    vals = [row.wonder_score, row.aq_score, row.story_transfer_score,
-                            row.disruption_score, row.dod_score, row.dm_score]
-                    col_w = (W - 2 * PAD) // 6
-                    for i, (lbl, val) in enumerate(zip(labels, vals)):
-                        cx = PAD + i * col_w + col_w // 2
-                        score_txt = f'{val:.1f}' if val else '—'
-                        sw = int(d.textlength(score_txt, font=fnt_score_s))
-                        d.text((cx - sw // 2, y), score_txt, font=fnt_score_s, fill=DARK)
-                        # v182.36: labels like 'Human\nConnect' are two lines —
-                        # textlength() refuses multi-line text, so centre each line.
-                        for _li, _ln in enumerate(lbl.split('\n')):
-                            _lw = int(d.textlength(_ln, font=fnt_label))
-                            d.text((cx - _lw // 2, y + 36 + _li * 24), _ln, font=fnt_label, fill=MID)
-
-                    y += 80
-
-                    # ── Thin rule
-                    d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=(224, 221, 214))
-                    y += 18
-
-                    # ── Theme note
-                    if row.theme_note:
-                        d.text((PAD, y), 'Theme Note', font=fnt_label, fill=MID)
-                        y += 22
-                        for line in _textwrap.wrap(row.theme_note, 80):
-                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                            y += 32
-                        y += 6
-
-                    # ── Master ref
-                    if row.master_ref:
-                        d.text((PAD, y), 'Master Reference', font=fnt_label, fill=MID)
-                        y += 22
-                        for line in _textwrap.wrap(row.master_ref, 80):
-                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                            y += 32
-                        y += 6
-
-                    # ── Gap
-                    if row.gap_note:
-                        d.text((PAD, y), 'Gap', font=fnt_label, fill=MID)
-                        y += 22
-                        for line in _textwrap.wrap(row.gap_note, 80):
-                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                            y += 32
-                        y += 6
-
-                    # ── Mentor Notes (founder_note)
-                    if getattr(row, 'founder_note', None):
-                        y += 4
-                        d.rectangle([(PAD, y), (W - PAD, y + 1)], fill=GOLD)
-                        y += 12
-                        d.text((PAD, y), 'Mentor Notes', font=fnt_h2, fill=GOLD)
+                    def _sc_block(title, text, font, colour, max_lines, indent=0, rule=False):
+                        nonlocal y
+                        if not text:
+                            return
+                        _sc_tracked(d, (_SC_M, y), title, _lab_cap_f, _SC_GOLDTXT, 0.22)
                         y += 44
-                        for line in _textwrap.wrap(row.founder_note, 80):
-                            d.text((PAD, y), line, font=fnt_body, fill=DARK)
-                            y += 32
-                        y += 6
+                        _wlines = _sc_wrap(d, text, font, _SC_W - 2 * _SC_M - indent, max_lines)
+                        _top_y = y
+                        for _wl in _wlines:
+                            d.text((_SC_M + indent, y), _wl, font=font, fill=colour)
+                            y += int(font.size * 1.45)
+                        if rule:
+                            d.rectangle([(_SC_M, _top_y + 4), (_SC_M + 5, y - 10)], fill=_SC_GOLD)
+                        y += 34
 
-                    # ── Footer: filename + judged at
-                    footer_y = H - 48
-                    d.rectangle([(0, footer_y - 8), (W, footer_y - 7)], fill=(224, 221, 214))
-                    d.text((PAD, footer_y), row.filename or '', font=fnt_label, fill=MID)
-                    jat = row.judged_at.strftime('%Y-%m-%d %H:%M UTC') if row.judged_at else ''
-                    jw = int(d.textlength(jat, font=fnt_label))
-                    d.text((W - PAD - jw, footer_y), jat, font=fnt_label, fill=MID)
+                    _sc_block('The Reading', row.theme_note, _body_f, _SC_INK, 4)
+                    _sc_block('Master Reference', row.master_ref, _cor_f, _SC_INK, 3, indent=34, rule=True)
+                    _sc_block('Where It Could Go Further', row.gap_note, _body_f, _SC_INK, 4)
 
-                    # ── Gold bottom bar
-                    d.rectangle([(0, H - 6), (W, H)], fill=GOLD)
+                    # ── Mentor note (gold-bordered ivory panel) ──────────────────
+                    if getattr(row, 'founder_note', None):
+                        _mn_f = _sc_f('SL-Cormorant-Italic.ttf', 44)
+                        _mn_lines = _sc_wrap(d, row.founder_note, _mn_f, _SC_W - 2 * _SC_M - 100, 6)
+                        _mn_h = 70 + len(_mn_lines) * 62 + 90
+                        d.rounded_rectangle([(_SC_M, y), (_SC_W - _SC_M, y + _mn_h)], radius=18,
+                                             fill=(243, 234, 214), outline=_SC_GOLD, width=2)
+                        _sc_tracked(d, (_SC_M + 50, y + 40), 'Mentor Note', _lab_cap_f, _SC_GOLDTXT, 0.22)
+                        _mty = y + 86
+                        for _ml in _mn_lines:
+                            d.text((_SC_M + 50, _mty), _ml, font=_mn_f, fill=_SC_INK)
+                            _mty += 62
+                        _sig = '— Sreekumar Krishnan, Founder'
+                        _sig_f = _sc_f('SL-Inter-Medium.ttf', 28)
+                        d.text((_SC_W - _SC_M - 50 - d.textlength(_sig, font=_sig_f), _mty + 12), _sig, font=_sig_f, fill=_SC_MUTED)
+                        y += _mn_h + 40
+
+                    # ── Footer ───────────────────────────────────────────────────
+                    _sc_card_h = max(_sc_min_h, y + 110)
+                    _fy = _sc_card_h - 92
+                    d.line([(_SC_M, _fy), (_SC_W - _SC_M, _fy)], fill=_SC_TRACK, width=2)
+                    _sc_tracked(d, (_SC_M, _fy + 34), 'shutterleague.com  ·  Making Images Matter', _sc_f('SL-Inter-SemiBold.ttf', 20), _SC_GOLDTXT, 0.18)
+                    _ev_txt = f"Evaluated {row.judged_at.strftime('%d %b %Y') if row.judged_at else ''}"
+                    _sc_tracked(d, (_SC_W - _SC_M, _fy + 34), _ev_txt, _sc_f('SL-Inter-Medium.ttf', 20), _SC_MUTED, 0.14, anchor_right=True)
+                    # Crop to actual card height; gold bottom bar
+                    canvas = canvas.crop((0, 0, _SC_W, _sc_card_h))
+                    _PILID.Draw(canvas).rectangle([(0, _sc_card_h - 10), (_SC_W, _sc_card_h)], fill=_SC_GOLD)
 
                     # Save to ZIP
                     sc_buf = _cj_io.BytesIO()
-                    img_card.save(sc_buf, format='JPEG', quality=92)
+                    canvas.save(sc_buf, format='JPEG', quality=93)
                     sc_buf.seek(0)
                     safe_name = (row.photographer or 'Unknown').replace(' ', '_')
                     zf.writestr(f'{rank:02d}_{safe_name}_scorecard.jpg', sc_buf.read())
