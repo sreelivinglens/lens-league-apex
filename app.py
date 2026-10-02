@@ -1,3 +1,4 @@
+# SL-VERSION: 182.60 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags final-corrected to Street,Fashion,Conceptual,Creative,Landscape,Portrait (founder confirmed in two rounds -- Landscape and Portrait added after v182.59, Documentary and Maternity explicitly excluded, both checked against his known_for bio text which supports Street/Portrait/Landscape but not Documentary/Maternity). Supersedes v182.59's narrower list. RETAINS 182.59.)
 # SL-VERSION: 182.59 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags corrected to Street,Fashion,Conceptual,Creative (founder-confirmed), replacing the live DB's broader tag set (Nature,Wildlife,Landscape,Documentary,Maternity,Portrait) that contradicted the Constitution's own "do not reference for Nature, Wildlife, Landscape" rule. This was the root cause of Kochhar being over-cited as master reference on Documentary images (is_platform_mentor sorts him first in every genre his tags match). New idempotent boot-time block, fixed-value UPDATE. RETAINS 182.58.)
 # SL-VERSION: 182.58 (Session 235, 2026-10-02 -- DATA FIX: People genre master-reference pool was starved to 1 candidate (Steve McCurry) because only his genre_tags literally said "People" -- 20+ legitimate Portrait masters (Karsh, Avedon, Platon, Arbus, Annie Leibovitz, Dorothea Lange, Mary Ellen Mark, Dayanita Singh, etc.) plus Street and Wedding masters were invisible to People-genre queries. Founder instruction: People is a larger umbrella covering Portrait/Street/Wedding. New idempotent boot-time block tags all Portrait/Street/Wedding master_references rows with People too (53 rows affected), unless already tagged. No rows removed, no existing tags touched. RETAINS 182.57.)
 # SL-VERSION: 182.57 (Session 235, 2026-10-02 -- FIX: _cj_resolve_master_ref() master-reference substitution. When the model's proposed photographer doesn't match the image genre and has to be swapped: (1) now picks randomly among the top 3 genre-matched candidates instead of always the same one (was: always candidates[0]), and (2) now builds the description from the substituted photographer's own known_for/reference_when DB columns instead of reusing the model's echo sentence, which was written to justify the REJECTED photographer and read as a mismatch once re-attached to the new name. No schema change, single function touched. RETAINS 182.56.)
@@ -2550,19 +2551,23 @@ def _run_startup_tasks():
             # Session 235: Ashok Kochhar (Platform Mentor) genre_tags corrected to
             # match the Constitution's own documented rule — "reference ONLY for
             # Street, Fashion, or Conceptual genre. Do NOT reference for Nature,
-            # Wildlife, Landscape..." Founder confirmed Session 235: Street, Fashion,
-            # Conceptual, Creative (Creative added, Constitution did not previously
-            # list it). The live DB had him tagged for Nature, Wildlife, Landscape,
-            # Documentary, Maternity, Portrait too — the actual cause of Kochhar being
-            # over-cited on Documentary images (is_platform_mentor sorts him first in
-            # every genre his tags match). Idempotent — a fixed value, safe every boot.
+            # Wildlife, Landscape..." Founder final confirmed list (Session 235,
+            # two rounds): Street, Fashion, Conceptual, Creative, Landscape, Portrait.
+            # Explicitly excluded: Documentary (no support in his known_for bio —
+            # no photojournalism/reportage mentioned), Maternity (not mentioned in
+            # his known_for bio either). Wildlife/Nature also excluded — his
+            # known_for bio mentions Kabini/Kerala wildlife work, but founder chose
+            # Portrait over Wildlife when asked to pick between the two.
+            # (People genre is NOT listed here directly — he gets it automatically
+            # via the separate People-umbrella fix below, because he's tagged Street.)
+            # Idempotent — a fixed value, safe every boot.
             try:
                 db.session.execute(db.text(
                     "UPDATE master_references SET genre_tags = :gt WHERE name = :name"
-                ), {'gt': 'Street,Fashion,Conceptual,Creative', 'name': 'Ashok Kochhar'})
+                ), {'gt': 'Street,Fashion,Conceptual,Creative,Landscape,Portrait', 'name': 'Ashok Kochhar'})
                 db.session.commit()
                 print('[kochhar_genre_fix] Ashok Kochhar genre_tags set to '
-                      'Street,Fashion,Conceptual,Creative OK')
+                      'Street,Fashion,Conceptual,Creative,Landscape,Portrait OK')
             except Exception as _kgf_err:
                 db.session.rollback()
                 print(f'[kochhar_genre_fix] {_kgf_err}')
