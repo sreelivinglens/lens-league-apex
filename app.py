@@ -1,3 +1,5 @@
+# SL-VERSION: 182.62 (Session 235, 2026-10-02 -- NEW (test only): DDI side-by-side for Open Calls. Two admin routes: POST /admin/contest-judge/ddi-compare-run/<batch> runs the standard 5-dimension DDI (Open genre weights, scoring.py formula, one Sonnet call per image, reading the same stored pictures the current judge uses) and writes ONLY to a new table contest_judge_ddi_compare (created on first use); GET /admin/contest-judge/ddi-compare-csv/<batch> downloads current vs DDI with standings. contest_judge_batch is never written. No change to the live Open Call engine. RETAINS 182.61.)
+# SL-VERSION: 182.61 (Session 235, 2026-10-02 -- FIX: member evaluation NS calibration anchors corrected (prompt text only): the 57% Not Sure example was wrongly attached to the Nihang horseman; Nihang is 88% = YES, and the 57% belongs to the woman in the white sari. No scoring formula, route or data change. RETAINS 182.60.)
 # SL-VERSION: 182.60 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags final-corrected to Street,Fashion,Conceptual,Creative,Landscape,Portrait (founder confirmed in two rounds -- Landscape and Portrait added after v182.59, Documentary and Maternity explicitly excluded, both checked against his known_for bio text which supports Street/Portrait/Landscape but not Documentary/Maternity). Supersedes v182.59's narrower list. RETAINS 182.59.)
 # SL-VERSION: 182.59 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags corrected to Street,Fashion,Conceptual,Creative (founder-confirmed), replacing the live DB's broader tag set (Nature,Wildlife,Landscape,Documentary,Maternity,Portrait) that contradicted the Constitution's own "do not reference for Nature, Wildlife, Landscape" rule. This was the root cause of Kochhar being over-cited as master reference on Documentary images (is_platform_mentor sorts him first in every genre his tags match). New idempotent boot-time block, fixed-value UPDATE. RETAINS 182.58.)
 # SL-VERSION: 182.58 (Session 235, 2026-10-02 -- DATA FIX: People genre master-reference pool was starved to 1 candidate (Steve McCurry) because only his genre_tags literally said "People" -- 20+ legitimate Portrait masters (Karsh, Avedon, Platon, Arbus, Annie Leibovitz, Dorothea Lange, Mary Ellen Mark, Dayanita Singh, etc.) plus Street and Wedding masters were invisible to People-genre queries. Founder instruction: People is a larger umbrella covering Portrait/Street/Wedding. New idempotent boot-time block tags all Portrait/Street/Wedding master_references rows with People too (53 rows affected), unless already tagged. No rows removed, no existing tags touched. RETAINS 182.57.)
@@ -16768,6 +16770,142 @@ def admin_contest_judge_bulk_rescore_status(job_id):
     if not prog:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(prog)
+
+
+# ── CONTEST JUDGE — DDI SIDE-BY-SIDE TEST (v182.62, Session 235) ────────────
+# Runs the standard 5-dimension DDI engine (Open genre weights, scoring.py) over every
+# entry in an open call and stores the result in its OWN table, contest_judge_ddi_compare.
+# NOTHING in contest_judge_batch is read-for-write: existing evaluations, standings and
+# scorecards are never touched. Purpose: compare DDI-for-Open-Call against the current
+# 6-dimension engine before any decision is made. Admin only. One Sonnet call per image.
+
+def _cj_ddi_compare_ensure_table():
+    db.session.execute(db.text("""
+        CREATE TABLE IF NOT EXISTS contest_judge_ddi_compare (
+            id SERIAL PRIMARY KEY,
+            batch_ref VARCHAR(300) NOT NULL,
+            entry_id INTEGER NOT NULL,
+            filename VARCHAR(300),
+            dod REAL, disruption REAL, dm REAL, wonder REAL, aq REAL,
+            ddi_score REAL, ddi_tier VARCHAR(40),
+            run_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (batch_ref, entry_id)
+        )
+    """))
+    db.session.commit()
+
+
+@app.route('/admin/contest-judge/ddi-compare-run/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_ddi_compare_run(batch_ref):
+    """Start the DDI side-by-side run (background thread). Poll with the existing
+    /admin/contest-judge/bulk-rescore-status/<job_id> route. v182.62."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_ddi_compare_ensure_table()
+    rows = db.session.execute(db.text(
+        "SELECT id, filename, thumb_path FROM contest_judge_batch WHERE batch_ref = :br"
+    ), {'br': batch_ref}).fetchall()
+    if not rows:
+        return jsonify({'error': 'No entries found for this batch'}), 404
+
+    import uuid as _uuid
+    job_id = _uuid.uuid4().hex[:12]
+    total = len(rows)
+    _bulk_rescore_prog_write(job_id, total, 0, 0, False)
+
+    def _ddi_worker(rows, job_id, total):
+        with app.app_context():
+            import tempfile as _tmp3
+            import storage as _r2store3
+            from engine.auto_score import auto_score_ddi_fast as _ddi_fast
+            _calc = calculate_score  # imported at top of file from engine.scoring
+            done = 0
+            errors = 0
+            for row in rows:
+                try:
+                    if not row.thumb_path:
+                        errors += 1
+                        continue
+                    _key = _r2store3.key_from_url(row.thumb_path)
+                    tmp = _tmp3.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    tmp.close()
+                    if not _r2store3.download_file(_key, tmp.name):
+                        errors += 1
+                        try: _cj_os.unlink(tmp.name)
+                        except Exception: pass
+                        continue
+                    try:
+                        res = _ddi_fast(image_path=tmp.name, genre='Open', sub_genre=None)
+                    finally:
+                        try: _cj_os.unlink(tmp.name)
+                        except Exception: pass
+                    # Recompute with scoring.py so the formula is identical to members (Open weights, no NS bonus).
+                    final, tier, _sb, _chk = _calc('Open', res['dod'], res['disruption'], res['dm'], res['wonder'], res['aq'])
+                    db.session.execute(db.text("""
+                        INSERT INTO contest_judge_ddi_compare
+                            (batch_ref, entry_id, filename, dod, disruption, dm, wonder, aq, ddi_score, ddi_tier, run_at)
+                        VALUES (:br, :eid, :fn, :dod, :dis, :dm, :wo, :aq, :sc, :tier, NOW())
+                        ON CONFLICT (batch_ref, entry_id) DO UPDATE SET
+                            dod=:dod, disruption=:dis, dm=:dm, wonder=:wo, aq=:aq,
+                            ddi_score=:sc, ddi_tier=:tier, run_at=NOW()
+                    """), {'br': batch_ref, 'eid': row.id, 'fn': row.filename, 'dod': res['dod'],
+                           'dis': res['disruption'], 'dm': res['dm'], 'wo': res['wonder'],
+                           'aq': res['aq'], 'sc': final, 'tier': tier})
+                    db.session.commit()
+                except Exception as _de:
+                    db.session.rollback()
+                    app.logger.error(f'[ddi_compare] entry={row.id} {_de}')
+                    errors += 1
+                finally:
+                    done += 1
+                    _bulk_rescore_prog_write(job_id, total, done, errors, False)
+            _bulk_rescore_prog_write(job_id, total, done, errors, True)
+            app.logger.info(f'[ddi_compare] job={job_id} complete — {done}/{total} done, {errors} errors')
+
+    import threading as _thr3
+    _thr3.Thread(target=_ddi_worker, args=(rows, job_id, total), daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/contest-judge/ddi-compare-csv/<path:batch_ref>')
+@login_required
+def admin_contest_judge_ddi_compare_csv(batch_ref):
+    """Download the side-by-side result as CSV: current engine vs DDI, with standings. v182.62."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_ddi_compare_ensure_table()
+    rows = db.session.execute(db.text("""
+        SELECT b.photographer, b.image_title, b.filename, b.genre_detected,
+               b.composite_score, b.wonder_score, b.aq_score, b.story_transfer_score,
+               b.disruption_score, b.dod_score, b.dm_score,
+               c.ddi_score, c.wonder AS d_wonder, c.aq AS d_aq, c.disruption AS d_dis,
+               c.dod AS d_dod, c.dm AS d_dm
+        FROM contest_judge_batch b
+        LEFT JOIN contest_judge_ddi_compare c ON c.batch_ref = b.batch_ref AND c.entry_id = b.id
+        WHERE b.batch_ref = :br
+    """), {'br': batch_ref}).fetchall()
+    cur_sorted = sorted(rows, key=lambda r: -(r.composite_score or 0))
+    cur_rank = {r.filename: i + 1 for i, r in enumerate(cur_sorted)}
+    ddi_sorted = sorted([r for r in rows if r.ddi_score is not None], key=lambda r: -r.ddi_score)
+    ddi_rank = {r.filename: i + 1 for i, r in enumerate(ddi_sorted)}
+    out = _cj_io.StringIO()
+    import csv as _csv3
+    w = _csv3.writer(out)
+    w.writerow(['Current standing', 'DDI standing', 'Standing change', 'Photographer', 'Image title', 'Filename',
+                'Current evaluation', 'DDI evaluation', 'Difference',
+                'Current Wonder', 'Current Human Connect', 'Current Story Transfer', 'Current Disruption', 'Current Craft', 'Current Moment',
+                'DDI Wonder', 'DDI AQ', 'DDI Disruption', 'DDI DoD', 'DDI DM'])
+    for r in sorted(rows, key=lambda x: cur_rank.get(x.filename, 999)):
+        cr, dr = cur_rank.get(r.filename), ddi_rank.get(r.filename)
+        diff = round(r.ddi_score - r.composite_score, 2) if (r.ddi_score is not None and r.composite_score is not None) else ''
+        w.writerow([cr, dr or '', (cr - dr) if dr else '', r.photographer, r.image_title, r.filename,
+                    r.composite_score, r.ddi_score, diff,
+                    r.wonder_score, r.aq_score, r.story_transfer_score, r.disruption_score, r.dod_score, r.dm_score,
+                    r.d_wonder, r.d_aq, r.d_dis, r.d_dod, r.d_dm])
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(out.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="SL_DDI_SideBySide_{safe_ref}.csv"'})
 
 
 # ── CONTEST JUDGE — HAIKU COMPARISON RUN (v182.37, Session 229) ────────────
@@ -40282,10 +40420,11 @@ _TRY_HAIKU_PROMPT = (
     "  YES (>75% story recognition):\n"
     "    Maternity shadow on cracked wall (91%) — shadow + cracked drought wall = two elements\n"
     "    Monks walking to prayer in corridor (75%) — procession + destination readable\n"
+    "    Nihang horseman on two galloping horses (88%) — action and defiance readable\n"
     "  NOT SURE (50–75% recognition):\n"
     "    Child reaching for cherry blossoms (65%) — gesture implies story, destination unclear\n"
     "    Kathak dancer's feet in motion (65%) — movement implies performance, not complete\n"
-    "    Nihang horseman mid-gallop (57%) — drama readable, context requires knowledge\n"
+    "    Woman in white sari, head bowed (57%) — grace readable, story projected by the viewer\n"
     "  NO (<50% recognition):\n"
     "    Mountain landscape, dramatic sky (40%) — no subject, no action, no consequence\n"
     "    Swallow landing, wings extended (44%) — specimen only, no narrative\n"
