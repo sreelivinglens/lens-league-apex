@@ -1,3 +1,4 @@
+# SL-VERSION: 182.64 (Session 235, 2026-10-03 -- NEW (read-only, changes NO score): GET /admin/score-audit recalculates every scored member image from its stored five dimension numbers with the code formula (calculate_score; weights, rules, NS bonus, sub-genre routing) and reports how many scores and tiers would differ, plus CSV (?format=csv). Also checks whether the live percentile function excludes Haiku-tier (eValuate) images and counts how many sit in its pool. Mobile-track images use mobile weights without modifiers and are labelled. Nothing is written.)
 # SL-VERSION: 182.63 (Session 235, 2026-10-02 -- NEW (test only): FULL-engine DDI side-by-side on a short list of 12 pictures. POST /admin/contest-judge/ddi-full-run/<batch> runs the full member engine (auto_score: scene description + evaluation with Gestalt/classical checks and story clarity; genre Open) and writes ONLY to new table contest_judge_ddi_full; GET /admin/contest-judge/ddi-full-csv/<batch> downloads current vs fast DDI vs full DDI. contest_judge_batch never written. Live Open Call engine unchanged. RETAINS 182.62.)
 # SL-VERSION: 182.62 (Session 235, 2026-10-02 -- NEW (test only): DDI side-by-side for Open Calls. Two admin routes: POST /admin/contest-judge/ddi-compare-run/<batch> runs the standard 5-dimension DDI (Open genre weights, scoring.py formula, one Sonnet call per image, reading the same stored pictures the current judge uses) and writes ONLY to a new table contest_judge_ddi_compare (created on first use); GET /admin/contest-judge/ddi-compare-csv/<batch> downloads current vs DDI with standings. contest_judge_batch is never written. No change to the live Open Call engine. RETAINS 182.61.)
 # SL-VERSION: 182.61 (Session 235, 2026-10-02 -- FIX: member evaluation NS calibration anchors corrected (prompt text only): the 57% Not Sure example was wrongly attached to the Nihang horseman; Nihang is 88% = YES, and the 57% belongs to the woman in the white sari. No scoring formula, route or data change. RETAINS 182.60.)
@@ -17016,6 +17017,139 @@ def admin_contest_judge_ddi_full_run(batch_ref):
     import threading as _thr4
     _thr4.Thread(target=_full_worker, args=(rows, job_id, total), daemon=True).start()
     return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/score-audit')
+@login_required
+def admin_score_audit():
+    """READ-ONLY. Recalculate member scores from stored dimensions with the code formula and report differences.
+    Writes nothing. ?format=csv downloads every row. v182.64."""
+    if current_user.role != 'admin':
+        abort(403)
+    from flask import Response
+    import json as _sa_json
+    import csv as _sa_csv
+    import io as _sa_io
+    import inspect as _sa_inspect
+    from engine.scoring import normalise_genre as _sa_norm, get_effective_genre as _sa_eff
+    try:
+        from engine.auto_score import compute_mobile_weights as _sa_mw
+    except Exception:
+        _sa_mw = None
+    rows = db.session.execute(db.text(
+        "SELECT id, user_id, genre, sub_genre, camera_track, score, tier, "
+        "dod_score, disruption_score, dm_score, wonder_score, aq_score, audit_json, "
+        "COALESCE(is_haiku_try, FALSE) AS is_haiku "
+        "FROM images WHERE status = 'scored' AND score IS NOT NULL ORDER BY id"
+    )).fetchall()
+    out_rows = []
+    groups = {}
+    for r in rows:
+        grp = 'Haiku (eValuate)' if r.is_haiku else ('Sonnet - mobile track' if (r.camera_track == 'mobile') else 'Sonnet - camera track')
+        g = groups.setdefault(grp, {'n': 0, 'no_dims': 0, 'changed': 0, 'tier_changed': 0, 'sumabs': 0.0, 'maxabs': 0.0})
+        g['n'] += 1
+        dims = [r.dod_score, r.disruption_score, r.dm_score, r.wonder_score, r.aq_score]
+        if any(d is None for d in dims):
+            g['no_dims'] += 1
+            out_rows.append([r.id, r.user_id, grp, r.genre, r.score, r.tier, '', '', '', 'no stored dimensions'])
+            continue
+        try:
+            aud = _sa_json.loads(r.audit_json) if r.audit_json else {}
+        except Exception:
+            aud = {}
+        ns = str(aud.get('ns', '') or '')
+        eff_sub = aud.get('effective_subgenre') or r.sub_genre or ''
+        canon = _sa_norm(r.genre)
+        eff_genre = _sa_eff(canon, eff_sub)
+        method = 'calculate_score'
+        try:
+            if r.camera_track == 'mobile' and _sa_mw and eff_genre != 'Drone' and _sa_mw(eff_genre):
+                w = _sa_mw(eff_genre)
+                new = round(float(r.dod_score) * w['dod'] + float(r.disruption_score) * w['disruption'] +
+                            float(r.dm_score) * w['dm'] + float(r.wonder_score) * w['wonder'] +
+                            float(r.aq_score) * w['aq'], 2)
+                new_tier = get_tier(new)
+                method = 'mobile weights, no modifiers'
+            else:
+                new, new_tier, _sb, _ck = calculate_score(eff_genre, float(r.dod_score), float(r.disruption_score),
+                                                          float(r.dm_score), float(r.wonder_score), float(r.aq_score), ns=ns)
+        except Exception as _e:
+            g['no_dims'] += 1
+            out_rows.append([r.id, r.user_id, grp, r.genre, r.score, r.tier, '', '', '', 'error: ' + str(_e)[:60]])
+            continue
+        diff = round(float(new) - float(r.score), 2)
+        if abs(diff) >= 0.01:
+            g['changed'] += 1
+        if (new_tier or '') != (r.tier or ''):
+            g['tier_changed'] += 1
+        g['sumabs'] += abs(diff)
+        g['maxabs'] = max(g['maxabs'], abs(diff))
+        out_rows.append([r.id, r.user_id, grp, r.genre, r.score, r.tier, new, new_tier, diff, method])
+
+    # Percentile pool check (same selection compute_percentile uses)
+    pool_total = pool_haiku = None
+    try:
+        pr = db.session.execute(db.text(
+            "SELECT COUNT(*) AS n, COUNT(*) FILTER (WHERE COALESCE(is_haiku_try, FALSE)) AS h "
+            "FROM images WHERE status = 'scored' AND score IS NOT NULL "
+            "AND is_flagged IS NOT TRUE AND needs_review IS NOT TRUE"
+        )).fetchone()
+        pool_total, pool_haiku = int(pr.n), int(pr.h)
+    except Exception as _pe:
+        app.logger.warning(f'[score_audit] pool count failed: {_pe}')
+    try:
+        from engine import scoring as _sa_scoring
+        pct_src = _sa_inspect.getsource(_sa_scoring.compute_percentile)
+        pct_excludes = 'is_haiku_try' in pct_src
+    except Exception:
+        pct_excludes = None
+
+    if request.args.get('format') == 'csv':
+        buf = _sa_io.StringIO()
+        w = _sa_csv.writer(buf)
+        w.writerow(['image_id', 'user_id', 'group', 'genre', 'stored_score', 'stored_tier',
+                    'recalculated_score', 'recalculated_tier', 'difference', 'method / note'])
+        for o in out_rows:
+            w.writerow(o)
+        return Response(buf.getvalue(), mimetype='text/csv',
+                        headers={'Content-Disposition': 'attachment;filename=score_audit.csv'})
+
+    def _esc(x):
+        return str(x).replace('&', '&amp;').replace('<', '&lt;')
+    gr = ''
+    for name, g in groups.items():
+        calc = g['n'] - g['no_dims']
+        mean = round(g['sumabs'] / calc, 3) if calc else 0
+        gr += ('<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>'
+               % (_esc(name), g['n'], g['no_dims'], g['changed'], g['tier_changed'], mean, round(g['maxabs'], 2)))
+    big = sorted([o for o in out_rows if isinstance(o[8], float) and abs(o[8]) >= 0.01], key=lambda o: -abs(o[8]))[:25]
+    br = ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % (o[0], _esc(o[2]), _esc(o[3]), o[4], o[6], o[8], _esc(o[5]) + ' &rarr; ' + _esc(o[7])) for o in big)
+    if pct_excludes is True:
+        pct_msg = 'The live percentile function excludes Haiku images.'
+    elif pct_excludes is False:
+        pct_msg = 'The live percentile function does NOT exclude Haiku images. Haiku scores are counted in the pool.'
+    else:
+        pct_msg = 'Could not read the percentile function.'
+    html = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<title>Score audit</title>'
+            '<style>body{font-family:Georgia,serif;font-size:19px;line-height:1.6;max-width:980px;margin:0 auto;padding:16px;color:#1a1a18;background:#faf8f3}'
+            'table{border-collapse:collapse;width:100%;margin:12px 0;display:block;overflow-x:auto}'
+            'th,td{border:1px solid #bbb;padding:10px;text-align:left;font-size:17px}th{background:#eee}'
+            '.box{background:#fff;border:2px solid #c9a227;padding:14px;margin:14px 0}'
+            'a.btn{display:inline-block;background:#1a1a18;color:#F5C518;padding:14px 20px;text-decoration:none;border-radius:6px;min-height:44px}'
+            '</style></head><body>'
+            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.64.</p>'
+            '<div class="box"><b>Percentile pool.</b><br>%s<br>Images in the pool: %s. Of these, Haiku (eValuate) images: %s.</div>'
+            '<h2>Recalculated from stored dimensions</h2>'
+            '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>%s</table>'
+            '<h2>25 largest differences</h2>'
+            '<table><tr><th>Image</th><th>Group</th><th>Genre</th><th>Stored</th><th>Recalculated</th><th>Change</th><th>Tier</th></tr>%s</table>'
+            '<p><a class="btn" href="?format=csv">Download every row (CSV)</a></p>'
+            '<p>Mobile-track images are recalculated with mobile weights and without the Iconic Wall, Humanity, Plateau and Excellence rules, so their differences are only a guide.</p>'
+            '</body></html>') % (_esc(pct_msg), pool_total, pool_haiku, gr, br or '<tr><td colspan="7">None</td></tr>')
+    return html
 
 
 @app.route('/admin/contest-judge/ddi-full-csv/<path:batch_ref>')
