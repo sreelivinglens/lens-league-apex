@@ -1,3 +1,4 @@
+# SL-VERSION: 182.56 (Session 234, 2026-10-01 -- Open Call: Haiku retired (D1/D2/D3 decisions). _cj_sonnet_judge() now writes the full scorecard narrative (impression+strength, gap+next step, master reference) in the SAME Sonnet call used for scoring -- folded into the existing theme_note/gap_note/master_ref columns, zero schema or template change, one scorecard, numbers and words always from one engine. Master reference is now grounded against the master_references DB table via new _cj_resolve_master_ref()/_cj_master_candidates() -- never a freehand name, never a printed URL (scorecards are flattened JPGs with no clickable links; a fabricated link was the actual bug, not a missing one). Removed the silent 6.0/7.0 fallback for missing dimensions -- an incomplete engine response now returns an error and the entry is skipped, same as any other engine error, instead of being scored on invented numbers. admin_contest_judge_haiku_run and admin_contest_judge_haiku_sonnet_scorecards routes now return 410 with a clear message (old code kept in place, unreachable, rather than deleted). Cleaned up stale draft weight arithmetic in _cj_opencall_composite (P6) -- docstring now matches the weights actually used (27/19/18/15/13/8), matching Constitution Session 234. Footer middle-dot fix (P4) in the now-unreachable haiku-sonnet scorecard builder. NOT done in this pass: the admin template buttons for "Run Haiku" and "Haiku+Sonnet Scorecards" still need removing by hand -- this session does not have the template file. RETAINS 182.55.)
 # SL-VERSION: 182.55 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP -- new route admin_contest_judge_haiku_sonnet_scorecards. Same Mock B card design, Sonnet scores authoritative, narrative from haiku_json (impression/master_ref/next_leap), Sonnet fallback if missing. Button on Haiku tab only. RETAINS 182.54.)
 # SL-VERSION: 182.54 (Session 231, 2026-10-01 — FEATURE: Haiku narrative inline edit — haiku_edit route extended to patch individual haiku_json fields (impression, score_read, master_ref, strength, next_leap). RETAINS 182.53.)
 # SL-VERSION: 182.53 (Session 231, 2026-10-01 — FIX: _CJ_HAIKU_EXTRA genre rule strengthened: "judge by what the PHOTOGRAPH is about, not what appears in it" — painting of a tiger = craft/documentary, not wildlife. Explicit ban on Steve Winter/Frans Lanting/Nick Brandt for human/painting/body art subjects. RETAINS 182.52.)
@@ -15344,14 +15345,16 @@ def _cj_thumb_b64(filepath, max_long=1200):
 def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_val):
     """
     Open Call DDI composite formula — Session 224 v182.27.
+    Weight comments cleaned up Session 234 (removed stale draft arithmetic;
+    these are the only weights actually used — matches Constitution Session 234).
 
-    Weights (agreed with founder 2026-09-28):
-      Wonder (Emotion)         30%
-      AQ (Human Connect)       22%
-      Story Transfer (1-10)    18%   — replaces Yes/No NS; measures transfer not presence
-      Disruption (Wow factor)  15%
-      DoD (Composition/Light)  18%  — composition + light + colour + craft
-      DM (Moment)               8%   — decisiveness, timing
+    Weights (final, agreed with founder):
+      Wonder (Emotion)                    27%
+      AQ (Human Connect)                  19%
+      Story Transfer (1-10)               18%   — replaces Yes/No NS; measures transfer not presence
+      Disruption (Wow factor)             15%
+      DoD (Composition/Light/Colour/Craft) 13%
+      DM (Moment)                          8%   — decisiveness, timing
       NS bonus:                REMOVED v182.34 — Story Transfer at 18% weight handles this
 
     All modifiers from SL DDI engine apply:
@@ -15362,24 +15365,11 @@ def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_v
       Excellence Bonus: wonder >= 9.5 AND aq >= 9.5 → +0.15
       Cap: 9.9
     """
-    W_WONDER   = 0.30
-    W_AQ       = 0.22
-    W_STORY    = 0.18   # story_transfer dimension weight (not the NS bonus)
-    W_DISRUPT  = 0.15
-    W_DOD      = 0.18   # DoD carries: composition, light, colour, craft
-    W_DM       = 0.08   # wait — this totals to 1.11. Recalculate to exactly 1.00:
-    # Corrected weights that sum to 1.00:
-    # Wonder 0.30, AQ 0.22, Story 0.18, Disruption 0.12, DoD 0.12, DM 0.06 = 1.00
-    # But founder said DoD=18%, DM=8% → total = 1.08. Adjust Disruption down:
-    # Wonder 0.30 + AQ 0.22 + Story 0.18 + Disruption 0.12 + DoD 0.12 + DM 0.06 = 1.00 ✓
-    # Per final founder conversation: Disruption=15%, DoD=18%, DM=8% → need to trim 6%
-    # Trim equally from Wonder (-3%) and AQ (-3%): Wonder 0.27, AQ 0.19 → total 1.00 ✓
-    # FINAL AGREED WEIGHTS:
     W_WONDER  = 0.27   # Emotion
     W_AQ      = 0.19   # Human Connect
     W_STORY   = 0.18   # Story Transfer
     W_DISRUPT = 0.15   # Wow / Disruption
-    W_DOD     = 0.13   # Composition + Light + Colour + Craft  (DoD ~13%)
+    W_DOD     = 0.13   # Composition + Light + Colour + Craft
     W_DM      = 0.08   # Moment / Decisiveness
     # Total: 0.27+0.19+0.18+0.15+0.13+0.08 = 1.00 ✓
 
@@ -15437,12 +15427,61 @@ def _cj_opencall_composite(wonder, aq, story_transfer, disruption, dod, dm, ns_v
     return round(raw, 2), soul_bonus, checks
 
 
+def _cj_master_candidates(limit=24):
+    """Broad, genre-mixed sample of approved master_references entries, formatted
+    for the judging prompt so Sonnet picks a master reference from a REAL list
+    instead of inventing a name or URL. Session 234.
+    Returns a plain-text block, or '' if the table is empty/unreachable."""
+    try:
+        rows = db.session.execute(db.text(
+            "SELECT name, genre_tags FROM master_references WHERE is_active = TRUE "
+            "ORDER BY is_platform_mentor DESC, "
+            "CASE tier WHEN 'Platform Mentor' THEN 0 WHEN 'Tier 1' THEN 1 "
+            "WHEN 'Tier 2' THEN 2 ELSE 3 END, RANDOM() LIMIT :lim"
+        ), {'lim': limit}).fetchall()
+        return '\n'.join(f"- {r.name} ({r.genre_tags})" for r in rows)
+    except Exception as _mce:
+        app.logger.warning(f'[master_candidates] failed: {_mce}')
+        return ''
+
+
+def _cj_resolve_master_ref(genre_detected, proposed_name, echo_sentence):
+    """Ground the model's chosen master reference against master_references —
+    never trust a freehand name or URL. Session 234 (replaces the separate
+    Sonnet micro-call _validate_master_ref, which this makes unnecessary).
+    Returns the final display string for the 'Master Reference' card field,
+    or '' if no approved photographer for this genre could be found."""
+    try:
+        candidates = get_masters_for_genre(genre_detected or '', limit=8)
+    except Exception:
+        candidates = []
+    approved_name = None
+    if proposed_name:
+        for c in candidates:
+            if c['name'].strip().lower() == proposed_name.strip().lower():
+                approved_name = c['name']
+                break
+    if not approved_name and candidates:
+        approved_name = candidates[0]['name']
+        app.logger.info(f'[master_ref_resolve] proposed {proposed_name!r} not on approved list '
+                         f'for genre {genre_detected!r} — substituted {approved_name!r}')
+    if not approved_name:
+        return ''
+    echo = (echo_sentence or '').strip()
+    if echo:
+        return f"{approved_name}'s work — {echo}"
+    return f"{approved_name}'s work echoes this image."
+
+
 def _cj_sonnet_judge(image_b64, photographer, title, theme='Story', theme_threshold=6.0,
-                     model=None, max_tokens=500, extra_instructions=''):
-    # v182.37: model / max_tokens / extra_instructions are optional. Defaults keep the
-    # Sonnet open call call byte-for-byte identical. The Haiku comparison run passes
-    # model=_HAIKU_MODEL and asks for extra narrative keys via extra_instructions —
-    # the scoring rubric (system prompt) is shared, so the numbers are comparable.
+                     model=None, max_tokens=1000, extra_instructions=''):
+    # v234: Sonnet now writes the full scorecard narrative in this single call —
+    # impression, strength, gap and next step are folded into the existing
+    # theme_note / gap_note fields (zero schema change, scorecard keeps working
+    # unmodified). Master reference is grounded against the master_references
+    # DB table — never a freehand name or URL. Haiku is no longer used for
+    # Open Call judging (Session 234); model/max_tokens/extra_instructions are
+    # kept for compatibility but are not exercised by any live caller.
     """
     Open Call DDI scoring — v182.27.
     Single Sonnet call returning 6 Open Call DDI dimensions + theme gate + narrative fields.
@@ -15540,15 +15579,21 @@ Score 1.0–10.0 how compellingly the image responds to the contest theme.
 3–4 = theme is absent but could be argued
 1–2 = image has no relationship to the theme
 
-MASTER REFERENCE:
-Name one master photographer (living or historical) whose work this image most echoes, and specifically why in one sentence (max 25 words). Be honest. Weak images may echo a master's lesser or student work.
-FACT ACCURACY RULE: Never state specific locations, dates, or project names unless they are established general knowledge. Use broad known approach instead.
+MASTER REFERENCE (Session 234 — grounded, no freehand names or URLs):
+Choose ONE photographer from the APPROVED MASTER LIST below whose work this image most echoes, matched to the image's actual genre. Never name anyone outside this list — if none fit well, pick the closest match on the list rather than inventing a name. Do not write a URL; one is added automatically from the platform's own records. Give the name exactly as it appears on the list, plus a one-sentence echo (max 25 words, no specific locations/dates/project names unless established general knowledge).
 
-GAP:
-One sentence (max 25 words): the single weakest element holding this image back. Name the specific element — not a general principle. Be kind but exact.
+GAP AND NEXT STEP:
+Two sentences, max 25 words each. First: the single weakest element holding this image back — name the specific element, not a general principle, be kind but exact. Second: the one change that would lift this photograph most.
+
+NARRATIVE (Session 234 — what a viewer would feel and the photographer's best decision):
+Two to three sentences: what a viewer walking past this in a gallery would feel, and why — then name the single strongest decision the photographer made. Never use the word "stranger" in this field — say "viewer", "a person", or "someone". Never use the words "AI" or "score". Never assert a relationship (father/mother/child) unless it is explicit in the image — say "a figure", "an older man", etc. Never say "living things" or "creatures" — name the species when known, genus when not.
 
 SUBJECT IDENTIFICATION:
 If the primary subject is a specific person, animal, plant, object, or cultural/religious element, identify it precisely. If you are uncertain, say so — do not invent specific identifications. Cultural and religious subjects require particular care: name the element if you are confident, describe what you see if you are not."""
+
+    _cj_master_list_text = _cj_master_candidates()
+    if not _cj_master_list_text:
+        _cj_master_list_text = '(list unavailable — name the photographer you are most confident about; it will be checked against the platform approved list and substituted if needed)'
 
     prompt = f"""Photographer: {photographer}
 Image title: {title}
@@ -15569,7 +15614,10 @@ THEME: "{theme}"
 Score theme_score 1–10 for how compellingly the image responds to this theme.
 theme_relevant = true if theme_score >= {theme_threshold}
 
-Return ONLY valid JSON:
+APPROVED MASTER LIST — choose master_ref_name ONLY from this list, matched to the image's genre:
+{_cj_master_list_text}
+
+Return ONLY valid JSON. All six dimensions, theme_score, theme_relevant, narrative, gap_note and next_leap are REQUIRED — do not omit any key:
 {{
   "wonder": 0.0,
   "aq": 0.0,
@@ -15582,8 +15630,11 @@ Return ONLY valid JSON:
   "theme_note": "one sentence max 30 words — what the image does with or misses about the theme",
   "genre_detected": "Wildlife",
   "subject_id": "precise identification of primary subject, or description if uncertain",
-  "master_ref": "one sentence max 25 words — master photographer echo and why",
-  "gap_note": "one sentence max 25 words — single weakest element, specific"
+  "master_ref_name": "exact name from the APPROVED MASTER LIST above",
+  "master_ref_echo": "one sentence max 25 words — why this photographer's work echoes this image",
+  "gap_note": "one sentence max 25 words — single weakest element, specific",
+  "next_leap": "one sentence max 25 words — the one change that would lift this photograph most",
+  "narrative": "two to three sentences — what a viewer would feel, and the photographer's single strongest decision"
 }}"""
     if extra_instructions:
         prompt = prompt + "\n\n" + extra_instructions
@@ -15629,20 +15680,52 @@ Return ONLY valid JSON:
                     text = text[4:]
             result = _cj_json.loads(text.strip())
 
-            # Extract DDI dimensions
-            wonder         = float(result.get('wonder', 7.0))
-            aq             = float(result.get('aq', 7.0))
-            story_transfer = float(result.get('story_transfer', 6.0))
-            disruption     = float(result.get('disruption', 6.0))
-            dod            = float(result.get('dod', 6.0))
-            dm             = float(result.get('dm', 6.0))
-            theme_score    = float(result.get('theme_score', 5.0))
+            # v234: no more silent 6.0/7.0 fallback when a dimension is missing.
+            # An incomplete response is now reported as an error (existing
+            # callers already route verdict['error'] to their error list —
+            # see admin_contest_judge_upload / rescore-entry / bulk-rescore).
+            _required = ['wonder', 'aq', 'story_transfer', 'disruption', 'dod', 'dm', 'theme_score']
+            _missing = [k for k in _required if k not in result or result.get(k) is None]
+            if _missing:
+                app.logger.warning(f'[cj_sonnet_judge] incomplete response, missing {_missing}: {text[:300]!r}')
+                return {'error': f"Engine returned an incomplete evaluation (missing: {', '.join(_missing)}). Not scored — rescore this entry."}
+
+            # Extract DDI dimensions — no defaults; presence already checked above.
+            wonder         = float(result['wonder'])
+            aq             = float(result['aq'])
+            story_transfer = float(result['story_transfer'])
+            disruption     = float(result['disruption'])
+            dod            = float(result['dod'])
+            dm             = float(result['dm'])
+            theme_score    = float(result['theme_score'])
             theme_threshold_val = float(theme_threshold)
 
             # Compute Open Call composite
             composite, soul_bonus, checks = _cj_opencall_composite(
                 wonder, aq, story_transfer, disruption, dod, dm, ns_val=None
             )
+
+            # v234 — master reference grounded against master_references DB table.
+            # Never trust a freehand name or URL from the model (was the source
+            # of fabricated photographer homepage links). No URL is printed —
+            # scorecards are flattened JPGs with no clickable links anyway.
+            genre_detected = result.get('genre_detected', '')
+            master_ref_final = _cj_resolve_master_ref(
+                genre_detected, result.get('master_ref_name', ''), result.get('master_ref_echo', '')
+            )
+
+            # v234 — narrative fields folded into the existing theme_note / gap_note
+            # columns so the scorecard (and every other consumer of these two
+            # columns) keeps working with zero schema or template changes:
+            #   theme_note -> "The Reading" block on the scorecard
+            #   gap_note   -> "Where It Could Go Further" block on the scorecard
+            _narrative = (result.get('narrative') or '').strip()
+            _theme_fit = (result.get('theme_note') or '').strip()
+            theme_note_final = ' '.join(x for x in [_narrative, _theme_fit] if x)
+
+            _gap = (result.get('gap_note') or '').strip()
+            _next = (result.get('next_leap') or '').strip()
+            gap_note_final = ' '.join(x for x in [_gap, _next] if x)
 
             result['wonder']         = wonder
             result['aq']             = aq
@@ -15655,6 +15738,9 @@ Return ONLY valid JSON:
             result['composite']      = composite
             result['soul_bonus']     = soul_bonus
             result['checks']         = checks
+            result['theme_note']     = theme_note_final  # now carries full narrative + theme fit
+            result['gap_note']       = gap_note_final     # now carries gap + next step
+            result['master_ref']     = master_ref_final   # DB-grounded, no URL
             return result
     except Exception as e:
         return {'error': str(e)}
@@ -16664,10 +16750,18 @@ def _cj_haiku_ensure_columns():
 @app.route('/admin/contest-judge/haiku-run/<path:batch_ref>', methods=['POST'])
 @login_required
 def admin_contest_judge_haiku_run(batch_ref):
-    """Start the Haiku comparison run. Background thread, 3 entries at a time.
-    Progress reuses the bulk rescore progress store and status endpoint."""
+    """RETIRED Session 234 — Haiku is no longer used for Open Call judging.
+    Sonnet now writes the full evaluation AND narrative (impression, strength,
+    gap, next step, DB-grounded master reference) in a single call — see
+    _cj_sonnet_judge(). Use Rescore / Bulk Rescore + Scorecards (ZIP) instead.
+    Route and old code kept in place (unreachable) rather than deleted, to
+    keep this change small; a stale 'Run Haiku' button will now get a clear
+    message instead of a 404 or a silent no-op."""
     if current_user.role != 'admin':
         abort(403)
+    return jsonify({'error': "Haiku is retired for Open Call judging (Session 234). "
+                              "Sonnet now writes the full evaluation and narrative in one pass — "
+                              "use Rescore or Bulk Rescore, then Scorecards (ZIP)."}), 410
     _cj_haiku_ensure_columns()
     rows = db.session.execute(db.text(
         "SELECT id, photographer, image_title, theme, theme_threshold, thumb_path "
@@ -17734,11 +17828,16 @@ def admin_contest_judge_scorecards(batch_ref):
 @app.route('/admin/contest-judge/haiku-sonnet-scorecards/<path:batch_ref>')
 @login_required
 def admin_contest_judge_haiku_sonnet_scorecards(batch_ref):
-    """ZIP of JPG scorecards using Sonnet scores + Haiku narrative fields (Mock B design).
-    Falls back to Sonnet narrative fields when Haiku fields are absent.
+    """RETIRED Session 234 — the separate Haiku+Sonnet card is no longer needed.
+    Sonnet alone now writes the full narrative used by the main Scorecards (ZIP)
+    route (admin_contest_judge_scorecards) — one engine, numbers and words always
+    match (founder decision D1, Session 234: show engines independently, never mixed).
     """
     if current_user.role != 'admin':
         abort(403)
+    return jsonify({'error': "This separate Haiku+Sonnet scorecard is retired (Session 234). "
+                              "Use Scorecards (ZIP) on the open call page — it now carries the "
+                              "full narrative, written by Sonnet alone."}), 410
 
     import json as _hs_json_mod
 
@@ -18061,7 +18160,7 @@ def admin_contest_judge_haiku_sonnet_scorecards(batch_ref):
                     _sc_card_h = max(_sc_min_h, y + 110)
                     _fy = _sc_card_h - 92
                     d.line([(_HS_M, _fy), (_HS_W - _HS_M, _fy)], fill=_HS_TRACK, width=2)
-                    _hs_tracked(d, (_HS_M, _fy + 34), 'shutterleague.com  --  Making Images Matter', _hs_f('SL-Inter-SemiBold.ttf', 20), _HS_GOLDTXT, 0.18)
+                    _hs_tracked(d, (_HS_M, _fy + 34), 'shutterleague.com  ·  Making Images Matter', _hs_f('SL-Inter-SemiBold.ttf', 20), _HS_GOLDTXT, 0.18)  # P4 fix Session 234 (route itself is retired, fixed for correctness)
                     _ev_txt = f"Evaluated {row.judged_at.strftime('%d %b %Y') if row.judged_at else ''}"
                     _hs_tracked(d, (_HS_W - _HS_M, _fy + 34), _ev_txt, _hs_f('SL-Inter-Medium.ttf', 20), _HS_MUTED, 0.14, anchor_right=True)
                     canvas = canvas.crop((0, 0, _HS_W, _sc_card_h))
