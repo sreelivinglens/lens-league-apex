@@ -1,3 +1,5 @@
+# SL-VERSION: 182.59 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags corrected to Street,Fashion,Conceptual,Creative (founder-confirmed), replacing the live DB's broader tag set (Nature,Wildlife,Landscape,Documentary,Maternity,Portrait) that contradicted the Constitution's own "do not reference for Nature, Wildlife, Landscape" rule. This was the root cause of Kochhar being over-cited as master reference on Documentary images (is_platform_mentor sorts him first in every genre his tags match). New idempotent boot-time block, fixed-value UPDATE. RETAINS 182.58.)
+# SL-VERSION: 182.58 (Session 235, 2026-10-02 -- DATA FIX: People genre master-reference pool was starved to 1 candidate (Steve McCurry) because only his genre_tags literally said "People" -- 20+ legitimate Portrait masters (Karsh, Avedon, Platon, Arbus, Annie Leibovitz, Dorothea Lange, Mary Ellen Mark, Dayanita Singh, etc.) plus Street and Wedding masters were invisible to People-genre queries. Founder instruction: People is a larger umbrella covering Portrait/Street/Wedding. New idempotent boot-time block tags all Portrait/Street/Wedding master_references rows with People too (53 rows affected), unless already tagged. No rows removed, no existing tags touched. RETAINS 182.57.)
 # SL-VERSION: 182.57 (Session 235, 2026-10-02 -- FIX: _cj_resolve_master_ref() master-reference substitution. When the model's proposed photographer doesn't match the image genre and has to be swapped: (1) now picks randomly among the top 3 genre-matched candidates instead of always the same one (was: always candidates[0]), and (2) now builds the description from the substituted photographer's own known_for/reference_when DB columns instead of reusing the model's echo sentence, which was written to justify the REJECTED photographer and read as a mismatch once re-attached to the new name. No schema change, single function touched. RETAINS 182.56.)
 # SL-VERSION: 182.56 (Session 234, 2026-10-01 -- Open Call: Haiku retired (D1/D2/D3 decisions). _cj_sonnet_judge() now writes the full scorecard narrative (impression+strength, gap+next step, master reference) in the SAME Sonnet call used for scoring -- folded into the existing theme_note/gap_note/master_ref columns, zero schema or template change, one scorecard, numbers and words always from one engine. Master reference is now grounded against the master_references DB table via new _cj_resolve_master_ref()/_cj_master_candidates() -- never a freehand name, never a printed URL (scorecards are flattened JPGs with no clickable links; a fabricated link was the actual bug, not a missing one). Removed the silent 6.0/7.0 fallback for missing dimensions -- an incomplete engine response now returns an error and the entry is skipped, same as any other engine error, instead of being scored on invented numbers. admin_contest_judge_haiku_run and admin_contest_judge_haiku_sonnet_scorecards routes now return 410 with a clear message (old code kept in place, unreachable, rather than deleted). Cleaned up stale draft weight arithmetic in _cj_opencall_composite (P6) -- docstring now matches the weights actually used (27/19/18/15/13/8), matching Constitution Session 234. Footer middle-dot fix (P4) in the now-unreachable haiku-sonnet scorecard builder. NOT done in this pass: the admin template buttons for "Run Haiku" and "Haiku+Sonnet Scorecards" still need removing by hand -- this session does not have the template file. RETAINS 182.55.)
 # SL-VERSION: 182.55 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP -- new route admin_contest_judge_haiku_sonnet_scorecards. Same Mock B card design, Sonnet scores authoritative, narrative from haiku_json (impression/master_ref/next_leap), Sonnet fallback if missing. Button on Haiku tab only. RETAINS 182.54.)
@@ -2544,6 +2546,49 @@ def _run_startup_tasks():
             except Exception as _mru_err:
                 db.session.rollback()
                 print(f'[master_ref_upsert] {_mru_err}')
+
+            # Session 235: Ashok Kochhar (Platform Mentor) genre_tags corrected to
+            # match the Constitution's own documented rule — "reference ONLY for
+            # Street, Fashion, or Conceptual genre. Do NOT reference for Nature,
+            # Wildlife, Landscape..." Founder confirmed Session 235: Street, Fashion,
+            # Conceptual, Creative (Creative added, Constitution did not previously
+            # list it). The live DB had him tagged for Nature, Wildlife, Landscape,
+            # Documentary, Maternity, Portrait too — the actual cause of Kochhar being
+            # over-cited on Documentary images (is_platform_mentor sorts him first in
+            # every genre his tags match). Idempotent — a fixed value, safe every boot.
+            try:
+                db.session.execute(db.text(
+                    "UPDATE master_references SET genre_tags = :gt WHERE name = :name"
+                ), {'gt': 'Street,Fashion,Conceptual,Creative', 'name': 'Ashok Kochhar'})
+                db.session.commit()
+                print('[kochhar_genre_fix] Ashok Kochhar genre_tags set to '
+                      'Street,Fashion,Conceptual,Creative OK')
+            except Exception as _kgf_err:
+                db.session.rollback()
+                print(f'[kochhar_genre_fix] {_kgf_err}')
+
+            # Session 235: People is a larger umbrella genre (founder instruction) —
+            # it should draw from Portrait, Street, and Wedding masters, not just the
+            # single photographer whose genre_tags happened to literally say "People"
+            # (Steve McCurry). Without this, get_masters_for_genre('People') returned
+            # a pool of exactly 1 candidate, starving the Open Call master-reference
+            # substitution for every People-genre image. Idempotent — only touches
+            # rows that don't already carry the People tag. Runs every boot, safe.
+            try:
+                _people_result = db.session.execute(db.text(
+                    "UPDATE master_references "
+                    "SET genre_tags = genre_tags || ',People' "
+                    "WHERE is_active = TRUE "
+                    "AND (genre_tags ILIKE '%Portrait%' OR genre_tags ILIKE '%Street%' "
+                    "     OR genre_tags ILIKE '%Wedding%') "
+                    "AND genre_tags NOT ILIKE '%People%'"
+                ))
+                db.session.commit()
+                print(f'[people_genre_align] {_people_result.rowcount} rows tagged People '
+                      f'(from Portrait/Street/Wedding) OK')
+            except Exception as _pga_err:
+                db.session.rollback()
+                print(f'[people_genre_align] {_pga_err}')
 
             # Session 212: backfill is_haiku_try=TRUE for images whose audit_json
             # contains "source": "haiku_try" but whose is_haiku_try column is not set.
