@@ -1,3 +1,4 @@
+# SL-VERSION: 182.65 (Session 235, 2026-10-03 -- FIX: /admin/score-audit crashed when building its page (a literal percent sign in the page style clashed with the text-filling method). Page now filled with plain replacement. Still read-only. 182.64 line retained below.)
 # SL-VERSION: 182.64 (Session 235, 2026-10-03 -- NEW (read-only, changes NO score): GET /admin/score-audit recalculates every scored member image from its stored five dimension numbers with the code formula (calculate_score; weights, rules, NS bonus, sub-genre routing) and reports how many scores and tiers would differ, plus CSV (?format=csv). Also checks whether the live percentile function excludes Haiku-tier (eValuate) images and counts how many sit in its pool. Mobile-track images use mobile weights without modifiers and are labelled. Nothing is written.)
 # SL-VERSION: 182.63 (Session 235, 2026-10-02 -- NEW (test only): FULL-engine DDI side-by-side on a short list of 12 pictures. POST /admin/contest-judge/ddi-full-run/<batch> runs the full member engine (auto_score: scene description + evaluation with Gestalt/classical checks and story clarity; genre Open) and writes ONLY to new table contest_judge_ddi_full; GET /admin/contest-judge/ddi-full-csv/<batch> downloads current vs fast DDI vs full DDI. contest_judge_batch never written. Live Open Call engine unchanged. RETAINS 182.62.)
 # SL-VERSION: 182.62 (Session 235, 2026-10-02 -- NEW (test only): DDI side-by-side for Open Calls. Two admin routes: POST /admin/contest-judge/ddi-compare-run/<batch> runs the standard 5-dimension DDI (Open genre weights, scoring.py formula, one Sonnet call per image, reading the same stored pictures the current judge uses) and writes ONLY to a new table contest_judge_ddi_compare (created on first use); GET /admin/contest-judge/ddi-compare-csv/<batch> downloads current vs DDI with standings. contest_judge_batch is never written. No change to the live Open Call engine. RETAINS 182.61.)
@@ -17140,15 +17141,18 @@ def admin_score_audit():
             '.box{background:#fff;border:2px solid #c9a227;padding:14px;margin:14px 0}'
             'a.btn{display:inline-block;background:#1a1a18;color:#F5C518;padding:14px 20px;text-decoration:none;border-radius:6px;min-height:44px}'
             '</style></head><body>'
-            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.64.</p>'
-            '<div class="box"><b>Percentile pool.</b><br>%s<br>Images in the pool: %s. Of these, Haiku (eValuate) images: %s.</div>'
+            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.65.</p>'
+            '<div class="box"><b>Percentile pool.</b><br>@@PCTMSG@@<br>Images in the pool: @@POOL@@. Of these, Haiku (eValuate) images: @@POOLH@@.</div>'
             '<h2>Recalculated from stored dimensions</h2>'
-            '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>%s</table>'
+            '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>@@GROUPS@@</table>'
             '<h2>25 largest differences</h2>'
-            '<table><tr><th>Image</th><th>Group</th><th>Genre</th><th>Stored</th><th>Recalculated</th><th>Change</th><th>Tier</th></tr>%s</table>'
+            '<table><tr><th>Image</th><th>Group</th><th>Genre</th><th>Stored</th><th>Recalculated</th><th>Change</th><th>Tier</th></tr>@@BIG@@</table>'
             '<p><a class="btn" href="?format=csv">Download every row (CSV)</a></p>'
             '<p>Mobile-track images are recalculated with mobile weights and without the Iconic Wall, Humanity, Plateau and Excellence rules, so their differences are only a guide.</p>'
-            '</body></html>') % (_esc(pct_msg), pool_total, pool_haiku, gr, br or '<tr><td colspan="7">None</td></tr>')
+            '</body></html>')
+    html = (html.replace('@@PCTMSG@@', _esc(pct_msg)).replace('@@POOLH@@', str(pool_haiku))
+            .replace('@@POOL@@', str(pool_total)).replace('@@GROUPS@@', gr)
+            .replace('@@BIG@@', br or '<tr><td colspan="7">None</td></tr>'))
     return html
 
 
