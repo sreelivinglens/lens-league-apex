@@ -1,3 +1,4 @@
+# SL-VERSION: 182.63 (Session 235, 2026-10-02 -- NEW (test only): FULL-engine DDI side-by-side on a short list of 12 pictures. POST /admin/contest-judge/ddi-full-run/<batch> runs the full member engine (auto_score: scene description + evaluation with Gestalt/classical checks and story clarity; genre Open) and writes ONLY to new table contest_judge_ddi_full; GET /admin/contest-judge/ddi-full-csv/<batch> downloads current vs fast DDI vs full DDI. contest_judge_batch never written. Live Open Call engine unchanged. RETAINS 182.62.)
 # SL-VERSION: 182.62 (Session 235, 2026-10-02 -- NEW (test only): DDI side-by-side for Open Calls. Two admin routes: POST /admin/contest-judge/ddi-compare-run/<batch> runs the standard 5-dimension DDI (Open genre weights, scoring.py formula, one Sonnet call per image, reading the same stored pictures the current judge uses) and writes ONLY to a new table contest_judge_ddi_compare (created on first use); GET /admin/contest-judge/ddi-compare-csv/<batch> downloads current vs DDI with standings. contest_judge_batch is never written. No change to the live Open Call engine. RETAINS 182.61.)
 # SL-VERSION: 182.61 (Session 235, 2026-10-02 -- FIX: member evaluation NS calibration anchors corrected (prompt text only): the 57% Not Sure example was wrongly attached to the Nihang horseman; Nihang is 88% = YES, and the 57% belongs to the woman in the white sari. No scoring formula, route or data change. RETAINS 182.60.)
 # SL-VERSION: 182.60 (Session 235, 2026-10-02 -- DATA FIX: Ashok Kochhar (Platform Mentor) genre_tags final-corrected to Street,Fashion,Conceptual,Creative,Landscape,Portrait (founder confirmed in two rounds -- Landscape and Portrait added after v182.59, Documentary and Maternity explicitly excluded, both checked against his known_for bio text which supports Street/Portrait/Landscape but not Documentary/Maternity). Supersedes v182.59's narrower list. RETAINS 182.59.)
@@ -16906,6 +16907,147 @@ def admin_contest_judge_ddi_compare_csv(batch_ref):
     safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
     return app.response_class(out.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="SL_DDI_SideBySide_{safe_ref}.csv"'})
+
+
+# ── CONTEST JUDGE — FULL DDI SIDE-BY-SIDE, SMALL SET (v182.63, Session 235) ─
+# Same idea as the fast test above, but runs the FULL member engine (auto_score: scene
+# description call + evaluation call, Photographic Intelligence incl. Gestalt, story clarity)
+# on a short list of 12 pictures. Own table: contest_judge_ddi_full. contest_judge_batch is
+# never written. Admin only. Two Sonnet calls per picture.
+
+_CJ_DDI_FULL_FILES = [
+    'Ram Ch3_contest.jpg', 'Rushabh_contest.jpg', 'Anurag_contest.jpg', 'Sree 4_Contest.jpg',
+    'Sree2_contest.jpg', 'Unknown2_contest.jpg', 'Malcolm 2_contest.jpg', 'Prashant4_contest.jpg',
+    'Nick 3_contest.jpg', 'S2_contest.jpg', 'Rushabh3_contest.jpg', 'Malcolm_contest.jpg',
+]
+
+
+def _cj_ddi_full_ensure_table():
+    db.session.execute(db.text("""
+        CREATE TABLE IF NOT EXISTS contest_judge_ddi_full (
+            id SERIAL PRIMARY KEY,
+            batch_ref VARCHAR(300) NOT NULL,
+            entry_id INTEGER NOT NULL,
+            filename VARCHAR(300),
+            dod REAL, disruption REAL, dm REAL, wonder REAL, aq REAL,
+            ns VARCHAR(20),
+            score_without_ns REAL, score_with_ns REAL, tier VARCHAR(40),
+            run_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE (batch_ref, entry_id)
+        )
+    """))
+    db.session.commit()
+
+
+@app.route('/admin/contest-judge/ddi-full-run/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_ddi_full_run(batch_ref):
+    """Start the FULL DDI side-by-side on a short list (default 12 pictures). Background thread.
+    Optional POST body {"filenames": [...]} to override the list. Poll with
+    /admin/contest-judge/bulk-rescore-status/<job_id>. v182.63."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_ddi_full_ensure_table()
+    data = request.get_json(silent=True) or {}
+    wanted = data.get('filenames') or _CJ_DDI_FULL_FILES
+    rows = db.session.execute(db.text(
+        "SELECT id, filename, photographer, image_title, thumb_path FROM contest_judge_batch "
+        "WHERE batch_ref = :br AND filename = ANY(:fns)"
+    ), {'br': batch_ref, 'fns': list(wanted)}).fetchall()
+    if not rows:
+        return jsonify({'error': 'No matching entries found for this batch'}), 404
+
+    import uuid as _uuid
+    job_id = _uuid.uuid4().hex[:12]
+    total = len(rows)
+    _bulk_rescore_prog_write(job_id, total, 0, 0, False)
+
+    def _full_worker(rows, job_id, total):
+        with app.app_context():
+            import tempfile as _tmp4
+            import storage as _r2store4
+            from engine.auto_score import auto_score as _full_score
+            done = 0
+            errors = 0
+            for row in rows:
+                try:
+                    if not row.thumb_path:
+                        errors += 1
+                        continue
+                    _key = _r2store4.key_from_url(row.thumb_path)
+                    tmp = _tmp4.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    tmp.close()
+                    if not _r2store4.download_file(_key, tmp.name):
+                        errors += 1
+                        try: _cj_os.unlink(tmp.name)
+                        except Exception: pass
+                        continue
+                    try:
+                        res = _full_score(image_path=tmp.name, genre='Open',
+                                          title=row.image_title or '', photographer=row.photographer or '')
+                    finally:
+                        try: _cj_os.unlink(tmp.name)
+                        except Exception: pass
+                    d_, di_, dm_, wo_, aq_ = (float(res[k]) for k in ('dod', 'disruption', 'dm', 'wonder', 'aq'))
+                    ns_ = str(res.get('ns', '') or '')
+                    s_no, tier_, _sb, _c = calculate_score('Open', d_, di_, dm_, wo_, aq_)
+                    s_ns, _t2, _sb2, _c2 = calculate_score('Open', d_, di_, dm_, wo_, aq_, ns=ns_)
+                    db.session.execute(db.text("""
+                        INSERT INTO contest_judge_ddi_full
+                            (batch_ref, entry_id, filename, dod, disruption, dm, wonder, aq, ns,
+                             score_without_ns, score_with_ns, tier, run_at)
+                        VALUES (:br, :eid, :fn, :dod, :dis, :dm, :wo, :aq, :ns, :s1, :s2, :tier, NOW())
+                        ON CONFLICT (batch_ref, entry_id) DO UPDATE SET
+                            dod=:dod, disruption=:dis, dm=:dm, wonder=:wo, aq=:aq, ns=:ns,
+                            score_without_ns=:s1, score_with_ns=:s2, tier=:tier, run_at=NOW()
+                    """), {'br': batch_ref, 'eid': row.id, 'fn': row.filename, 'dod': d_, 'dis': di_,
+                           'dm': dm_, 'wo': wo_, 'aq': aq_, 'ns': ns_, 's1': s_no, 's2': s_ns, 'tier': tier_})
+                    db.session.commit()
+                except Exception as _fe:
+                    db.session.rollback()
+                    app.logger.error(f'[ddi_full] entry={row.id} {_fe}')
+                    errors += 1
+                finally:
+                    done += 1
+                    _bulk_rescore_prog_write(job_id, total, done, errors, False)
+            _bulk_rescore_prog_write(job_id, total, done, errors, True)
+            app.logger.info(f'[ddi_full] job={job_id} complete — {done}/{total} done, {errors} errors')
+
+    import threading as _thr4
+    _thr4.Thread(target=_full_worker, args=(rows, job_id, total), daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/contest-judge/ddi-full-csv/<path:batch_ref>')
+@login_required
+def admin_contest_judge_ddi_full_csv(batch_ref):
+    """Download the full-engine test: current engine vs fast DDI vs full DDI, for the short list. v182.63."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_ddi_full_ensure_table()
+    _cj_ddi_compare_ensure_table()
+    rows = db.session.execute(db.text("""
+        SELECT b.photographer, b.filename, b.composite_score,
+               f.dod, f.disruption, f.dm, f.wonder, f.aq, f.ns, f.score_without_ns, f.score_with_ns, f.tier,
+               c.ddi_score AS fast_score
+        FROM contest_judge_ddi_full f
+        JOIN contest_judge_batch b ON b.id = f.entry_id AND b.batch_ref = f.batch_ref
+        LEFT JOIN contest_judge_ddi_compare c ON c.batch_ref = f.batch_ref AND c.entry_id = f.entry_id
+        WHERE f.batch_ref = :br
+        ORDER BY f.score_with_ns DESC
+    """), {'br': batch_ref}).fetchall()
+    out = _cj_io.StringIO()
+    import csv as _csv4
+    w = _csv4.writer(out)
+    w.writerow(['Photographer', 'Filename', 'Current engine', 'Fast DDI', 'Full DDI (no story bonus)',
+                'Full DDI (with story bonus)', 'Story clarity', 'Tier',
+                'Full Wonder', 'Full AQ', 'Full Disruption', 'Full DoD', 'Full DM'])
+    for r in rows:
+        w.writerow([r.photographer, r.filename, r.composite_score, r.fast_score, r.score_without_ns,
+                    r.score_with_ns, r.ns, r.tier, r.wonder, r.aq, r.disruption, r.dod, r.dm])
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(out.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="SL_DDI_FullTest_{safe_ref}.csv"'})
 
 
 # ── CONTEST JUDGE — HAIKU COMPARISON RUN (v182.37, Session 229) ────────────
