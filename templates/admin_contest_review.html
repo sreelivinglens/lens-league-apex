@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_review-2.1 (Session 228, 2026-09-28 — Rescore All button in top-actions bar + per-card Rescore button in card header. Calls /admin/contest-judge/bulk-rescore/<batch_ref> and /admin/contest-judge/rescore-entry/<id>. Progress bar on bulk rescore. RETAINS v2.0.) #}
+{# SL-VERSION: admin_contest_review-2.2 (Session 234, 2026-10-02 — Rule 10 fix: replaced all 7 literal "AI" mentions with "Engine" (3x "AI original:" labels, the Subject/Cultural ID placeholder, the subject-ID help text, and 2x in the rescore confirm() dialogs). No functional change. RETAINS v2.1.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -356,7 +356,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% if e.override_theme_note %}<span class="ai-flag">(edited)</span>{% endif %}
               </div>
               <div class="edit-form" id="form-{{ e.id }}-theme_note">
-                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_theme_note or '—' }}</div>
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Engine original: {{ e.ai_theme_note or '—' }}</div>
                 <textarea class="edit-textarea" id="ta-{{ e.id }}-theme_note">{{ e.theme_note }}</textarea>
                 <div class="edit-actions">
                   <button class="save-btn" onclick="saveOverride({{ e.id }}, 'theme_note')">Save</button>
@@ -379,7 +379,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% if e.override_master_ref %}<span class="ai-flag">(edited)</span>{% endif %}
               </div>
               <div class="edit-form" id="form-{{ e.id }}-master_ref">
-                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_master_ref or '—' }}</div>
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Engine original: {{ e.ai_master_ref or '—' }}</div>
                 <textarea class="edit-textarea" id="ta-{{ e.id }}-master_ref">{{ e.master_ref }}</textarea>
                 <div class="edit-actions">
                   <button class="save-btn" onclick="saveOverride({{ e.id }}, 'master_ref')">Save</button>
@@ -402,7 +402,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 {% if e.override_gap_note %}<span class="ai-flag">(edited)</span>{% endif %}
               </div>
               <div class="edit-form" id="form-{{ e.id }}-gap_note">
-                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">AI original: {{ e.ai_gap_note or '—' }}</div>
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Engine original: {{ e.ai_gap_note or '—' }}</div>
                 <textarea class="edit-textarea" id="ta-{{ e.id }}-gap_note">{{ e.gap_note }}</textarea>
                 <div class="edit-actions">
                   <button class="save-btn" onclick="saveOverride({{ e.id }}, 'gap_note')">Save</button>
@@ -421,10 +421,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                 </button>
               </div>
               <div class="note-text" id="disp-{{ e.id }}-subject_id">
-                {{ e.subject_id or '(AI identified subject — click Correct if wrong)' }}
+                {{ e.subject_id or '(Engine-identified subject — click Correct if wrong)' }}
               </div>
               <div class="edit-form" id="form-{{ e.id }}-subject_id">
-                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Use this to correct AI misidentification of cultural or religious subjects (e.g. "Mushika, Ganesha's divine vehicle" not "Ganesha's clay face").</div>
+                <div style="font-size:11px;color:#AEAEA8;margin-bottom:4px">Use this to correct the engine's misidentification of cultural or religious subjects (e.g. "Mushika, Ganesha's divine vehicle" not "Ganesha's clay face").</div>
                 <textarea class="edit-textarea" id="ta-{{ e.id }}-subject_id" rows="2">{{ e.subject_id }}</textarea>
                 <div class="edit-actions">
                   <button class="save-btn" onclick="saveOverride({{ e.id }}, 'subject_id')">Save</button>
@@ -551,7 +551,7 @@ function esc(s) {
 async function rescoreEntry(id) {
   const btn = document.getElementById('rescore-btn-' + id);
   const status = document.getElementById('rescore-status-' + id);
-  if (!confirm('Rescore this entry with the current engine? This overwrites all AI scores.')) return;
+  if (!confirm('Rescore this entry with the current engine? This overwrites all engine evaluations.')) return;
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin 1s linear infinite;display:inline-block"></i> Scoring…';
   status.style.display = 'inline';
@@ -585,7 +585,7 @@ async function rescoreEntry(id) {
 // ── Bulk rescore all ──────────────────────────────────────────────────────────
 async function rescoreAll() {
   const total = {{ total }};
-  if (!confirm('Rescore all ' + total + ' entries with the current engine?\n\nThis overwrites all AI scores and runs in the background — takes ~15 seconds per image.\n\nDo not close this page until done.')) return;
+  if (!confirm('Rescore all ' + total + ' entries with the current engine?\n\nThis overwrites all engine evaluations and runs in the background — takes ~15 seconds per image.\n\nDo not close this page until done.')) return;
   const btn = document.getElementById('rescore-all-btn');
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin 1s linear infinite;display:inline-block"></i> Starting…';
