@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.12 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP button added to Haiku tab (visible after Haiku run). Links to admin_contest_judge_haiku_sonnet_scorecards route. RETAINS 2.11.) #}
+{# SL-VERSION: admin_contest_judge-2.14 (Session 234, 2026-10-02 -- CLEANUP: Haiku and Compare tabs removed from Open Call dashboard (D1/D2/D3 -- Open Call judging is Sonnet-only now, Haiku retired for this feature; Haiku free-tier member evaluations elsewhere on the platform are untouched). Page is Sonnet-only, no tab bar. Removed: Haiku tab, Compare tab, Run Haiku / Haiku CSV / Haiku+Sonnet Scorecards buttons, batch selector "Haiku check" indicator, and the JS that drove them. BUGFIX (pre-existing, found while chasing the "Unexpected token '{'" console error): the "Delete call" button built its onclick from {{ batch_ref|tojson }} inside a double-quoted HTML attribute -- any batch name with an apostrophe (e.g. "Founder's Picks") produced malformed HTML because tojson's own quotes collided with the attribute's quotes. Fixed by passing the value through a data-batch-ref attribute instead and reading it in JS via this.dataset.batchRef. RETAINS 2.12 for the Sonnet tab content.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,12 +27,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 .btn-del:hover{background:#FEE2E2}
 .batch-empty{font-size:16px;color:#6B6B68;padding:40px 0;text-align:center}
 
-/* -- TABS -- */
-.tabs{display:flex;gap:0;border-bottom:2px solid #E0DDD6;margin-bottom:20px}
-.tab{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;font:500 16px 'Inter',sans-serif;color:#6B6B68;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s}
-.tab:hover{color:#1A1A18}
-.tab.active{color:#1A1A18;border-bottom-color:#C8A84B;font-weight:600}
-.tab.locked{opacity:.45;cursor:not-allowed}
+/* -- PANEL (single Sonnet panel, Session 234 -- tab bar removed) -- */
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
@@ -87,93 +82,18 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .no-entries{text-align:center;padding:48px 0;color:#6B6B68;font-size:16px}
 .note-text{font-size:15px;color:#6B6B68;max-width:280px;line-height:1.4}
 
-/* -- HAIKU ENTRIES -- */
-.entry{background:#fff;border:1px solid #E0DDD6;border-radius:12px;padding:16px;margin-bottom:14px}
-.e-top{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center}
-.e-thumb{width:96px;height:96px;border-radius:8px;object-fit:cover;background:#EEE}
-.e-name{font-size:19px;font-weight:600}
-.e-title{font-size:15px;color:#6B6B68}
-.e-stand{font-size:15px;color:#3A3A38;margin-top:4px}
-.e-overall{text-align:right}
-.e-overall .lbl{font-size:15px;color:#6B6B68;text-transform:uppercase;letter-spacing:.05em}
-.e-overall .vals{font-size:18px;white-space:nowrap}
-.e-overall .diff{font-size:24px;font-weight:600}
-.dims{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
-.dim{background:#FAF8F4;border-radius:8px;padding:10px 8px;text-align:center}
-.dim .n{font-size:15px;color:#6B6B68;line-height:1.3;min-height:44px}
-.dim .sv{font-size:15px;color:#3A3A38}
-.dim .d{font-size:19px;font-weight:600;margin-top:2px}
-details{margin-top:14px;border-top:1px solid #F0EDE6;padding-top:6px}
-summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:500;color:#1A2744}
-.narr{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
-.narr h4{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#92400E;margin:12px 0 4px}
-.narr p{font-size:16px;line-height:1.65}
-.narr .col-h{font-size:15px;font-weight:600;padding:6px 10px;border-radius:6px;background:#F3E8FF;color:#6B21A8;display:inline-block}
-.score-read-note{font-size:15px;line-height:1.6;color:#78350F;font-style:italic;background:#FEF3C7;border-left:3px solid #D97706;padding:8px 12px;border-radius:0 4px 4px 0;margin:6px 0 14px}
-.narr .col-s{background:#E8EEF8;color:#1A2744}
-/* Haiku inline edit */
-.btn-edit-haiku{background:none;border:none;cursor:pointer;color:#9333EA;padding:2px 4px;border-radius:4px;font-size:14px;line-height:1;vertical-align:middle;margin-left:4px;opacity:.7;transition:opacity .15s}
-.btn-edit-haiku:hover{opacity:1;background:#F3E8FF}
-.btn-edit-haiku.inline-edit{font-size:13px}
-.haiku-field-wrap .haiku-field-edit{margin-top:6px}
-.haiku-edit-ta{width:100%;box-sizing:border-box;font-size:15px;line-height:1.6;border:1.5px solid #9333EA;border-radius:6px;padding:8px 10px;resize:vertical;font-family:inherit}
-.haiku-edit-actions{display:flex;gap:8px;margin-top:6px;align-items:center}
-.btn-save-hf{min-height:44px;padding:0 18px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;font-weight:600}
-.btn-save-hf:hover{background:#6D28D9}
-.btn-cancel-hf{min-height:44px;padding:0 14px;background:none;color:#6B7280;border:1px solid #D1D5DB;border-radius:6px;font-size:15px;cursor:pointer}
-
-/* -- MASTER REF + JUDGE NOTES -- */
-.e-master{font-size:15px;color:#6B6B68;margin-top:6px;padding:7px 10px;background:#FFFBEB;border-left:3px solid #C8A84B;border-radius:0 6px 6px 0;line-height:1.5}
-.e-master strong{color:#92400E}
-.judge-note-box{margin-top:14px;border-top:1px solid #F0EDE6;padding-top:14px}
-.judge-note-box label{display:block;font-size:15px;font-weight:600;color:#3A3A38;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
-.judge-note-ta{width:100%;min-height:88px;font:16px/1.55 'Inter',sans-serif;padding:10px 12px;border:1px solid #CFCBC2;border-radius:8px;background:#FAFAF8;resize:vertical;color:#1A1A18}
-.judge-note-ta:focus{outline:none;border-color:#C8A84B;background:#fff}
-.btn-save-note{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 22px;border-radius:8px;border:none;font:600 16px 'Inter',sans-serif;background:#1A1A18;color:#fff;cursor:pointer;margin-top:10px}
-.btn-save-note:hover{background:#333}
-.btn-save-note:disabled{background:#8A8A86;cursor:wait}
-
-/* -- COMPARE STATS -- */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E0DDD6;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden;margin-bottom:16px}
-.stat{background:#fff;padding:16px}
-.stat-l{font-size:15px;color:#6B6B68;margin-bottom:6px}
-.stat-n{font-size:26px;font-weight:600;line-height:1.15}
-.stat-d{font-size:15px;color:#6B6B68;margin-top:4px}
-table.dimt{width:100%;border-collapse:collapse;font-size:16px}
-.dimt th{text-align:left;font-size:15px;color:#6B6B68;font-weight:600;padding:8px 10px;border-bottom:1px solid #E0DDD6}
-.dimt td{padding:10px;border-bottom:1px solid #F0EDE6}
-
 /* -- COLOUR TONES -- */
 .pos{color:#1E6B34}.mid{color:#A15C07}.neg{color:#B91C1C}.muted{color:#8A8A86}
-.pill{font-size:15px;padding:4px 10px;border-radius:99px;background:#F3E8FF;color:#6B21A8;white-space:nowrap}
-
-/* -- LOCKED OVERLAY -- */
-.locked-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:64px 0;color:#6B6B68;text-align:center}
-.locked-msg i{font-size:40px;color:#CFCBC2}
-.locked-msg p{font-size:16px;max-width:380px;line-height:1.6}
 
 /* -- GUIDE -- */
 .guide{background:#FFFBEB;border:1px solid #FDE68A;border-left:4px solid #C8A84B;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:18px;font-size:16px;line-height:1.65}
 .guide strong{color:#92400E}
 
-/* -- SORT BAR -- */
-.sortbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 14px}
-.sortbar span{font-size:15px;color:#6B6B68}
-
 /* -- RESPONSIVE -- */
 @media(max-width:900px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .dims{grid-template-columns:repeat(3,1fr)}
-  .narr{grid-template-columns:1fr}
   .upload-cfg{grid-template-columns:1fr 1fr}
 }
 @media(max-width:600px){
-  .tabs{overflow-x:auto;gap:0}
-  .tab{padding:0 14px;font-size:15px}
-  .e-top{grid-template-columns:72px 1fr}
-  .e-thumb{width:72px;height:72px}
-  .e-overall{grid-column:1/-1;text-align:left;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
-  .dims{grid-template-columns:repeat(2,1fr)}
   .btn{width:100%}
   .upload-cfg{grid-template-columns:1fr}
   .batch-bar{flex-direction:column;align-items:stretch}
@@ -192,13 +112,13 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
       <option value="">— choose an open call —</option>
       {% for b in batches %}
       <option value="{{ b.batch_ref }}"{% if b.batch_ref == batch_ref %} selected{% endif %}>
-        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %}{% if b.haiku_run %} · Haiku ✓{% endif %})
+        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %})
       </option>
       {% endfor %}
     </select>
     {% if batch_ref %}
     <span class="batch-meta">{{ batch_meta.n }} entries</span>
-    <button class="btn-del" onclick="deleteBatch({{ batch_ref|tojson }})">
+    <button class="btn-del" data-batch-ref="{{ batch_ref }}" onclick="deleteBatch(this.dataset.batchRef)">
       <i class="ti ti-trash"></i> Delete call
     </button>
     {% endif %}
@@ -239,25 +159,11 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
   </div>
 
   {% else %}
-  {# -- TABS -- #}
-  <div class="tabs">
-    <button class="tab{% if active_tab == 'sonnet' %} active{% endif %}" id="tabSonnet" onclick="showTab('sonnet')">
-      <i class="ti ti-brain"></i> Sonnet
-    </button>
-    <button class="tab{% if active_tab == 'haiku' %} active{% endif %}" id="tabHaiku" onclick="showTab('haiku')">
-      <i class="ti ti-feather"></i> Haiku
-    </button>
-    <button class="tab{% if active_tab == 'compare' %} active{% endif %}{% if not compare_unlocked %} locked{% endif %}"
-            id="tabCompare"
-            onclick="{% if compare_unlocked %}showTab('compare'){% else %}alert('Run both Sonnet and Haiku first to unlock the Compare tab.'){% endif %}">
-      <i class="ti ti-scale"></i> Compare{% if not compare_unlocked %} <i class="ti ti-lock" style="font-size:15px"></i>{% endif %}
-    </button>
-  </div>
 
   {# ══════════════════════════════════════════════
-     TAB 1 — SONNET
+     SONNET — Open Call judging (Session 234: the only engine)
   ══════════════════════════════════════════════ #}
-  <div class="tab-panel{% if active_tab == 'sonnet' %} active{% endif %}" id="panelSonnet">
+  <div class="tab-panel active" id="panelSonnet">
 
     <div class="card">
       <div class="card-title"><i class="ti ti-upload"></i> Add more images to this call</div>
@@ -355,315 +261,6 @@ table.dimt{width:100%;border-collapse:collapse;font-size:16px}
       </table>
     </div>
   </div>
-
-  {# ══════════════════════════════════════════════
-     TAB 2 — HAIKU
-  ══════════════════════════════════════════════ #}
-  <div class="tab-panel{% if active_tab == 'haiku' %} active{% endif %}" id="panelHaiku">
-
-    <div class="guide">
-      <strong>Independent Haiku evaluation.</strong> Haiku scores every entry using the same open call rubric as Sonnet, plus a longer written reading.
-      Sonnet's evaluations, notes and standings are <strong>never changed</strong> — this is always a separate, independent run.
-    </div>
-
-    <div class="card">
-      <div class="run-row">
-        <button class="btn btn-gold" id="haikuRunBtn" onclick="runHaiku()">
-          <i class="ti ti-player-play"></i>
-          {% if haiku_summary %}Run Haiku again ({{ haiku_entries|length }} entries){% else %}Run Haiku on all {{ haiku_entries|length }} entries{% endif %}
-        </button>
-        {% if haiku_summary and haiku_summary.n > 0 %}
-        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_only_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-download"></i> Haiku-only CSV
-        </a>
-        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_sonnet_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-file-zip"></i> Haiku+Sonnet Scorecards
-        </a>
-        {% endif %}
-        <span class="run-note">Takes 3–5 minutes. Keep this page open.</span>
-      </div>
-      <div class="prog" id="haikuProg">
-        <div class="prog-track"><div class="prog-fill" id="haikuProgFill"></div></div>
-        <div class="prog-text" id="haikuProgText">Starting…</div>
-      </div>
-      <div class="msg" id="haikuMsg"></div>
-    </div>
-
-    {% macro sgn(v, dp=1) -%}
-      {%- if v is none -%}—{%- elif v > 0 -%}+{{ ('%.' ~ dp ~ 'f')|format(v) }}{%- elif v < 0 -%}−{{ ('%.' ~ dp ~ 'f')|format(-v) }}{%- else -%}0.{{ '0'*dp }}{%- endif -%}
-    {%- endmacro %}
-    {% macro fmt(v) -%}{%- if v is none -%}—{%- else -%}{{ '%.1f'|format(v) }}{%- endif -%}{%- endmacro %}
-
-    <div class="sortbar" id="haikuSortbar" {% if not haiku_summary %}style="display:none"{% endif %}>
-      <span>Order by:</span>
-      <button class="btn btn-line on" id="haikuSortS" onclick="haikuSort('s')">Haiku standing</button>
-      <button class="btn btn-line" id="haikuSortD" onclick="haikuSort('score')">Highest score</button>
-    </div>
-
-    <div id="haikuEntries">
-    {% for e in haiku_entries %}
-      <div class="entry" data-s="{{ loop.index }}" data-score="{{ e.haiku_c or 0 }}">
-        <div class="e-top">
-          {% if e.thumb %}<img class="e-thumb" src="{{ e.thumb }}" alt="" loading="lazy">{% else %}<div class="e-thumb"></div>{% endif %}
-          <div>
-            <div class="e-name">{{ e.photographer }}</div>
-            {% if e.title %}<div class="e-title">{{ e.title }}</div>{% endif %}
-            <div class="e-stand">
-              {% if e.haiku_c is not none %}
-                Haiku standing <strong>{{ loop.index }}</strong> · Score <strong>{{ '%.2f'|format(e.haiku_c) }}</strong>
-              {% else %}
-                <span class="muted">Not yet evaluated</span>
-              {% endif %}
-            </div>
-            {% if e.master_ref %}
-            <div class="e-master"><strong>Master ref:</strong> {{ e.master_ref }}</div>
-            {% endif %}
-          </div>
-          {% if e.haiku_c is not none %}
-          <div class="e-overall">
-            <div class="lbl">Haiku score</div>
-            <div class="diff">{{ '%.2f'|format(e.haiku_c) }}</div>
-          </div>
-          {% endif %}
-        </div>
-
-        {% if e.h %}
-        <div class="dims">
-          {% for d in e.dims %}
-          <div class="dim">
-            <div class="n">{{ d.label }}</div>
-            <div class="sv">{{ fmt(d.haiku) }}</div>
-          </div>
-          {% endfor %}
-        </div>
-        <details>
-          <summary><i class="ti ti-file-text" style="margin-right:8px"></i> Read Haiku's written evaluation</summary>
-          <div class="narr" style="grid-template-columns:1fr">
-            <div>
-              <span class="col-h">Haiku</span>
-              {% if e.h.impression %}
-              <h4>Reading <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'impression',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
-              <div class="haiku-field-wrap" id="hf-impression-{{ e.id }}">
-                <p class="haiku-field-display">{{ e.h.impression }}</p>
-                <div class="haiku-field-edit" hidden>
-                  <textarea class="haiku-edit-ta" rows="4">{{ e.h.impression }}</textarea>
-                  <div class="haiku-edit-actions">
-                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'impression',this)"><i class="ti ti-device-floppy"></i> Save</button>
-                    <button class="btn-cancel-hf" onclick="cancelHaikuField('impression',{{ e.id }})">Cancel</button>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-              {% if e.h.score_read %}
-              <div class="haiku-field-wrap" id="hf-score_read-{{ e.id }}">
-                <p class="score-read-note haiku-field-display">{{ e.h.score_read }} <button class="btn-edit-haiku inline-edit" onclick="editHaikuField({{ e.id }},'score_read',this)" title="Edit"><i class="ti ti-pencil"></i></button></p>
-                <div class="haiku-field-edit" hidden>
-                  <textarea class="haiku-edit-ta" rows="3">{{ e.h.score_read }}</textarea>
-                  <div class="haiku-edit-actions">
-                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'score_read',this)"><i class="ti ti-device-floppy"></i> Save</button>
-                    <button class="btn-cancel-hf" onclick="cancelHaikuField('score_read',{{ e.id }})">Cancel</button>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-              {% set _mr_raw = e.h.master_ref if e.h.master_ref else e.master_ref %}
-              {% if _mr_raw %}
-              <h4>Master Reference <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'master_ref',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
-              <div class="haiku-field-wrap" id="hf-master_ref-{{ e.id }}">
-                <p class="haiku-field-display">{% if '(http' in _mr_raw %}{% set _parts = _mr_raw.split('(http') %}{% set _name = _parts[0].strip() %}{% set _url = ('http' + _parts[1])|replace(')', '')|trim %}{{ _name }} — <a href="{{ _url }}" target="_blank" rel="noopener">See their work</a>{% else %}{{ _mr_raw }}{% endif %}</p>
-                <div class="haiku-field-edit" hidden>
-                  <textarea class="haiku-edit-ta" rows="3">{{ _mr_raw }}</textarea>
-                  <div class="haiku-edit-actions">
-                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'master_ref',this)"><i class="ti ti-device-floppy"></i> Save</button>
-                    <button class="btn-cancel-hf" onclick="cancelHaikuField('master_ref',{{ e.id }})">Cancel</button>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-              {% if e.h.strength %}
-              <h4>Strength <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'strength',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
-              <div class="haiku-field-wrap" id="hf-strength-{{ e.id }}">
-                <p class="haiku-field-display">{{ e.h.strength }}</p>
-                <div class="haiku-field-edit" hidden>
-                  <textarea class="haiku-edit-ta" rows="2">{{ e.h.strength }}</textarea>
-                  <div class="haiku-edit-actions">
-                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'strength',this)"><i class="ti ti-device-floppy"></i> Save</button>
-                    <button class="btn-cancel-hf" onclick="cancelHaikuField('strength',{{ e.id }})">Cancel</button>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-              {% if e.h.next_leap %}
-              <h4>Next Leap <button class="btn-edit-haiku" onclick="editHaikuField({{ e.id }},'next_leap',this)" title="Edit"><i class="ti ti-pencil"></i></button></h4>
-              <div class="haiku-field-wrap" id="hf-next_leap-{{ e.id }}">
-                <p class="haiku-field-display">{{ e.h.next_leap }}</p>
-                <div class="haiku-field-edit" hidden>
-                  <textarea class="haiku-edit-ta" rows="2">{{ e.h.next_leap }}</textarea>
-                  <div class="haiku-edit-actions">
-                    <button class="btn-save-hf" onclick="saveHaikuField({{ e.id }},'next_leap',this)"><i class="ti ti-device-floppy"></i> Save</button>
-                    <button class="btn-cancel-hf" onclick="cancelHaikuField('next_leap',{{ e.id }})">Cancel</button>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-        </details>
-        {% endif %}
-
-        <div class="judge-note-box">
-          <label for="hnote-{{ e.id }}">Judge Notes (private)</label>
-          <textarea class="judge-note-ta" id="hnote-{{ e.id }}" rows="3" placeholder="Your notes on this entry — not shown to photographer">{{ e.judge_note }}</textarea>
-          <button class="btn-save-note" onclick="saveHaikuNote({{ e.id }}, this)"><i class="ti ti-device-floppy"></i> Save note</button>
-        </div>
-
-      </div>
-    {% else %}
-      <div class="no-entries">No Haiku evaluations yet. Hit Run Haiku above.</div>
-    {% endfor %}
-    </div>
-  </div>
-
-  {# ══════════════════════════════════════════════
-     TAB 3 — COMPARE
-  ══════════════════════════════════════════════ #}
-  <div class="tab-panel{% if active_tab == 'compare' %} active{% endif %}" id="panelCompare">
-
-    {% if not compare_unlocked %}
-    <div class="locked-msg">
-      <i class="ti ti-lock"></i>
-      <p>Run both Sonnet and Haiku on this open call to unlock the Compare tab.</p>
-    </div>
-    {% else %}
-
-    <div class="guide">
-      <strong>Calibration view.</strong> How closely do Sonnet and Haiku agree?
-      <strong>Plus / minus</strong> = Haiku minus Sonnet. <span class="pos">Green</span> within 0.3 · <span class="mid">Amber</span> within 0.6 · <span class="neg">Red</span> more than 0.6 apart.
-    </div>
-
-    <div class="card">
-      <div class="run-row">
-        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-download"></i> Comparison CSV
-        </a>
-        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_haiku_only_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-download"></i> Haiku-only CSV
-        </a>
-      </div>
-    </div>
-
-    {% if compare_summary %}
-    {% macro tone(v) -%}
-      {%- if v is none -%}muted{%- elif (v if v >= 0 else -v) <= 0.3 -%}pos{%- elif (v if v >= 0 else -v) <= 0.6 -%}mid{%- else -%}neg{%- endif -%}
-    {%- endmacro %}
-    {% macro csgn(v, dp=1) -%}
-      {%- if v is none -%}—{%- elif v > 0 -%}+{{ ('%.' ~ dp ~ 'f')|format(v) }}{%- elif v < 0 -%}−{{ ('%.' ~ dp ~ 'f')|format(-v) }}{%- else -%}0.{{ '0'*dp }}{%- endif -%}
-    {%- endmacro %}
-    {% macro cfmt(v) -%}{%- if v is none -%}—{%- else -%}{{ '%.1f'|format(v) }}{%- endif -%}{%- endmacro %}
-
-    <div class="stats">
-      <div class="stat"><div class="stat-l">Entries compared</div><div class="stat-n">{{ compare_summary.n }} of {{ compare_summary.total }}</div></div>
-      <div class="stat">
-        <div class="stat-l">Average gap, overall</div>
-        <div class="stat-n {{ tone(compare_summary.mad) }}">± {{ '%.2f'|format(compare_summary.mad) }}</div>
-        <div class="stat-d">Largest: {{ csgn(compare_summary.max, 2) }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l">Haiku leans</div>
-        <div class="stat-n">{% if compare_summary.bias > 0.05 %}Higher{% elif compare_summary.bias < -0.05 %}Lower{% else %}Level{% endif %}</div>
-        <div class="stat-d">by {{ csgn(compare_summary.bias, 2) }} on average</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l">Rank agreement</div>
-        <div class="stat-n">{% if compare_summary.rho is none %}—{% elif compare_summary.rho >= 0.9 %}Very close{% elif compare_summary.rho >= 0.75 %}Close{% elif compare_summary.rho >= 0.5 %}Loose{% else %}Different{% endif %}</div>
-        <div class="stat-d">Spearman ρ = {{ compare_summary.rho if compare_summary.rho is not none else '—' }}</div>
-      </div>
-      <div class="stat"><div class="stat-l">Top 10 in both</div><div class="stat-n">{{ compare_summary.top10_overlap }} of {{ compare_summary.top10_size }}</div></div>
-      <div class="stat"><div class="stat-l">Within 0.1 of Sonnet</div><div class="stat-n">{{ compare_summary.within_01 }}</div><div class="stat-d">entries</div></div>
-      <div class="stat"><div class="stat-l">Within 0.3 of Sonnet</div><div class="stat-n">{{ compare_summary.within_03 }}</div><div class="stat-d">entries</div></div>
-      <div class="stat"><div class="stat-l">Not yet compared</div><div class="stat-n">{{ compare_summary.total - compare_summary.n }}</div><div class="stat-d">entries</div></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-chart-bar"></i> Dimension by dimension</div>
-      <table class="dimt">
-        <tr><th>Dimension</th><th>Average gap</th><th>Haiku leans</th></tr>
-        {% for d in compare_summary.per_dim %}
-        <tr>
-          <td>{{ d.label }}</td>
-          <td class="{{ tone(d.mad) }}">{% if d.mad is none %}—{% else %}± {{ '%.2f'|format(d.mad) }}{% endif %}</td>
-          <td>{% if d.bias is none %}—{% elif d.bias > 0.05 %}Higher {{ csgn(d.bias, 2) }}{% elif d.bias < -0.05 %}Lower {{ csgn(d.bias, 2) }}{% else %}Level{% endif %}</td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-    {% endif %}
-
-    <div class="sortbar">
-      <span>Order by:</span>
-      <button class="btn btn-line on" id="cmpSortS" onclick="cmpSort('s')">Sonnet standing</button>
-      <button class="btn btn-line" id="cmpSortD" onclick="cmpSort('d')">Biggest difference</button>
-    </div>
-
-    <div id="cmpEntries">
-    {% for e in compare_entries %}
-      <div class="entry" data-s="{{ e.sonnet_standing }}" data-d="{{ (e.cdiff if e.cdiff is not none and e.cdiff >= 0 else (-(e.cdiff) if e.cdiff is not none else -1)) }}">
-        <div class="e-top">
-          {% if e.thumb %}<img class="e-thumb" src="{{ e.thumb }}" alt="" loading="lazy">{% else %}<div class="e-thumb"></div>{% endif %}
-          <div>
-            <div class="e-name">{{ e.photographer }}</div>
-            {% if e.title %}<div class="e-title">{{ e.title }}</div>{% endif %}
-            <div class="e-stand">
-              Sonnet <strong>{{ e.sonnet_standing }}</strong>
-              {% if e.haiku_standing %} · Haiku <strong>{{ e.haiku_standing }}</strong>
-                {% if e.standing_move > 0 %}<span class="pos">(up {{ e.standing_move }})</span>{% elif e.standing_move < 0 %}<span class="neg">(down {{ -e.standing_move }})</span>{% else %}<span class="muted">(same)</span>{% endif %}
-              {% endif %}
-            </div>
-          </div>
-          <div class="e-overall">
-            <div class="lbl">Overall</div>
-            <div class="vals">{{ '%.2f'|format(e.sonnet_c) if e.sonnet_c is not none else '—' }} → {{ '%.2f'|format(e.haiku_c) if e.haiku_c is not none else '—' }}</div>
-            <div class="diff {{ tone(e.cdiff) }}">{{ csgn(e.cdiff, 2) }}</div>
-          </div>
-        </div>
-
-        <div class="dims">
-          {% for d in e.dims %}
-          <div class="dim">
-            <div class="n">{{ d.label }}</div>
-            <div class="sv">{{ cfmt(d.sonnet) }} → {{ cfmt(d.haiku) }}</div>
-            <div class="d {{ tone(d.diff) }}">{{ csgn(d.diff) }}</div>
-          </div>
-          {% endfor %}
-        </div>
-
-        {% if e.h %}
-        <details>
-          <summary><i class="ti ti-file-text" style="margin-right:8px"></i> Read Haiku beside Sonnet</summary>
-          <div class="narr">
-            <div>
-              <span class="col-h">Haiku</span>
-              {% if e.h.impression %}<h4>First impression</h4><p>{{ e.h.impression }}</p>{% endif %}
-              {% for d in e.dims %}{% if d.obs %}<h4>{{ d.label }} · {{ cfmt(d.haiku) }}</h4><p>{{ d.obs }}</p>{% endif %}{% endfor %}
-              {% if e.h.strength %}<h4>Strength</h4><p>{{ e.h.strength }}</p>{% endif %}
-              {% if e.h.next_leap %}<h4>Next leap</h4><p>{{ e.h.next_leap }}</p>{% endif %}
-            </div>
-            <div>
-              <span class="col-h col-s">Sonnet</span>
-              <h4>Theme note</h4><p>{{ e.s_theme_note or '—' }}</p>
-              <h4>Master reference</h4><p>{{ e.s_master_ref or '—' }}</p>
-              <h4>Gap</h4><p>{{ e.s_gap_note or '—' }}</p>
-            </div>
-          </div>
-        </details>
-        {% endif %}
-      </div>
-    {% endfor %}
-    </div>
-
-    {% endif %}{# compare_unlocked #}
-  </div>
-
   {% endif %}{# batch_ref #}
 </div>
 
@@ -674,14 +271,8 @@ var URL_UPLOAD      = {{ url_for('admin_contest_judge_upload')|tojson }};
 var URL_RESCORE     = {{ url_for('admin_contest_judge_bulk_rescore', batch_ref=batch_ref or '_')|tojson }};
 var URL_STATUS      = {{ url_for('admin_contest_judge_bulk_rescore_status', job_id='JOBID')|tojson }};
 var URL_DELETE      = {{ url_for('admin_contest_judge_delete_batch', batch_ref=batch_ref or '_')|tojson }};
-var URL_HAIKU_EDIT  = {{ url_for('admin_contest_judge_haiku_edit', entry_id=0)|tojson }};
 var BATCH_REF       = {{ batch_ref|tojson if batch_ref else 'null' }};
 var BATCH_N         = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
-{% if batch_ref %}
-var URL_HAIKU_RUN   = {{ url_for('admin_contest_judge_haiku_run', batch_ref=batch_ref)|tojson }};
-{% else %}
-var URL_HAIKU_RUN   = '';
-{% endif %}
 </script>
 {% raw %}
 <script>
@@ -696,15 +287,6 @@ function deleteBatch(ref){
     .then(function(r){ return r.json(); })
     .then(function(){ window.location = URL_BASE; })
     .catch(function(){ alert('Delete failed. Please try again.'); });
-}
-
-/* -- TABS -- */
-function showTab(t){
-  ['sonnet','haiku','compare'].forEach(function(k){
-    document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active', k===t);
-    document.getElementById('panel'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active', k===t);
-  });
-  history.replaceState(null,'','?batch='+encodeURIComponent(BATCH_REF||'')+'&tab='+t);
 }
 
 /* -- DRAG + DROP HELPERS -- */
@@ -747,7 +329,7 @@ function _doUpload(files, batchRef, theme, thresh, logId, msgId){
         (d.errors||[]).forEach(function(r){ html+='<p class="err">✗ '+(r.filename||r)+'</p>'; });
         log.innerHTML=html||'<p class="ok">Done.</p>';
       }
-      if(d.batch_ref) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(d.batch_ref)+'&tab=sonnet'; },1200);
+      if(d.batch_ref) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(d.batch_ref); },1200);
     })
     .catch(function(){ if(log) log.innerHTML='<p class="err">Upload failed. Please try again.</p>'; });
 }
@@ -776,145 +358,6 @@ function pollRescore(id,btn){
     }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
 }
 
-/* -- RUN HAIKU -- */
-function runHaiku(){
-  if(!URL_HAIKU_RUN){ alert('No open call selected.'); return; }
-  if(!confirm('Run Haiku on every entry in this open call?\n\nSonnet evaluations and standings will not change.')) return;
-  var btn=document.getElementById('haikuRunBtn'); btn.disabled=true;
-  document.getElementById('haikuProg').style.display='block';
-  fetch(URL_HAIKU_RUN,{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({}),credentials:'same-origin'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(!d.job_id){ btn.disabled=false; document.getElementById('haikuMsg').className='msg err'; document.getElementById('haikuMsg').textContent=d.error||'Could not start.'; document.getElementById('haikuMsg').style.display='block'; return; }
-      pollHaiku(d.job_id);
-    })
-    .catch(function(){ btn.disabled=false; });
-}
-function pollHaiku(id){
-  fetch(URL_STATUS.replace('JOBID',id),{credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(p){
-    if(p.total){
-      document.getElementById('haikuProgFill').style.width=Math.round(100*p.done/p.total)+'%';
-      document.getElementById('haikuProgText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' errors':'');
-    }
-    if(p.finished){ document.getElementById('haikuProgText').textContent+=' - done. Reloading...'; setTimeout(function(){ location.reload(); },1200); }
-    else setTimeout(function(){ pollHaiku(id); },3000);
-  }).catch(function(){ setTimeout(function(){ pollHaiku(id); },5000); });
-}
-
-/* -- SORT: HAIKU TAB -- */
-function haikuSort(k){
-  var box=document.getElementById('haikuEntries');
-  var items=[].slice.call(box.querySelectorAll('.entry'));
-  items.sort(function(a,b){ return k==='s'?(+a.dataset.s)-(+b.dataset.s):(+b.dataset.score)-(+a.dataset.score); });
-  items.forEach(function(it){ box.appendChild(it); });
-  document.getElementById('haikuSortS').classList.toggle('on',k==='s');
-  document.getElementById('haikuSortD').classList.toggle('on',k==='score');
-}
-
-/* -- SORT: COMPARE TAB -- */
-function cmpSort(k){
-  var box=document.getElementById('cmpEntries');
-  if(!box) return;
-  var items=[].slice.call(box.querySelectorAll('.entry'));
-  items.sort(function(a,b){ return k==='s'?(+a.dataset.s)-(+b.dataset.s):(+b.dataset.d)-(+a.dataset.d); });
-  items.forEach(function(it){ box.appendChild(it); });
-  document.getElementById('cmpSortS').classList.toggle('on',k==='s');
-  document.getElementById('cmpSortD').classList.toggle('on',k==='d');
-}
-
-/* -- HAIKU JUDGE NOTE SAVE -- */
-function saveHaikuNote(entryId, btn){
-  var ta = document.getElementById('hnote-' + entryId);
-  if(!ta) return;
-  var note = ta.value;
-  var url = URL_HAIKU_EDIT.replace('/0', '/' + entryId);
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-  fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-    credentials: 'same-origin',
-    body: JSON.stringify({note: note})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d.ok){
-      btn.textContent = 'Saved';
-      setTimeout(function(){ btn.disabled=false; btn.textContent='Save note'; }, 2000);
-    } else {
-      btn.textContent = 'Error - retry';
-      btn.disabled = false;
-    }
-  })
-  .catch(function(){
-    btn.textContent = 'Error - retry';
-    btn.disabled = false;
-  });
-}
-
-/* -- HAIKU NARRATIVE FIELD INLINE EDIT -- */
-function editHaikuField(entryId, field, btn){
-  var wrap = document.getElementById('hf-' + field + '-' + entryId);
-  if(!wrap) return;
-  var disp = wrap.querySelector('.haiku-field-display');
-  var edit = wrap.querySelector('.haiku-field-edit');
-  if(!disp || !edit) return;
-  disp.hidden = true;
-  edit.hidden = false;
-  var ta = edit.querySelector('.haiku-edit-ta');
-  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
-}
-function cancelHaikuField(field, entryId){
-  var wrap = document.getElementById('hf-' + field + '-' + entryId);
-  if(!wrap) return;
-  var disp = wrap.querySelector('.haiku-field-display');
-  var edit = wrap.querySelector('.haiku-field-edit');
-  if(disp) disp.hidden = false;
-  if(edit) edit.hidden = true;
-}
-function saveHaikuField(entryId, field, btn){
-  var wrap = document.getElementById('hf-' + field + '-' + entryId);
-  if(!wrap) return;
-  var ta = wrap.querySelector('.haiku-edit-ta');
-  if(!ta) return;
-  var value = ta.value.trim();
-  var url = URL_HAIKU_EDIT.replace('/0', '/' + entryId);
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-  fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-    credentials: 'same-origin',
-    body: JSON.stringify({field: field, value: value})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d.ok){
-      var disp = wrap.querySelector('.haiku-field-display');
-      if(disp){ disp.textContent = value; }
-      cancelHaikuField(field, entryId);
-      btn.disabled = false;
-      btn.textContent = 'Save';
-    } else {
-      btn.textContent = 'Error - retry';
-      btn.disabled = false;
-    }
-  })
-  .catch(function(){
-    btn.textContent = 'Error - retry';
-    btn.disabled = false;
-  });
-}
-
-/* -- RESTORE TAB FROM URL -- */
-(function(){
-  var p=new URLSearchParams(window.location.search);
-  var t=p.get('tab');
-  if(t&&['sonnet','haiku','compare'].indexOf(t)>-1){
-    var el=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
-    if(el&&!el.classList.contains('locked')) showTab(t);
-  }
-})();
 </script>
 {% endraw %}
 </body>
