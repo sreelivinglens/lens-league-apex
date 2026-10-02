@@ -1,3 +1,4 @@
+# SL-VERSION: 182.57 (Session 235, 2026-10-02 -- FIX: _cj_resolve_master_ref() master-reference substitution. When the model's proposed photographer doesn't match the image genre and has to be swapped: (1) now picks randomly among the top 3 genre-matched candidates instead of always the same one (was: always candidates[0]), and (2) now builds the description from the substituted photographer's own known_for/reference_when DB columns instead of reusing the model's echo sentence, which was written to justify the REJECTED photographer and read as a mismatch once re-attached to the new name. No schema change, single function touched. RETAINS 182.56.)
 # SL-VERSION: 182.56 (Session 234, 2026-10-01 -- Open Call: Haiku retired (D1/D2/D3 decisions). _cj_sonnet_judge() now writes the full scorecard narrative (impression+strength, gap+next step, master reference) in the SAME Sonnet call used for scoring -- folded into the existing theme_note/gap_note/master_ref columns, zero schema or template change, one scorecard, numbers and words always from one engine. Master reference is now grounded against the master_references DB table via new _cj_resolve_master_ref()/_cj_master_candidates() -- never a freehand name, never a printed URL (scorecards are flattened JPGs with no clickable links; a fabricated link was the actual bug, not a missing one). Removed the silent 6.0/7.0 fallback for missing dimensions -- an incomplete engine response now returns an error and the entry is skipped, same as any other engine error, instead of being scored on invented numbers. admin_contest_judge_haiku_run and admin_contest_judge_haiku_sonnet_scorecards routes now return 410 with a clear message (old code kept in place, unreachable, rather than deleted). Cleaned up stale draft weight arithmetic in _cj_opencall_composite (P6) -- docstring now matches the weights actually used (27/19/18/15/13/8), matching Constitution Session 234. Footer middle-dot fix (P4) in the now-unreachable haiku-sonnet scorecard builder. NOT done in this pass: the admin template buttons for "Run Haiku" and "Haiku+Sonnet Scorecards" still need removing by hand -- this session does not have the template file. RETAINS 182.55.)
 # SL-VERSION: 182.55 (Session 232, 2026-10-01 -- FEATURE: Haiku+Sonnet Scorecards ZIP -- new route admin_contest_judge_haiku_sonnet_scorecards. Same Mock B card design, Sonnet scores authoritative, narrative from haiku_json (impression/master_ref/next_leap), Sonnet fallback if missing. Button on Haiku tab only. RETAINS 182.54.)
 # SL-VERSION: 182.54 (Session 231, 2026-10-01 — FEATURE: Haiku narrative inline edit — haiku_edit route extended to patch individual haiku_json fields (impression, score_read, master_ref, strength, next_leap). RETAINS 182.53.)
@@ -15449,24 +15450,49 @@ def _cj_resolve_master_ref(genre_detected, proposed_name, echo_sentence):
     """Ground the model's chosen master reference against master_references —
     never trust a freehand name or URL. Session 234 (replaces the separate
     Sonnet micro-call _validate_master_ref, which this makes unnecessary).
+    Session 235 fix: when the proposed name has to be substituted —
+    (a) pick randomly among the top genre-matched candidates instead of
+        always the same one (was: always candidates[0]), and
+    (b) build the description from the SUBSTITUTED candidate's own
+        known_for / reference_when columns instead of reusing the model's
+        echo sentence — that sentence was written to justify the REJECTED
+        photographer and reads as a mismatch once re-attached to a new name.
     Returns the final display string for the 'Master Reference' card field,
     or '' if no approved photographer for this genre could be found."""
     try:
         candidates = get_masters_for_genre(genre_detected or '', limit=8)
     except Exception:
         candidates = []
-    approved_name = None
+    approved = None
+    is_substitution = False
     if proposed_name:
         for c in candidates:
             if c['name'].strip().lower() == proposed_name.strip().lower():
-                approved_name = c['name']
+                approved = c
                 break
-    if not approved_name and candidates:
-        approved_name = candidates[0]['name']
+    if not approved and candidates:
+        import random as _mr_random
+        _top = candidates[:3] if len(candidates) >= 3 else candidates
+        approved = _mr_random.choice(_top)
+        is_substitution = True
         app.logger.info(f'[master_ref_resolve] proposed {proposed_name!r} not on approved list '
-                         f'for genre {genre_detected!r} — substituted {approved_name!r}')
-    if not approved_name:
+                         f'for genre {genre_detected!r} — substituted {approved["name"]!r} '
+                         f'(random pick among top {len(_top)} genre matches)')
+    if not approved:
         return ''
+    approved_name = approved['name']
+    if is_substitution:
+        # Never reuse the model's echo — it was written for a different,
+        # rejected photographer. Describe the substituted name from the
+        # database's own fields instead.
+        known_for = (approved.get('known_for') or '').strip()
+        reference_when = (approved.get('reference_when') or '').strip()
+        if known_for:
+            first_clause = known_for.rstrip('.').split('.')[0]
+            return f"{approved_name}'s work — {first_clause}."
+        if reference_when:
+            return f"{approved_name}'s work — referenced for {reference_when.rstrip('.').lower()}."
+        return f"{approved_name}'s work echoes this image."
     echo = (echo_sentence or '').strip()
     if echo:
         return f"{approved_name}'s work — {echo}"
