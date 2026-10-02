@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_review-2.4 (Session 235, 2026-10-02 — ADDED "Run DDI Test" and "DDI Test Results" buttons for the side-by-side test (new routes in app.py 182.62; scores in the main table are never changed). EARLIER v2.3 — ADDED: "Fix Pictures" button + file picker wired to the existing route /admin/contest-judge/reupload-thumbs/<batch>. Founder picks the original photos; they are re-uploaded to permanent storage and only the picture link changes. No scores are touched, no Sonnet calls. No app.py change. RETAINS v2.2.) #}
+{# SL-VERSION: admin_contest_review-2.5 (Session 235, 2026-10-02 — ADDED "Run Full DDI Test (12)" and "Full Test Results" buttons (app.py 182.63). EARLIER v2.4 — ADDED "Run DDI Test" and "DDI Test Results" buttons for the side-by-side test (new routes in app.py 182.62; scores in the main table are never changed). EARLIER v2.3 — ADDED: "Fix Pictures" button + file picker wired to the existing route /admin/contest-judge/reupload-thumbs/<batch>. Founder picks the original photos; they are re-uploaded to permanent storage and only the picture link changes. No scores are touched, no Sonnet calls. No app.py change. RETAINS v2.2.) #}
 {# SL-VERSION: admin_contest_review-2.2 (Session 234, 2026-10-02 — Rule 10 fix: replaced all 7 literal "AI" mentions with "Engine" (3x "AI original:" labels, the Subject/Cultural ID placeholder, the subject-ID help text, and 2x in the rescore confirm() dialogs). No functional change. RETAINS v2.1.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -220,6 +220,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       </button>
       <a href="/admin/contest-judge/ddi-compare-csv/{{ batch_ref|urlencode }}" class="btn btn-outline" style="border-color:#1A2744;color:#1A2744;font-size:16px;padding:12px 18px">
         <i class="ti ti-download"></i> DDI Test Results
+      </a>
+      <button class="btn btn-outline" id="ddi-full-btn" type="button" onclick="runDdiFull()" style="border-color:#1A2744;color:#1A2744;font-size:16px;padding:12px 18px">
+        <i class="ti ti-flask-2"></i> Run Full DDI Test (12)
+      </button>
+      <a href="/admin/contest-judge/ddi-full-csv/{{ batch_ref|urlencode }}" class="btn btn-outline" style="border-color:#1A2744;color:#1A2744;font-size:16px;padding:12px 18px">
+        <i class="ti ti-download"></i> Full Test Results
       </a>
       <input type="file" id="fix-pics-input" accept="image/*" multiple style="display:none" onchange="fixPictures(this)">
       <a href="/admin/contest-judge" class="btn btn-outline">
@@ -595,6 +601,29 @@ async function rescoreEntry(id) {
 }
 
 // ── Bulk rescore all ──────────────────────────────────────────────────────────
+async function runDdiFull() {
+  if (!confirm('Run the FULL DDI test on 12 chosen pictures?\n\nThis does NOT change any evaluation or standing. It saves the result separately. Two engine calls per picture, about 1 minute each. Keep this page open.')) return;
+  const msg = document.getElementById('fix-pics-msg');
+  const btn = document.getElementById('ddi-full-btn');
+  msg.style.display = 'block'; btn.disabled = true;
+  msg.textContent = 'Starting the full DDI test…';
+  let jobId;
+  try {
+    const resp = await fetch('/admin/contest-judge/ddi-full-run/{{ batch_ref|urlencode }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    const data = await resp.json();
+    if (data.error) { msg.textContent = 'Problem: ' + data.error; btn.disabled = false; return; }
+    jobId = data.job_id;
+  } catch (e) { msg.textContent = 'Connection problem: ' + e; btn.disabled = false; return; }
+  const timer = setInterval(async () => {
+    try {
+      const r = await fetch('/admin/contest-judge/bulk-rescore-status/' + jobId);
+      const p = await r.json();
+      msg.textContent = 'Full DDI test: ' + (p.done || 0) + ' of ' + (p.total || 12) + ' done' + (p.errors ? ' (' + p.errors + ' problems)' : '') + '.';
+      if (p.finished) { clearInterval(timer); btn.disabled = false; msg.textContent += ' Finished. Press "Full Test Results" to download.'; }
+    } catch (e) { /* keep waiting */ }
+  }, 5000);
+}
+
 async function runDdiTest() {
   const total = {{ total }};
   if (!confirm('Run the DDI side-by-side test on all ' + total + ' pictures?\n\nThis does NOT change any evaluation or standing. It saves the DDI result separately so you can compare. It uses one engine call per picture and takes about 15 seconds each. Keep this page open.')) return;
