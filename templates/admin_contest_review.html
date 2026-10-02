@@ -1,4 +1,4 @@
-{# SL-VERSION: admin_contest_review-2.5 (Session 235, 2026-10-02 — ADDED "Run Full DDI Test (12)" and "Full Test Results" buttons (app.py 182.63). EARLIER v2.4 — ADDED "Run DDI Test" and "DDI Test Results" buttons for the side-by-side test (new routes in app.py 182.62; scores in the main table are never changed). EARLIER v2.3 — ADDED: "Fix Pictures" button + file picker wired to the existing route /admin/contest-judge/reupload-thumbs/<batch>. Founder picks the original photos; they are re-uploaded to permanent storage and only the picture link changes. No scores are touched, no Sonnet calls. No app.py change. RETAINS v2.2.) #}
+{# SL-VERSION: admin_contest_review-2.6 (Session 235, 2026-10-02 — ADDED a large progress bar (with 'working' animation and a count) to the Run DDI Test and Run Full DDI Test buttons. Template only. EARLIER v2.5 — ADDED "Run Full DDI Test (12)" and "Full Test Results" buttons (app.py 182.63). EARLIER v2.4 — ADDED "Run DDI Test" and "DDI Test Results" buttons for the side-by-side test (new routes in app.py 182.62; scores in the main table are never changed). EARLIER v2.3 — ADDED: "Fix Pictures" button + file picker wired to the existing route /admin/contest-judge/reupload-thumbs/<batch>. Founder picks the original photos; they are re-uploaded to permanent storage and only the picture link changes. No scores are touched, no Sonnet calls. No app.py change. RETAINS v2.2.) #}
 {# SL-VERSION: admin_contest_review-2.2 (Session 234, 2026-10-02 — Rule 10 fix: replaced all 7 literal "AI" mentions with "Engine" (3x "AI original:" labels, the Subject/Cultural ID placeholder, the subject-ID help text, and 2x in the rescore confirm() dialogs). No functional change. RETAINS v2.1.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -232,7 +232,16 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <i class="ti ti-arrow-left"></i> Back
       </a>
     </div>
-    <div id="fix-pics-msg" style="display:none;font-size:18px;line-height:1.5;color:#1A2744;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:14px 18px;margin-bottom:20px"></div>
+    <div id="fix-pics-msg" style="display:none;font-size:18px;line-height:1.5;color:#1A2744;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:14px 18px;margin-bottom:20px">
+      <div id="fix-pics-text"></div>
+      <div id="test-bar-wrap" style="display:none;margin-top:12px">
+        <div style="height:26px;background:#E8E5DE;border-radius:13px;overflow:hidden">
+          <div id="test-bar" style="height:100%;width:0%;background:repeating-linear-gradient(45deg,#1A2744,#1A2744 14px,#2F4170 14px,#2F4170 28px);background-size:40px 40px;animation:barmove 1s linear infinite;border-radius:13px;transition:width .6s ease"></div>
+        </div>
+        <div id="test-bar-label" style="margin-top:6px;font-size:20px;font-weight:600"></div>
+      </div>
+    </div>
+    <style>@keyframes barmove{from{background-position:0 0}to{background-position:40px 0}}</style>
 
     <!-- Bulk rescore progress bar (hidden until triggered) -->
     <div id="bulk-rescore-bar" style="display:none;background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:16px 20px;margin-bottom:20px">
@@ -601,25 +610,37 @@ async function rescoreEntry(id) {
 }
 
 // ── Bulk rescore all ──────────────────────────────────────────────────────────
+let lastText = '';
+function setMsg(s) { lastText = s; const el = document.getElementById('fix-pics-text'); if (el) el.textContent = s; }
+function setBar(pct, label, finished) {
+  const w = document.getElementById('test-bar-wrap'), b = document.getElementById('test-bar'), l = document.getElementById('test-bar-label');
+  if (!w) return;
+  w.style.display = 'block';
+  b.style.width = Math.max(4, pct) + '%';
+  b.style.animation = finished ? 'none' : '';
+  b.style.background = finished ? '#2E7D4F' : '';
+  l.textContent = label;
+}
+
 async function runDdiFull() {
   if (!confirm('Run the FULL DDI test on 12 chosen pictures?\n\nThis does NOT change any evaluation or standing. It saves the result separately. Two engine calls per picture, about 1 minute each. Keep this page open.')) return;
   const msg = document.getElementById('fix-pics-msg');
   const btn = document.getElementById('ddi-full-btn');
   msg.style.display = 'block'; btn.disabled = true;
-  msg.textContent = 'Starting the full DDI test…';
+  setMsg('Starting the full DDI test…'); setBar(4, 'Working… please wait', false);
   let jobId;
   try {
     const resp = await fetch('/admin/contest-judge/ddi-full-run/{{ batch_ref|urlencode }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
     const data = await resp.json();
-    if (data.error) { msg.textContent = 'Problem: ' + data.error; btn.disabled = false; return; }
+    if (data.error) { setMsg('Problem: ' + data.error); btn.disabled = false; return; }
     jobId = data.job_id;
-  } catch (e) { msg.textContent = 'Connection problem: ' + e; btn.disabled = false; return; }
+  } catch (e) { setMsg('Connection problem: ' + e); btn.disabled = false; return; }
   const timer = setInterval(async () => {
     try {
       const r = await fetch('/admin/contest-judge/bulk-rescore-status/' + jobId);
       const p = await r.json();
-      msg.textContent = 'Full DDI test: ' + (p.done || 0) + ' of ' + (p.total || 12) + ' done' + (p.errors ? ' (' + p.errors + ' problems)' : '') + '.';
-      if (p.finished) { clearInterval(timer); btn.disabled = false; msg.textContent += ' Finished. Press "Full Test Results" to download.'; }
+      setMsg('Full DDI test: ' + (p.done || 0) + ' of ' + (p.total || 12) + ' done' + (p.errors ? ' (' + p.errors + ' problems)' : '') + '.'); setBar(Math.round(100 * (p.done || 0) / (p.total || 12)), (p.done || 0) + ' of ' + (p.total || 12) + ' done — working…', false);
+      if (p.finished) { clearInterval(timer); btn.disabled = false; setMsg(lastText + ' Finished. Press "Full Test Results" to download.'); setBar(100, 'Finished', true); }
     } catch (e) { /* keep waiting */ }
   }, 5000);
 }
@@ -630,20 +651,20 @@ async function runDdiTest() {
   const msg = document.getElementById('fix-pics-msg');
   const btn = document.getElementById('ddi-test-btn');
   msg.style.display = 'block'; btn.disabled = true;
-  msg.textContent = 'Starting the DDI test…';
+  setMsg('Starting the DDI test…'); setBar(4, 'Working… please wait', false);
   let jobId;
   try {
     const resp = await fetch('/admin/contest-judge/ddi-compare-run/{{ batch_ref|urlencode }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
     const data = await resp.json();
-    if (data.error) { msg.textContent = 'Problem: ' + data.error; btn.disabled = false; return; }
+    if (data.error) { setMsg('Problem: ' + data.error); btn.disabled = false; return; }
     jobId = data.job_id;
-  } catch (e) { msg.textContent = 'Connection problem: ' + e; btn.disabled = false; return; }
+  } catch (e) { setMsg('Connection problem: ' + e); btn.disabled = false; return; }
   const timer = setInterval(async () => {
     try {
       const r = await fetch('/admin/contest-judge/bulk-rescore-status/' + jobId);
       const p = await r.json();
-      msg.textContent = 'DDI test: ' + (p.done || 0) + ' of ' + (p.total || total) + ' done' + (p.errors ? ' (' + p.errors + ' problems)' : '') + '.';
-      if (p.finished) { clearInterval(timer); btn.disabled = false; msg.textContent += ' Finished. Press "DDI Test Results" to download.'; }
+      setMsg('DDI test: ' + (p.done || 0) + ' of ' + (p.total || total) + ' done' + (p.errors ? ' (' + p.errors + ' problems)' : '') + '.'); setBar(Math.round(100 * (p.done || 0) / (p.total || total)), (p.done || 0) + ' of ' + (p.total || total) + ' done — working…', false);
+      if (p.finished) { clearInterval(timer); btn.disabled = false; setMsg(lastText + ' Finished. Press "DDI Test Results" to download.'); setBar(100, 'Finished', true); }
     } catch (e) { /* keep waiting */ }
   }, 5000);
 }
@@ -654,7 +675,7 @@ async function fixPictures(inp) {
   const btn = document.getElementById('fix-pics-btn');
   if (!files.length) return;
   msg.style.display = 'block';
-  msg.textContent = 'Sending ' + files.length + ' pictures. Please keep this page open. Scores are not changed.';
+  setMsg('Sending ' + files.length + ' pictures. Please keep this page open. Scores are not changed.');
   btn.disabled = true;
   let updated = 0, skipped = [], errors = [];
   // send in small groups so a slow phone or iPad connection does not time out
@@ -667,14 +688,14 @@ async function fixPictures(inp) {
       if (data.error) { errors.push(data.error); }
       else { updated += data.updated || 0; skipped = skipped.concat(data.skipped || []); errors = errors.concat((data.errors || []).map(e => e.filename + ': ' + e.error)); }
     } catch (e) { errors.push('Connection problem: ' + e); }
-    msg.textContent = 'Done ' + Math.min(i + 5, files.length) + ' of ' + files.length + '…';
+    setMsg('Done ' + Math.min(i + 5, files.length) + ' of ' + files.length + '…');
   }
   btn.disabled = false;
   let out = 'Finished. ' + updated + ' pictures fixed.';
   if (skipped.length) out += ' ' + skipped.length + ' did not match any entry (file name must be the same as the original): ' + skipped.join(', ') + '.';
   if (errors.length) out += ' Problems: ' + errors.join(' | ');
   if (!skipped.length && !errors.length) out += ' Refreshing the page…';
-  msg.textContent = out;
+  setMsg(out);
   inp.value = '';
   if (!skipped.length && !errors.length && updated) setTimeout(() => location.reload(), 1800);
 }
