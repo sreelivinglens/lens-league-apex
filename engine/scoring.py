@@ -1,3 +1,4 @@
+# SL-VERSION: scoring-227.2 (Session 235, 2026-10-03 — (1) compute_percentile now takes pool='sonnet'|'haiku'|'combined' (default 'sonnet'): Haiku (eValuate) images no longer count in the Sonnet pool; Haiku images get their own pool; a combined figure is always returned as combined_pct for approximate display (wording needs founder approval). (2) calculate_score takes optional weights_override so the Mobile League weights can be applied by code with the same rules. No weight, tier or rule changed. RETAINS scoring-227.1.)
 # SL-VERSION: scoring-227.1 (Session 227, 2026-09-28 — FLAG 1: Open genre added to GENRE_WEIGHTS and GENRE_LIST. 5-dim weights: wonder=0.27, aq=0.37 (story_transfer 0.18 folded into AQ), disruption=0.15, dod=0.13, dm=0.08. Open added to GENRE_IDS so normalise_genre() passes through correctly instead of falling to Wildlife fallback. RETAINS scoring-222.1.)
 # SL-VERSION: scoring-222.1 (Session 222, 2026-09-26 — NS scoring bonus: YES +0.15, NOT_SURE +0.05, NO +0.00. Applied after all other modifiers. Cap at 9.9 retained.)
 """
@@ -505,7 +506,7 @@ def get_tier(score: float) -> str:
 
 
 # ── Core formula ──────────────────────────────────────────────────────────────
-def calculate_score(genre, dod, disruption, dm, wonder, aq, ns=''):
+def calculate_score(genre, dod, disruption, dm, wonder, aq, ns='', weights_override=None):
     """
     Returns (final_score, tier, soul_bonus, checks_dict).
 
@@ -519,6 +520,8 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq, ns=''):
     """
     canonical = normalise_genre(genre)
     weights   = GENRE_WEIGHTS.get(canonical, GENRE_WEIGHTS['Wildlife'])
+    if weights_override:
+        weights = weights_override   # Session 235: Mobile League weights, same rules applied
     checks    = {}
     notes     = []
 
@@ -653,7 +656,7 @@ def compute_calibration_stats(images):
 
 # ── Global Percentile Engine ──────────────────────────────────────────────────
 def compute_percentile(score: float, genre: str = None,
-                       camera_track: str = None) -> dict:
+                       camera_track: str = None, pool: str = 'sonnet') -> dict:
     """
     Returns percentile position and comparison benchmarks for a scored image.
 
@@ -680,16 +683,37 @@ def compute_percentile(score: float, genre: str = None,
     try:
         from models import Image as ImageModel   # deferred — avoids circular import
 
-        scored = ImageModel.query.filter(
+        # Session 235 (scoring-227.2): pools. Haiku (eValuate) images are flagged
+        # is_haiku_try (a raw column, not an ORM attribute — Rule 8), so it is read
+        # with a literal column. 'sonnet' = full-engine images only (the default);
+        # 'haiku' = free-tier images only; 'combined' = everything. Haiku scores
+        # never enter the Sonnet pool.
+        from sqlalchemy import literal_column as _lc
+        _all_rows = ImageModel.query.filter(
             ImageModel.status == 'scored',
             ImageModel.score.isnot(None),
             ImageModel.is_flagged.isnot(True),
             ImageModel.needs_review.isnot(True),
         ).with_entities(ImageModel.score, ImageModel.genre,
-                        ImageModel.camera_track).all()
+                        ImageModel.camera_track,
+                        _lc('COALESCE(images.is_haiku_try, FALSE)').label('is_haiku')).all()
+
+        if pool == 'haiku':
+            scored = [r for r in _all_rows if r.is_haiku]
+        elif pool == 'combined':
+            scored = list(_all_rows)
+        else:
+            pool = 'sonnet'
+            scored = [r for r in _all_rows if not r.is_haiku]
 
         if not scored:
             return {}
+
+        # Approximate position in the combined (Sonnet + Haiku) pool.
+        # Shown to Haiku users only, marked approximate (wording: founder to approve).
+        _comb_scores = [float(r.score) for r in _all_rows]
+        _comb_below = sum(1 for s_ in _comb_scores if s_ < score)
+        combined_pct = max(1, round((1 - _comb_below / len(_comb_scores)) * 100)) if _comb_scores else None
 
         all_scores = [float(r.score) for r in scored]
         total = len(all_scores)
@@ -755,6 +779,8 @@ def compute_percentile(score: float, genre: str = None,
             'context':         context,
             'total_images':    total,
             'genre_images':    len(genre_scores),
+            'pool':            pool,
+            'combined_pct':    combined_pct,
         }
 
     except Exception as e:
