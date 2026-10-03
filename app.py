@@ -1,3 +1,4 @@
+# SL-VERSION: 182.82 (Session 235, 2026-10-03 -- CHANGE (staging only, nothing live-tested): the new-evaluation trial is now a TAB on the Open Call page ('Official results' | 'New evaluation (trial)', ?tab=trial) with the same kind of table and pictures as the official one, plus a 'Read reasons' row for each picture (five reasons, principles, story reason). Replaces the card + spreadsheet-only view of 182.81. Reads saved trial results only: no engine call, no new table, nothing in contest_judge_batch written. New helper _cj_new_eval_entries(); the page route passes trial_entries. RETAINS 182.81.)
 # SL-VERSION: 182.81 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): NEW FIVE-DIMENSION EVALUATION, TRIAL. Button on the Open Call page ('Try the new evaluation (trial)', 'Download trial results'). Five dimensions each 1 to 10 with a reason, Degree of Difficulty = average of situational and technical plus principle bonus, overall = plain average (no weights), Story = tag only, no genre ceilings, Iconic Wall one sentence, cap 9.9; Soul Bonus, Humanity Check, Excellence Bonus dropped. Own table contest_judge_new_eval (every trial run kept); contest_judge_batch and the old engine are NEVER written or changed. Nothing runs until an admin presses the button and confirms the number of engine calls. New routes: /admin/contest-judge/new-eval-count, new-eval-run, new-eval-csv. Wording: claude/OPENCALL_PROMPT_DRAFT_S235.md v1.1. RETAINS 182.80.)
 # SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP, simplified. '+ New open call' asks for a name and a theme word; a theme description is written for the founder to read, change and approve; then pictures are added to that open call (pairs with templates/admin_contest_judge.html 3.0). For an open call with an approved theme, every picture first gets a plain true/false theme check: fits go on to the normal evaluation, borderline pictures wait for the jury, pictures that do not fit are not evaluated and are shown last. Jury include / keep-out decisions need a name and reason and are logged; first theme decision stands on rescore. An open call with no approved theme behaves exactly as 182.79. Theme page in plain words, theme word editable, founder-only 'Remove the theme' (refused once any picture is checked). Open calls with a theme but no pictures are listed. Delete removes the call's theme too. Scorecards ZIP and Review page leave out pictures that were not evaluated. Upload page sends 3 pictures per request. Excel export no longer fails on pictures without a theme number. Audit-trail 'When' column on one line. Excel: pictures not evaluated stay at the bottom with no rank number; one [theme] log line per theme decision and per jury decision. Checks page: 'Start a new open call' link and a 'Theme' button per open call. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
@@ -15827,6 +15828,7 @@ def admin_contest_judge():
 
     batch_meta = None
     sonnet_entries = []
+    trial_entries = []
     haiku_entries = []
     haiku_summary = None
     compare_entries = []
@@ -15901,6 +15903,15 @@ def admin_contest_judge():
                 'thumb': r.thumb_path if (r.thumb_path or '').startswith('http') else None,
                 'override_subject_id': r.override_subject_id or '',
             })
+
+        # 182.82: trial tab. Reads saved trial results only.
+        if active_tab == 'trial':
+            try:
+                trial_entries = _cj_new_eval_entries(batch_ref, sonnet_entries)
+            except Exception as _te:
+                db.session.rollback()
+                app.logger.error(f'[new_eval] trial tab could not be built: {_te}')
+                trial_entries = []
 
         # Haiku entries
         _hr = db.session.execute(db.text("""
@@ -16019,6 +16030,7 @@ def admin_contest_judge():
                            active_tab=active_tab,
                            compare_unlocked=compare_unlocked,
                            sonnet_entries=sonnet_entries,
+                           trial_entries=trial_entries,
                            haiku_entries=haiku_entries,
                            haiku_summary=haiku_summary,
                            compare_entries=compare_entries,
@@ -18613,6 +18625,67 @@ def _cj_new_eval_rows(batch_ref):
         "FROM contest_judge_batch WHERE batch_ref = :br ORDER BY id"
     ), {'br': batch_ref}).fetchall()
     return [r for r in rows if r.theme_state not in _CJ_NEW_EVAL_SKIP_STATES]
+
+
+def _cj_new_eval_entries(batch_ref, base_entries):
+    """Rows for the trial tab: the latest saved trial result for each picture, in the same order
+    logic as the official table (ranked by the trial overall; pictures not yet run next; pictures the
+    theme step holds back last). base_entries = the official entries the page already built.
+    Reads only. v182.82."""
+    _cj_new_eval_ensure_table()
+    latest = {}
+    for r in db.session.execute(db.text(
+            "SELECT DISTINCT ON (entry_id) entry_id, wonder, aq, disruption, dm, dod, "
+            "dod_situational, dod_technical, dod_bonus, story, overall, notes, raw_json "
+            "FROM contest_judge_new_eval WHERE batch_ref = :br ORDER BY entry_id, id DESC"),
+            {'br': batch_ref}).fetchall():
+        latest[r.entry_id] = r
+    story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
+    held, waiting, ranked = [], [], []
+    for e in base_entries:
+        flagged = e.get('theme_state') in _CJ_NEW_EVAL_SKIP_STATES
+        t = latest.get(e['id'])
+        item = {
+            'id': e['id'], 'photographer': e.get('photographer') or 'Unknown',
+            'title': e.get('title') or '', 'thumb_url': e.get('thumb_url'),
+            'official': e.get('composite'), 'theme_state': e.get('theme_state'),
+            'flagged': flagged, 'has_trial': bool(t and not flagged), 'rank': None,
+        }
+        if t and not flagged:
+            try:
+                rj = _cj_json.loads(t.raw_json or '{}')
+            except Exception:
+                rj = {}
+            princ = []
+            for p in (rj.get('dod_principles') or []):
+                if isinstance(p, dict) and p.get('name'):
+                    princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
+            reasons = [
+                ('Wonder' + (f" ({rj.get('wonder_kind')})" if rj.get('wonder_kind') else ''), rj.get('wonder_reason', '')),
+                ('Affect Quotient' + (f" ({rj.get('aq_feeling')})" if rj.get('aq_feeling') else ''), rj.get('aq_reason', '')),
+                ('Disruption', rj.get('disruption_reason', '')),
+                ('Decisive Moment', rj.get('dm_reason', '')),
+                ('Difficulty of the situation', rj.get('dod_situational_reason', '')),
+                ('Technical execution', rj.get('dod_technical_reason', '')),
+                ('Story', rj.get('story_reason', '')),
+            ]
+            item.update({
+                'overall': t.overall, 'wonder': t.wonder, 'aq': t.aq, 'disruption': t.disruption,
+                'dod': t.dod, 'dm': t.dm, 'dod_situational': t.dod_situational,
+                'dod_technical': t.dod_technical, 'dod_bonus': t.dod_bonus,
+                'story': story_words.get(t.story, t.story or ''),
+                'reasons': [(a, b) for a, b in reasons if b],
+                'principles': princ, 'notes': t.notes or '',
+            })
+            ranked.append(item)
+        elif flagged:
+            held.append(item)
+        else:
+            waiting.append(item)
+    ranked.sort(key=lambda x: -(x['overall'] or 0))
+    for i, it in enumerate(ranked, 1):
+        it['rank'] = i
+    return ranked + waiting + held
 
 
 @app.route('/admin/contest-judge/new-eval-count/<path:batch_ref>')
