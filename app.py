@@ -1,3 +1,5 @@
+# SL-VERSION: 182.75 (Session 235, 2026-10-03 -- CHANGE: FIRST SCORE STANDS. The stored score for an identical picture (same member, phash, genre) is no longer overwritten by later scorings, so repeat uploads keep returning the first score. Only an old stored row with no audit copy may be replaced. Applies to normal upload and bulk upload. Existing stored rows are NOT changed. RETAINS 182.74.)
+# SL-VERSION: 182.74 (Session 235, 2026-10-03 -- FIX: upload route crashed with NameError _bg_nsfw_breastfeeding on a repeat-upload cache hit (variable only existed inside the background thread). Now defaulted to False in the route; behaviour otherwise unchanged. RETAINS 182.73.)
 # SL-VERSION: 182.73 (Session 235, 2026-10-03 -- FIX: repeat-upload score anchor ignored the audit copy saved in scored_phash_cache and demanded that the ORIGINAL image still exist, so delete + re-upload of the same picture re-rolled the score (founder test: 8.26, 8.26, 7.92). The guard now accepts the cached audit_json first; behaviour with a surviving original is unchanged. RETAINS 182.72.)
 # SL-VERSION: 182.72 (Session 235, 2026-10-03 -- FIX (email): percentile line was always blank (read a key that does not exist); now "Higher than N% of images in the League" as on the scorecard. Strength / Next leap headings in the email are now named from the scores (as the scorecard page does), not from the stored model label. RETAINS 182.71.)
 # SL-VERSION: 182.71 (Session 235, 2026-10-03 -- NEW: member scorecard email now rendered from templates/email_scorecard.html and expanded to the full scorecard (standing, why each dimension, story check, master reference, technical read, visual flow, imagine, body of work, path to recognition, edit suggestions). The old in-code builder stays as an automatic fallback. New admin route /admin/email-preview/<image_id> shows the email on screen and sends nothing. RETAINS 182.70.)
@@ -9548,6 +9550,7 @@ def upload():
         # the engine again. Prevents score re-rolling via delete + re-upload.
         # Stored in scored_phash_cache which survives image deletion.
         _anchored_score = None
+        _bg_nsfw_breastfeeding = False  # 182.74: outer-scope default; the real flag is set inside the background thread
         try:
             _cache_row = db.session.execute(
                 db.text(
@@ -10838,9 +10841,12 @@ def upload():
                                         " soul_bonus=EXCLUDED.soul_bonus, "
                                         " original_image_id=EXCLUDED.original_image_id, "
                                         " audit_json=EXCLUDED.audit_json, "
-                                        " scored_at=NOW()"
+                                        " scored_at=NOW() "
+                                        # 182.75: FIRST SCORE STANDS. Only an old row with no
+                                        # audit copy (unusable for anchoring) may be replaced.
+                                        "WHERE scored_phash_cache.audit_json IS NULL"
                                     )
-                                    db.session.execute(db.text(_cache_sql), {
+                                    _cache_res = db.session.execute(db.text(_cache_sql), {
                                         'uid':   _img.user_id,  'ph':    _img.phash,
                                         'genre': _img.genre,    'score': _img.score,
                                         'tier':  _img.tier,     'dod':   _img.dod_score,
@@ -10851,10 +10857,16 @@ def upload():
                                         'audit_json': _img._audit_json or None,
                                     })
                                     db.session.commit()
-                                    app.logger.info(
-                                        f'[scoring] phash cache written: image={_img.id} '
-                                        f'score={_img.score} phash={_img.phash[:16]}…'
-                                    )
+                                    if _cache_res.rowcount:
+                                        app.logger.info(
+                                            f'[scoring] phash cache written: image={_img.id} '
+                                            f'score={_img.score} phash={_img.phash[:16]}…'
+                                        )
+                                    else:
+                                        app.logger.info(
+                                            f'[scoring] phash cache kept (first score stands): image={_img.id} '
+                                            f'new_score={_img.score} phash={_img.phash[:16]}…'
+                                        )
                             except Exception as _cache_write_err:
                                 app.logger.warning(
                                     f'[scoring] phash cache write failed (non-fatal): {_cache_write_err}'
@@ -30312,8 +30324,7 @@ def bulk_upload_one():
                             " dm_score, wonder_score, aq_score, archetype, soul_bonus, "
                             " original_image_id, scored_at) "
                             "VALUES (:uid,:ph,:genre,:score,:tier,:dod,:dis,:dm,:wonder,:aq,:arch,:soul,:iid,NOW()) "
-                            "ON CONFLICT (user_id, phash, genre) DO UPDATE SET "
-                            " score=EXCLUDED.score, tier=EXCLUDED.tier, scored_at=NOW()"
+                            "ON CONFLICT (user_id, phash, genre) DO NOTHING"  # 182.75: first score stands
                         )
                         db.session.execute(db.text(_bcs), {
                             'uid': img.user_id, 'ph': img.phash, 'genre': img.genre,
