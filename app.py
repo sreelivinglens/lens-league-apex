@@ -1,3 +1,4 @@
+# SL-VERSION: 182.81 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): NEW FIVE-DIMENSION EVALUATION, TRIAL. Button on the Open Call page ('Try the new evaluation (trial)', 'Download trial results'). Five dimensions each 1 to 10 with a reason, Degree of Difficulty = average of situational and technical plus principle bonus, overall = plain average (no weights), Story = tag only, no genre ceilings, Iconic Wall one sentence, cap 9.9; Soul Bonus, Humanity Check, Excellence Bonus dropped. Own table contest_judge_new_eval (every trial run kept); contest_judge_batch and the old engine are NEVER written or changed. Nothing runs until an admin presses the button and confirms the number of engine calls. New routes: /admin/contest-judge/new-eval-count, new-eval-run, new-eval-csv. Wording: claude/OPENCALL_PROMPT_DRAFT_S235.md v1.1. RETAINS 182.80.)
 # SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP, simplified. '+ New open call' asks for a name and a theme word; a theme description is written for the founder to read, change and approve; then pictures are added to that open call (pairs with templates/admin_contest_judge.html 3.0). For an open call with an approved theme, every picture first gets a plain true/false theme check: fits go on to the normal evaluation, borderline pictures wait for the jury, pictures that do not fit are not evaluated and are shown last. Jury include / keep-out decisions need a name and reason and are logged; first theme decision stands on rescore. An open call with no approved theme behaves exactly as 182.79. Theme page in plain words, theme word editable, founder-only 'Remove the theme' (refused once any picture is checked). Open calls with a theme but no pictures are listed. Delete removes the call's theme too. Scorecards ZIP and Review page leave out pictures that were not evaluated. Upload page sends 3 pictures per request. Excel export no longer fails on pictures without a theme number. Audit-trail 'When' column on one line. Excel: pictures not evaluated stay at the bottom with no rank number; one [theme] log line per theme decision and per jury decision. Checks page: 'Start a new open call' link and a 'Theme' button per open call. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
@@ -18375,6 +18376,399 @@ def _cj_ddi_compare_ensure_table():
         )
     """))
     db.session.commit()
+
+
+# ══ CONTEST JUDGE — NEW FIVE-DIMENSION EVALUATION, TRIAL (v182.81, Session 235) ══════════════
+# The redesign approved by the founder on 3 Oct 2026 (claude/DECISIONS_S235_G.md,
+# claude/OPENCALL_PROMPT_DRAFT_S235.md v1.1): five dimensions, each 1 to 10 with a reason,
+# plain average (no weights), Story as a tag only, no genre ceilings.
+# TRIAL ONLY. It never writes to contest_judge_batch, never changes an official result and
+# never touches the old engine. Every trial run is kept in its own table, contest_judge_new_eval.
+# No engine call is made until an admin presses the button and confirms the number of calls.
+
+_CJ_NEW_EVAL_PROMPT_VERSION = 'new-eval-1.0'
+_CJ_NEW_EVAL_FORMULA_VERSION = 'plain-average-1.0'
+_CJ_NEW_EVAL_SKIP_STATES = ('off_theme', 'borderline', 'jury_exclude')
+
+_CJ_NEW_EVAL_SYSTEM = """You are the Open Call judging engine for Shutter League. Wildlife, Street, Portrait, Documentary and every other kind of photograph compete in the same pool. Do not judge by genre. Do not apply any genre standard, ceiling or weighting.
+Your evaluation is used in formal judging. Accuracy and honesty matter above all.
+Give five numbers, each from 1.0 to 10.0 with one decimal, and one short reason for each. Technical imperfection is never a penalty on its own. A blurry picture that breaks the heart outranks a sharp picture that feels empty.
+Story is not a number. You give a separate tag: yes, no or not_sure.
+In every reason: never use the words AI, score or stranger. Say viewer, a person or someone. Keep each reason under 30 words.
+
+DEGREE OF DIFFICULTY (DoD). Give two numbers, each 1 to 10, each with a reason.
+(a) Situational difficulty: how hard was this to photograph well? Think of access, light, conditions, speed, risk, and how many things had to be right at once.
+(b) Technical execution: how well did the photographer's own choices serve the picture's intent? Judge focus where it matters, exposure and tone that suit the picture's own type, and composition. A silhouette is allowed dark shadows. A high-key picture is allowed bright highlights. Blur, grain and underexposure are not penalised if they serve the feeling.
+Then list the composition principles the photographer CLEARLY APPLIED. A principle counts only if a deliberate decision is visible in the frame, not if it is merely present. Name each one and its family:
+- classical: rule of thirds or golden ratio, leading lines, frame within frame, negative space, diagonal tension, depth and layering, pattern and break, juxtaposition, scale and proportion, symmetry or deliberate asymmetry, point of view, colour relationship, simplicity and elimination, light as composition.
+- japanese: ma (meaningful emptiness), kanso (simplicity), wabi-sabi (beauty in imperfection), mono no aware (the gentle sadness of passing things), yugen (suggested depth), seijaku (stillness), fukinsei (deliberate imbalance), datsuzoku (breaking the pattern).
+- gestalt: figure and ground, closure, continuation, proximity, similarity, common fate, pragnanz (the simplest strong form).
+Do not calculate a DoD total. The system does that.
+
+DECISIVE MOMENT (DM), 1 to 10. Could this picture be made again? Score how unrepeatable the moment is.
+Where a person, an animal or an element is moving or acting: the instant that will never happen the same way again, such as the peak of the action, the turn of an expression, the moment of change.
+Where the scene is a posed portrait, a still life or a landscape: the moment is how the light is falling. Light that will not fall this way again scores high. Light that would look the same all afternoon, or that can be set up again, scores low.
+Scale: 9 and above: gone in a blink, it cannot be made again. 7.0 to 8.5: very hard to make again. 5.5 to 7.0: could be made again with patience or another day. Below 5.5: can be made again at will.
+The reason must name what cannot be repeated.
+
+DISRUPTION, 1 to 10. Compared with how the best photographers have shown this subject, and how most photographers would show it, how far does this picture depart, and does the departure work?
+Two ways to score high. Score the higher of the two.
+1. Departure: angle, framing, treatment, a clash of colour or tone, a setting that surprises, geometry broken on purpose.
+2. Impact: a conventional picture that stops any viewer at once through light, geometry, colour or expression.
+Score the effect, not the technique. Blur or an odd angle earns nothing unless it works.
+Limits:
+- A common formula (mirror lake, aurora, star trails, famous sunrise spots, safari portrait) cannot exceed 8.5 unless the photographer clearly transformed it.
+- A near copy of a famous photograph that you can name cannot exceed 6.0.
+- 9 and above only if it changes how the subject can be seen.
+- 9 to 10: redefines the subject. 8 to 9: strong departure or impact. 7 to 8: clear presence. 6 to 7: competent. 5 to 6: generic. Below 5: weak.
+The reason must name what the picture departs from, and say that the comparison comes from your knowledge of photography.
+
+WONDER, 1 to 10. What did the photographer find or reach that most people never would, and what does it let the viewer see or enter?
+Name which kind it is. One strong kind is enough to score high.
+1. Eye: a find in the ordinary, such as a shadow, a juxtaposition or a frame that could only exist once.
+2. Access: being somewhere, or trusted by someone, that most photographers never reach.
+3. World: a community or way of life the viewer cannot otherwise enter, especially one that is disappearing.
+4. Truth: something real and unposed that anyone would recognise at once, such as uncontained joy or the dignity of a person the world walks past. The wonder is that the photographer stopped to see it.
+5. Nature: rare behaviour or something of scientific interest, in the way a museum would value it.
+Wonder belongs to the photographer's find, not to the subject or the place. A famous subject earns nothing by being famous.
+Scale: 9 to 10: singular, could only exist once, award level. 8 to 9: a complete find or real access. 7 to 8: clear and specific. 6 to 7: mild. 5 to 6: nothing found. Below 5: absent.
+The reason must name the kind of Wonder and the specific thing found. Leave the named feeling to Affect Quotient.
+
+AFFECT QUOTIENT (AQ), 1 to 10. What specific feeling does this picture create in the viewer? Name it in one word. How exactly does that word fit, and how strongly does the feeling arrive and stay?
+This is a meter of feeling, not a ladder of quality. Most good photographs sit between 6.0 and 7.5, and that is honest.
+What to look at: whether the expression or gesture is honest, the warmth or coldness of the tone, where the subject's gaze goes (into empty space creates longing; at the lens creates intimacy), and imperfect human detail, which often carries more feeling than polish.
+Rules:
+- Powerful and beautiful are not feelings. Lonely, defiant, tender, reverent and unsettled are.
+- If the feeling cannot be named in one word, the number is below 8.0.
+- Admiring the craft is not a feeling. A technically brilliant picture with nothing felt stays at 6.5 or below.
+- Beauty alone is not a feeling. If no specific feeling is legible beyond beauty, the number stays at 7.0 or below.
+- The story tag is separate. Do not raise or lower this number because of it.
+- Judge the feeling the picture creates, not the sadness or fame of the subject or event.
+Scale: 9 to 10: the viewer cannot stay neutral and the feeling stays long after looking away. The ceiling is the Bhopal child at 9.5. 8 to 9: specific, strong, lasting. 7 to 8: clear and real, but it passes gently. 6 to 7: faint or general. 5 to 6: weak. Below 5: none.
+The reason must name the feeling and say what in the picture creates it.
+
+STORY TAG. Answer yes, no or not_sure. This is your own view. It adds no points and takes none away.
+Method: try to write one sentence, A [subject] is [doing something] with [a consequence]. If you can write it, with a real action and a consequence that carries meaning without a caption, answer yes. If you can only describe what you see, answer not_sure or no. If nothing is happening, answer no. In doubt, the answer is not_sure. Do not default to yes. Beautiful does not mean story, and powerful does not mean story. Give one sentence of reason.
+
+CALIBRATION ANCHORS:
+- Raghu Rai, Bhopal child (1984): Wonder 9.8, Affect Quotient 9.5 (the ceiling).
+- Cartier-Bresson, Behind Gare Saint-Lazare: Wonder 8.5, Disruption 9.3, Decisive Moment 9.8.
+- Kevin Carter, Vulture and Child: Wonder 9.5, Affect Quotient 9.5.
+- A sharp but emotionally empty portrait: Wonder 4.5, Affect Quotient 5.0.
+- A blurry but heartbreaking wildlife moment: Decisive Moment 7.5, Wonder 8.5, Degree of Difficulty not penalised for blur.
+Use these as fixed points and interpolate. Do not compress everything into the middle. The full range exists."""
+
+_CJ_NEW_EVAL_FAMILIES = ('classical', 'japanese', 'gestalt')
+
+
+def _cj_new_eval_clamp(v):
+    """Number from the engine, forced into 1.0 to 10.0. Raises ValueError if it is not a number."""
+    x = float(v)
+    if x != x:  # NaN
+        raise ValueError('not a number')
+    return max(1.0, min(10.0, x))
+
+
+def _cj_new_eval_calc(r):
+    """The arithmetic for the new evaluation. Pure function, no database, no engine call.
+    r = dict from the engine reply (numbers already validated). Returns dict with the five
+    final numbers, the overall (plain average), the principle bonus and notes."""
+    notes = []
+    sit = _cj_new_eval_clamp(r['dod_situational'])
+    tech = _cj_new_eval_clamp(r['dod_technical'])
+    base = (sit + tech) / 2.0
+    seen, fams = set(), set()
+    for p in (r.get('dod_principles') or []):
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get('name') or '').strip().lower()
+        fam = str(p.get('family') or '').strip().lower()
+        if not name or fam not in _CJ_NEW_EVAL_FAMILIES:
+            continue
+        seen.add(name)
+        fams.add(fam)
+    n = len(seen)
+    if n >= 3 and len(fams) >= 2:
+        bonus = 1.5
+    elif n >= 2:
+        bonus = 1.0
+    elif n == 1:
+        bonus = 0.5
+    else:
+        bonus = 0.0
+    if n == 0 and base > 7.5:
+        notes.append('DoD above 7.5 but no principle named: no bonus, read by a person')
+    dod = min(10.0, base + bonus)
+    wonder = _cj_new_eval_clamp(r['wonder'])
+    aq = _cj_new_eval_clamp(r['aq'])
+    disruption = _cj_new_eval_clamp(r['disruption'])
+    dm = _cj_new_eval_clamp(r['dm'])
+    overall = (dod + dm + disruption + wonder + aq) / 5.0
+    if overall >= 9.0 and not (wonder > 8.5 or aq > 8.5):
+        overall = min(overall, 8.99)
+        notes.append('Iconic Wall: 9.0 or more needs Wonder or Affect Quotient above 8.5; held at 8.99')
+    if overall > 9.9:
+        overall = 9.9
+        notes.append('Capped at 9.9')
+    return {
+        'dod': round(dod, 2), 'dod_base': round(base, 2), 'dod_bonus': bonus,
+        'dod_principle_count': n, 'dm': round(dm, 2), 'disruption': round(disruption, 2),
+        'wonder': round(wonder, 2), 'aq': round(aq, 2),
+        'dod_situational': round(sit, 2), 'dod_technical': round(tech, 2),
+        'overall': round(overall, 2), 'notes': notes,
+    }
+
+
+def _cj_new_eval_judge(image_b64, photographer, title, model=None, max_tokens=2500):
+    """One engine call for the new evaluation. Returns the engine's reply with the arithmetic
+    added, or {'error': ...}. Same model and temperature as the live Open Call engine."""
+    api_key = _cj_os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return {'error': 'No engine key is set on this server.'}
+    user_text = (
+        'Photographer: ' + str(photographer or '') + '\n'
+        'Image title: ' + str(title or '') + '\n\n'
+        'Evaluate this picture. Return ONLY valid JSON, no other text, with every key below.\n'
+        '{\n'
+        '  "wonder": 0.0, "wonder_kind": "Eye or Access or World or Truth or Nature", "wonder_reason": "",\n'
+        '  "aq": 0.0, "aq_feeling": "one word", "aq_reason": "",\n'
+        '  "disruption": 0.0, "disruption_reason": "",\n'
+        '  "dm": 0.0, "dm_reason": "",\n'
+        '  "dod_situational": 0.0, "dod_situational_reason": "",\n'
+        '  "dod_technical": 0.0, "dod_technical_reason": "",\n'
+        '  "dod_principles": [{"name": "", "family": "classical or japanese or gestalt", "decision": ""}],\n'
+        '  "story": "yes or no or not_sure", "story_reason": "",\n'
+        '  "genre_detected": ""\n'
+        '}'
+    )
+    payload = _cj_json.dumps({
+        'model': model or 'claude-sonnet-4-6',
+        'max_tokens': max_tokens,
+        'temperature': 0,
+        'system': _CJ_NEW_EVAL_SYSTEM,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': image_b64}},
+            {'type': 'text', 'text': user_text},
+        ]}],
+    }).encode('utf-8')
+    req = _cj_ur.Request(
+        'https://api.anthropic.com/v1/messages', data=payload,
+        headers={'Content-Type': 'application/json', 'x-api-key': api_key,
+                 'anthropic-version': '2023-06-01'},
+        method='POST')
+    try:
+        with _cj_ur.urlopen(req, timeout=90) as resp:
+            data = _cj_json.loads(resp.read().decode('utf-8'))
+        text = data['content'][0]['text'].strip()
+        if text.startswith('```'):
+            text = text.split('```')[1]
+            if text.startswith('json'):
+                text = text[4:]
+        result = _cj_json.loads(text.strip())
+        required = ['wonder', 'aq', 'disruption', 'dm', 'dod_situational', 'dod_technical']
+        missing = [k for k in required if result.get(k) is None]
+        if missing:
+            return {'error': 'Engine returned an incomplete evaluation (missing: ' + ', '.join(missing) + '). Not saved.'}
+        calc = _cj_new_eval_calc(result)
+        story = str(result.get('story') or '').strip().lower().replace(' ', '_')
+        if story not in ('yes', 'no', 'not_sure'):
+            story = 'not_sure'
+        result['story'] = story
+        result['calc'] = calc
+        result['model'] = model or 'claude-sonnet-4-6'
+        return result
+    except Exception as e:
+        return {'error': str(e)}
+
+
+def _cj_new_eval_ensure_table():
+    db.session.execute(db.text("""
+        CREATE TABLE IF NOT EXISTS contest_judge_new_eval (
+            id SERIAL PRIMARY KEY,
+            batch_ref VARCHAR(300) NOT NULL,
+            entry_id INTEGER NOT NULL,
+            run_ref VARCHAR(20) NOT NULL,
+            filename VARCHAR(300),
+            wonder REAL, aq REAL, disruption REAL, dm REAL, dod REAL,
+            dod_situational REAL, dod_technical REAL, dod_bonus REAL,
+            story VARCHAR(10),
+            overall REAL,
+            notes TEXT,
+            raw_json TEXT,
+            model VARCHAR(60),
+            prompt_version VARCHAR(40),
+            formula_version VARCHAR(40),
+            run_at TIMESTAMP DEFAULT NOW()
+        )
+    """))
+    db.session.commit()
+
+
+def _cj_new_eval_rows(batch_ref):
+    """Pictures the trial will use: every picture in the open call except those the theme step
+    keeps out of the normal evaluation (outside the theme, waiting for the jury, kept out)."""
+    _cj_theme_ensure()
+    rows = db.session.execute(db.text(
+        "SELECT id, filename, photographer, image_title, thumb_path, theme_state "
+        "FROM contest_judge_batch WHERE batch_ref = :br ORDER BY id"
+    ), {'br': batch_ref}).fetchall()
+    return [r for r in rows if r.theme_state not in _CJ_NEW_EVAL_SKIP_STATES]
+
+
+@app.route('/admin/contest-judge/new-eval-count/<path:batch_ref>')
+@login_required
+def admin_contest_judge_new_eval_count(batch_ref):
+    """How many engine calls the trial would make. Read only. v182.81."""
+    if current_user.role != 'admin':
+        abort(403)
+    rows = _cj_new_eval_rows(batch_ref)
+    return jsonify({'calls': len(rows), 'with_picture': sum(1 for r in rows if r.thumb_path)})
+
+
+@app.route('/admin/contest-judge/new-eval-run/<path:batch_ref>', methods=['POST'])
+@login_required
+def admin_contest_judge_new_eval_run(batch_ref):
+    """Start the new-evaluation trial (background thread). Needs {"confirm": true} in the body,
+    so nothing can start by accident. Writes only to contest_judge_new_eval. Poll with
+    /admin/contest-judge/bulk-rescore-status/<job_id>. v182.81."""
+    if current_user.role != 'admin':
+        abort(403)
+    data = request.get_json(silent=True) or {}
+    if data.get('confirm') is not True:
+        return jsonify({'error': 'Confirmation is needed before the trial starts.'}), 400
+    _cj_new_eval_ensure_table()
+    rows = _cj_new_eval_rows(batch_ref)
+    if not rows:
+        return jsonify({'error': 'No pictures to evaluate in this open call.'}), 404
+
+    import uuid as _uuid
+    job_id = _uuid.uuid4().hex[:12]
+    run_ref = job_id
+    total = len(rows)
+    _bulk_rescore_prog_write(job_id, total, 0, 0, False)
+    app.logger.info(f'[new_eval] job={job_id} batch={batch_ref} START {total} pictures prompt={_CJ_NEW_EVAL_PROMPT_VERSION} '
+                    f'by={getattr(current_user, "email", "?")}')
+
+    def _worker(rows, job_id, total):
+        with app.app_context():
+            import tempfile as _tmpn
+            import storage as _r2n
+            done = 0
+            errors = 0
+            for row in rows:
+                try:
+                    if not row.thumb_path:
+                        errors += 1
+                        continue
+                    _key = _r2n.key_from_url(row.thumb_path)
+                    tmp = _tmpn.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    tmp.close()
+                    if not _r2n.download_file(_key, tmp.name):
+                        errors += 1
+                        try: _cj_os.unlink(tmp.name)
+                        except Exception: pass
+                        continue
+                    image_b64 = _cj_thumb_b64(tmp.name)
+                    try: _cj_os.unlink(tmp.name)
+                    except Exception: pass
+                    v = _cj_new_eval_judge(image_b64, row.photographer or '', row.image_title or '')
+                    if not v or 'error' in v:
+                        app.logger.error(f'[new_eval] entry={row.id} {(v or {}).get("error")}')
+                        errors += 1
+                        continue
+                    c = v['calc']
+                    db.session.execute(db.text("""
+                        INSERT INTO contest_judge_new_eval
+                            (batch_ref, entry_id, run_ref, filename, wonder, aq, disruption, dm, dod,
+                             dod_situational, dod_technical, dod_bonus, story, overall, notes, raw_json,
+                             model, prompt_version, formula_version, run_at)
+                        VALUES (:br, :eid, :rr, :fn, :wo, :aq, :di, :dm, :dod, :ds, :dt, :db, :st, :ov,
+                                :nt, :rj, :md, :pv, :fv, NOW())
+                    """), {'br': batch_ref, 'eid': row.id, 'rr': run_ref, 'fn': row.filename,
+                           'wo': c['wonder'], 'aq': c['aq'], 'di': c['disruption'], 'dm': c['dm'],
+                           'dod': c['dod'], 'ds': c['dod_situational'], 'dt': c['dod_technical'],
+                           'db': c['dod_bonus'], 'st': v['story'], 'ov': c['overall'],
+                           'nt': '; '.join(c['notes']), 'rj': _cj_json.dumps(v),
+                           'md': v.get('model'), 'pv': _CJ_NEW_EVAL_PROMPT_VERSION,
+                           'fv': _CJ_NEW_EVAL_FORMULA_VERSION})
+                    db.session.commit()
+                except Exception as _ne:
+                    db.session.rollback()
+                    app.logger.error(f'[new_eval] entry={row.id} {_ne}')
+                    errors += 1
+                finally:
+                    done += 1
+                    _bulk_rescore_prog_write(job_id, total, done, errors, False)
+            _bulk_rescore_prog_write(job_id, total, done, errors, True)
+            app.logger.info(f'[new_eval] job={job_id} COMPLETE {done}/{total} done, {errors} errors')
+
+    import threading as _thrn
+    _thrn.Thread(target=_worker, args=(rows, job_id, total), daemon=True).start()
+    return jsonify({'job_id': job_id, 'total': total})
+
+
+@app.route('/admin/contest-judge/new-eval-csv/<path:batch_ref>')
+@login_required
+def admin_contest_judge_new_eval_csv(batch_ref):
+    """Download the latest trial result for every picture beside the official result. v182.81."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_new_eval_ensure_table()
+    rows = db.session.execute(db.text("""
+        SELECT b.id AS eid, b.photographer, b.image_title, b.filename,
+               b.composite_score, b.wonder_score, b.aq_score, b.story_transfer_score,
+               b.disruption_score, b.dod_score, b.dm_score,
+               n.overall, n.wonder AS n_wonder, n.aq AS n_aq, n.disruption AS n_dis,
+               n.dm AS n_dm, n.dod AS n_dod, n.dod_situational, n.dod_technical, n.dod_bonus,
+               n.story, n.notes, n.raw_json, n.run_ref, n.run_at,
+               (SELECT COUNT(*) FROM contest_judge_new_eval x WHERE x.entry_id = b.id) AS n_runs
+        FROM contest_judge_batch b
+        JOIN contest_judge_new_eval n ON n.entry_id = b.id
+         AND n.id = (SELECT MAX(y.id) FROM contest_judge_new_eval y WHERE y.entry_id = b.id)
+        WHERE b.batch_ref = :br
+    """), {'br': batch_ref}).fetchall()
+    off_sorted = sorted(rows, key=lambda r: -(r.composite_score or 0))
+    off_rank = {r.eid: i + 1 for i, r in enumerate(off_sorted)}
+    new_sorted = sorted(rows, key=lambda r: -(r.overall or 0))
+    new_rank = {r.eid: i + 1 for i, r in enumerate(new_sorted)}
+    out = _cj_io.StringIO()
+    out.write('﻿')
+    import csv as _csvn
+    w = _csvn.writer(out)
+    w.writerow(['Official standing', 'Trial standing', 'Standing change', 'Photographer', 'Image title', 'Filename',
+                'Official evaluation', 'Trial evaluation', 'Difference',
+                'Trial Wonder', 'Trial Affect Quotient', 'Trial Disruption', 'Trial Decisive Moment',
+                'Trial Degree of Difficulty', 'Situational difficulty', 'Technical execution', 'Principle bonus',
+                'Story', 'Wonder kind', 'Feeling named',
+                'Wonder reason', 'Affect Quotient reason', 'Disruption reason', 'Decisive Moment reason',
+                'Situational reason', 'Technical reason', 'Principles clearly applied', 'Story reason',
+                'Notes', 'Trial runs for this picture', 'Run reference', 'Run time (UTC)',
+                'Official Wonder', 'Official Human Connect', 'Official Story Transfer',
+                'Official Disruption', 'Official Craft', 'Official Moment'])
+    for r in sorted(rows, key=lambda x: new_rank.get(x.eid, 999)):
+        try:
+            rj = _cj_json.loads(r.raw_json or '{}')
+        except Exception:
+            rj = {}
+        princ = '; '.join(
+            f"{p.get('name', '')} ({p.get('family', '')}): {p.get('decision', '')}"
+            for p in (rj.get('dod_principles') or []) if isinstance(p, dict))
+        orr, nr = off_rank.get(r.eid), new_rank.get(r.eid)
+        diff = round(r.overall - r.composite_score, 2) if (r.overall is not None and r.composite_score is not None) else ''
+        w.writerow([orr, nr, (orr - nr) if (orr and nr) else '', r.photographer, r.image_title, r.filename,
+                    r.composite_score, r.overall, diff,
+                    r.n_wonder, r.n_aq, r.n_dis, r.n_dm, r.n_dod, r.dod_situational, r.dod_technical, r.dod_bonus,
+                    {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}.get(r.story, r.story),
+                    rj.get('wonder_kind', ''), rj.get('aq_feeling', ''),
+                    rj.get('wonder_reason', ''), rj.get('aq_reason', ''), rj.get('disruption_reason', ''),
+                    rj.get('dm_reason', ''), rj.get('dod_situational_reason', ''),
+                    rj.get('dod_technical_reason', ''), princ, rj.get('story_reason', ''),
+                    r.notes or '', r.n_runs, r.run_ref, r.run_at,
+                    r.wonder_score, r.aq_score, r.story_transfer_score,
+                    r.disruption_score, r.dod_score, r.dm_score])
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(out.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="SL_NewEvaluation_Trial_{safe_ref}.csv"'})
 
 
 @app.route('/admin/contest-judge/ddi-compare-run/<path:batch_ref>', methods=['POST'])
