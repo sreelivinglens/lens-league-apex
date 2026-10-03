@@ -1,3 +1,4 @@
+# SL-VERSION: 182.71 (Session 235, 2026-10-03 -- NEW: member scorecard email now rendered from templates/email_scorecard.html and expanded to the full scorecard (standing, why each dimension, story check, master reference, technical read, visual flow, imagine, body of work, path to recognition, edit suggestions). The old in-code builder stays as an automatic fallback. New admin route /admin/email-preview/<image_id> shows the email on screen and sends nothing. RETAINS 182.70.)
 # SL-VERSION: 182.70 (Session 235, 2026-10-03 -- FIX: removed a stray duplicate copy of the _clean_audit body that sat after _refresh_dash_mentor without its def line (95 lines). It ran after every mentor refresh and raised "name 'audit' is not defined" (found by the 182.69 traceback). The real _clean_audit function is unchanged. No scoring change. RETAINS 182.69.)
 # SL-VERSION: 182.69 (Session 235, 2026-10-03 -- DIAGNOSTIC + labels only: the two [dash_mentor] warning lines now also print the full traceback so the old "name 'audit' is not defined" fault can be located (no behaviour change). Stale version labels on the Checks, sign-off and score-audit pages corrected. RETAINS 182.68.)
 # SL-VERSION: 182.68 (Session 235, 2026-10-03 -- NEW: /admin/checks hub page (links to score audit and, per Open Call batch, run history, pixel report and sign-off; read-only, no emails). Pair with templates/admin.html admin-3.4. pixel_metrics.py now lives in engine/ (imported as engine.pixel_metrics). RETAINS 182.67.)
@@ -32932,7 +32933,23 @@ def raw_submit(contest_type, image_id):
 # ---------------------------------------------------------------------------
 
 
-def _send_scorecard_email(img, user):
+def _em_paras(text):
+    """Session 235 (182.71): turn stored scorecard text into a list of plain paragraphs for the
+    email template (markdown markers and engine placeholders removed). Autoescape in the template
+    handles the rest. Returns [] when there is nothing to show."""
+    import re as _r
+    if not text:
+        return []
+    t = str(text)
+    t = _r.sub(r'\*\*(.*?)\*\*', r'\1', t)
+    t = _r.sub(r'\*(.*?)\*', r'\1', t)
+    t = _r.sub(r'\[[^\]]*(MISSING|PLACEHOLDER)[^\]]*\]', '', t, flags=_r.IGNORECASE)
+    t = t.replace('\u25aa', '\n')
+    out = [l.strip() for l in t.split('\n') if l.strip()]
+    return out
+
+
+def _send_scorecard_email(img, user, preview=False):
     """
     S168 — Rich scorecard email, fires immediately after scoring in _score_in_background.
     Sends to all SL users (UAT + subscribers) who have not unsubscribed.
@@ -33374,31 +33391,152 @@ def _send_scorecard_email(img, user):
     parts.append('</table></td></tr></table>')
     parts.append('</body></html>')
 
-    _html = ''.join(parts)
+    _html = ''.join(parts)   # old builder: kept as the automatic fallback (remove after staging pass)
+    _email_engine = 'fallback'
 
+    # ── Session 235 (182.71): full-scorecard email from templates/email_scorecard.html ──────────
+    _ex = {}
+    try:
+        _norm = lambda t: ' '.join(str(t or '').split()).lower()
+        _a = _audit
+        _impr = _em_paras(_a.get('impression'))
+        _conc = _em_paras(_a.get('conclusion'))
+        _seen = {_norm(_wso), _norm(_bck), _norm(_nxt)}
+        _conc = [c for c in _conc if _norm(c) not in _seen]
+        _impr = [c for c in _impr if _norm(c) not in _seen]
+        # dimensions in the same order and with the same member-facing names as the scorecard
+        _hi = max(_dim_scores, key=_dim_scores.get)
+        _why_def = [
+            ('Difficulty',    'Depth of Difficulty', ('dim_obs_dod', 'dod_reasoning')),
+            ('Visual impact', 'Wonder Factor',       ('dim_obs_wf', 'wonder_reasoning')),
+            ('Timing',        'Decisive Moment',     ('dim_obs_dm', 'dm_reasoning')),
+            ('Disruption',    'Visual Disruption',   ('dim_obs_vd', 'disruption_reasoning')),
+            ('Emotion',       'Affective Quotient',  ('dim_obs_aq', 'aq_reasoning')),
+        ]
+        _why_rows = []
+        for _lab, _full, _keys in _why_def:
+            _txt = ''
+            for _k in _keys:
+                if (_a.get(_k) or '').strip():
+                    _txt = ' '.join(_em_paras(_a.get(_k)))
+                    break
+            _why_rows.append({
+                'label': _lab, 'val': f'{_dim_scores[_full]:.1f}', 'text': _txt,
+                'tag': ('Your strongest' if _full == _hi else ('Your next leap' if _full == _weakest_name else '')),
+            })
+        if not any(r['text'] for r in _why_rows):
+            _why_rows = []
+        # standing
+        _standing = []
+        try:
+            _best = db.session.execute(db.text(
+                "SELECT MAX(score) FROM images WHERE user_id=:u AND status='scored' AND score IS NOT NULL "
+                "AND scored_at >= date_trunc('year', NOW())"), {'u': user.id}).scalar()
+            _cnt = db.session.execute(db.text(
+                "SELECT COUNT(*) FROM images WHERE user_id=:u AND status='scored' AND score IS NOT NULL"),
+                {'u': user.id}).scalar()
+            if _pct_text:
+                _standing.append(('Standing', _pct_text))
+            if _cnt:
+                _standing.append(('Evaluations so far', str(_cnt)))
+            if _best:
+                _standing.append(('Your best this year', f'{float(_best):.2f}'))
+            for _th, _tn in ((4.0, 'Shooter'), (5.0, 'Contender'), (6.0, 'Craftsman'), (7.0, 'Maverick'),
+                             (8.0, 'Master'), (9.0, 'Grandmaster'), (9.7, 'Legend')):
+                if float(_score) < _th:
+                    _standing.append(('Next milestone', f'Reach {_th:.1f} to become {_tn.upper()}'))
+                    break
+        except Exception as _st_e:
+            db.session.rollback()
+            app.logger.warning(f'[scorecard_email] standing skipped: {_st_e}')
+        _nsv = str(_a.get('ns') or '').strip().lower().replace(' ', '_')
+        _ns_label = {'yes': 'Yes', 'not_sure': 'Not sure', 'no': 'No'}.get(_nsv, '')
+        _dims_t = [{'short': _dim_short[n], 'val': f'{v:.1f}', 'weakest': (n == _weakest_name)}
+                   for n, v in _dim_scores.items()]
+        _reads = []
+        for _lab, _k in (('Technical read', 'tech_read'), ('Visual flow', 'visual_flow'), ('Imagine', 'imagine')):
+            _it = _em_paras(_a.get(_k))
+            if _it:
+                _reads.append({'label': _lab, 'lines': _it})
+        _enote = 'Evaluated by the Apex DDI Engine' + (
+            f' on {img.scored_at.strftime("%d %b %Y")}' if getattr(img, 'scored_at', None) else '')
+        if (_a.get('engine_version') or '').strip():
+            _enote += f' · Engine version: {_a.get("engine_version")}'
+        _ex = dict(
+            subject=_subject, name=_name, genre=_genre, title=_title, score=f'{_score:.2f}', tier=_tier,
+            pct_text=_pct_text, thumb=_thumb, img_url=_img_url, site=_site, hero_html=_hero_html,
+            dims=_dims_t, standing=_standing, impression=_impr,
+            strength_name=(_a.get('strength_name') or '').strip(), strength_obs=(_a.get('strength_obs') or '').strip(),
+            next_leap_name=(_a.get('next_leap_name') or '').strip(), next_leap_obs=(_a.get('next_leap_obs') or '').strip(),
+            why_rows=_why_rows, ns_label=_ns_label, ns_text=' '.join(_em_paras(_a.get('dim_obs_ns'))),
+            wso_html=_wso, bck_html=_bck, nxt_html=_nxt, weakest_name=_weakest_name,
+            weakest_score=f'{_weakest_score:.1f}',
+            master_name=(_a.get('master_name') or '').strip(), master_why=' '.join(_em_paras(_a.get('master_why'))),
+            read_sections=_reads, conclusion=_conc, body_of_work=_em_paras(_a.get('body_of_work')),
+            award_context=_em_paras(_a.get('award_context')),
+            edit_base=_em_paras(_a.get('edit_base')), edit_creative=_em_paras(_a.get('edit_creative')),
+            loc_html=_loc_html, wc_html=_wc_html, news_html=_news_html, evals=_evals,
+            contact_email=CONTACT_EMAIL, fb_yes=_fb_yes, fb_no=_fb_no, unsub_url=_unsub_url, engine_note=_enote,
+        )
+        _html = app.jinja_env.get_template('email_scorecard.html').render(**_ex)
+        _email_engine = 'template'
+    except Exception as _tpl_err:
+        import traceback as _tb_em
+        app.logger.warning(f'[scorecard_email] template failed, using fallback: {_tpl_err}\n{_tb_em.format_exc()}')
+
+    _plain = lambda h: _mdre.sub(r'\n{3,}', '\n\n', _mdre.sub(r'<[^>]+>', '\n', h or '')).strip()
+    _wso_t, _bck_t, _nxt_t = _plain(_wso), _plain(_bck), _plain(_nxt)
     _text = (
         f'Hi {_name},\n\n'
         f'Your {_genre} photograph "{_title}" has been evaluated.\n\n'
         f'Evaluation: {_score:.2f} \u00b7 {_tier}\n'
         + (f'Standing: {_pct_text}\n' if _pct_text else '')
         + f'\nWeakest dimension: {_weakest_name} \u00b7 {_weakest_score:.1f}\n\n'
-        + (f'What your eye caught:\n{_wso}\n\n' if _wso else '')
-        + (f'To improve your {_weakest_name}:\n{_bck}\n\n' if _bck else '')
-        + (f'Your next assignment:\n{_nxt}\n(Expires in 48 hours)\n\n' if _nxt else '')
+        + (f'What your eye caught:\n{_wso_t}\n\n' if _wso else '')
+        + (f'To improve your {_weakest_name}:\n{_bck_t}\n\n' if _bck else '')
+        + (f'Your next assignment:\n{_nxt_t}\n(Expires in 48 hours)\n\n' if _nxt else '')
+        + ''.join(f'{r["label"]} {r["val"]}: {r["text"]}\n' for r in (_ex.get('why_rows') or [])) + ('\n' if _ex.get('why_rows') else '')
+        + (f'Does the image have a story? {_ex.get("ns_label")}. {_ex.get("ns_text","")}\n\n' if _ex.get('ns_label') else '')
+        + ''.join(f'{x["label"]}:\n' + '\n'.join(x['lines']) + '\n\n' for x in (_ex.get('read_sections') or []))
+        + (('Your next body of work:\n' + '\n'.join(_ex.get('body_of_work')) + '\n\n') if _ex.get('body_of_work') else '')
         + f'View your full evaluation: {_img_url}\n\n'
         + f'Upload your next image: {_site}/upload\n\n'
         + f'\u2014 Shutter League\n{CONTACT_EMAIL}\n\n'
         + f'Unsubscribe: {_unsub_url}'
     )
 
+    if preview:
+        return _subject, _html, _text, _email_engine
+
     try:
         _ok = send_email(_email, _subject, _html, _text)
         app.logger.info(
             f'[scorecard_email] {"sent" if _ok else "failed"} \u2192 '
-            f'user={user.id} image={img.id} score={_score:.2f}'
+            f'user={user.id} image={img.id} score={_score:.2f} layout={_email_engine}'
         )
     except Exception as _send_err:
         app.logger.warning(f'[scorecard_email] send error: {_send_err}')
+
+
+@app.route('/admin/email-preview/<int:image_id>')
+@login_required
+def admin_email_preview(image_id):
+    """Session 235 (182.71): shows the member scorecard email for an image ON SCREEN. Sends nothing.
+    ?text=1 shows the plain-text part. Admin only."""
+    if current_user.role != 'admin':
+        abort(403)
+    _pimg = Image.query.get(image_id)
+    if not _pimg:
+        abort(404)
+    _puser = User.query.get(_pimg.user_id)
+    _subj, _phtml, _ptext, _peng = _send_scorecard_email(_pimg, _puser, preview=True)
+    if request.args.get('text') == '1':
+        from flask import Response as _R
+        return _R(f'Subject: {_subj}\nLayout: {_peng}\n\n{_ptext}', mimetype='text/plain')
+    banner = ('<div style="background:#fff8e1;border:1px solid #e0b000;padding:12px 16px;font:18px Arial;margin:0;">'
+              'PREVIEW ONLY. Nothing was sent. Layout used: <b>%s</b>. Subject: %s &nbsp; '
+              '<a href="?text=1">See plain-text version</a></div>' % (_peng, _subj))
+    return banner + _phtml
 
 
 def _send_grandmaster_raw_email(user_email, user_name, asset_name, score, tier, submit_url):
