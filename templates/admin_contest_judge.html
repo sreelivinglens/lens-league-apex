@@ -1,7 +1,4 @@
-{# SL-VERSION: admin_contest_judge-2.17 (Session 235, 2026-10-03 -- A call created on the Theme step (approved meaning, no pictures yet) now shows in the dropdown as 'theme ready' and opens the add-pictures card; that card states 'Theme check: ON (meaning approved: <word>)' or 'OFF', and the Theme box shows the approved word. Pairs with app.py 182.80. RETAINS 2.16.) #}
-{# SL-VERSION: admin_contest_judge-2.16 (Session 235, 2026-10-03 -- NEW OPEN CALL: a '+ New open call' button at the top (works from any call without touching it); the new-call card has a 'Step 1: set the theme meaning for this name' button; the upload log says whether the theme check was ON or OFF for that call name. Choosing '- choose an open call -' now also opens the new-call card (before, it reopened the latest call). Pairs with app.py 182.80. RETAINS 2.15.) #}
-{# SL-VERSION: admin_contest_judge-2.15 (Session 235, 2026-10-03 -- THEME STEP (pairs with app.py 182.80, staging only): (1) upload result list no longer crashes on a picture with no overall number (it showed 'Upload failed' and skipped the page reload when a picture was outside the theme); such pictures now show 'Outside the theme' or 'Waiting for the jury'. (2) 'Theme step' button next to Delete call, and a note on the new-call card telling you to set the theme meaning first using exactly the same call name. No scoring change. RETAINS 2.14.) #}
-{# SL-VERSION: admin_contest_judge-2.14 (Session 234, 2026-10-02 -- CLEANUP: Haiku and Compare tabs removed from Open Call dashboard (D1/D2/D3 -- Open Call judging is Sonnet-only now, Haiku retired for this feature; Haiku free-tier member evaluations elsewhere on the platform are untouched). Page is Sonnet-only, no tab bar. Removed: Haiku tab, Compare tab, Run Haiku / Haiku CSV / Haiku+Sonnet Scorecards buttons, batch selector "Haiku check" indicator, and the JS that drove them. BUGFIX (pre-existing, found while chasing the "Unexpected token '{'" console error): the "Delete call" button built its onclick from {{ batch_ref|tojson }} inside a double-quoted HTML attribute -- any batch name with an apostrophe (e.g. "Founder's Picks") produced malformed HTML because tojson's own quotes collided with the attribute's quotes. Fixed by passing the value through a data-batch-ref attribute instead and reading it in JS via this.dataset.batchRef. RETAINS 2.12 for the Sonnet tab content.) #}
+{# SL-VERSION: admin_contest_judge-3.0 (Session 235, 2026-10-03 -- SIMPLIFIED OPEN CALL PAGE (pairs with app.py 182.80, staging only). One flow: '+ New open call' asks for a name and a theme word only; a theme description is written for you to approve; then you add pictures to that open call (no retyping of names, no separate theme box or threshold). Pictures waiting for the jury or not fitting the theme are counted on this page and shown last. Upload sends 3 pictures at a time with a visible count. Plain words replace 'Sonnet' labels. Delete removes the open call and its theme. RETAINS 2.17 / 2.16 / 2.15 / 2.14 table, rescore, scorecards and Excel behaviour.) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +21,7 @@ h1{font-size:26px;font-weight:600;margin:4px 0 16px}
 /* -- BATCH SELECTOR -- */
 .batch-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px;padding:16px 18px;background:#fff;border:1px solid #E0DDD6;border-radius:12px}
 .batch-bar label{font-size:15px;font-weight:600;color:#6B6B68;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
-.batch-sel{flex:1;min-width:220px;font:500 16px 'Inter',sans-serif;padding:10px 14px;border:1px solid #CFCBC2;border-radius:8px;background:#FAF8F4;color:#1A1A18;min-height:44px}
+.batch-sel{flex:1;min-width:0;max-width:100%;font:500 16px 'Inter',sans-serif;padding:10px 14px;border:1px solid #CFCBC2;border-radius:8px;background:#FAF8F4;color:#1A1A18;min-height:44px}
 .batch-meta{font-size:15px;color:#6B6B68;white-space:nowrap}
 .btn-del{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid #FCA5A5;background:#FEF2F2;color:#B91C1C;font:500 15px 'Inter',sans-serif;cursor:pointer}
 .btn-del:hover{background:#FEE2E2}
@@ -100,180 +97,195 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
   .btn{width:100%}
   .upload-cfg{grid-template-columns:1fr}
   .batch-bar{flex-direction:column;align-items:stretch}
+  .batch-bar>*{max-width:100%}
+  .batch-sel{width:100%}
+  .cfg-2{grid-template-columns:1fr !important}
 }
+
+.guide a,.card a:not(.btn){color:#1A2744}
+.rt td.theme-cell,.rt th.theme-cell{min-width:230px}
+.pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:15px;background:#F0EDE6;color:#3A3A38}
+.cfg-2{grid-template-columns:1fr 1fr}
+.pill.warn{background:#FFF1D6;color:#7A4B00}
+.pill.off{background:#FDECEC;color:#8A1C1C}
+.rt tr.flag td{background:#FAF8F4;color:#6B6B68}
+.theme-word{font-size:24px;font-weight:600;margin:0 0 6px}
+.small-note{font-size:15px;color:#6B6B68;margin:6px 0 12px}
+.prog-line{font-size:16px;margin:8px 0}
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back" href="{{ url_for('admin_dashboard') }}"><i class="ti ti-arrow-left"></i> Admin</a>
-  <h1>Contest Judge</h1>
+  <h1>Open Calls</h1>
 
-  {# -- BATCH SELECTOR -- #}
   <div class="batch-bar">
-    <a class="btn btn-gold" style="min-height:44px;padding:0 18px;font-size:16px;text-decoration:none" href="{{ url_for('admin_contest_judge') }}?new=1"><i class="ti ti-plus"></i> New open call</a>
+    <a class="btn btn-gold" style="min-height:48px;padding:0 20px;font-size:17px;text-decoration:none" href="{{ url_for('admin_contest_judge') }}?new=1"><i class="ti ti-plus"></i> New open call</a>
     <label for="batchSel">Open call</label>
     <select class="batch-sel" id="batchSel" onchange="switchBatch(this.value)">
       <option value="">— choose an open call —</option>
       {% for b in batches %}
       <option value="{{ b.batch_ref }}"{% if b.batch_ref == batch_ref %} selected{% endif %}>
-        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %}{% if b.theme_ready %} · theme ready, add pictures{% endif %})
+        {{ b.batch_ref }} ({{ b.n }} picture{{ '' if b.n == 1 else 's' }}{% if b.n == 0 and b.theme_ready %} · theme approved{% elif b.n == 0 and b.theme_pending %} · theme waiting for approval{% endif %})
       </option>
       {% endfor %}
     </select>
-    {% if batch_ref %}
-    <span class="batch-meta">{{ batch_meta.n }} entries</span>
-    <a class="btn-line btn" style="min-height:44px;padding:0 16px;font-size:15px;text-decoration:none" href="/admin/theme/{{ batch_ref|urlencode }}"><i class="ti ti-target"></i> Theme step</a>
+    {% if batch_ref and batch_meta %}
+    <span class="batch-meta">{{ batch_meta.n }} picture{{ '' if batch_meta.n == 1 else 's' }}</span>
     <button class="btn-del" data-batch-ref="{{ batch_ref }}" onclick="deleteBatch(this.dataset.batchRef)">
-      <i class="ti ti-trash"></i> Delete call
+      <i class="ti ti-trash"></i> Delete open call
     </button>
     {% endif %}
   </div>
 
-  {% if not batch_ref %}
-  {# -- EMPTY STATE: no call selected -- #}
-  <div class="batch-empty">
-    <i class="ti ti-folder-open" style="font-size:40px;color:#CFCBC2;display:block;margin-bottom:12px"></i>
-    <p>Choose an open call above, or upload images below to start a new one.</p>
-  </div>
-
-  {# -- UPLOAD CARD (always visible so new calls can be created) -- #}
+  {% if not batch_ref or not batch_meta %}
+  {# -- NEW OPEN CALL -- #}
   <div class="card" id="newcall">
-    <div class="card-title"><i class="ti ti-upload"></i> New open call</div>
-    <div class="guide">To have each picture checked against the theme, first open the <a href="/admin/checks">Checks page</a>, type the call name in the Theme step box, and approve the meaning. Then type <strong>exactly the same call name</strong> below. Without that, the call is judged the old way.</div>
-    <div class="upload-cfg">
-      <div class="field">
-        <label for="batchName">Open call name</label>
-        <input id="batchName" type="text" placeholder="e.g. Fuji Collective Open Call" style="font-size:16px">
+    <div class="card-title"><i class="ti ti-plus"></i> New open call</div>
+    <form method="post" action="{{ url_for('admin_theme_new') }}">
+      <div class="upload-cfg cfg-2">
+        <div class="field">
+          <label for="batchName">Open call name</label>
+          <input id="batchName" name="batch_name" type="text" maxlength="40" required placeholder="e.g. Sunday Open Call" style="font-size:17px">
+        </div>
+        <div class="field">
+          <label for="themeWord">Theme word</label>
+          <input id="themeWord" name="theme_word" type="text" maxlength="120" required placeholder="e.g. Silence" style="font-size:17px">
+        </div>
       </div>
-      <div class="field">
-        <label for="themeInput">Theme (only used if no meaning is approved)</label>
-        <input id="themeInput" type="text" value="Story" style="font-size:16px">
-      </div>
-      <div class="field">
-        <label for="threshInput">Theme threshold</label>
-        <input id="threshInput" type="number" value="6.0" min="1" max="10" step="0.5" style="font-size:16px">
-      </div>
-    </div>
-    <p style="margin:0 0 14px"><button type="button" class="btn btn-line" onclick="goTheme()"><i class="ti ti-target"></i> Step 1: set the theme meaning for this name</button></p>
-    <p class="run-note" style="margin-bottom:14px">Step 2: after the meaning is approved, come back here, type the same name, and add the pictures below.</p>
-    <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="ev(event,'over')" ondragleave="ev(event,'out')" ondrop="ev(event,'drop')">
-      <div class="drop-icon"><i class="ti ti-photo"></i></div>
-      <p><strong>Click to choose images</strong> or drag and drop here</p>
-      <p>JPG or PNG · Multiple files · Already-scored entries are skipped (no re-cost)</p>
-      <input type="file" id="fileInput" multiple accept="image/jpeg,image/png" onchange="uploadFiles(this.files)">
-    </div>
-    <div class="upload-log" id="uploadLog"></div>
-    <div class="msg" id="uploadMsg"></div>
+      <p class="small-note">Next, a short description of the theme is written for you. You read it, change any words you like, and approve it. Then you can add pictures.</p>
+      <button class="btn btn-gold" type="submit">Create open call</button>
+    </form>
   </div>
+  {% if batches %}<p class="small-note">To work on an open call you already have, choose it from the list above.</p>{% endif %}
 
   {% else %}
 
-  {# ══════════════════════════════════════════════
-     SONNET — Open Call judging (Session 234: the only engine)
-  ══════════════════════════════════════════════ #}
-  <div class="tab-panel active" id="panelSonnet">
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-upload"></i> Add more images to this call</div>
-      {% if batch_meta.theme_gate %}
-      <div class="guide"><strong>Theme check: ON.</strong> Every picture is checked against the approved meaning of <strong>{{ batch_meta.theme_word }}</strong> before it is analysed. <a href="/admin/theme/{{ batch_ref|urlencode }}">See the meaning</a></div>
-      {% else %}
-      <div class="guide"><strong>Theme check: OFF.</strong> No approved meaning for this call, so pictures are judged the old way using the Theme box. <a href="/admin/theme/{{ batch_ref|urlencode }}">Set a meaning</a></div>
-      {% endif %}
-      <div class="upload-cfg">
-        <div class="field">
-          <label>Open call</label>
-          <input type="text" value="{{ batch_ref }}" readonly style="font-size:16px;background:#F0EDE6">
-        </div>
-        <div class="field">
-          <label for="themeInput2">Theme</label>
-          <input id="themeInput2" type="text" value="{{ batch_meta.theme_word or batch_meta.theme or 'Story' }}" style="font-size:16px">
-        </div>
-        <div class="field">
-          <label for="threshInput2">Threshold</label>
-          <input id="threshInput2" type="number" value="{{ batch_meta.threshold or 6.0 }}" min="1" max="10" step="0.5" style="font-size:16px">
-        </div>
-      </div>
-      <div class="drop" id="dropZone2" onclick="document.getElementById('fileInput2').click()" ondragover="ev2(event,'over')" ondragleave="ev2(event,'out')" ondrop="ev2(event,'drop')">
-        <div class="drop-icon"><i class="ti ti-photo"></i></div>
-        <p><strong>Click to add images</strong> or drag and drop</p>
-        <p>Already-scored entries in this call are skipped (no re-cost)</p>
-        <input type="file" id="fileInput2" multiple accept="image/jpeg,image/png" onchange="uploadFiles2(this.files)">
-      </div>
-      <div class="upload-log" id="uploadLog2"></div>
-    </div>
-
-    <div class="card">
-      <div class="run-row">
-        <a class="btn btn-gold" href="{{ url_for('admin_contest_judge_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-download"></i> Scorecards ZIP
-        </a>
-        <a class="btn btn-line" href="{{ url_for('admin_contest_judge_export', batch_ref=batch_ref) }}" style="text-decoration:none">
-          <i class="ti ti-file-spreadsheet"></i> Sonnet CSV
-        </a>
-        <button class="btn btn-line" onclick="rescoreAll()">
-          <i class="ti ti-refresh"></i> Rescore all
-        </button>
-        <span class="run-note">{{ batch_meta.n }} entries · Sonnet {% if batch_meta.sonnet_run %}run {{ batch_meta.sonnet_run }}{% else %}not yet run{% endif %}</span>
-      </div>
-      <div class="prog" id="rescoreProg">
-        <div class="prog-track"><div class="prog-fill" id="rescoreProgFill"></div></div>
-        <div class="prog-text" id="rescoreProgText">Starting…</div>
-      </div>
-      <div class="msg" id="rescoreMsg"></div>
-    </div>
-
-    <div class="results-wrap">
-      <table class="rt" id="resultsTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th></th>
-            <th>Photographer</th>
-            <th class="num">Overall</th>
-            <th class="num">Wonder<br><span style="font-weight:400;font-size:15px">27%</span></th>
-            <th class="num">H.Connect<br><span style="font-weight:400;font-size:15px">19%</span></th>
-            <th class="num">Story<br><span style="font-weight:400;font-size:15px">18%</span></th>
-            <th class="num">Disrupt<br><span style="font-weight:400;font-size:15px">15%</span></th>
-            <th class="num">Craft<br><span style="font-weight:400;font-size:15px">13%</span></th>
-            <th class="num">Moment<br><span style="font-weight:400;font-size:15px">8%</span></th>
-            <th>Theme</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="resultsTbody">
-          {% if sonnet_entries %}
-            {% for e in sonnet_entries %}
-            <tr>
-              <td class="muted" style="font-size:15px">{{ loop.index }}</td>
-              <td><img class="thumb-sm" src="{{ e.thumb_url }}" alt="" loading="lazy"></td>
-              <td>
-                <div style="font-weight:500">{{ e.photographer or '—' }}</div>
-                <div class="muted" style="font-size:15px">{{ e.title or '' }}</div>
-              </td>
-              <td class="num"><strong>{{ '%.2f'|format(e.composite) if e.composite else '—' }}</strong></td>
-              <td class="num">{{ '%.1f'|format(e.wonder) if e.wonder else '—' }}</td>
-              <td class="num">{{ '%.1f'|format(e.aq) if e.aq else '—' }}</td>
-              <td class="num">{{ '%.1f'|format(e.story_transfer) if e.story_transfer else '—' }}</td>
-              <td class="num">{{ '%.1f'|format(e.disruption) if e.disruption else '—' }}</td>
-              <td class="num">{{ '%.1f'|format(e.dod) if e.dod else '—' }}</td>
-              <td class="num">{{ '%.1f'|format(e.dm) if e.dm else '—' }}</td>
-              <td>
-                {% if e.theme_relevant %}<span class="pos" style="font-size:15px">✓</span>{% else %}<span class="muted" style="font-size:15px">—</span>{% endif %}
-                {% if e.theme_note %}<div class="note-text">{{ e.theme_note[:80] }}{% if e.theme_note|length > 80 %}…{% endif %}</div>{% endif %}
-              </td>
-              <td>
-                <a href="{{ url_for('admin_contest_judge_review', batch_ref=batch_ref) }}#e{{ e.id }}" class="btn-line btn" style="min-height:44px;padding:0 12px;font-size:15px;text-decoration:none">Review</a>
-              </td>
-            </tr>
-            {% endfor %}
-          {% else %}
-          <tr><td colspan="12" class="no-entries">No entries scored yet. Upload images above.</td></tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
+  {# -- THEME -- #}
+  <div class="card">
+    <div class="card-title"><i class="ti ti-target"></i> Theme</div>
+    {% if batch_meta.theme_gate %}
+      <p class="theme-word">{{ batch_meta.theme_word }}</p>
+      <p class="small-note">Every picture added to this open call is checked against this theme first.</p>
+      {% if batch_meta.theme_pending %}<p><span class="pill warn">A change to the theme is waiting for approval</span></p>{% endif %}
+      <a class="btn btn-line" style="text-decoration:none" href="/admin/theme/{{ batch_ref|urlencode }}">Read or change the theme description</a>
+    {% elif batch_meta.theme_pending %}
+      <p class="theme-word">{{ batch_meta.theme_draft_word }}</p>
+      <p class="small-note">The theme description is written but not approved yet. Pictures can be added after you approve it.</p>
+      <a class="btn btn-gold" style="text-decoration:none" href="/admin/theme/{{ batch_ref|urlencode }}">Read and approve the theme description</a>
+    {% else %}
+      <p class="small-note">No theme is set for this open call. Pictures are evaluated without a theme check.</p>
+      <a class="btn btn-line" style="text-decoration:none" href="/admin/theme/{{ batch_ref|urlencode }}">Set a theme</a>
+    {% endif %}
   </div>
+
+  {% if batch_meta.n_wait %}
+  <div class="guide"><strong>{{ batch_meta.n_wait }} picture{{ '' if batch_meta.n_wait == 1 else 's' }} waiting for the jury.</strong> {{ 'It is' if batch_meta.n_wait == 1 else 'They are' }} not evaluated or ranked until someone decides.
+    <a href="/admin/theme/{{ batch_ref|urlencode }}#jury">Decide now</a></div>
+  {% endif %}
+  {% if batch_meta.n_off %}
+  <p class="small-note">{{ batch_meta.n_off }} picture{{ '' if batch_meta.n_off == 1 else 's' }} did not fit the theme and {{ 'is' if batch_meta.n_off == 1 else 'are' }} shown last in the list.
+    <a href="/admin/theme/{{ batch_ref|urlencode }}#nofit">See them</a></p>
+  {% endif %}
+
+  {# -- ADD PICTURES -- #}
+  {% if batch_meta.n > 0 or batch_meta.theme_gate %}
+  <div class="card">
+    <div class="card-title"><i class="ti ti-upload"></i> Add pictures to this open call</div>
+    <input type="hidden" id="themeInput2" value="{{ batch_meta.theme_word or batch_meta.theme or 'Story' }}">
+    <input type="hidden" id="threshInput2" value="{{ batch_meta.threshold or 6.0 }}">
+    <div class="drop" id="dropZone2" onclick="document.getElementById('fileInput2').click()" ondragover="ev2(event,'over')" ondragleave="ev2(event,'out')" ondrop="ev2(event,'drop')">
+      <div class="drop-icon"><i class="ti ti-photo"></i></div>
+      <p><strong>Click to add pictures</strong> or drag and drop</p>
+      <p>JPG or PNG · several at once · pictures already evaluated in this open call are skipped</p>
+      <input type="file" id="fileInput2" multiple accept="image/jpeg,image/png" onchange="uploadFiles2(this.files)">
+    </div>
+    <div class="upload-log" id="uploadLog2"></div>
+  </div>
+  {% else %}
+  <div class="card"><p>Approve the theme description above, then you can add pictures here.</p></div>
+  {% endif %}
+
+  {% if batch_meta.n > 0 %}
+  <div class="card">
+    <div class="run-row">
+      <a class="btn btn-gold" href="{{ url_for('admin_contest_judge_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-download"></i> Scorecards ZIP
+      </a>
+      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_export', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-file-spreadsheet"></i> Download Excel
+      </a>
+      <button class="btn btn-line" onclick="rescoreAll()">
+        <i class="ti ti-refresh"></i> Rescore all
+      </button>
+    </div>
+    <div class="prog" id="rescoreProg">
+      <div class="prog-track"><div class="prog-fill" id="rescoreProgFill"></div></div>
+      <div class="prog-text" id="rescoreProgText">Starting…</div>
+    </div>
+    <div class="msg" id="rescoreMsg"></div>
+  </div>
+
+  <div class="results-wrap">
+    <table class="rt" id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th></th>
+          <th>Photographer</th>
+          <th class="num">Overall</th>
+          <th class="num">Wonder<br><span style="font-weight:400;font-size:15px">27%</span></th>
+          <th class="num">H.Connect<br><span style="font-weight:400;font-size:15px">19%</span></th>
+          <th class="num">Story<br><span style="font-weight:400;font-size:15px">18%</span></th>
+          <th class="num">Disrupt<br><span style="font-weight:400;font-size:15px">15%</span></th>
+          <th class="num">Craft<br><span style="font-weight:400;font-size:15px">13%</span></th>
+          <th class="num">Moment<br><span style="font-weight:400;font-size:15px">8%</span></th>
+          <th class="theme-cell">Theme</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="resultsTbody">
+        {% if sonnet_entries %}
+          {% for e in sonnet_entries %}
+          {% set flagged = e.theme_state in ['off_theme', 'borderline', 'jury_exclude'] %}
+          <tr{% if flagged %} class="flag"{% endif %}>
+            <td class="muted" style="font-size:15px">{{ '—' if flagged else e.rank }}</td>
+            <td>{% if e.thumb_url %}<img class="thumb-sm" src="{{ e.thumb_url }}" alt="" loading="lazy">{% endif %}</td>
+            <td>
+              <div style="font-weight:500">{{ e.photographer or '—' }}</div>
+              <div class="muted" style="font-size:15px">{{ e.title or '' }}</div>
+            </td>
+            <td class="num"><strong>{{ '%.2f'|format(e.composite) if e.composite else '—' }}</strong></td>
+            <td class="num">{{ '%.1f'|format(e.wonder) if e.wonder else '—' }}</td>
+            <td class="num">{{ '%.1f'|format(e.aq) if e.aq else '—' }}</td>
+            <td class="num">{{ '%.1f'|format(e.story_transfer) if e.story_transfer else '—' }}</td>
+            <td class="num">{{ '%.1f'|format(e.disruption) if e.disruption else '—' }}</td>
+            <td class="num">{{ '%.1f'|format(e.dod) if e.dod else '—' }}</td>
+            <td class="num">{{ '%.1f'|format(e.dm) if e.dm else '—' }}</td>
+            <td class="theme-cell">
+              {% if e.theme_state == 'borderline' %}<span class="pill warn">Waiting for the jury</span>
+              {% elif e.theme_state == 'off_theme' %}<span class="pill off">Does not fit the theme</span>
+              {% elif e.theme_state == 'jury_exclude' %}<span class="pill off">Kept out by the jury</span>
+              {% elif e.theme_relevant %}<span class="pos" style="font-size:15px">✓</span>
+              {% else %}<span class="muted" style="font-size:15px">—</span>{% endif %}
+              {% if e.theme_note %}<div class="note-text">{{ e.theme_note[:80] }}{% if e.theme_note|length > 80 %}…{% endif %}</div>{% endif %}
+            </td>
+            <td>
+              {% if flagged %}
+              <a href="/admin/theme/{{ batch_ref|urlencode }}#{{ 'jury' if e.theme_state == 'borderline' else ('nofit' if e.theme_state == 'off_theme' else 'kept') }}" class="btn-line btn" style="min-height:44px;padding:0 12px;font-size:15px;text-decoration:none">Decide</a>
+              {% else %}
+              <a href="{{ url_for('admin_contest_judge_review', batch_ref=batch_ref) }}#e{{ e.id }}" class="btn-line btn" style="min-height:44px;padding:0 12px;font-size:15px;text-decoration:none">Review</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+        <tr><td colspan="12" class="no-entries">No pictures evaluated yet. Add pictures above.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
   {% endif %}{# batch_ref #}
 </div>
 
@@ -289,78 +301,79 @@ var BATCH_N         = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
 </script>
 {% raw %}
 <script>
-/* -- BATCH SWITCH & DELETE -- */
+/* -- OPEN CALL SWITCH & DELETE -- */
 function switchBatch(v){
   if(v) window.location = URL_BASE + '?batch=' + encodeURIComponent(v);
   else window.location = URL_BASE + '?new=1';
 }
-function goTheme(){
-  var name=document.getElementById('batchName').value.trim();
-  if(!name){ alert('Type the open call name first.'); return; }
-  window.location='/admin/theme-go?batch='+encodeURIComponent(name);
-}
 function deleteBatch(ref){
-  if(!confirm('Delete "' + ref + '" and all ' + BATCH_N + ' scored entries?\n\nThis removes all Sonnet scores, Haiku scores and stored images. It cannot be undone.')) return;
+  if(!confirm('Delete "' + ref + '"?\n\nThis removes its ' + BATCH_N + ' picture(s), their evaluations and its theme. It cannot be undone.')) return;
   fetch(URL_DELETE, {method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'})
     .then(function(r){ return r.json(); })
-    .then(function(){ window.location = URL_BASE; })
+    .then(function(){ window.location = URL_BASE + '?new=1'; })
     .catch(function(){ alert('Delete failed. Please try again.'); });
 }
 
-/* -- DRAG + DROP HELPERS -- */
-function ev(e,a){ e.preventDefault(); document.getElementById('dropZone').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles(e.dataTransfer.files); }
+/* -- DRAG + DROP -- */
 function ev2(e,a){ e.preventDefault(); document.getElementById('dropZone2').classList.toggle('over',a==='over'||a==='drop'); if(a==='drop') uploadFiles2(e.dataTransfer.files); }
-
-/* -- UPLOAD (new call) -- */
-function uploadFiles(files){
-  if(!files||!files.length) return;
-  var name=document.getElementById('batchName').value.trim();
-  if(!name){ alert('Enter an open call name first.'); return; }
-  _doUpload(files, name,
-    document.getElementById('themeInput').value.trim()||'Story',
-    document.getElementById('threshInput').value||'6.0',
-    'uploadLog','uploadMsg');
-}
-/* -- UPLOAD (add to existing call) -- */
 function uploadFiles2(files){
   if(!files||!files.length) return;
   _doUpload(files, BATCH_REF||'',
     document.getElementById('themeInput2') ? document.getElementById('themeInput2').value.trim() : 'Story',
     document.getElementById('threshInput2') ? document.getElementById('threshInput2').value : '6.0',
-    'uploadLog2','');
-}
-function _doUpload(files, batchRef, theme, thresh, logId, msgId){
-  var log=document.getElementById(logId);
-  if(log){ log.style.display='block'; log.innerHTML='<p>Uploading '+files.length+' image'+(files.length===1?'':'s')+'…</p>'; }
-  var fd=new FormData();
-  for(var i=0;i<files.length;i++) fd.append('images',files[i]);
-  fd.append('batch_ref',batchRef);
-  fd.append('theme',theme);
-  fd.append('theme_threshold',thresh);
-  fetch(URL_UPLOAD,{method:'POST',body:fd,credentials:'same-origin'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(log){
-        var html='';
-        (d.results||[]).forEach(function(r){
-          if(r.composite===null||r.composite===undefined){
-            var why=(r.theme_state==='borderline')?'Waiting for the jury':'Outside the theme';
-            html+='<p class="skip">• '+r.photographer+' — '+r.filename+' ('+why+', not analysed)</p>';
-          } else { html+='<p class="ok">✓ '+r.photographer+' — '+r.filename+' ('+Number(r.composite).toFixed(2)+')</p>'; }
-        });
-        (d.reused||[]).forEach(function(r){ html+='<p class="skip">↩ '+r+' (already scored, skipped)</p>'; });
-        (d.errors||[]).forEach(function(r){ html+='<p class="err">✗ '+(r.filename||r)+'</p>'; });
-        var gate = (d.theme_gate===true) ? '<p class="ok"><strong>Theme check: ON</strong> for this call.</p>' : '<p class="skip"><strong>Theme check: OFF</strong> — no approved theme meaning for this exact call name, so pictures were judged the old way.</p>';
-        log.innerHTML=gate+(html||'<p class="ok">Done.</p>');
-      }
-      if(d.batch_ref) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(d.batch_ref); },1200);
-    })
-    .catch(function(){ if(log) log.innerHTML='<p class="err">Upload failed. Please try again.</p>'; });
+    'uploadLog2');
 }
 
-/* -- RESCORE ALL (Sonnet) -- */
+/* -- UPLOAD: 3 pictures per request, with a visible count -- */
+function _addLine(log, cls, text){
+  var p=document.createElement('p'); if(cls) p.className=cls; p.textContent=text; log.appendChild(p);
+}
+function _doUpload(files, batchRef, theme, thresh, logId){
+  var log=document.getElementById(logId);
+  var arr=Array.prototype.slice.call(files), size=3, idx=0, gate=null, failed=0, reload=false;
+  var done={results:[],reused:[],errors:[]};
+  log.style.display='block'; log.textContent='';
+  var status=document.createElement('p'); status.className='prog-line'; log.appendChild(status);
+  function show(){ status.textContent='Working: '+Math.min(idx,arr.length)+' of '+arr.length+' pictures done…'; }
+  function finish(){
+    log.textContent='';
+    if(gate===true) _addLine(log,'ok','Theme check: each picture was checked against the theme first.');
+    else if(gate===false) _addLine(log,'skip','No theme is set for this open call, so pictures were evaluated without a theme check.');
+    done.results.forEach(function(r){
+      if(r.composite===null||r.composite===undefined){
+        var why=(r.theme_state==='borderline')?'waiting for the jury':'does not fit the theme';
+        _addLine(log,'skip','• '+r.photographer+' — '+r.filename+' ('+why+', not evaluated)');
+      } else { _addLine(log,'ok','✓ '+r.photographer+' — '+r.filename+' ('+Number(r.composite).toFixed(2)+')'); }
+    });
+    done.reused.forEach(function(r){ _addLine(log,'skip','↩ '+(r.filename||r)+' (already evaluated, skipped)'); });
+    done.errors.forEach(function(r){ _addLine(log,'err','✗ '+(r.filename||r)+(r.error?' — '+r.error:'')); });
+    if(failed) _addLine(log,'err','Some pictures did not finish. Add them again; the ones already evaluated are skipped.');
+    if(!done.results.length && !done.reused.length && !done.errors.length && !failed) _addLine(log,'ok','Done.');
+    if(reload) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(batchRef); },1500);
+  }
+  function next(){
+    if(idx>=arr.length){ finish(); return; }
+    var chunk=arr.slice(idx, idx+size), fd=new FormData();
+    chunk.forEach(function(f){ fd.append('images',f); });
+    fd.append('batch_ref',batchRef); fd.append('theme',theme); fd.append('theme_threshold',thresh);
+    fetch(URL_UPLOAD,{method:'POST',body:fd,credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        done.results=done.results.concat(d.results||[]);
+        done.reused=done.reused.concat(d.reused||[]);
+        done.errors=done.errors.concat(d.errors||[]);
+        if(typeof d.theme_gate==='boolean') gate=d.theme_gate;
+        if(d.batch_ref) reload=true;
+        idx+=size; show(); next();
+      })
+      .catch(function(){ failed+=chunk.length; idx+=size; show(); next(); });
+  }
+  show(); next();
+}
+
+/* -- RESCORE ALL -- */
 function rescoreAll(){
-  if(!confirm('Rescore all entries in this open call with Sonnet?\nExisting scores will be overwritten.')) return;
+  if(!confirm('Rescore all pictures in this open call?\nExisting scores will be overwritten. Pictures already judged not to fit the theme stay as they are.')) return;
   var btn=event.target; btn.disabled=true;
   document.getElementById('rescoreProg').style.display='block';
   fetch(URL_RESCORE,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'})
@@ -381,7 +394,6 @@ function pollRescore(id,btn){
       else setTimeout(function(){ pollRescore(id,btn); },3000);
     }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
 }
-
 </script>
 {% endraw %}
 </body>
