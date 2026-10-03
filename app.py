@@ -1,4 +1,4 @@
-# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
+# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Founder-only 'Switch the theme check off' on the theme page (record kept as retired; refused once any picture is checked). Contest Judge page: '+ New open call' works (?new=1; before, the page always reopened the latest call). Theme audit table wraps so Detail is readable. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
@@ -15795,8 +15795,8 @@ def admin_contest_judge():
 
     # Active batch from query param (default to most recent)
     batch_ref = request.args.get('batch', '')
-    if not batch_ref and batches:
-        batch_ref = batches[0]['batch_ref']
+    if not batch_ref and batches and request.args.get('new') != '1':
+        batch_ref = batches[0]['batch_ref']  # 182.80: ?new=1 skips this so a NEW call can be started
     active_tab = request.args.get('tab', 'sonnet')
 
     batch_meta = None
@@ -16156,6 +16156,7 @@ def admin_contest_judge_upload():
 
     return jsonify({
         'batch_ref': batch_ref,
+        'theme_gate': bool(_cj_theme_active_def(batch_ref)),
         'judged': len(results),
         'reused': len(reused),
         'errors': errors,
@@ -17540,6 +17541,15 @@ def admin_theme(batch_ref):
         body += ("<form method='post' action='%s/newversion'><p class='hint'>An approved meaning cannot be edited. "
                  "A change makes a new version, and the page will warn that earlier checks used the old one.</p>"
                  "<button class='btn sec' type='submit'>Start a new version</button></form>") % base
+        if founder:
+            body += ("<h3>Switch the theme check off for this call</h3>"
+                     "<form method='post' action='%s/retire'><p class='hint'>This puts the call back to being judged "
+                     "the old way, with the Theme box you typed at upload. The approved meaning stays on record as "
+                     "switched off, and the audit trail shows who did it and when. It only works while no picture "
+                     "has been checked yet.</p>"
+                     "<button class='btn sec' type='submit' "
+                     "onclick=\"return confirm('Switch the theme check off for this call?')\">"
+                     "Switch the theme check off</button></form>") % base
     else:
         body += ("<form method='post' action='%s/draft'><p>Type the theme word, then press the button. "
                  "The engine writes a short meaning for you to read and correct.</p>"
@@ -17597,7 +17607,7 @@ def admin_theme(batch_ref):
     logs = db.session.execute(db.text(
         "SELECT at, action, detail, by_who, ip FROM contest_theme_log WHERE batch_ref=:b ORDER BY id DESC LIMIT 200"),
         {'b': batch_ref}).fetchall()
-    tr = ''.join("<tr><td class='when'>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (
+    tr = ''.join("<tr><td class='when'>%s</td><td style='word-break:break-word'>%s</td><td style='word-break:break-word'>%s</td><td style='min-width:260px'>%s</td></tr>" % (
         _html_escape_cj(_cj_fmt_ts_short(r.at)), _html_escape_cj(r.by_who), _html_escape_cj(r.action),
         _html_escape_cj(r.detail)) for r in logs)
     body += ("<h2>Audit trail (newest first)</h2><div class='wrap'><table><tr><th class='when'>When (India time)</th><th>Who</th>"
@@ -17697,6 +17707,37 @@ def admin_theme_save(batch_ref):
         app.logger.info('[theme] APPROVED batch=%s version=%d by=%s' % (batch_ref, ver, current_user.email))
     else:
         _cj_theme_log(batch_ref, 'draft_edited', 'version %d saved' % ver)
+    return redirect('/admin/theme/' + batch_ref)
+
+
+@app.route('/admin/theme/<batch_ref>/retire', methods=['POST'])
+@login_required
+def admin_theme_retire(batch_ref):
+    """Founder only. Switches the theme check off for a call (record kept as 'retired').
+    Refused once any picture carries a theme check, so no stored result is left half-changed."""
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_theme_ensure():
+        abort(500)
+    if not _cj_theme_is_founder():
+        abort(403)
+    back = '<a href="/admin/theme/%s">Back</a>' % _html_escape_cj(batch_ref)
+    d = _cj_theme_active_def(batch_ref)
+    if d is None:
+        return _cj_theme_msg('Nothing to switch off', 'This call has no approved meaning. ' + back, 400)
+    checked = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contest_judge_batch WHERE batch_ref=:b AND theme_state IS NOT NULL"),
+        {'b': batch_ref}).scalar() or 0
+    if checked:
+        return _cj_theme_msg('Cannot switch off now',
+                             '%d picture(s) in this call already carry a theme check, so switching it off would '
+                             'leave them half changed. Nothing was changed. ' % checked + back, 400)
+    db.session.execute(db.text(
+        "UPDATE contest_theme_def SET status='retired' WHERE batch_ref=:b AND status='approved'"), {'b': batch_ref})
+    db.session.commit()
+    _cj_theme_log(batch_ref, 'retired', 'version %d switched off by %s; call judged the old way again'
+                  % (d.version, current_user.email))
+    app.logger.info('[theme] RETIRED batch=%s version=%d by=%s' % (batch_ref, d.version, current_user.email))
     return redirect('/admin/theme/' + batch_ref)
 
 
