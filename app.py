@@ -1,3 +1,5 @@
+# SL-VERSION: 182.67 (Session 235, 2026-10-03 -- NEW (staging, nothing live-tested): (1) Open Call RUN HISTORY: every judge run kept in new table contest_judge_runs, first run official, viewer /admin/contest-judge/runs/<batch>, CSV, founder-only make-official with reason; rescore routes snapshot today's result then record the new run; optional env SL_OC_KEEP_OFFICIAL=1 stops rescore overwriting the displayed result (default OFF = unchanged behaviour). (2) PIXEL REPORT (report only, changes no score): /admin/pixel-report/<batch>, uses new pixel_metrics.py, own table contest_pixel_metrics. (3) SIGN-OFF page: /admin/jury/<batch> creates private links (NO EMAIL SENT), /jury/review/<token> for jury/founder to approve or return, audit trail in contest_jury_log. RETAINS 182.66.)
+# SL-VERSION: 182.66 (Session 235, 2026-10-03 -- (1) Percentile pools separated: Sonnet images compare with the Sonnet pool only, Haiku (eValuate) images with the Haiku pool; Haiku never enters the Sonnet pool (needs scoring-227.2). A combined approximate figure is returned as combined_pct but is NOT displayed yet (wording awaits founder approval). (2) /admin/score-audit now reports whether pools are separated. 182.65 line retained below.)
 # SL-VERSION: 182.65 (Session 235, 2026-10-03 -- FIX: /admin/score-audit crashed when building its page (a literal percent sign in the page style clashed with the text-filling method). Page now filled with plain replacement. Still read-only. 182.64 line retained below.)
 # SL-VERSION: 182.64 (Session 235, 2026-10-03 -- NEW (read-only, changes NO score): GET /admin/score-audit recalculates every scored member image from its stored five dimension numbers with the code formula (calculate_score; weights, rules, NS bonus, sub-genre routing) and reports how many scores and tiers would differ, plus CSV (?format=csv). Also checks whether the live percentile function excludes Haiku-tier (eValuate) images and counts how many sit in its pool. Mobile-track images use mobile weights without modifiers and are labelled. Nothing is written.)
 # SL-VERSION: 182.63 (Session 235, 2026-10-02 -- NEW (test only): FULL-engine DDI side-by-side on a short list of 12 pictures. POST /admin/contest-judge/ddi-full-run/<batch> runs the full member engine (auto_score: scene description + evaluation with Gestalt/classical checks and story clarity; genre Open) and writes ONLY to new table contest_judge_ddi_full; GET /admin/contest-judge/ddi-full-csv/<batch> downloads current vs fast DDI vs full DDI. contest_judge_batch never written. Live Open Call engine unchanged. RETAINS 182.62.)
@@ -2662,6 +2664,17 @@ def inject_globals():
         'timedelta':         timedelta,
         'now':               datetime.utcnow,
     }
+
+
+def _pct_pool_for_image(image_id):
+    """Which percentile pool an image belongs to: 'haiku' for free-tier (eValuate) images, else 'sonnet'.
+    Raw SQL because is_haiku_try is not an ORM column (Rule 8). Falls back to 'sonnet'. v182.66."""
+    try:
+        r = db.session.execute(db.text('SELECT COALESCE(is_haiku_try, FALSE) FROM images WHERE id = :iid'),
+                               {'iid': image_id}).fetchone()
+        return 'haiku' if (r and r[0]) else 'sonnet'
+    except Exception:
+        return 'sonnet'
 
 
 def admin_required(f):
@@ -13031,6 +13044,7 @@ def image_detail(image_id):
                 float(img.score),
                 genre=img.genre,
                 camera_track=getattr(img, 'camera_track', None),
+                pool=_pct_pool_for_image(img.id),
             )
         except Exception as e:
             app.logger.warning(f'[percentile] {e}')
@@ -16165,6 +16179,16 @@ def admin_contest_judge_upload():
                 'tp':  thumb_path_val,
             })
             db.session.commit()
+            # Session 235 (182.67): keep this run in the history table (best effort)
+            try:
+                _new_eid = db.session.execute(db.text(
+                    "SELECT id FROM contest_judge_batch WHERE batch_ref=:br AND filename=:fn "
+                    "ORDER BY id DESC LIMIT 1"), {'br': batch_ref, 'fn': fname}).scalar()
+                if _new_eid:
+                    _cj_runs_record(_new_eid, batch_ref, verdict, image_b64, 'initial')
+            except Exception as _hk:
+                db.session.rollback()
+                app.logger.error(f'[cj_runs] initial hook: {_hk}')
 
             results.append({
                 'filename':      fname,
@@ -16545,6 +16569,759 @@ def admin_contest_judge_delete_batch(batch_ref):
 
 # ── CONTEST JUDGE — SINGLE ENTRY RESCORE ─────────────────────────────────────
 
+# ═══════════════════════════════════════════════════════════════════════════
+# Session 235 (182.67) — OPEN CALL RUN HISTORY  (audit trail, step 3)
+# Every judge run is KEPT in contest_judge_runs. Nothing is ever overwritten
+# or deleted here. The first run of an entry is the OFFICIAL run (founder rule:
+# "the first official evaluation stands"). Only the founder can make another
+# run official, with a written reason.
+# Recording is "best effort": if anything here fails, the existing Open Call
+# flow carries on exactly as before (the error is only logged).
+# Display switch (default OFF = today's behaviour): env SL_OC_KEEP_OFFICIAL=1
+# makes a rescore be recorded but NOT overwrite the displayed result once an
+# official run exists.
+# ═══════════════════════════════════════════════════════════════════════════
+_CJ_RUNS_FOUNDER_EMAILS = {'sreeks@gmail.com', 'sreelivinglens@gmail.com',
+                           'sree@shutterleague.com', 'sree@thelivinglens.org'}
+_CJ_RUNS_PROMPT_VERSION = 'opencall-v182.27 (6 questions; theme gate)'
+_CJ_RUNS_FORMULA_VERSION = 'wonder27 aq19 story18 disruption15 dod13 dm8 (no NS bonus)'
+_cj_runs_table_ready = {'ok': False}
+
+
+def _cj_runs_ensure_table():
+    if _cj_runs_table_ready['ok']:
+        return True
+    try:
+        db.session.execute(db.text("""
+            CREATE TABLE IF NOT EXISTS contest_judge_runs (
+                id SERIAL PRIMARY KEY,
+                batch_ref VARCHAR(40) NOT NULL,
+                entry_id INTEGER NOT NULL,
+                run_no INTEGER NOT NULL,
+                run_at TIMESTAMP DEFAULT NOW(),
+                source VARCHAR(40),
+                image_sha256 VARCHAR(64),
+                model VARCHAR(60),
+                prompt_version VARCHAR(120),
+                formula_version VARCHAR(160),
+                wonder FLOAT, aq FLOAT, story_transfer FLOAT,
+                disruption FLOAT, dod FLOAT, dm FLOAT,
+                composite FLOAT,
+                theme_score FLOAT,
+                theme_relevant BOOLEAN,
+                reasoning_json TEXT,
+                is_official BOOLEAN DEFAULT FALSE,
+                official_by VARCHAR(120),
+                official_at TIMESTAMP,
+                official_reason TEXT,
+                UNIQUE (entry_id, run_no)
+            )
+        """))
+        db.session.execute(db.text(
+            "CREATE INDEX IF NOT EXISTS idx_cjruns_batch ON contest_judge_runs (batch_ref)"))
+        db.session.commit()
+        _cj_runs_table_ready['ok'] = True
+        return True
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[cj_runs] table create failed: {_e}')
+        return False
+
+
+def _cj_runs_sha(image_b64):
+    try:
+        import base64 as _b64, hashlib as _hl
+        return _hl.sha256(_b64.b64decode(image_b64)).hexdigest()
+    except Exception:
+        return ''
+
+
+def _cj_runs_insert(entry_id, batch_ref, values, source, sha, make_official=False, official_by=None,
+                    official_reason=None):
+    """Insert one run. values = dict with wonder, aq, story_transfer, disruption, dod, dm,
+    composite, theme_score, theme_relevant, reasoning (dict or str). Returns new run id or None."""
+    nxt = db.session.execute(db.text(
+        "SELECT COALESCE(MAX(run_no),0)+1 FROM contest_judge_runs WHERE entry_id=:e"),
+        {'e': entry_id}).scalar()
+    reasoning = values.get('reasoning')
+    if not isinstance(reasoning, str):
+        reasoning = _cj_json.dumps(reasoning, default=str)
+    r = db.session.execute(db.text("""
+        INSERT INTO contest_judge_runs
+          (batch_ref, entry_id, run_no, source, image_sha256, model, prompt_version, formula_version,
+           wonder, aq, story_transfer, disruption, dod, dm, composite, theme_score, theme_relevant,
+           reasoning_json, is_official, official_by, official_at, official_reason)
+        VALUES
+          (:br, :e, :n, :src, :sha, :mod, :pv, :fv,
+           :wo, :aq, :st, :di, :dod, :dm, :cs, :tsc, :tr,
+           :rj, :off, :ob, CASE WHEN :off THEN NOW() ELSE NULL END, :orr)
+        RETURNING id
+    """), {
+        'br': batch_ref, 'e': entry_id, 'n': nxt, 'src': source, 'sha': sha or '',
+        'mod': values.get('model') or 'claude-sonnet-4-6',
+        'pv': _CJ_RUNS_PROMPT_VERSION, 'fv': _CJ_RUNS_FORMULA_VERSION,
+        'wo': values.get('wonder'), 'aq': values.get('aq'), 'st': values.get('story_transfer'),
+        'di': values.get('disruption'), 'dod': values.get('dod'), 'dm': values.get('dm'),
+        'cs': values.get('composite'), 'tsc': values.get('theme_score'),
+        'tr': values.get('theme_relevant'), 'rj': reasoning,
+        'off': bool(make_official), 'ob': official_by, 'orr': official_reason,
+    }).scalar()
+    return r
+
+
+def _cj_runs_snapshot_existing(entry_id):
+    """Call BEFORE a rescore overwrites the displayed row. If this entry has no history yet,
+    the current stored evaluation is kept as run 1 and marked official (the first evaluation)."""
+    try:
+        if not _cj_runs_ensure_table():
+            return
+        have = db.session.execute(db.text(
+            "SELECT 1 FROM contest_judge_runs WHERE entry_id=:e LIMIT 1"), {'e': entry_id}).fetchone()
+        if have:
+            return
+        row = db.session.execute(db.text("""
+            SELECT batch_ref, wonder_score, aq_score, story_transfer_score, disruption_score,
+                   dod_score, dm_score, composite_score, theme_score, theme_relevant, raw_json
+            FROM contest_judge_batch WHERE id=:e"""), {'e': entry_id}).fetchone()
+        if not row or row.composite_score is None:
+            return
+        _cj_runs_insert(entry_id, row.batch_ref, {
+            'wonder': row.wonder_score, 'aq': row.aq_score, 'story_transfer': row.story_transfer_score,
+            'disruption': row.disruption_score, 'dod': row.dod_score, 'dm': row.dm_score,
+            'composite': row.composite_score, 'theme_score': row.theme_score,
+            'theme_relevant': row.theme_relevant, 'reasoning': row.raw_json or '{}',
+        }, source='snapshot-of-existing', sha='', make_official=True,
+            official_by='system (first evaluation)')
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[cj_runs] snapshot failed entry={entry_id}: {_e}')
+
+
+def _cj_runs_record(entry_id, batch_ref, verdict, image_b64, source):
+    """Record a judge result as a new run. First run for an entry becomes official.
+    Never raises."""
+    try:
+        if not _cj_runs_ensure_table() or not verdict or 'error' in verdict:
+            return None
+        first = not db.session.execute(db.text(
+            "SELECT 1 FROM contest_judge_runs WHERE entry_id=:e LIMIT 1"), {'e': entry_id}).fetchone()
+        rid = _cj_runs_insert(entry_id, batch_ref, {
+            'wonder': verdict.get('wonder'), 'aq': verdict.get('aq'),
+            'story_transfer': verdict.get('story_transfer'),
+            'disruption': verdict.get('disruption'), 'dod': verdict.get('dod'), 'dm': verdict.get('dm'),
+            'composite': verdict.get('composite'), 'theme_score': verdict.get('theme_score'),
+            'theme_relevant': bool(verdict.get('theme_relevant')), 'reasoning': verdict,
+        }, source=source, sha=_cj_runs_sha(image_b64), make_official=first,
+            official_by=('system (first evaluation)' if first else None))
+        db.session.commit()
+        return rid
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[cj_runs] record failed entry={entry_id}: {_e}')
+        return None
+
+
+def _cj_runs_keep_official():
+    return (os.environ.get('SL_OC_KEEP_OFFICIAL', '0').strip() == '1')
+
+
+def _cj_runs_official_exists(entry_id):
+    try:
+        if not _cj_runs_ensure_table():
+            return False
+        return bool(db.session.execute(db.text(
+            "SELECT 1 FROM contest_judge_runs WHERE entry_id=:e AND is_official LIMIT 1"),
+            {'e': entry_id}).fetchone())
+    except Exception:
+        db.session.rollback()
+        return False
+
+
+_CJ_RUNS_CSS = (
+    "<style>body{font-family:Arial,Helvetica,sans-serif;font-size:19px;line-height:1.5;"
+    "margin:0;padding:16px;background:#fff;color:#111}"
+    "h1{font-size:28px}h2{font-size:23px}table{border-collapse:collapse;width:100%}"
+    "th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}"
+    "th{background:#eee}.wrap{overflow-x:auto}a{color:#0645ad}"
+    ".btn{display:inline-block;padding:12px 18px;background:#1a56db;color:#fff;border:0;"
+    "border-radius:6px;font-size:19px;text-decoration:none;cursor:pointer;min-height:44px}"
+    ".off{background:#e6f4ea;font-weight:bold}.note{background:#fff8e1;border:1px solid #e0b000;"
+    "padding:10px;margin:12px 0}input[type=text],textarea{font-size:19px;width:100%;"
+    "box-sizing:border-box;padding:8px}</style>")
+
+
+def _cj_runs_page(title, body):
+    return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<title>" + _html_escape_cj(title) + "</title>" + _CJ_RUNS_CSS + "</head><body>"
+            "<p style='color:#555'>SL-VERSION: Open Call run history, app.py 182.67</p>"
+            "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
+
+
+def _html_escape_cj(x):
+    import html as _h
+    return _h.escape(str(x if x is not None else ''))
+
+
+@app.route('/admin/contest-judge/runs/<batch_ref>')
+@login_required
+def admin_contest_judge_runs(batch_ref):
+    """Viewer: every entry, how many runs it has, the official score and the latest score."""
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_runs_ensure_table():
+        return _cj_runs_page('Run history', '<p>Could not prepare the history table. See Railway log.</p>'), 500
+    rows = db.session.execute(db.text("""
+        SELECT b.id, b.filename, b.photographer, b.image_title, b.composite_score AS shown,
+               (SELECT COUNT(*) FROM contest_judge_runs r WHERE r.entry_id=b.id) AS n,
+               (SELECT composite FROM contest_judge_runs r WHERE r.entry_id=b.id AND r.is_official
+                  ORDER BY run_no LIMIT 1) AS official,
+               (SELECT composite FROM contest_judge_runs r WHERE r.entry_id=b.id
+                  ORDER BY run_no DESC LIMIT 1) AS latest
+        FROM contest_judge_batch b WHERE b.batch_ref=:br ORDER BY b.composite_score DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+    fmt = lambda v: '' if v is None else ('%.2f' % v)
+    tr = ''
+    for r in rows:
+        tr += ("<tr><td><a href='/admin/contest-judge/runs/%s/entry/%d'>%s</a></td><td>%s</td>"
+               "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>") % (
+            _html_escape_cj(batch_ref), r.id, _html_escape_cj(r.image_title or r.filename),
+            _html_escape_cj(r.photographer), r.n, fmt(r.official), fmt(r.latest), fmt(r.shown))
+    note = ("<div class='note'>Runs are only recorded from now on. An entry with 0 runs has not been "
+            "judged or re-judged since this feature went live. The first time such an entry is "
+            "re-judged, today's stored result is kept as run 1 (official).</div>")
+    body = (note + "<p><a class='btn' href='/admin/contest-judge/runs/%s/csv'>Download CSV</a></p>"
+            "<div class='wrap'><table><tr><th>Entry</th><th>Photographer</th><th>Runs kept</th>"
+            "<th>Official score</th><th>Latest run</th><th>Score shown on results</th></tr>%s</table></div>"
+            ) % (_html_escape_cj(batch_ref), tr)
+    return _cj_runs_page('Open Call run history: ' + batch_ref, body)
+
+
+@app.route('/admin/contest-judge/runs/<batch_ref>/entry/<int:entry_id>')
+@login_required
+def admin_contest_judge_runs_entry(entry_id, batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_runs_ensure_table():
+        return _cj_runs_page('Run history', '<p>Table not ready.</p>'), 500
+    runs = db.session.execute(db.text(
+        "SELECT * FROM contest_judge_runs WHERE entry_id=:e ORDER BY run_no"), {'e': entry_id}).fetchall()
+    is_founder = (current_user.email or '').lower().strip() in _CJ_RUNS_FOUNDER_EMAILS
+    fmt = lambda v: '' if v is None else ('%.2f' % v)
+    tr = ''
+    for r in runs:
+        btn = ''
+        if is_founder and not r.is_official:
+            btn = ("<form method='post' action='/admin/contest-judge/runs/make-official/%d'>"
+                   "<input type='text' name='reason' placeholder='Reason (required)' required>"
+                   "<button class='btn' type='submit'>Make this the official run</button></form>") % r.id
+        tr += ("<tr class='%s'><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
+               "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>") % (
+            'off' if r.is_official else '', r.run_no, _html_escape_cj(r.run_at), _html_escape_cj(r.source),
+            fmt(r.wonder), fmt(r.aq), fmt(r.story_transfer), fmt(r.disruption), fmt(r.dod), fmt(r.dm),
+            fmt(r.composite),
+            ('OFFICIAL (%s, %s)<br>%s' % (_html_escape_cj(r.official_by), _html_escape_cj(r.official_at),
+                                          _html_escape_cj(r.official_reason or ''))) if r.is_official else btn)
+    body = ("<p><a href='/admin/contest-judge/runs/%s'>Back to the list</a></p><div class='wrap'><table>"
+            "<tr><th>Run</th><th>When</th><th>Source</th><th>Wonder</th><th>AQ</th><th>Story</th>"
+            "<th>Disruption</th><th>DoD</th><th>DM</th><th>Composite</th><th>Official?</th></tr>%s"
+            "</table></div>") % (_html_escape_cj(batch_ref), tr)
+    if not is_founder:
+        body += "<div class='note'>Only the founder can make a different run official.</div>"
+    return _cj_runs_page('Entry %d: all runs' % entry_id, body)
+
+
+@app.route('/admin/contest-judge/runs/make-official/<int:run_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_runs_make_official(run_id):
+    """Founder only. Needs a written reason. The old official run stays on record."""
+    if (current_user.email or '').lower().strip() not in _CJ_RUNS_FOUNDER_EMAILS:
+        abort(403)
+    reason = (request.form.get('reason') or '').strip()
+    if len(reason) < 5:
+        return _cj_runs_page('Reason needed', '<p>Please write the reason (at least a few words) and try again.</p>'), 400
+    r = db.session.execute(db.text("SELECT id, entry_id, batch_ref FROM contest_judge_runs WHERE id=:i"),
+                           {'i': run_id}).fetchone()
+    if not r:
+        abort(404)
+    db.session.execute(db.text(
+        "UPDATE contest_judge_runs SET is_official=FALSE WHERE entry_id=:e AND is_official"), {'e': r.entry_id})
+    db.session.execute(db.text(
+        "UPDATE contest_judge_runs SET is_official=TRUE, official_by=:b, official_at=NOW(), "
+        "official_reason=:rs WHERE id=:i"), {'b': current_user.email, 'rs': reason, 'i': run_id})
+    db.session.commit()
+    app.logger.info(f'[cj_runs] OFFICIAL changed entry={r.entry_id} run_id={run_id} by={current_user.email} reason={reason}')
+    return redirect('/admin/contest-judge/runs/%s/entry/%d' % (r.batch_ref, r.entry_id))
+
+
+@app.route('/admin/contest-judge/runs/<batch_ref>/csv')
+@login_required
+def admin_contest_judge_runs_csv(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_runs_ensure_table():
+        abort(500)
+    import csv as _csv, io as _io
+    rows = db.session.execute(db.text("""
+        SELECT r.entry_id, b.filename, b.photographer, r.run_no, r.run_at, r.source, r.model,
+               r.prompt_version, r.formula_version, r.image_sha256, r.wonder, r.aq, r.story_transfer,
+               r.disruption, r.dod, r.dm, r.composite, r.theme_score, r.theme_relevant,
+               r.is_official, r.official_by, r.official_at, r.official_reason
+        FROM contest_judge_runs r JOIN contest_judge_batch b ON b.id=r.entry_id
+        WHERE r.batch_ref=:br ORDER BY r.entry_id, r.run_no"""), {'br': batch_ref}).fetchall()
+    out = _io.StringIO()
+    w = _csv.writer(out)
+    w.writerow(['entry_id', 'filename', 'photographer', 'run_no', 'run_at', 'source', 'model',
+                'prompt_version', 'formula_version', 'image_sha256', 'wonder', 'aq', 'story_transfer',
+                'disruption', 'dod', 'dm', 'composite', 'theme_score', 'theme_relevant', 'is_official',
+                'official_by', 'official_at', 'official_reason'])
+    for r in rows:
+        w.writerow(list(r))
+    from flask import Response as _R
+    return _R(out.getvalue(), mimetype='text/csv',
+              headers={'Content-Disposition': 'attachment; filename=open_call_runs_%s.csv' % batch_ref})
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Session 235 (182.67) — PIXEL MEASURING LAYER: REPORT ONLY  (step 4)
+# Measures the stored picture of each Open Call entry with pixel_metrics.py and
+# SHOWS the numbers. It writes ONLY to its own table contest_pixel_metrics.
+# It never touches contest_judge_batch, never changes a score, never calls the
+# model. Thresholds are the founder's to set after he has seen real numbers.
+# ═══════════════════════════════════════════════════════════════════════════
+_cj_px_ready = {'ok': False}
+
+
+def _cj_px_ensure_table():
+    if _cj_px_ready['ok']:
+        return True
+    try:
+        db.session.execute(db.text("""
+            CREATE TABLE IF NOT EXISTS contest_pixel_metrics (
+                id SERIAL PRIMARY KEY,
+                batch_ref VARCHAR(40) NOT NULL,
+                entry_id INTEGER NOT NULL,
+                image_sha256 VARCHAR(64),
+                metrics_version VARCHAR(40),
+                measured_at TIMESTAMP DEFAULT NOW(),
+                metrics_json TEXT,
+                UNIQUE (entry_id, metrics_version)
+            )"""))
+        db.session.commit()
+        _cj_px_ready['ok'] = True
+        return True
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[pixel] table create failed: {_e}')
+        return False
+
+
+@app.route('/admin/pixel-report/<batch_ref>')
+@login_required
+def admin_pixel_report(batch_ref):
+    """Report only. Shows measured picture facts for an Open Call batch. Changes no score."""
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_px_ensure_table():
+        return _cj_runs_page('Pixel report', '<p>Could not prepare the table. See Railway log.</p>'), 500
+    try:
+        import pixel_metrics as _pm
+        ver = _pm.METRICS_VERSION
+    except Exception as _ie:
+        return _cj_runs_page('Pixel report', '<p>pixel_metrics.py is missing or failed to load: %s</p>' % _html_escape_cj(_ie)), 500
+    rows = db.session.execute(db.text("""
+        SELECT b.id, b.filename, b.image_title, b.photographer, b.composite_score, m.metrics_json
+        FROM contest_judge_batch b
+        LEFT JOIN contest_pixel_metrics m ON m.entry_id=b.id AND m.metrics_version=:v
+        WHERE b.batch_ref=:br ORDER BY b.composite_score DESC NULLS LAST"""),
+        {'br': batch_ref, 'v': ver}).fetchall()
+    done = sum(1 for r in rows if r.metrics_json)
+    tr = ''
+    for r in rows:
+        m = _cj_json.loads(r.metrics_json) if r.metrics_json else None
+        g = (lambda k: '' if not m or m.get(k) is None else _html_escape_cj(m.get(k)))
+        tr += ("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
+               "<td>%s</td><td>%s</td></tr>") % (
+            _html_escape_cj(r.image_title or r.filename), '' if r.composite_score is None else '%.2f' % r.composite_score,
+            g('tonal_type_provisional') or 'not measured yet', g('highlight_clipped_pct'), g('shadow_clipped_pct'),
+            g('sharpness_overall'), g('horizon_tilt_deg'), g('distance_to_thirds_point'), g('entropy_bits'),
+            g('negative_space_pct'))
+    body = ("<div class='note'>REPORT ONLY. These numbers do not change any score. "
+            "The tonal type is a provisional label so you can judge each picture against its own kind "
+            "(a silhouette or high-key picture is expected to clip). Horizon tilt is a rough estimate "
+            "(about 2 degrees). Nothing here is used for blur.</div>"
+            "<p>Measured: <b>%d of %d</b> entries (engine %s).</p>"
+            "<form method='post' action='/admin/pixel-report/%s/run'><button class='btn' type='submit'>"
+            "Measure the next 15 entries</button></form>"
+            "<p><a class='btn' href='/admin/pixel-report/%s/csv'>Download CSV (all numbers)</a></p>"
+            "<div class='wrap'><table><tr><th>Entry</th><th>Score now</th><th>Picture type</th>"
+            "<th>Blown highlights %%</th><th>Crushed shadows %%</th><th>Sharpness</th><th>Horizon tilt (deg)</th>"
+            "<th>Distance to a thirds point</th><th>Entropy (bits)</th><th>Empty space %%</th></tr>%s</table></div>"
+            ) % (done, len(rows), _html_escape_cj(ver), _html_escape_cj(batch_ref), _html_escape_cj(batch_ref), tr)
+    return _cj_runs_page('Pixel report: ' + batch_ref, body)
+
+
+@app.route('/admin/pixel-report/<batch_ref>/run', methods=['POST'])
+@login_required
+def admin_pixel_report_run(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_px_ensure_table():
+        abort(500)
+    import pixel_metrics as _pm
+    import tempfile as _tf
+    import storage as _st
+    todo = db.session.execute(db.text("""
+        SELECT b.id, b.thumb_path FROM contest_judge_batch b
+        WHERE b.batch_ref=:br AND b.thumb_path IS NOT NULL AND b.thumb_path <> ''
+          AND NOT EXISTS (SELECT 1 FROM contest_pixel_metrics m WHERE m.entry_id=b.id AND m.metrics_version=:v)
+        ORDER BY b.id LIMIT 15"""), {'br': batch_ref, 'v': _pm.METRICS_VERSION}).fetchall()
+    ok = bad = 0
+    for r in todo:
+        tmp = None
+        try:
+            tmp = _tf.NamedTemporaryFile(suffix='.jpg', delete=False)
+            tmp.close()
+            if not _st.download_file(_st.key_from_url(r.thumb_path), tmp.name):
+                bad += 1
+                continue
+            facts = _pm.measure_file(tmp.name)
+            db.session.execute(db.text("""
+                INSERT INTO contest_pixel_metrics (batch_ref, entry_id, image_sha256, metrics_version, metrics_json)
+                VALUES (:br, :e, :sha, :v, :j) ON CONFLICT (entry_id, metrics_version) DO NOTHING"""),
+                {'br': batch_ref, 'e': r.id, 'sha': facts.get('image_sha256'), 'v': _pm.METRICS_VERSION,
+                 'j': _cj_json.dumps(facts)})
+            db.session.commit()
+            ok += 1
+        except Exception as _e:
+            db.session.rollback()
+            bad += 1
+            app.logger.error(f'[pixel] entry={r.id} failed: {_e}')
+        finally:
+            try:
+                if tmp:
+                    os.unlink(tmp.name)
+            except Exception:
+                pass
+    app.logger.info(f'[pixel] batch={batch_ref} measured={ok} failed={bad}')
+    return redirect('/admin/pixel-report/%s' % batch_ref)
+
+
+@app.route('/admin/pixel-report/<batch_ref>/csv')
+@login_required
+def admin_pixel_report_csv(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_px_ensure_table():
+        abort(500)
+    import csv as _csv, io as _io
+    import pixel_metrics as _pm
+    rows = db.session.execute(db.text("""
+        SELECT b.id, b.filename, b.photographer, b.composite_score, m.metrics_json
+        FROM contest_judge_batch b
+        JOIN contest_pixel_metrics m ON m.entry_id=b.id AND m.metrics_version=:v
+        WHERE b.batch_ref=:br ORDER BY b.composite_score DESC NULLS LAST"""),
+        {'br': batch_ref, 'v': _pm.METRICS_VERSION}).fetchall()
+    out = _io.StringIO()
+    w = _csv.writer(out)
+    w.writerow(['entry_id', 'filename', 'photographer', 'composite_score'] + _pm.FIELDS)
+    for r in rows:
+        m = _cj_json.loads(r.metrics_json)
+        w.writerow([r.id, r.filename, r.photographer, r.composite_score] + [m.get(k, '') for k in _pm.FIELDS])
+    from flask import Response as _R
+    return _R(out.getvalue(), mimetype='text/csv',
+              headers={'Content-Disposition': 'attachment; filename=pixel_report_%s.csv' % batch_ref})
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Session 235 (182.67) — JURY / FOUNDER SIGN-OFF PAGE  (step 5)
+# Creates private links only. NO EMAIL IS SENT by this code. The founder copies
+# each link and sends it himself. A person with the link sees the top places and
+# the engine's reasoning, writes a comment and presses Approve or Return.
+# Every action is stored with date and time in contest_jury_log (audit trail).
+# This does not publish anything and changes no score.
+# Rule (founder): if a jury is assigned, the jury members sign off; if none is
+# assigned, the founder signs off (add a "founder" signer here).
+# ═══════════════════════════════════════════════════════════════════════════
+_cj_jury_ready = {'ok': False}
+_CJ_JURY_TOP_N = 10
+
+
+def _cj_jury_ensure_tables():
+    if _cj_jury_ready['ok']:
+        return True
+    try:
+        db.session.execute(db.text("""
+            CREATE TABLE IF NOT EXISTS contest_jury (
+                id SERIAL PRIMARY KEY,
+                batch_ref VARCHAR(40) NOT NULL,
+                signer_name VARCHAR(120) NOT NULL,
+                signer_email VARCHAR(200),
+                signer_role VARCHAR(20) DEFAULT 'jury',
+                token VARCHAR(64) NOT NULL UNIQUE,
+                status VARCHAR(20) DEFAULT 'pending',
+                comment TEXT,
+                no_entry_declared BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW(),
+                created_by VARCHAR(200),
+                signed_at TIMESTAMP
+            )"""))
+        db.session.execute(db.text("""
+            CREATE TABLE IF NOT EXISTS contest_jury_log (
+                id SERIAL PRIMARY KEY,
+                jury_id INTEGER,
+                batch_ref VARCHAR(40),
+                action VARCHAR(40),
+                detail TEXT,
+                at TIMESTAMP DEFAULT NOW(),
+                ip VARCHAR(64)
+            )"""))
+        db.session.commit()
+        _cj_jury_ready['ok'] = True
+        return True
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[jury] table create failed: {_e}')
+        return False
+
+
+def _cj_jury_log(jury_id, batch_ref, action, detail=''):
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO contest_jury_log (jury_id, batch_ref, action, detail, ip) "
+            "VALUES (:j,:b,:a,:d,:ip)"),
+            {'j': jury_id, 'b': batch_ref, 'a': action, 'd': detail,
+             'ip': (request.headers.get('X-Forwarded-For') or request.remote_addr or '')[:64]})
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[jury] log failed: {_e}')
+
+
+_CJ_JURY_CSS = _CJ_RUNS_CSS.replace('</style>',
+    ".card{border:1px solid #888;border-radius:8px;padding:12px;margin:14px 0}"
+    ".card img{max-width:100%;height:auto;border-radius:6px}"
+    ".ok{background:#e6f4ea}.ret{background:#fdecea}"
+    ".btn2{display:inline-block;padding:14px 20px;border:0;border-radius:6px;font-size:20px;"
+    "min-height:48px;cursor:pointer;color:#fff;margin:6px 6px 6px 0}"
+    ".g{background:#1e7e34}.r{background:#b02a37}</style>")
+
+
+def _cj_jury_page(title, body):
+    return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<meta name='robots' content='noindex,nofollow'>"
+            "<title>" + _html_escape_cj(title) + "</title>" + _CJ_JURY_CSS + "</head><body>"
+            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.67</p>"
+            "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
+
+
+@app.route('/admin/jury/<batch_ref>')
+@login_required
+def admin_jury(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_jury_ensure_tables():
+        return _cj_jury_page('Sign-off', '<p>Could not prepare tables. See Railway log.</p>'), 500
+    signers = db.session.execute(db.text(
+        "SELECT * FROM contest_jury WHERE batch_ref=:b ORDER BY id"), {'b': batch_ref}).fetchall()
+    base = request.host_url.rstrip('/')
+    tr = ''
+    for s in signers:
+        link = '%s/jury/review/%s' % (base, s.token)
+        cls = 'ok' if s.status == 'approved' else ('ret' if s.status == 'returned' else '')
+        tr += ("<tr class='%s'><td>%s<br>%s</td><td>%s</td><td><b>%s</b><br>%s</td>"
+               "<td style='word-break:break-all'>%s</td></tr>") % (
+            cls, _html_escape_cj(s.signer_name), _html_escape_cj(s.signer_email or ''),
+            _html_escape_cj(s.signer_role), _html_escape_cj(s.status.upper()),
+            _html_escape_cj(s.signed_at or ''), _html_escape_cj(link))
+    n = len(signers)
+    ap = sum(1 for s in signers if s.status == 'approved')
+    rt = sum(1 for s in signers if s.status == 'returned')
+    if n == 0:
+        summary = 'Nobody added yet. If no jury is assigned, add yourself as the founder signer.'
+    elif rt:
+        summary = 'RETURNED: %d signer(s) returned the results. Do not publish. Read their comments.' % rt
+    elif ap == n:
+        summary = 'ALL %d SIGNER(S) HAVE APPROVED. Results are ready for you to publish.' % n
+    else:
+        summary = 'Waiting: %d of %d have approved.' % (ap, n)
+    body = ("<div class='note'><b>No email is sent from here.</b> Copy a link and send it yourself. "
+            "Each link is private to one person. Everything they do is stored with date and time.</div>"
+            "<div class='card'><b>Status:</b> %s</div>"
+            "<div class='wrap'><table><tr><th>Person</th><th>Role</th><th>Status</th><th>Private link</th></tr>%s</table></div>"
+            "<h2>Add a person</h2>"
+            "<form method='post' action='/admin/jury/%s/add'>"
+            "<p>Name<br><input type='text' name='name' required></p>"
+            "<p>Email (to remember who it is; nothing is sent)<br><input type='text' name='email'></p>"
+            "<p>Role<br><select name='role' style='font-size:19px;padding:8px'>"
+            "<option value='jury'>Jury member</option><option value='founder'>Founder (if no jury is assigned)</option></select></p>"
+            "<button class='btn' type='submit'>Create private link</button></form>"
+            "<p><a href='/admin/jury/%s/log'>See the full audit trail</a></p>"
+            ) % (_html_escape_cj(summary), tr, _html_escape_cj(batch_ref), _html_escape_cj(batch_ref))
+    return _cj_jury_page('Sign-off for ' + batch_ref, body)
+
+
+@app.route('/admin/jury/<batch_ref>/add', methods=['POST'])
+@login_required
+def admin_jury_add(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_jury_ensure_tables():
+        abort(500)
+    import secrets as _sec
+    name = (request.form.get('name') or '').strip()[:120]
+    email = (request.form.get('email') or '').strip()[:200]
+    role = 'founder' if request.form.get('role') == 'founder' else 'jury'
+    if not name:
+        return _cj_jury_page('Name needed', '<p>Please type a name and go back.</p>'), 400
+    tok = _sec.token_hex(24)
+    jid = db.session.execute(db.text(
+        "INSERT INTO contest_jury (batch_ref, signer_name, signer_email, signer_role, token, created_by) "
+        "VALUES (:b,:n,:e,:r,:t,:c) RETURNING id"),
+        {'b': batch_ref, 'n': name, 'e': email, 'r': role, 't': tok, 'c': current_user.email}).scalar()
+    db.session.commit()
+    _cj_jury_log(jid, batch_ref, 'link_created', '%s (%s) by %s' % (name, role, current_user.email))
+    return redirect('/admin/jury/%s' % batch_ref)
+
+
+@app.route('/admin/jury/<batch_ref>/log')
+@login_required
+def admin_jury_log(batch_ref):
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_jury_ensure_tables():
+        abort(500)
+    rows = db.session.execute(db.text(
+        "SELECT l.at, l.action, l.detail, l.ip, j.signer_name FROM contest_jury_log l "
+        "LEFT JOIN contest_jury j ON j.id=l.jury_id WHERE l.batch_ref=:b ORDER BY l.id"),
+        {'b': batch_ref}).fetchall()
+    tr = ''.join("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (
+        _html_escape_cj(r.at), _html_escape_cj(r.signer_name or ''), _html_escape_cj(r.action),
+        _html_escape_cj(r.detail), _html_escape_cj(r.ip)) for r in rows)
+    return _cj_jury_page('Audit trail: ' + batch_ref,
+                         "<p><a href='/admin/jury/%s'>Back</a></p><div class='wrap'><table><tr><th>When</th><th>Who</th>"
+                         "<th>What</th><th>Detail</th><th>From</th></tr>%s</table></div>" % (_html_escape_cj(batch_ref), tr))
+
+
+def _cj_jury_signer(token):
+    if not _cj_jury_ensure_tables():
+        return None
+    if not token or len(token) > 64:
+        return None
+    return db.session.execute(db.text("SELECT * FROM contest_jury WHERE token=:t"), {'t': token}).fetchone()
+
+
+@app.route('/jury/review/<token>')
+def jury_review(token):
+    """Private page - no login. Shows top places with reasoning. Link-holder can approve or return."""
+    s = _cj_jury_signer(token)
+    if not s:
+        return _cj_jury_page('Link not found', '<p>This link is not valid. Please ask for a new one.</p>'), 404
+    blind = request.args.get('blind') == '1'
+    rows = db.session.execute(db.text("""
+        SELECT id, filename, photographer, image_title, composite_score, wonder_score, aq_score,
+               story_transfer_score, disruption_score, dod_score, dm_score, theme_note, gap_note, raw_json
+        FROM contest_judge_batch WHERE batch_ref=:b AND composite_score IS NOT NULL
+        ORDER BY composite_score DESC LIMIT :n"""), {'b': s.batch_ref, 'n': _CJ_JURY_TOP_N}).fetchall()
+    _cj_jury_log(s.id, s.batch_ref, 'page_opened', 'blind=%s' % blind)
+    f = lambda v: '' if v is None else '%.1f' % v
+    cards = ''
+    for i, r in enumerate(rows, 1):
+        try:
+            raw = _cj_json.loads(r.raw_json or '{}')
+        except Exception:
+            raw = {}
+        narrative = raw.get('narrative') or r.theme_note or ''
+        gap = r.gap_note or raw.get('gap_note') or ''
+        who = '' if blind else '<br>by %s' % _html_escape_cj(r.photographer)
+        cards += ("<div class='card'><h2>Place %d: %s</h2><p>%s</p>"
+                  "<img src='/jury/review/%s/img/%d' alt='Entry %d'>"
+                  "<p><b>Score %.2f</b> &nbsp; Wonder %s &middot; Feeling %s &middot; Story %s &middot; "
+                  "Stops the eye %s &middot; Difficulty %s &middot; Moment %s</p>"
+                  "<p><b>What the engine said:</b> %s</p><p><b>Weakest point:</b> %s</p></div>") % (
+            i, _html_escape_cj(r.image_title or r.filename), who.replace('<br>', ''), s.token, r.id, i,
+            r.composite_score, f(r.wonder_score), f(r.aq_score), f(r.story_transfer_score),
+            f(r.disruption_score), f(r.dod_score), f(r.dm_score),
+            _html_escape_cj(narrative), _html_escape_cj(gap))
+    if s.status in ('approved', 'returned'):
+        form = ("<div class='card %s'><h2>You have already signed: %s</h2><p>%s</p><p>Date: %s</p>"
+                "<p>If this is a mistake, please tell the founder. He can give you a fresh link.</p></div>") % (
+            'ok' if s.status == 'approved' else 'ret', _html_escape_cj(s.status.upper()),
+            _html_escape_cj(s.comment or ''), _html_escape_cj(s.signed_at))
+    else:
+        form = ("<form method='post' action='/jury/review/%s/submit' class='card'>"
+                "<h2>Your decision</h2>"
+                "<p><label><input type='checkbox' name='no_entry' value='1' style='width:26px;height:26px'> "
+                "I confirm I have <b>no entry of my own</b> in this Open Call.</label></p>"
+                "<p>Your comment (required if you return the results)<br><textarea name='comment' rows='5'></textarea></p>"
+                "<button class='btn2 g' type='submit' name='decision' value='approve'>Approve these results</button>"
+                "<button class='btn2 r' type='submit' name='decision' value='return'>Return for another look</button>"
+                "</form>") % _html_escape_cj(token)
+    intro = ("<p>Hello %s. Below are the top %d places and what the engine said about each. "
+             "Please look at the pictures and read the reasons, then give your decision at the bottom. "
+             "<a href='?blind=%s'>%s</a></p>") % (
+        _html_escape_cj(s.signer_name), len(rows), '0' if blind else '1',
+        'Show photographer names' if blind else 'Hide photographer names (blind view)')
+    return _cj_jury_page('Open Call sign-off', intro + cards + form)
+
+
+@app.route('/jury/review/<token>/img/<int:entry_id>')
+def jury_review_img(token, entry_id):
+    s = _cj_jury_signer(token)
+    if not s:
+        abort(404)
+    row = db.session.execute(db.text(
+        "SELECT thumb_path FROM contest_judge_batch WHERE id=:i AND batch_ref=:b"),
+        {'i': entry_id, 'b': s.batch_ref}).fetchone()
+    if not row or not row.thumb_path:
+        abort(404)
+    import tempfile as _tf
+    import storage as _st
+    tmp = _tf.NamedTemporaryFile(suffix='.jpg', delete=False)
+    tmp.close()
+    try:
+        if not _st.download_file(_st.key_from_url(row.thumb_path), tmp.name):
+            abort(404)
+        with open(tmp.name, 'rb') as fh:
+            data = fh.read()
+    finally:
+        try:
+            os.unlink(tmp.name)
+        except Exception:
+            pass
+    from flask import Response as _R
+    return _R(data, mimetype='image/jpeg', headers={'Cache-Control': 'private, max-age=600'})
+
+
+@app.route('/jury/review/<token>/submit', methods=['POST'])
+def jury_review_submit(token):
+    s = _cj_jury_signer(token)
+    if not s:
+        return _cj_jury_page('Link not found', '<p>This link is not valid.</p>'), 404
+    if s.status in ('approved', 'returned'):
+        return redirect('/jury/review/%s' % token)
+    decision = request.form.get('decision')
+    comment = (request.form.get('comment') or '').strip()[:4000]
+    no_entry = request.form.get('no_entry') == '1'
+    if decision not in ('approve', 'return'):
+        return _cj_jury_page('Choose', '<p>Please go back and press Approve or Return.</p>'), 400
+    if not no_entry:
+        return _cj_jury_page('One more step', '<p>Please tick the box that says you have no entry of your own in '
+                             'this Open Call, then press the button again. Use your back button.</p>'), 400
+    if decision == 'return' and len(comment) < 5:
+        return _cj_jury_page('Comment needed', '<p>Please write a short comment saying why, then press Return again. '
+                             'Use your back button.</p>'), 400
+    status = 'approved' if decision == 'approve' else 'returned'
+    db.session.execute(db.text(
+        "UPDATE contest_jury SET status=:s, comment=:c, no_entry_declared=TRUE, signed_at=NOW() "
+        "WHERE id=:i AND status='pending'"), {'s': status, 'c': comment, 'i': s.id})
+    db.session.commit()
+    _cj_jury_log(s.id, s.batch_ref, 'signed_' + status, comment)
+    return redirect('/jury/review/%s' % token)
+
+
 @app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
 @login_required
 def admin_contest_judge_rescore_entry(entry_id):
@@ -16581,6 +17358,14 @@ def admin_contest_judge_rescore_entry(entry_id):
 
         if not verdict or 'error' in verdict:
             return jsonify({'error': verdict.get('error', 'Engine error') if verdict else 'No API key'}), 500
+
+        # Session 235 (182.67): keep history. Snapshot today's stored result first (if no history yet).
+        _cj_runs_snapshot_existing(entry_id)
+        _cj_runs_record(entry_id, row.batch_ref, verdict, image_b64, 'rescore-single')
+        if _cj_runs_keep_official() and _cj_runs_official_exists(entry_id):
+            return jsonify({'ok': True, 'kept_official': True,
+                            'note': 'New run recorded. The official result is unchanged (SL_OC_KEEP_OFFICIAL=1).',
+                            'composite': verdict.get('composite')})
 
         db.session.execute(db.text("""
             UPDATE contest_judge_batch SET
@@ -16726,6 +17511,10 @@ def admin_contest_judge_bulk_rescore(batch_ref):
                     verdict = _cj_sonnet_judge(image_b64, row.photographer or '', row.image_title or '', row.theme or 'Story', theme_thr)
                     if not verdict or 'error' in verdict:
                         errors += 1
+                    elif (_cj_runs_snapshot_existing(row.id),
+                          _cj_runs_record(row.id, batch_ref, verdict, image_b64, 'rescore-bulk'),
+                          _cj_runs_keep_official() and _cj_runs_official_exists(row.id))[2]:
+                        pass  # run recorded; official result left unchanged (SL_OC_KEEP_OFFICIAL=1)
                     else:
                         db.session.execute(db.text("""
                             UPDATE contest_judge_batch SET
@@ -17126,7 +17915,13 @@ def admin_score_audit():
     big = sorted([o for o in out_rows if isinstance(o[8], float) and abs(o[8]) >= 0.01], key=lambda o: -abs(o[8]))[:25]
     br = ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
                  % (o[0], _esc(o[2]), _esc(o[3]), o[4], o[6], o[8], _esc(o[5]) + ' &rarr; ' + _esc(o[7])) for o in big)
-    if pct_excludes is True:
+    try:
+        pct_pools = 'pool' in _sa_inspect.signature(_sa_scoring.compute_percentile).parameters
+    except Exception:
+        pct_pools = False
+    if pct_pools:
+        pct_msg = 'The live percentile function keeps the Sonnet and Haiku pools separate. Haiku images do not count in the Sonnet pool.'
+    elif pct_excludes is True:
         pct_msg = 'The live percentile function excludes Haiku images.'
     elif pct_excludes is False:
         pct_msg = 'The live percentile function does NOT exclude Haiku images. Haiku scores are counted in the pool.'
@@ -17142,7 +17937,7 @@ def admin_score_audit():
             'a.btn{display:inline-block;background:#1a1a18;color:#F5C518;padding:14px 20px;text-decoration:none;border-radius:6px;min-height:44px}'
             '</style></head><body>'
             '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.65.</p>'
-            '<div class="box"><b>Percentile pool.</b><br>@@PCTMSG@@<br>Images in the pool: @@POOL@@. Of these, Haiku (eValuate) images: @@POOLH@@.</div>'
+            '<div class="box"><b>Percentile pool.</b><br>@@PCTMSG@@<br>Scored images: @@POOL@@ &mdash; Sonnet: @@POOLS@@, Haiku (eValuate): @@POOLH@@.</div>'
             '<h2>Recalculated from stored dimensions</h2>'
             '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>@@GROUPS@@</table>'
             '<h2>25 largest differences</h2>'
@@ -17151,6 +17946,7 @@ def admin_score_audit():
             '<p>Mobile-track images are recalculated with mobile weights and without the Iconic Wall, Humanity, Plateau and Excellence rules, so their differences are only a guide.</p>'
             '</body></html>')
     html = (html.replace('@@PCTMSG@@', _esc(pct_msg)).replace('@@POOLH@@', str(pool_haiku))
+            .replace('@@POOLS@@', str((pool_total - pool_haiku) if (pool_total is not None and pool_haiku is not None) else 'n/a'))
             .replace('@@POOL@@', str(pool_total)).replace('@@GROUPS@@', gr)
             .replace('@@BIG@@', br or '<tr><td colspan="7">None</td></tr>'))
     return html
@@ -32313,7 +33109,8 @@ def _send_scorecard_email(img, user):
     try:
         from engine.scoring import compute_percentile
         _pct = compute_percentile(float(_score), genre=img.genre,
-                                  camera_track=getattr(img, 'camera_track', None))
+                                  camera_track=getattr(img, 'camera_track', None),
+                                  pool=_pct_pool_for_image(img.id))
         if _pct and _pct.get('genre_pct'):
             _pct_text = f'Top {_pct["genre_pct"]}% \u00b7 {_genre}'
     except Exception:
@@ -42895,6 +43692,7 @@ def try_result(image_id):
                 float(img.score),
                 genre=img.genre,
                 camera_track=getattr(img, 'camera_track', None),
+                pool='haiku',   # v182.66: free-tier images compare with the Haiku pool
             )
             # SL 172.3: Tier-aware context string.
             if percentile_data and img.tier:
