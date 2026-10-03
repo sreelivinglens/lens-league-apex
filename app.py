@@ -1,4 +1,4 @@
-# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
+# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
@@ -17927,14 +17927,20 @@ def admin_checks_hub():
         br = _html_escape_cj(b.batch_ref)
         rows += ("<tr><td><b>%s</b><br>%d entries</td><td><a class='btn' href='/admin/contest-judge/runs/%s'>Run history</a></td>"
                  "<td><a class='btn' href='/admin/pixel-report/%s'>Pixel report</a></td>"
-                 "<td><a class='btn' href='/admin/jury/%s'>Sign-off</a></td></tr>") % (br, b.n, br, br, br)
+                 "<td><a class='btn' href='/admin/jury/%s'>Sign-off</a></td>"
+                 "<td><a class='btn' href='/admin/theme/%s'>Theme step</a></td></tr>") % (br, b.n, br, br, br, br)
     if not rows:
-        rows = "<tr><td colspan='4'>No Open Call batches found.</td></tr>"
+        rows = "<tr><td colspan='5'>No Open Call batches found.</td></tr>"
     body = ("<div class='note'>These tools only show information or create private links. "
             "The pixel report changes no score. The sign-off page sends no email.</div>"
             "<h2>Member scores</h2><p><a class='btn' href='/admin/score-audit'>Score audit (read-only)</a></p>"
+            "<h2>Open Call theme step (new batch)</h2>"
+            "<form method='get' action='/admin/theme-go'><p><label for='tb'>Type the batch name you will use "
+            "when uploading the pictures:</label></p>"
+            "<p><input type='text' id='tb' name='batch' maxlength='40' required></p>"
+            "<p><button class='btn' type='submit'>Open the theme step</button></p></form>"
             "<h2>Open Call batches</h2><div class='wrap'><table><tr><th>Batch</th><th>Every run kept</th>"
-            "<th>Measured facts</th><th>Jury / founder sign-off</th></tr>%s</table></div>") % rows
+            "<th>Measured facts</th><th>Jury / founder sign-off</th><th>Theme meaning and checks</th></tr>%s</table></div>") % rows
     return _cj_runs_page('Checks and sign-off', body, nav_checks=False)
 
 @app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
