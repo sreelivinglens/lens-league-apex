@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-3.2 (Session 235, 2026-10-03 -- CHANGE (staging only, nothing live-tested): the new-evaluation trial is now a TAB ('Official results' | 'New evaluation (trial)') with the same kind of table and pictures as the official one, and a 'Read reasons' row for each picture. The trial buttons live inside the trial tab; the official tab is as it was in 3.0. When a trial run finishes the page reloads to show the results. Pairs with app.py 182.82. RETAINS 3.1 / 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.1 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): 'New evaluation (trial)' card on the Open Call page with two buttons: 'Try the new evaluation (trial)' (asks for confirmation showing the number of engine calls, then runs; official results never change) and 'Download trial results' (trial beside official, as a spreadsheet). Pairs with app.py 182.81. RETAINS 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.0 (Session 235, 2026-10-03 -- SIMPLIFIED OPEN CALL PAGE (pairs with app.py 182.80, staging only). One flow: '+ New open call' asks for a name and a theme word only; a theme description is written for you to approve; then you add pictures to that open call (no retyping of names, no separate theme box or threshold). Pictures waiting for the jury or not fitting the theme are counted on this page and shown last. Upload sends 3 pictures at a time with a visible count. Plain words replace 'Sonnet' labels. Delete removes the open call and its theme. RETAINS 2.17 / 2.16 / 2.15 / 2.14 table, rescore, scorecards and Excel behaviour.) #}
 <!DOCTYPE html>
@@ -113,6 +114,12 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .theme-word{font-size:24px;font-weight:600;margin:0 0 6px}
 .small-note{font-size:15px;color:#6B6B68;margin:6px 0 12px}
 .prog-line{font-size:16px;margin:8px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px}
+.tab{display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:10px;border:1px solid #CFCBC2;background:#fff;color:#1A1A18;font:600 17px 'Inter',sans-serif;text-decoration:none}
+.tab.on{background:#1A1A18;color:#fff;border-color:#1A1A18}
+.why{font-size:16px;line-height:1.65;padding:6px 4px;position:sticky;left:12px;width:calc(100vw - 72px);max-width:760px}
+.why p{margin:0 0 10px}
+.why ul{margin:0 0 10px 22px}
 </style>
 </head>
 <body>
@@ -162,6 +169,15 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 
   {% else %}
 
+  {% if batch_meta.n > 0 %}
+  <div class="tabs">
+    <a class="tab{{ '' if active_tab == 'trial' else ' on' }}" href="{{ url_for('admin_contest_judge') }}?batch={{ batch_ref|urlencode }}">Official results</a>
+    <a class="tab{{ ' on' if active_tab == 'trial' else '' }}" href="{{ url_for('admin_contest_judge') }}?batch={{ batch_ref|urlencode }}&amp;tab=trial">New evaluation (trial)</a>
+  </div>
+  {% endif %}
+  {% set on_trial = (active_tab == 'trial' and batch_meta.n > 0) %}
+
+  {% if not on_trial %}
   {# -- THEME -- #}
   <div class="card">
     <div class="card-title"><i class="ti ti-target"></i> Theme</div>
@@ -206,8 +222,101 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
   {% else %}
   <div class="card"><p>Approve the theme description above, then you can add pictures here.</p></div>
   {% endif %}
+  {% endif %}{# not on_trial #}
 
   {% if batch_meta.n > 0 %}
+  {% if active_tab == 'trial' %}
+  <div class="card" id="newEvalCard">
+    <p style="font-size:16px;line-height:1.65;margin-bottom:14px">The new five-part evaluation, tried on every picture in this open call. <strong>Your official results do not change.</strong> The engine is only called after you press the button and confirm the number of pictures.</p>
+    <div class="run-row">
+      <button class="btn btn-gold" id="newEvalBtn" onclick="newEvalStart()">
+        <i class="ti ti-flask"></i> Try the new evaluation (trial)
+      </button>
+      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_new_eval_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-file-spreadsheet"></i> Download trial results
+      </a>
+    </div>
+    <div class="prog" id="newEvalProg">
+      <div class="prog-track"><div class="prog-fill" id="newEvalFill"></div></div>
+      <div class="prog-text" id="newEvalText">Starting…</div>
+    </div>
+    <div class="msg" id="newEvalMsg"></div>
+  </div>
+
+  {% set trial_done = trial_entries|selectattr('has_trial')|list|length %}
+  {% if not trial_done %}
+  <div class="guide"><strong>No trial has been run for this open call yet.</strong> Press "Try the new evaluation (trial)" above. The pictures and their results will appear here.</div>
+  {% else %}
+  <p class="small-note">{{ trial_done }} picture{{ '' if trial_done == 1 else 's' }} evaluated with the new evaluation. The newest trial run is shown. Official overall is shown beside it for comparison.</p>
+  <div class="results-wrap">
+    <table class="rt" id="trialTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th></th>
+          <th>Photographer</th>
+          <th class="num">Overall</th>
+          <th class="num">Wonder</th>
+          <th class="num">Affect<br>Quotient</th>
+          <th class="num">Disruption</th>
+          <th class="num">Difficulty</th>
+          <th class="num">Moment</th>
+          <th>Story</th>
+          <th class="num">Official<br>overall</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in trial_entries %}
+        <tr{% if e.flagged or not e.has_trial %} class="flag"{% endif %}>
+          <td class="muted" style="font-size:15px">{{ e.rank if e.rank else '—' }}</td>
+          <td>{% if e.thumb_url %}<img class="thumb-sm" src="{{ e.thumb_url }}" alt="" loading="lazy">{% endif %}</td>
+          <td>
+            <div style="font-weight:500">{{ e.photographer or '—' }}</div>
+            <div class="muted" style="font-size:15px">{{ e.title or '' }}</div>
+            {% if e.theme_state == 'borderline' %}<span class="pill warn">Waiting for the jury</span>
+            {% elif e.theme_state == 'off_theme' %}<span class="pill off">Does not fit the theme</span>
+            {% elif e.theme_state == 'jury_exclude' %}<span class="pill off">Kept out by the jury</span>
+            {% elif not e.has_trial %}<span class="pill warn">Not evaluated in the trial</span>{% endif %}
+            {% if e.has_trial %}
+            <div><button class="btn-line btn" id="whyBtn{{ e.id }}" onclick="toggleWhy({{ e.id }})" style="min-height:44px;padding:0 14px;font-size:15px;margin-top:8px">Read reasons</button></div>
+            {% endif %}
+          </td>
+          {% if e.has_trial %}
+          <td class="num"><strong>{{ '%.2f'|format(e.overall) }}</strong></td>
+          <td class="num">{{ '%.1f'|format(e.wonder) }}</td>
+          <td class="num">{{ '%.1f'|format(e.aq) }}</td>
+          <td class="num">{{ '%.1f'|format(e.disruption) }}</td>
+          <td class="num">{{ '%.1f'|format(e.dod) }}</td>
+          <td class="num">{{ '%.1f'|format(e.dm) }}</td>
+          <td>{{ e.story }}</td>
+          {% else %}
+          <td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>—</td>
+          {% endif %}
+          <td class="num">{{ '%.2f'|format(e.official) if e.official else '—' }}</td>
+        </tr>
+        {% if e.has_trial %}
+        <tr id="why{{ e.id }}" style="display:none">
+          <td colspan="11" style="background:#FAF8F4">
+            <div class="why">
+              {% for label, text in e.reasons %}
+              <p><strong>{{ label }}:</strong> {{ text }}</p>
+              {% endfor %}
+              <p><strong>Difficulty built from:</strong> situation {{ '%.1f'|format(e.dod_situational) }}, technical {{ '%.1f'|format(e.dod_technical) }}, plus {{ '%.1f'|format(e.dod_bonus) }} for principles clearly applied.</p>
+              {% if e.principles %}
+              <p><strong>Principles named:</strong></p>
+              <ul>{% for pr in e.principles %}<li>{{ pr }}</li>{% endfor %}</ul>
+              {% endif %}
+              {% if e.notes %}<p><strong>Note:</strong> {{ e.notes }}</p>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% else %}
   <div class="card">
     <div class="run-row">
       <a class="btn btn-gold" href="{{ url_for('admin_contest_judge_scorecards', batch_ref=batch_ref) }}" style="text-decoration:none">
@@ -225,24 +334,6 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
       <div class="prog-text" id="rescoreProgText">Starting…</div>
     </div>
     <div class="msg" id="rescoreMsg"></div>
-  </div>
-
-  <div class="card" id="newEvalCard">
-    <h3 style="font-size:19px;margin-bottom:8px">New evaluation (trial)</h3>
-    <p style="font-size:16px;line-height:1.65;margin-bottom:14px">Tries the new five-part evaluation on every picture in this open call. <strong>Your official results do not change.</strong> The trial is saved on its own and can be downloaded beside the official results. The engine is only called after you press the button and confirm the number of pictures.</p>
-    <div class="run-row">
-      <button class="btn btn-gold" id="newEvalBtn" onclick="newEvalStart()">
-        <i class="ti ti-flask"></i> Try the new evaluation (trial)
-      </button>
-      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_new_eval_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
-        <i class="ti ti-file-spreadsheet"></i> Download trial results
-      </a>
-    </div>
-    <div class="prog" id="newEvalProg">
-      <div class="prog-track"><div class="prog-fill" id="newEvalFill"></div></div>
-      <div class="prog-text" id="newEvalText">Starting…</div>
-    </div>
-    <div class="msg" id="newEvalMsg"></div>
   </div>
 
   <div class="results-wrap">
@@ -304,6 +395,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
       </tbody>
     </table>
   </div>
+  {% endif %}
   {% endif %}
   {% endif %}{# batch_ref #}
 </div>
@@ -415,6 +507,13 @@ function pollRescore(id,btn){
       else setTimeout(function(){ pollRescore(id,btn); },3000);
     }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
 }
+/* -- TRIAL TAB: READ REASONS -- */
+function toggleWhy(id){
+  var row=document.getElementById('why'+id), btn=document.getElementById('whyBtn'+id);
+  var open=row.style.display!=='none';
+  row.style.display=open?'none':'table-row';
+  btn.textContent=open?'Read reasons':'Hide reasons';
+}
 /* -- NEW EVALUATION (TRIAL) -- */
 function neMsg(t,bad){
   var m=document.getElementById('newEvalMsg');
@@ -449,8 +548,8 @@ function pollNewEval(id,btn){
         document.getElementById('newEvalText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' could not be evaluated':'');
       }
       if(p.finished){
-        neMsg('Trial finished: '+p.done+' of '+p.total+' pictures'+(p.errors?' ('+p.errors+' could not be evaluated)':'')+'. Press "Download trial results" to read it.', !!p.errors);
-        btn.disabled=false;
+        neMsg('Finished: '+p.done+' of '+p.total+' pictures'+(p.errors?' ('+p.errors+' could not be evaluated)':'')+'. Showing the results…', !!p.errors);
+        setTimeout(function(){ location.reload(); }, p.errors ? 4000 : 1200);
       } else setTimeout(function(){ pollNewEval(id,btn); },3000);
     }).catch(function(){ setTimeout(function(){ pollNewEval(id,btn); },5000); });
 }
