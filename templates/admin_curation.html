@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_curation-1.1 (Session 235, 2026-10-04 — Genre dropdown now built from the live genre list passed by app.py 182.83, so it cannot go out of date. Nothing else changed. Previous: unversioned, 11 hand-typed genres.) #}
 {% extends "base.html" %}
 {% block title %}Bulk Special Run — Admin{% endblock %}
 
@@ -165,18 +166,11 @@
     <div class="cur-form-row">
       <div class="cur-field">
         <label for="cur-genre">Genre</label>
+        {% set _cur_genres = genres if genres else ['Wildlife','Nature','Landscape','Street','Wedding','People','Macro','Creative','Drone','Documentary','Fashion'] %}
         <select id="cur-genre">
-          <option value="Wildlife">Wildlife</option>
-          <option value="Nature">Nature</option>
-          <option value="Landscape">Landscape</option>
-          <option value="Street">Street</option>
-          <option value="Wedding">Wedding</option>
-          <option value="People">People</option>
-          <option value="Macro">Macro</option>
-          <option value="Creative">Creative</option>
-          <option value="Drone">Drone</option>
-          <option value="Documentary">Documentary</option>
-          <option value="Fashion">Fashion</option>
+          {% for g in _cur_genres %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
         </select>
       </div>
       <div class="cur-field">
