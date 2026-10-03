@@ -1,3 +1,4 @@
+# SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
 # SL-VERSION: 182.76 (Session 235, 2026-10-03 -- Run history pages now show 'You are logged in as: <email>. Founder access: YES/NO' (display only) so the founder can see why the make-official box is hidden; stale 'app.py 182.69' labels on the Open Call and sign-off pages corrected. No scoring change. RETAINS 182.75.)
 # SL-VERSION: 182.75 (Session 235, 2026-10-03 -- CHANGE: FIRST SCORE STANDS. The stored score for an identical picture (same member, phash, genre) is no longer overwritten by later scorings, so repeat uploads keep returning the first score. Only an old stored row with no audit copy may be replaced. Applies to normal upload and bulk upload. Existing stored rows are NOT changed. RETAINS 182.74.)
 # SL-VERSION: 182.74 (Session 235, 2026-10-03 -- FIX: upload route crashed with NameError _bg_nsfw_breastfeeding on a repeat-upload cache hit (variable only existed inside the background thread). Now defaulted to False in the route; behaviour otherwise unchanged. RETAINS 182.73.)
@@ -16516,7 +16517,8 @@ def admin_contest_judge_delete_batch(batch_ref):
 # official run exists.
 # ═══════════════════════════════════════════════════════════════════════════
 _CJ_RUNS_FOUNDER_EMAILS = {'sreeks@gmail.com', 'sreelivinglens@gmail.com',
-                           'sree@shutterleague.com', 'sree@thelivinglens.org'}
+                           'sree@shutterleague.com', 'sree@thelivinglens.org',
+                           'admin@shutterleague.com'}  # 182.77: founder's own shared admin login (founder-approved)
 _CJ_RUNS_PROMPT_VERSION = 'opencall-v182.27 (6 questions; theme gate)'
 _CJ_RUNS_FORMULA_VERSION = 'wonder27 aq19 story18 disruption15 dod13 dm8 (no NS bonus)'
 _cj_runs_table_ready = {'ok': False}
