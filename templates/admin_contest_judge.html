@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.17 (Session 235, 2026-10-03 -- A call created on the Theme step (approved meaning, no pictures yet) now shows in the dropdown as 'theme ready' and opens the add-pictures card; that card states 'Theme check: ON (meaning approved: <word>)' or 'OFF', and the Theme box shows the approved word. Pairs with app.py 182.80. RETAINS 2.16.) #}
 {# SL-VERSION: admin_contest_judge-2.16 (Session 235, 2026-10-03 -- NEW OPEN CALL: a '+ New open call' button at the top (works from any call without touching it); the new-call card has a 'Step 1: set the theme meaning for this name' button; the upload log says whether the theme check was ON or OFF for that call name. Choosing '- choose an open call -' now also opens the new-call card (before, it reopened the latest call). Pairs with app.py 182.80. RETAINS 2.15.) #}
 {# SL-VERSION: admin_contest_judge-2.15 (Session 235, 2026-10-03 -- THEME STEP (pairs with app.py 182.80, staging only): (1) upload result list no longer crashes on a picture with no overall number (it showed 'Upload failed' and skipped the page reload when a picture was outside the theme); such pictures now show 'Outside the theme' or 'Waiting for the jury'. (2) 'Theme step' button next to Delete call, and a note on the new-call card telling you to set the theme meaning first using exactly the same call name. No scoring change. RETAINS 2.14.) #}
 {# SL-VERSION: admin_contest_judge-2.14 (Session 234, 2026-10-02 -- CLEANUP: Haiku and Compare tabs removed from Open Call dashboard (D1/D2/D3 -- Open Call judging is Sonnet-only now, Haiku retired for this feature; Haiku free-tier member evaluations elsewhere on the platform are untouched). Page is Sonnet-only, no tab bar. Removed: Haiku tab, Compare tab, Run Haiku / Haiku CSV / Haiku+Sonnet Scorecards buttons, batch selector "Haiku check" indicator, and the JS that drove them. BUGFIX (pre-existing, found while chasing the "Unexpected token '{'" console error): the "Delete call" button built its onclick from {{ batch_ref|tojson }} inside a double-quoted HTML attribute -- any batch name with an apostrophe (e.g. "Founder's Picks") produced malformed HTML because tojson's own quotes collided with the attribute's quotes. Fixed by passing the value through a data-batch-ref attribute instead and reading it in JS via this.dataset.batchRef. RETAINS 2.12 for the Sonnet tab content.) #}
@@ -115,7 +116,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
       <option value="">— choose an open call —</option>
       {% for b in batches %}
       <option value="{{ b.batch_ref }}"{% if b.batch_ref == batch_ref %} selected{% endif %}>
-        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %})
+        {{ b.batch_ref }} ({{ b.n }} entries{% if b.sonnet_run %} · Sonnet ✓{% endif %}{% if b.theme_ready %} · theme ready, add pictures{% endif %})
       </option>
       {% endfor %}
     </select>
@@ -145,7 +146,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
         <input id="batchName" type="text" placeholder="e.g. Fuji Collective Open Call" style="font-size:16px">
       </div>
       <div class="field">
-        <label for="themeInput">Theme</label>
+        <label for="themeInput">Theme (only used if no meaning is approved)</label>
         <input id="themeInput" type="text" value="Story" style="font-size:16px">
       </div>
       <div class="field">
@@ -174,6 +175,11 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 
     <div class="card">
       <div class="card-title"><i class="ti ti-upload"></i> Add more images to this call</div>
+      {% if batch_meta.theme_gate %}
+      <div class="guide"><strong>Theme check: ON.</strong> Every picture is checked against the approved meaning of <strong>{{ batch_meta.theme_word }}</strong> before it is analysed. <a href="/admin/theme/{{ batch_ref|urlencode }}">See the meaning</a></div>
+      {% else %}
+      <div class="guide"><strong>Theme check: OFF.</strong> No approved meaning for this call, so pictures are judged the old way using the Theme box. <a href="/admin/theme/{{ batch_ref|urlencode }}">Set a meaning</a></div>
+      {% endif %}
       <div class="upload-cfg">
         <div class="field">
           <label>Open call</label>
@@ -181,7 +187,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
         </div>
         <div class="field">
           <label for="themeInput2">Theme</label>
-          <input id="themeInput2" type="text" value="{{ batch_meta.theme or 'Story' }}" style="font-size:16px">
+          <input id="themeInput2" type="text" value="{{ batch_meta.theme_word or batch_meta.theme or 'Story' }}" style="font-size:16px">
         </div>
         <div class="field">
           <label for="threshInput2">Threshold</label>
