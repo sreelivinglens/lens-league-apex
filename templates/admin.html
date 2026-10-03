@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.5 (Session 235, 2026-10-04 — Links and note only: Curation (Bulk Special Run, /admin/curation) added to the sidebar (Images group), the mobile menu and Quick actions; the grey bulk-upload note now points to it. No other change. RETAINS admin-3.4.) #}
 {# SL-VERSION: admin-3.4 (Session 235, 2026-10-03 — Links only: new Checks hub (/admin/checks) added to the sidebar (Open Call group), the mobile menu and Quick actions; Score audit link added. No other change. RETAINS admin-3.3.) #}
 {# SL-VERSION: admin-3.3 (Session 230, 2026-09-30 — UNIFIED: Removed Haiku comparison sidebar item (desktop + mobile) — functionality merged into Contest Judge 3-tab page. RETAINS admin-3.2.) #}
 {# SL-VERSION: admin-3.2 (Session 229, 2026-09-30 — Open Call: Haiku comparison sidebar item added; Contest Judge and Haiku comparison added to the mobile menu (new mob-nav-out class so the scroll highlighter is unaffected). RETAINS admin-3.1.) #}
@@ -488,6 +489,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <a class="mob-nav-item" onclick="navTo('danger','b-dz-body','cDZ')" style="color:#B91C1C"><i class="ti ti-skull"></i> Danger</a>
   <a class="mob-nav-out" href="{{ url_for('admin_contest_judge') }}"><i class="ti ti-gavel"></i> Contest Judge</a>
   <a class="mob-nav-out" href="{{ url_for('admin_checks_hub') }}"><i class="ti ti-checklist"></i> Checks &amp; sign-off</a>
+  <a class="mob-nav-out" href="{{ url_for('admin_curation') }}"><i class="ti ti-upload"></i> Curation</a>
 </div>
 
 <div class="layout">
@@ -525,6 +527,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div class="sb-group">
     <div class="sb-group-label">Images</div>
     <a class="sb-item" onclick="navTo('images','b-images-body','cIM')"><i class="ti ti-layout-grid"></i> Image grid</a>
+    <a class="sb-item" href="{{ url_for('admin_curation') }}" style="text-decoration:none"><i class="ti ti-upload"></i> Curation (bulk run)</a>
   </div>
 
   <div class="sb-group">
@@ -759,13 +762,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <a class="qa-btn" href="{{ url_for('admin_calibration') }}"><i class="ti ti-adjustments"></i> Calibration drift →</a>
         <a class="qa-btn" style="font-size:17px" href="{{ url_for('admin_checks_hub') }}"><i class="ti ti-checklist"></i> Checks &amp; sign-off →</a>
         <a class="qa-btn" style="font-size:17px" href="/admin/score-audit"><i class="ti ti-calculator"></i> Score audit →</a>
+        <a class="qa-btn" style="font-size:17px" href="{{ url_for('admin_curation') }}"><i class="ti ti-upload"></i> Curation (bulk run) →</a>
       </div>
     </div>
   </div>
 
   {# ── BULK UPLOAD ── #}
   <div class="guide" id="bulk-upload">
-    <strong>Bulk upload — member-side only.</strong> <code>/bulk-upload</code> (Sonnet, up to 10 images) and <code>/try/upload</code> (Haiku, single image) upload as the currently logged-in user — they are not admin tools. Members access these from their own dashboard. There is no admin-side bulk upload on behalf of a member.
+    <strong>Bulk upload.</strong> For your own batches of pictures, use <a href="{{ url_for('admin_curation') }}" style="color:#1A2744;font-weight:600">Curation (bulk run)</a>. It scores the five numbers only and keeps the pictures private. It does no duplicate, watermark or AI check. <code>/bulk-upload</code> (up to 10 pictures) and <code>/try/upload</code> (one picture) upload as the member who is logged in, so they are not admin tools. There is no admin upload on behalf of a member.
   </div>
 
   {# ── SEARCH ── #}
