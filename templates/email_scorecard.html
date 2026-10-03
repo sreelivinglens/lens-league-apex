@@ -1,0 +1,241 @@
+{# SL-VERSION: email_scorecard-1.0 (Session 235, 2026-10-03 — NEW: the member scorecard email moved out of app.py into this template and expanded to carry the full scorecard (standing, why-each-dimension, story check, master reference, technical read, visual flow, imagine, body of work, path to recognition, edit suggestions). Only text already stored in the scorecard is shown; a section with no stored text is left out. Colours/fonts follow email_welcome. 16px+ body text, 600px max width, tables + inline styles for email clients.) #}
+{%- macro band(label, bg='#2C3E6B', fg='#C8A84B') -%}
+<div style="background:{{ bg }};padding:10px 16px;"><span style="font-size:13px;letter-spacing:2px;color:{{ fg }};text-transform:uppercase;font-family:'Courier New',monospace;font-weight:700;">{{ label }}</span></div>
+{%- endmacro -%}
+{%- macro paras(items, size='16px') -%}
+{%- for p in items -%}<p style="margin:0 0 12px;font-size:{{ size }};line-height:1.75;color:#1a1a18;">{{ p }}</p>{%- endfor -%}
+{%- endmacro -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background:#E8E4DC;font-family:Aptos,'Segoe UI',-apple-system,Arial,sans-serif;color:#1A1A18;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E8E4DC;">
+<tr><td align="center" style="padding:20px 12px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #D0C8B0;max-width:600px;width:100%;">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0F1F3D;padding:18px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-family:'Courier New',monospace;font-size:15px;letter-spacing:2.5px;color:#ffffff;text-transform:uppercase;font-weight:700;">Shutter League</td>
+      <td align="right" style="font-family:'Courier New',monospace;font-size:12px;color:#C8A84B;letter-spacing:1px;">Apex DDI Engine<br>Evaluation Report</td>
+    </tr></table>
+  </td></tr>
+
+  {{ hero_html|safe }}
+
+  <tr><td style="padding:22px 24px 4px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+
+    <!-- GREETING -->
+    <tr><td style="padding:0 0 16px;">
+      <p style="margin:0;font-size:17px;color:#4A4840;line-height:1.75;">Hi {{ name }},<br><br>Your {{ genre }} photograph <b>{{ title }}</b> has been evaluated. Here is your full evaluation, kept as your record.</p>
+    </td></tr>
+
+    {% if thumb %}
+    <tr><td style="padding:0 0 14px;"><a href="{{ img_url }}" style="display:block;text-decoration:none;"><img src="{{ thumb }}" alt="{{ title }}" width="552" style="width:100%;max-width:552px;height:auto;display:block;border:0;"></a></td></tr>
+    {% endif %}
+
+    <!-- SCORE BLOCK -->
+    <tr><td style="padding:0 0 18px;">
+      <div style="background:#0F1F3D;">
+        <div style="padding:16px 20px 12px;">
+          <span style="font-family:'Courier New',monospace;font-size:36px;font-weight:700;color:#F5C518;line-height:1;">{{ score }}</span>
+          &nbsp;&nbsp;<span style="font-family:'Courier New',monospace;font-size:18px;font-weight:700;color:#ffffff;">{{ tier }}</span>
+          {% if pct_text %}<br><span style="font-size:14px;color:#ffffff;opacity:.8;">{{ pct_text }}</span>{% endif %}
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #33425f;"><tr>
+          {% for d in dims %}
+          <td align="center" style="padding:12px 2px;{% if d.weakest %}background:#3a3a2a;{% endif %}">
+            <div style="font-family:'Courier New',monospace;font-size:17px;font-weight:700;color:#F5C518;">{{ d.val }}{% if d.weakest %} &#8595;{% endif %}</div>
+            <div style="font-size:12px;color:#d9d9d9;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">{{ d.short }}</div>
+          </td>
+          {% endfor %}
+        </tr></table>
+      </div>
+    </td></tr>
+
+    <!-- YOUR STANDING -->
+    {% if standing %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Your standing') }}
+      <div style="background:#E8EDF5;padding:14px 16px;">
+        {% for row in standing %}<p style="margin:0 0 6px;font-size:16px;line-height:1.6;color:#1a1a18;"><b>{{ row[0] }}:</b> {{ row[1] }}</p>{% endfor %}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- OPENING READ -->
+    {% if impression %}
+    <tr><td style="padding:0 0 18px;">
+      <div style="border-left:4px solid #C8A84B;padding-left:16px;">{{ paras(impression, '17px') }}</div>
+    </td></tr>
+    {% endif %}
+
+    {% if strength_obs or next_leap_obs %}
+    <tr><td style="padding:0 0 18px;">
+      {% if strength_obs %}<p style="margin:0 0 10px;font-size:16px;line-height:1.7;"><b style="color:#2C3E6B;">Your strength &mdash; {{ strength_name }}</b><br>{{ strength_obs }}</p>{% endif %}
+      {% if next_leap_obs %}<p style="margin:0;font-size:16px;line-height:1.7;"><b style="color:#854F0B;">Your next leap &mdash; {{ next_leap_name }}</b><br>{{ next_leap_obs }}</p>{% endif %}
+    </td></tr>
+    {% endif %}
+
+    <!-- WHY EACH DIMENSION -->
+    {% if why_rows %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('The five dimensions: why each scored what it did') }}
+      <div style="background:#F7F5EF;padding:6px 16px 4px;">
+        {% for r in why_rows %}
+        <div style="padding:12px 0;{% if not loop.last %}border-bottom:1px solid #DDD6C4;{% endif %}">
+          <p style="margin:0 0 4px;font-size:16px;"><b>{{ r.label }}</b> &nbsp;<span style="font-family:'Courier New',monospace;font-weight:700;color:#0F1F3D;">{{ r.val }}</span>{% if r.tag %} &nbsp;<span style="font-size:13px;color:#854F0B;">{{ r.tag }}</span>{% endif %}</p>
+          {% if r.text %}<p style="margin:0;font-size:16px;line-height:1.7;color:#1a1a18;">{{ r.text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- STORY CHECK -->
+    {% if ns_label %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Does the image have a story?') }}
+      <div style="background:#E8EDF5;padding:14px 16px;">
+        <p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0F1F3D;">{{ ns_label }}</p>
+        {% if ns_text %}<p style="margin:0;font-size:16px;line-height:1.7;">{{ ns_text }}</p>{% endif %}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- WHAT YOUR EYE CAUGHT -->
+    {% if wso_html %}
+    <tr><td style="padding:0 0 18px;">
+      <div style="border-left:4px solid #C8A84B;padding-left:16px;">
+        <div style="font-size:13px;letter-spacing:2px;color:#666;text-transform:uppercase;margin-bottom:8px;font-family:'Courier New',monospace;">What your eye caught</div>
+        {{ wso_html|safe }}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- WEAKEST + IMPROVE -->
+    <tr><td style="padding:0 0 12px;">
+      {{ band('Your weakest dimension: ' ~ weakest_name ~ ' · ' ~ weakest_score) }}
+      <div style="background:#E8EDF5;padding:14px 16px;"><p style="margin:0;font-size:16px;line-height:1.7;color:#1a1a18;">This is the dimension the engine found most room to grow in on this frame.</p></div>
+    </td></tr>
+    {% if bck_html %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('What this evaluation means · to improve your ' ~ weakest_name, '#854F0B', '#FFF3CD') }}
+      <div style="background:#D6E0F0;padding:14px 16px;">{{ bck_html|safe }}</div>
+    </td></tr>
+    {% endif %}
+
+    <!-- MASTER REFERENCE -->
+    {% if master_name %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Master reference') }}
+      <div style="background:#F7F5EF;padding:14px 16px;">
+        <p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0F1F3D;">{{ master_name }}</p>
+        {% if master_why %}<p style="margin:0;font-size:16px;line-height:1.7;">{{ master_why }}</p>{% endif %}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- TECHNICAL READ / VISUAL FLOW / IMAGINE -->
+    {% for sec in read_sections %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band(sec.label) }}
+      <div style="background:#F7F5EF;padding:14px 16px 2px;">{{ paras(sec.lines) }}</div>
+    </td></tr>
+    {% endfor %}
+
+    {% if conclusion %}
+    <tr><td style="padding:0 0 18px;">
+      <div style="border-left:4px solid #C8A84B;padding-left:16px;">{{ paras(conclusion) }}</div>
+    </td></tr>
+    {% endif %}
+
+    <!-- BODY OF WORK -->
+    {% if body_of_work %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Your next body of work') }}
+      <div style="background:#F7F5EF;padding:14px 16px 2px;">{{ paras(body_of_work) }}</div>
+    </td></tr>
+    {% endif %}
+
+    <!-- PATH TO RECOGNITION -->
+    {% if award_context %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Your path to recognition') }}
+      <div style="background:#E8EDF5;padding:14px 16px 2px;">{{ paras(award_context) }}</div>
+    </td></tr>
+    {% endif %}
+
+    <!-- EDIT SUGGESTIONS -->
+    {% if edit_base or edit_creative %}
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Edit suggestions') }}
+      <div style="background:#F7F5EF;padding:14px 16px 2px;">
+        {% if edit_base %}<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#854F0B;">Balanced &middot; Light editing</p>{{ paras(edit_base) }}{% endif %}
+        {% if edit_creative %}<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#854F0B;">Artistic &middot; Heavy editing</p>{{ paras(edit_creative) }}{% endif %}
+      </div>
+    </td></tr>
+    {% endif %}
+
+    <!-- NEXT ASSIGNMENT -->
+    {% if nxt_html %}
+    <tr><td style="padding:0 0 18px;">
+      <div style="border:2px solid #C8A84B;">
+        <div style="background:#C8A84B;padding:10px 16px;"><span style="font-size:13px;letter-spacing:2px;color:#2a1800;text-transform:uppercase;font-family:'Courier New',monospace;font-weight:700;">Your next assignment</span></div>
+        <div style="background:#FFFBF0;padding:14px 16px;">{{ nxt_html|safe }}<p style="margin:0;font-size:14px;color:#854F0B;font-family:'Courier New',monospace;">This assignment expires in 48 hours.</p></div>
+      </div>
+    </td></tr>
+    {% endif %}
+
+    {{ loc_html|safe }}
+
+    <!-- ACCOUNT -->
+    <tr><td style="padding:0 0 18px;">
+      {{ band('Your account') }}
+      <div style="background:#E8EDF5;padding:14px 16px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td><span style="font-family:'Courier New',monospace;font-size:30px;font-weight:700;color:#0F1F3D;">{{ evals }}</span><span style="font-size:14px;color:#4A4840;display:block;margin-top:3px;">evaluations remaining this month</span></td>
+          <td align="right"><a href="{{ img_url }}" style="font-size:16px;color:#2C3E6B;font-weight:700;text-decoration:underline;">View on the website &rarr;</a></td>
+        </tr></table>
+      </div>
+    </td></tr>
+
+    {{ wc_html|safe }}
+    {{ news_html|safe }}
+
+    <!-- CTA -->
+    <tr><td style="padding:0 0 22px;">
+      <a href="{{ site }}/upload" style="display:block;background:#0F1F3D;color:#C8A84B;font-family:'Courier New',monospace;font-size:16px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-align:center;padding:18px 20px;text-decoration:none;">Your eye is still sharp from this. Upload your next image &rarr;</a>
+    </td></tr>
+
+    <tr><td style="padding:0 0 22px;">
+      <p style="margin:0 0 3px;font-size:16px;color:#4A4840;">&mdash; Shutter League</p>
+      <p style="margin:0;font-size:15px;color:#666;">{{ contact_email }}</p>
+      {% if engine_note %}<p style="margin:10px 0 0;font-size:13px;color:#777;">{{ engine_note }}</p>{% endif %}
+    </td></tr>
+
+  </table>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#F5F0E8;padding:14px 24px;border-top:1px solid #E0D8C8;">
+    <p style="margin:0;font-size:14px;color:#666;line-height:1.9;">
+      Was this useful?&nbsp;
+      <a href="{{ fb_yes }}" style="color:#854F0B;font-weight:700;">Yes</a> &nbsp;&middot;&nbsp;
+      <a href="{{ fb_no }}" style="color:#854F0B;font-weight:700;">No</a>
+      &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+      <a href="{{ unsub_url }}" style="color:#777;">Unsubscribe from evaluation emails</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
