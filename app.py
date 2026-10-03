@@ -1,4 +1,4 @@
-# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Founder-only 'Switch the theme check off' on the theme page (record kept as retired; refused once any picture is checked). Contest Judge page: '+ New open call' works (?new=1; before, the page always reopened the latest call). Theme audit table wraps so Detail is readable. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
+# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Founder-only 'Switch the theme check off' on the theme page (record kept as retired; refused once any picture is checked). A call with an approved meaning but no pictures yet is now listed in the Contest Judge dropdown and opens the add-pictures card (theme ready); theme page has 'Next: add the pictures to this call'. Contest Judge page: '+ New open call' works (?new=1; before, the page always reopened the latest call). Theme audit table wraps so Detail is readable. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
@@ -15793,10 +15793,29 @@ def admin_contest_judge():
     batches = [{'batch_ref': r.batch_ref, 'n': r.n, 'h': r.h,
                 'sonnet_run': r.n > 0, 'haiku_run': r.h > 0} for r in batch_rows]
 
+    # 182.80: a call that has an approved theme meaning but no pictures yet must still be listed
+    _theme_only = {}
+    try:
+        if _cj_theme_ensure():
+            for _t in db.session.execute(db.text(
+                    "SELECT DISTINCT ON (batch_ref) batch_ref, theme_word FROM contest_theme_def "
+                    "WHERE status='approved' ORDER BY batch_ref, version DESC")).fetchall():
+                _theme_only[_t.batch_ref] = _t.theme_word
+    except Exception as _te:
+        db.session.rollback()
+        app.logger.error('[theme] list approved calls failed: %s' % _te)
+    _have = {b['batch_ref'] for b in batches}
+    batches = [{'batch_ref': k, 'n': 0, 'h': 0, 'sonnet_run': False, 'haiku_run': False, 'theme_ready': True}
+               for k in _theme_only if k not in _have] + batches
+
     # Active batch from query param (default to most recent)
     batch_ref = request.args.get('batch', '')
     if not batch_ref and batches and request.args.get('new') != '1':
         batch_ref = batches[0]['batch_ref']  # 182.80: ?new=1 skips this so a NEW call can be started
+        # a theme-only call (no pictures yet) is not the default; prefer the newest call that has pictures
+        _first_real = next((b['batch_ref'] for b in batches if b['n'] > 0), None)
+        if _first_real:
+            batch_ref = _first_real
     active_tab = request.args.get('tab', 'sonnet')
 
     batch_meta = None
@@ -15825,6 +15844,12 @@ def admin_contest_judge():
                 'theme': (_bm_extra.theme if _bm_extra else None) or 'Story',
                 'threshold': float(_bm_extra.theme_threshold) if (_bm_extra and _bm_extra.theme_threshold) else 6.0,
             }
+        elif batch_ref in _theme_only:
+            batch_meta = {'ref': batch_ref, 'n': 0, 'h': 0, 'sonnet_run': False, 'haiku_run': False,
+                          'theme': _theme_only[batch_ref] or 'Story', 'threshold': 6.0}
+        if batch_meta is not None:
+            batch_meta['theme_gate'] = batch_ref in _theme_only
+            batch_meta['theme_word'] = _theme_only.get(batch_ref)
 
         # Sonnet entries
         _sr = db.session.execute(db.text("""
@@ -17517,6 +17542,9 @@ def admin_theme(batch_ref):
                  "<p style='white-space:pre-wrap'>%s</p></div>") % (
             approved.version, _html_escape_cj(approved.theme_word), _html_escape_cj(approved.approved_by),
             _html_escape_cj(_cj_fmt_ts(approved.approved_at)), _html_escape_cj(approved.definition))
+        import urllib.parse as _upq
+        body += ("<p><a class='btn' href='/admin/contest-judge?batch=%s'>Next: add the pictures to this call</a></p>"
+                 % _upq.quote(batch_ref, safe=''))
         older = db.session.execute(db.text(
             "SELECT COUNT(*) FROM contest_judge_batch WHERE batch_ref=:b AND theme_state IS NOT NULL "
             "AND COALESCE(theme_def_version,0) <> :v"), {'b': batch_ref, 'v': approved.version}).scalar() or 0
