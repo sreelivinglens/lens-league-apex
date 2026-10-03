@@ -1,4 +1,4 @@
-# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP. Founder writes and approves the meaning of the theme (versioned, locked, logged) on /admin/theme/<batch>. For a batch with an approved meaning, every picture first gets a plain true/false theme check; fits go on to the normal analysis, borderline pictures wait on a 'Jury decides' list, off-theme pictures get no analysis and are shown last as 'Outside the theme'. Jury include/keep-out decisions need a name and reason and are logged. First theme decision stands on rescore. A batch with no approved meaning behaves exactly as 182.79. Founder-only 'Switch the theme check off' on the theme page (record kept as retired; refused once any picture is checked). A call with an approved meaning but no pictures yet is now listed in the Contest Judge dropdown and opens the add-pictures card (theme ready); theme page has 'Next: add the pictures to this call'. Contest Judge page: '+ New open call' works (?new=1; before, the page always reopened the latest call). Theme audit table wraps so Detail is readable. Checks page gets a 'Theme step' button per batch and a box to start a new batch (admin.html needs no change). Audit-trail 'When' column kept on one line. Excel export no longer fails on pictures without a theme number. No score formula, weight or modifier changed. RETAINS 182.79.)
+# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP, simplified. '+ New open call' asks for a name and a theme word; a theme description is written for the founder to read, change and approve; then pictures are added to that open call (pairs with templates/admin_contest_judge.html 3.0). For an open call with an approved theme, every picture first gets a plain true/false theme check: fits go on to the normal evaluation, borderline pictures wait for the jury, pictures that do not fit are not evaluated and are shown last. Jury include / keep-out decisions need a name and reason and are logged; first theme decision stands on rescore. An open call with no approved theme behaves exactly as 182.79. Theme page in plain words, theme word editable, founder-only 'Remove the theme' (refused once any picture is checked). Open calls with a theme but no pictures are listed. Delete removes the call's theme too. Scorecards ZIP and Review page leave out pictures that were not evaluated. Upload page sends 3 pictures per request. Excel export no longer fails on pictures without a theme number. Audit-trail 'When' column on one line. Checks page: 'Start a new open call' link and a 'Theme' button per open call. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
@@ -15793,20 +15793,26 @@ def admin_contest_judge():
     batches = [{'batch_ref': r.batch_ref, 'n': r.n, 'h': r.h,
                 'sonnet_run': r.n > 0, 'haiku_run': r.h > 0} for r in batch_rows]
 
-    # 182.80: a call that has an approved theme meaning but no pictures yet must still be listed
-    _theme_only = {}
+    # 182.80: a call whose theme is approved (or written, waiting for approval) but that has no pictures yet
+    # must still be listed, otherwise a call made on the theme page is invisible here.
+    _ts_ok = False
+    _appr, _drafts = {}, {}
     try:
-        if _cj_theme_ensure():
+        _ts_ok = bool(_cj_theme_ensure())
+        if _ts_ok:
             for _t in db.session.execute(db.text(
-                    "SELECT DISTINCT ON (batch_ref) batch_ref, theme_word FROM contest_theme_def "
-                    "WHERE status='approved' ORDER BY batch_ref, version DESC")).fetchall():
-                _theme_only[_t.batch_ref] = _t.theme_word
+                    "SELECT batch_ref, status, theme_word FROM contest_theme_def "
+                    "WHERE status IN ('approved','draft') ORDER BY version")).fetchall():
+                (_appr if _t.status == 'approved' else _drafts)[_t.batch_ref] = _t.theme_word
     except Exception as _te:
         db.session.rollback()
-        app.logger.error('[theme] list approved calls failed: %s' % _te)
+        _ts_ok = False
+        app.logger.error('[theme] list theme calls failed: %s' % _te)
     _have = {b['batch_ref'] for b in batches}
-    batches = [{'batch_ref': k, 'n': 0, 'h': 0, 'sonnet_run': False, 'haiku_run': False, 'theme_ready': True}
-               for k in _theme_only if k not in _have] + batches
+    _extra = sorted(set(_appr) | set(_drafts))
+    batches = [{'batch_ref': k, 'n': 0, 'h': 0, 'sonnet_run': False, 'haiku_run': False,
+                'theme_ready': k in _appr, 'theme_pending': k not in _appr}
+               for k in _extra if k not in _have] + batches
 
     # Active batch from query param (default to most recent)
     batch_ref = request.args.get('batch', '')
@@ -15844,12 +15850,24 @@ def admin_contest_judge():
                 'theme': (_bm_extra.theme if _bm_extra else None) or 'Story',
                 'threshold': float(_bm_extra.theme_threshold) if (_bm_extra and _bm_extra.theme_threshold) else 6.0,
             }
-        elif batch_ref in _theme_only:
+        elif batch_ref in _appr or batch_ref in _drafts:
             batch_meta = {'ref': batch_ref, 'n': 0, 'h': 0, 'sonnet_run': False, 'haiku_run': False,
-                          'theme': _theme_only[batch_ref] or 'Story', 'threshold': 6.0}
+                          'theme': _appr.get(batch_ref) or _drafts.get(batch_ref) or 'Story', 'threshold': 6.0}
         if batch_meta is not None:
-            batch_meta['theme_gate'] = batch_ref in _theme_only
-            batch_meta['theme_word'] = _theme_only.get(batch_ref)
+            batch_meta['theme_gate'] = batch_ref in _appr
+            batch_meta['theme_word'] = _appr.get(batch_ref)
+            batch_meta['theme_pending'] = batch_ref in _drafts
+            batch_meta['theme_draft_word'] = _drafts.get(batch_ref)
+            batch_meta['n_wait'] = 0
+            batch_meta['n_off'] = 0
+            if _ts_ok and batch_meta['n']:
+                for _c in db.session.execute(db.text(
+                        "SELECT theme_state, COUNT(*) AS c FROM contest_judge_batch "
+                        "WHERE batch_ref=:br GROUP BY theme_state"), {'br': batch_ref}).fetchall():
+                    if _c.theme_state == 'borderline':
+                        batch_meta['n_wait'] += _c.c
+                    elif _c.theme_state in ('off_theme', 'jury_exclude'):
+                        batch_meta['n_off'] += _c.c
 
         # Sonnet entries
         _sr = db.session.execute(db.text("""
@@ -15857,12 +15875,16 @@ def admin_contest_judge():
                    wonder_score, aq_score, story_transfer_score, disruption_score, dod_score, dm_score,
                    composite_score, theme_score, theme_relevant, theme_note, master_ref, gap_note,
                    override_theme_note, override_master_ref, override_gap_note,
-                   genre_detected, judged_at, thumb_path, override_subject_id
+                   genre_detected, judged_at, thumb_path, override_subject_id, __TS__
             FROM contest_judge_batch WHERE batch_ref = :br ORDER BY composite_score DESC NULLS LAST
-        """), {'br': batch_ref}).fetchall()
+        """.replace('__TS__', 'theme_state' if _ts_ok else 'NULL AS theme_state')), {'br': batch_ref}).fetchall()
+        _rk = 0
         for i, r in enumerate(_sr, 1):
+            _flag = r.theme_state in ('off_theme', 'borderline', 'jury_exclude')
+            if not _flag:
+                _rk += 1
             sonnet_entries.append({
-                'rank': i, 'id': r.id, 'filename': r.filename,
+                'rank': None if _flag else _rk, 'theme_state': r.theme_state, 'id': r.id, 'filename': r.filename,
                 'photographer': r.photographer or 'Unknown',
                 'title': r.image_title or r.filename or '',
                 'wonder': r.wonder_score, 'aq': r.aq_score,
@@ -16515,6 +16537,14 @@ def admin_contest_judge_delete_batch(batch_ref):
         "DELETE FROM contest_judge_batch WHERE batch_ref = :br"
     ), {'br': batch_ref})
     db.session.commit()
+    try:  # 182.80: remove the call's theme too, or the call lingers in the list with no pictures
+        if _cj_theme_ensure():
+            db.session.execute(db.text("DELETE FROM contest_theme_def WHERE batch_ref = :br"), {'br': batch_ref})
+            db.session.commit()
+            _cj_theme_log(batch_ref, 'call_deleted', 'open call deleted by %s' % (current_user.email or ''))
+    except Exception as _dte:
+        db.session.rollback()
+        app.logger.error('[theme] delete cleanup failed: %s' % _dte)
     # Best-effort R2 cleanup — delete contest/<safe_batch>/* objects
     safe_batch = batch_ref.replace('/', '_').replace(' ', '_')
     try:
@@ -16714,11 +16744,11 @@ _CJ_RUNS_CSS = (
     "h1{font-size:28px}h2{font-size:23px}table{border-collapse:collapse;width:100%}"
     "th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}"
     "td.when,th.when{white-space:nowrap}"
-    "th{background:#eee}.wrap{overflow-x:auto}a{color:#0645ad}"
+    "th{background:#eee}.wrap{overflow-x:auto}a{color:#0645ad}img.thumb{max-width:100%;max-height:300px;display:block;margin-bottom:10px}"
     ".btn{display:inline-flex;align-items:center;box-sizing:border-box;padding:12px 18px;background:#1a56db;color:#fff;border:0;"
     "border-radius:6px;font-size:19px;line-height:1.3;text-decoration:none;cursor:pointer;min-height:48px}"
     ".off{background:#e6f4ea;font-weight:bold}.note{background:#fff8e1;border:1px solid #e0b000;"
-    "padding:10px;margin:12px 0}input[type=text],textarea{font-size:19px;width:100%;"
+    "padding:10px;margin:12px 0}input[type=text],textarea{min-height:44px;font-size:19px;width:100%;"
     "box-sizing:border-box;padding:8px}"
     ".nav{margin:0 0 18px 0;padding:10px 0;border-bottom:2px solid #1a56db}"
     ".nav .btn{margin:4px 10px 4px 0}.btn.sec{background:#fff;color:#1a56db;border:2px solid #1a56db}"
@@ -17502,18 +17532,88 @@ def _cj_theme_msg(title, text, code=200):
     return _cj_runs_page(title, "<div class='note'>%s</div>" % text), code
 
 
+_CJ_THEME_ACTION_LABELS = {
+    'draft_written': 'Theme description written',
+    'draft_edited': 'Theme description edited',
+    'approved_and_locked': 'Theme description approved',
+    'new_version_started': 'Change to the theme started',
+    'retired': 'Theme removed from this open call',
+    'jury_include': 'Picture included by the jury',
+    'jury_keep_out': 'Picture kept out by the jury',
+    'call_deleted': 'Open call deleted',
+}
+
+
+def _cj_theme_batch_ok(name):
+    """Open call names: 1 to 40 characters, none of / # ? % backslash (they break the page addresses)."""
+    return bool(name) and len(name) <= 40 and not any(c in name for c in '/#?%\\')
+
+
+def _cj_theme_make_draft(batch_ref, word):
+    """Writes a draft theme description. Returns (True, None) or (False, plain message)."""
+    have = db.session.execute(db.text(
+        "SELECT 1 FROM contest_theme_def WHERE batch_ref=:b AND status='draft' LIMIT 1"), {'b': batch_ref}).fetchone()
+    if have:
+        return True, None
+    text, err = _cj_theme_draft_text(word)
+    if err:
+        app.logger.error('[theme] draft failed: %s' % err)
+        return False, 'The engine did not answer (%s). Nothing was saved.' % _html_escape_cj(err)
+    nxt = db.session.execute(db.text(
+        "SELECT COALESCE(MAX(version),0)+1 FROM contest_theme_def WHERE batch_ref=:b"), {'b': batch_ref}).scalar()
+    db.session.execute(db.text(
+        "INSERT INTO contest_theme_def (batch_ref, version, theme_word, definition, status, created_by) "
+        "VALUES (:b,:v,:w,:d,'draft',:c)"),
+        {'b': batch_ref, 'v': nxt, 'w': word, 'd': text, 'c': current_user.email})
+    db.session.commit()
+    _cj_theme_log(batch_ref, 'draft_written', 'version %d, theme word: %s' % (nxt, word))
+    return True, None
+
+
 @app.route('/admin/theme-go')
 @login_required
 def admin_theme_go():
     if current_user.role != 'admin':
         abort(403)
     b = (request.args.get('batch') or '').strip()
-    if not b or '/' in b or len(b) > 40:
-        return _cj_theme_msg('Batch name needed',
-                             'Please type the batch name (up to 40 characters, no slash) and try again. '
-                             '<a href="/admin/checks">Back</a>', 400)
+    if not _cj_theme_batch_ok(b):
+        return _cj_theme_msg('Open call name needed',
+                             'Please type the open call name (up to 40 characters) and try again. '
+                             '<a href="/admin/contest-judge?new=1">Back</a>', 400)
     import urllib.parse as _up
     return redirect('/admin/theme/' + _up.quote(b, safe=''))
+
+
+@app.route('/admin/theme-new', methods=['POST'])
+@login_required
+def admin_theme_new():
+    """Start a NEW open call: name + theme word. Refuses a name that already exists, so nothing there changes."""
+    if current_user.role != 'admin':
+        abort(403)
+    if not _cj_theme_ensure():
+        abort(500)
+    import urllib.parse as _up
+    back = '<a href="/admin/contest-judge?new=1">Back</a>'
+    name = (request.form.get('batch_name') or '').strip()
+    word = (request.form.get('theme_word') or '').strip()[:120]
+    if not _cj_theme_batch_ok(name):
+        return _cj_theme_msg('Open call name', 'The name must be 1 to 40 characters and cannot contain / # ? % or a '
+                             'backslash. ' + back, 400)
+    if not word:
+        return _cj_theme_msg('Theme word needed', 'Please type the theme word. ' + back, 400)
+    pics = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contest_judge_batch WHERE batch_ref=:b"), {'b': name}).scalar() or 0
+    defs = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contest_theme_def WHERE batch_ref=:b"), {'b': name}).scalar() or 0
+    if pics or defs:
+        return _cj_theme_msg('This open call already exists',
+                             'An open call named <b>%s</b> already exists. Nothing was changed. Choose it from the '
+                             'list on the open call page, or use a different name. %s'
+                             % (_html_escape_cj(name), back), 400)
+    ok, err = _cj_theme_make_draft(name, word)
+    if not ok:
+        return _cj_theme_msg('Could not write the theme description', err + ' ' + back, 502)
+    return redirect('/admin/theme/' + _up.quote(name, safe=''))
 
 
 @app.route('/admin/theme/<batch_ref>')
@@ -17522,69 +17622,56 @@ def admin_theme(batch_ref):
     if current_user.role != 'admin':
         abort(403)
     if not _cj_theme_ensure():
-        return _cj_theme_msg('Theme step', 'Could not prepare the tables. See the Railway log.', 500)
+        return _cj_theme_msg('Theme', 'Could not prepare the tables. See the Railway log.', 500)
+    import urllib.parse as _upq
     founder = _cj_theme_is_founder()
-    br = _html_escape_cj(batch_ref)
-    base = '/admin/theme/' + br
+    qb = _upq.quote(batch_ref, safe='')
+    base = '/admin/theme/' + qb
+    call_url = '/admin/contest-judge?batch=' + qb
     defs = db.session.execute(db.text(
         "SELECT * FROM contest_theme_def WHERE batch_ref=:b ORDER BY version DESC"), {'b': batch_ref}).fetchall()
     approved = next((x for x in defs if x.status == 'approved'), None)
     draft = next((x for x in defs if x.status == 'draft'), None)
-    body = ("<div class='note'>Use exactly this batch name when you upload the pictures: <b>%s</b>. "
-            "The theme check only runs for a batch whose meaning has been approved on this page. "
-            "Until then the batch is judged the old way.</div>" % br)
+    body = ("<p><a class='btn sec' href='%s'>&larr; Back to this open call</a></p>"
+            "<div class='note'>Pictures added to this open call are checked against its theme first. A picture that "
+            "fits is evaluated as usual. A picture that does not fit is not evaluated and is shown last.</div>"
+            % call_url)
 
-    # Step 1: meaning of the theme
-    body += "<h2>Step 1. What the theme means</h2>"
+    body += "<h2>Theme description</h2>"
     if approved:
-        body += ("<div class='card ok'><p><b>Approved: version %d</b> &mdash; theme word: <b>%s</b><br>"
-                 "<span class='small'>Approved by %s on %s</span></p>"
+        body += ("<div class='card ok'><p style='font-size:22px'><b>%s</b></p>"
+                 "<p class='small'>Approved by %s on %s</p>"
                  "<p style='white-space:pre-wrap'>%s</p></div>") % (
-            approved.version, _html_escape_cj(approved.theme_word), _html_escape_cj(approved.approved_by),
+            _html_escape_cj(approved.theme_word), _html_escape_cj(approved.approved_by),
             _html_escape_cj(_cj_fmt_ts(approved.approved_at)), _html_escape_cj(approved.definition))
-        import urllib.parse as _upq
-        body += ("<p><a class='btn' href='/admin/contest-judge?batch=%s'>Next: add the pictures to this call</a></p>"
-                 % _upq.quote(batch_ref, safe=''))
-        older = db.session.execute(db.text(
-            "SELECT COUNT(*) FROM contest_judge_batch WHERE batch_ref=:b AND theme_state IS NOT NULL "
-            "AND COALESCE(theme_def_version,0) <> :v"), {'b': batch_ref, 'v': approved.version}).scalar() or 0
-        if older:
-            body += ("<div class='note'><b>Warning:</b> %d picture(s) were checked under an earlier version of the "
-                     "meaning. They have not been checked again.</div>" % older)
+        body += "<p><a class='btn' href='%s'>Add pictures to this open call</a></p>" % call_url
     if draft:
-        body += ("<h3>Draft version %d (not approved yet)</h3>"
+        body += ("<h3>%s</h3>"
                  "<form method='post' action='%s/save'><input type='hidden' name='version' value='%d'>"
-                 "<p class='hint'>Read it. Change any words you like. The wording you approve is the only meaning used.</p>"
+                 "<p><label for='tw'><b>Theme word</b></label></p>"
+                 "<p><input type='text' id='tw' name='theme_word' maxlength='120' required value='%s'></p>"
+                 "<p class='hint'>Read the description. Change any words you like. Only the wording you approve is used.</p>"
                  "<textarea name='definition' rows='16' required>%s</textarea><p>"
                  "<button class='btn sec' type='submit' name='do' value='save'>Save my changes</button> ") % (
-            draft.version, base, draft.version, _html_escape_cj(draft.definition))
+            ('A change is waiting for your approval' if approved else 'Read, change if you wish, then approve'),
+            base, draft.version, _html_escape_cj(draft.theme_word or ''), _html_escape_cj(draft.definition))
         if founder:
             body += ("<button class='btn' type='submit' name='do' value='approve' "
-                     "onclick=\"return confirm('Approve and lock this meaning? It becomes the only meaning used for this batch.')\">"
-                     "Approve and lock</button>")
+                     "onclick=\"return confirm('Approve this theme description? Pictures will be checked against it.')\">"
+                     "Approve</button>")
         else:
             body += "<span class='hint'>Only the founder can approve. Save your changes and ask the founder.</span>"
         body += "</p></form>"
     elif approved:
-        body += ("<form method='post' action='%s/newversion'><p class='hint'>An approved meaning cannot be edited. "
-                 "A change makes a new version, and the page will warn that earlier checks used the old one.</p>"
-                 "<button class='btn sec' type='submit'>Start a new version</button></form>") % base
-        if founder:
-            body += ("<h3>Switch the theme check off for this call</h3>"
-                     "<form method='post' action='%s/retire'><p class='hint'>This puts the call back to being judged "
-                     "the old way, with the Theme box you typed at upload. The approved meaning stays on record as "
-                     "switched off, and the audit trail shows who did it and when. It only works while no picture "
-                     "has been checked yet.</p>"
-                     "<button class='btn sec' type='submit' "
-                     "onclick=\"return confirm('Switch the theme check off for this call?')\">"
-                     "Switch the theme check off</button></form>") % base
+        body += ("<form method='post' action='%s/newversion'><p class='hint'>An approved description cannot be edited. "
+                 "To change the theme or its wording, start a change. The current one stays in use until you approve "
+                 "the change.</p><button class='btn sec' type='submit'>Change the theme</button></form>") % base
     else:
         body += ("<form method='post' action='%s/draft'><p>Type the theme word, then press the button. "
-                 "The engine writes a short meaning for you to read and correct.</p>"
-                 "<input type='text' name='theme_word' maxlength='120' required placeholder='For example: Reflections'>"
-                 "<p><button class='btn' type='submit'>Write a meaning for this theme</button></p></form>") % base
+                 "A short description is written for you to read and correct.</p>"
+                 "<p><input type='text' name='theme_word' maxlength='120' required placeholder='For example: Reflections'></p>"
+                 "<p><button class='btn' type='submit'>Write the theme description</button></p></form>") % base
 
-    # Step 2: how the pictures were checked
     ents = db.session.execute(db.text(
         "SELECT id, filename, photographer, image_title, thumb_path, theme_state, theme_confidence, theme_reason "
         "FROM contest_judge_batch WHERE batch_ref=:b ORDER BY photographer, filename"), {'b': batch_ref}).fetchall()
@@ -17592,55 +17679,66 @@ def admin_theme(batch_ref):
     for e in ents:
         k = e.theme_state or 'not_checked'
         cnt[k] = cnt.get(k, 0) + 1
-    body += ("<h2>Step 2. How the pictures were checked</h2><div class='wrap'><table>"
-             "<tr><th>Fits the theme</th><th>Waiting for the jury</th><th>Outside the theme</th>"
-             "<th>Included by the jury</th><th>Kept out by the jury</th><th>Judged before the check existed</th></tr>"
-             "<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr></table></div>") % (
-        cnt.get('on_theme', 0), cnt.get('borderline', 0), cnt.get('off_theme', 0),
-        cnt.get('jury_include', 0), cnt.get('jury_exclude', 0), cnt.get('not_checked', 0))
+    body += "<h2>Pictures</h2>"
+    if not ents:
+        body += "<p>No pictures have been added yet.</p>"
+    else:
+        body += ("<div class='wrap'><table>"
+                 "<tr><th>Fit the theme</th><th>Waiting for the jury</th><th>Do not fit</th>"
+                 "<th>Included by the jury</th><th>Kept out by the jury</th><th>Added before a theme was set</th></tr>"
+                 "<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr></table></div>") % (
+            cnt.get('on_theme', 0), cnt.get('borderline', 0), cnt.get('off_theme', 0),
+            cnt.get('jury_include', 0), cnt.get('jury_exclude', 0), cnt.get('not_checked', 0))
 
-    def _cards(rows, heading, intro, include_label):
+    def _cards(rows, anchor, heading, intro, include_label):
         if not rows:
-            return "<h2>%s</h2><p>None.</p>" % heading
-        out = "<h2>%s (%d)</h2><p class='hint'>%s</p>" % (heading, len(rows), intro)
+            return ''
+        out = "<h2 id='%s'>%s (%d)</h2><p class='hint'>%s</p>" % (anchor, heading, len(rows), intro)
         for e in rows:
             tp = e.thumb_path or ''
             src = tp if tp.startswith('http') else ('/static/' + tp if tp else '')
             out += "<div class='card'>"
             if src:
                 out += "<img class='thumb' src='%s' alt='Entry picture'>" % _html_escape_cj(src)
-            out += ("<p>%s</p><p><b>Confidence:</b> %s<br><b>Reason:</b> %s</p>"
+            out += ("<p>%s</p><p><b>Why:</b> %s</p>"
                     "<form method='post' action='%s/decide/%d'>"
                     "<p>Your name<br><input type='text' name='decided_by' required maxlength='100'></p>"
                     "<p>Reason (a few words)<br><textarea name='reason' rows='2' required></textarea></p>"
                     "<button class='btn' type='submit' name='decision' value='include' "
-                    "onclick=\"return confirm('%s This runs the full analysis now.')\">%s</button> "
+                    "onclick=\"return confirm('Include this picture? It will be evaluated now.')\">%s</button> "
                     "<button class='btn sec' type='submit' name='decision' value='keep_out'>Keep out</button>"
                     "</form></div>") % (
                 _cj_entry_label(e.photographer, e.filename, e.image_title),
-                _html_escape_cj(e.theme_confidence or ''), _html_escape_cj(e.theme_reason or ''),
-                base, e.id, 'Include this picture?', include_label)
+                _html_escape_cj(e.theme_reason or ''), base, e.id, include_label)
         return out
 
-    body += _cards([e for e in ents if e.theme_state == 'borderline'], 'Jury decides',
-                   'The engine could not decide clearly. These are NOT analysed and NOT ranked until someone decides.',
+    body += _cards([e for e in ents if e.theme_state == 'borderline'], 'jury', 'Waiting for the jury',
+                   'The engine could not decide clearly. These are not evaluated and not ranked until someone decides.',
                    'Include')
-    body += _cards([e for e in ents if e.theme_state == 'off_theme'], 'Outside the theme (shown last)',
-                   'These fit the theme poorly. They get no analysis and no narrative. The jury may overrule.',
-                   'Include anyway')
-    body += _cards([e for e in ents if e.theme_state == 'jury_exclude'], 'Kept out by the jury',
+    body += _cards([e for e in ents if e.theme_state == 'off_theme'], 'nofit', 'Do not fit the theme (shown last)',
+                   'These fit the theme poorly. They are not evaluated. The jury may overrule.', 'Include anyway')
+    body += _cards([e for e in ents if e.theme_state == 'jury_exclude'], 'kept', 'Kept out by the jury',
                    'Already decided. You can still change the decision; both are recorded.', 'Include')
 
-    # Step 3: audit trail
+    if approved and founder and ents and not any(e.theme_state for e in ents):
+        body += ("<h2>Remove the theme from this open call</h2>"
+                 "<form method='post' action='%s/retire'><p class='hint'>No picture has been checked against the "
+                 "theme yet. Removing it puts this open call back to how it was: pictures are evaluated without a "
+                 "theme check. The history below keeps a note of who removed it and when.</p>"
+                 "<button class='btn sec' type='submit' "
+                 "onclick=\"return confirm('Remove the theme from this open call?')\">Remove the theme</button></form>"
+                 ) % base
+
     logs = db.session.execute(db.text(
-        "SELECT at, action, detail, by_who, ip FROM contest_theme_log WHERE batch_ref=:b ORDER BY id DESC LIMIT 200"),
+        "SELECT at, action, detail, by_who FROM contest_theme_log WHERE batch_ref=:b ORDER BY id DESC LIMIT 200"),
         {'b': batch_ref}).fetchall()
-    tr = ''.join("<tr><td class='when'>%s</td><td style='word-break:break-word'>%s</td><td style='word-break:break-word'>%s</td><td style='min-width:260px'>%s</td></tr>" % (
-        _html_escape_cj(_cj_fmt_ts_short(r.at)), _html_escape_cj(r.by_who), _html_escape_cj(r.action),
-        _html_escape_cj(r.detail)) for r in logs)
-    body += ("<h2>Audit trail (newest first)</h2><div class='wrap'><table><tr><th class='when'>When (India time)</th><th>Who</th>"
+    tr = ''.join("<tr><td class='when'>%s</td><td style='word-break:break-word'>%s</td>"
+                 "<td style='word-break:break-word'>%s</td><td style='min-width:240px'>%s</td></tr>" % (
+        _html_escape_cj(_cj_fmt_ts_short(r.at)), _html_escape_cj(r.by_who),
+        _html_escape_cj(_CJ_THEME_ACTION_LABELS.get(r.action, r.action)), _html_escape_cj(r.detail)) for r in logs)
+    body += ("<h2>History</h2><div class='wrap'><table><tr><th class='when'>When (India time)</th><th>Who</th>"
              "<th>What</th><th>Detail</th></tr>%s</table></div>") % (tr or "<tr><td colspan='4'>Nothing recorded yet.</td></tr>")
-    return _cj_runs_page('Theme step: ' + batch_ref, body)
+    return _cj_runs_page('Theme: ' + batch_ref, body, nav_checks=False)
 
 
 @app.route('/admin/theme/<batch_ref>/draft', methods=['POST'])
@@ -17650,28 +17748,15 @@ def admin_theme_draft(batch_ref):
         abort(403)
     if not _cj_theme_ensure():
         abort(500)
+    import urllib.parse as _up
     word = (request.form.get('theme_word') or '').strip()[:120]
+    back = '<a href="/admin/theme/%s">Back</a>' % _up.quote(batch_ref, safe='')
     if not word:
-        return _cj_theme_msg('Theme word needed', 'Please type the theme word. <a href="/admin/theme/%s">Back</a>'
-                             % _html_escape_cj(batch_ref), 400)
-    have = db.session.execute(db.text(
-        "SELECT 1 FROM contest_theme_def WHERE batch_ref=:b AND status='draft' LIMIT 1"), {'b': batch_ref}).fetchone()
-    if have:
-        return redirect('/admin/theme/' + batch_ref)
-    text, err = _cj_theme_draft_text(word)
-    if err:
-        app.logger.error('[theme] draft failed: %s' % err)
-        return _cj_theme_msg('Could not write the meaning', 'The engine did not answer (%s). Nothing was saved. '
-                             '<a href="/admin/theme/%s">Back</a>' % (_html_escape_cj(err), _html_escape_cj(batch_ref)), 502)
-    nxt = db.session.execute(db.text(
-        "SELECT COALESCE(MAX(version),0)+1 FROM contest_theme_def WHERE batch_ref=:b"), {'b': batch_ref}).scalar()
-    db.session.execute(db.text(
-        "INSERT INTO contest_theme_def (batch_ref, version, theme_word, definition, status, created_by) "
-        "VALUES (:b,:v,:w,:d,'draft',:c)"),
-        {'b': batch_ref, 'v': nxt, 'w': word, 'd': text, 'c': current_user.email})
-    db.session.commit()
-    _cj_theme_log(batch_ref, 'draft_written', 'version %d, theme word: %s' % (nxt, word))
-    return redirect('/admin/theme/' + batch_ref)
+        return _cj_theme_msg('Theme word needed', 'Please type the theme word. ' + back, 400)
+    ok, err = _cj_theme_make_draft(batch_ref, word)
+    if not ok:
+        return _cj_theme_msg('Could not write the theme description', err + ' ' + back, 502)
+    return redirect('/admin/theme/' + _up.quote(batch_ref, safe=''))
 
 
 @app.route('/admin/theme/<batch_ref>/newversion', methods=['POST'])
@@ -17718,7 +17803,9 @@ def admin_theme_save(batch_ref):
                              '<a href="/admin/theme/%s">Back</a>' % _html_escape_cj(batch_ref), 400)
     if do == 'approve' and not _cj_theme_is_founder():
         abort(403)
-    db.session.execute(db.text("UPDATE contest_theme_def SET definition=:t WHERE id=:i"), {'t': text, 'i': d.id})
+    new_word = (request.form.get('theme_word') or '').strip()[:120] or d.theme_word
+    db.session.execute(db.text("UPDATE contest_theme_def SET definition=:t, theme_word=:w WHERE id=:i"),
+                       {'t': text, 'w': new_word, 'i': d.id})
     if do == 'approve':
         db.session.execute(db.text(
             "UPDATE contest_theme_def SET status='superseded' WHERE batch_ref=:b AND status='approved'"), {'b': batch_ref})
@@ -17733,9 +17820,12 @@ def admin_theme_save(batch_ref):
         _cj_theme_log(batch_ref, 'approved_and_locked', 'version %d approved. %d picture(s) already carried an earlier check.'
                       % (ver, older))
         app.logger.info('[theme] APPROVED batch=%s version=%d by=%s' % (batch_ref, ver, current_user.email))
+        import urllib.parse as _upa
+        return redirect('/admin/contest-judge?batch=' + _upa.quote(batch_ref, safe=''))
     else:
         _cj_theme_log(batch_ref, 'draft_edited', 'version %d saved' % ver)
-    return redirect('/admin/theme/' + batch_ref)
+    import urllib.parse as _upb
+    return redirect('/admin/theme/' + _upb.quote(batch_ref, safe=''))
 
 
 @app.route('/admin/theme/<batch_ref>/retire', methods=['POST'])
@@ -17752,13 +17842,13 @@ def admin_theme_retire(batch_ref):
     back = '<a href="/admin/theme/%s">Back</a>' % _html_escape_cj(batch_ref)
     d = _cj_theme_active_def(batch_ref)
     if d is None:
-        return _cj_theme_msg('Nothing to switch off', 'This call has no approved meaning. ' + back, 400)
+        return _cj_theme_msg('Nothing to remove', 'This open call has no approved theme. ' + back, 400)
     checked = db.session.execute(db.text(
         "SELECT COUNT(*) FROM contest_judge_batch WHERE batch_ref=:b AND theme_state IS NOT NULL"),
         {'b': batch_ref}).scalar() or 0
     if checked:
-        return _cj_theme_msg('Cannot switch off now',
-                             '%d picture(s) in this call already carry a theme check, so switching it off would '
+        return _cj_theme_msg('Cannot remove the theme now',
+                             '%d picture(s) in this call already carry a theme check, so removing the theme would '
                              'leave them half changed. Nothing was changed. ' % checked + back, 400)
     db.session.execute(db.text(
         "UPDATE contest_theme_def SET status='retired' WHERE batch_ref=:b AND status='approved'"), {'b': batch_ref})
@@ -17998,19 +18088,15 @@ def admin_checks_hub():
         rows += ("<tr><td><b>%s</b><br>%d entries</td><td><a class='btn' href='/admin/contest-judge/runs/%s'>Run history</a></td>"
                  "<td><a class='btn' href='/admin/pixel-report/%s'>Pixel report</a></td>"
                  "<td><a class='btn' href='/admin/jury/%s'>Sign-off</a></td>"
-                 "<td><a class='btn' href='/admin/theme/%s'>Theme step</a></td></tr>") % (br, b.n, br, br, br, br)
+                 "<td><a class='btn' href='/admin/theme/%s'>Theme</a></td></tr>") % (br, b.n, br, br, br, br)
     if not rows:
         rows = "<tr><td colspan='5'>No Open Call batches found.</td></tr>"
     body = ("<div class='note'>These tools only show information or create private links. "
             "The pixel report changes no score. The sign-off page sends no email.</div>"
             "<h2>Member scores</h2><p><a class='btn' href='/admin/score-audit'>Score audit (read-only)</a></p>"
-            "<h2>Open Call theme step (new batch)</h2>"
-            "<form method='get' action='/admin/theme-go'><p><label for='tb'>Type the batch name you will use "
-            "when uploading the pictures:</label></p>"
-            "<p><input type='text' id='tb' name='batch' maxlength='40' required></p>"
-            "<p><button class='btn' type='submit'>Open the theme step</button></p></form>"
+            "<p><a class='btn' href='/admin/contest-judge?new=1'>Start a new open call</a></p>"
             "<h2>Open Call batches</h2><div class='wrap'><table><tr><th>Batch</th><th>Every run kept</th>"
-            "<th>Measured facts</th><th>Jury / founder sign-off</th><th>Theme meaning and checks</th></tr>%s</table></div>") % rows
+            "<th>Measured facts</th><th>Jury / founder sign-off</th><th>Theme</th></tr>%s</table></div>") % rows
     return _cj_runs_page('Checks and sign-off', body, nav_checks=False)
 
 @app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
@@ -19331,6 +19417,7 @@ def admin_contest_judge_review(batch_ref):
     """Interactive scorecard review: view each image, add Mentor Notes, export selected."""
     if current_user.role != 'admin':
         abort(403)
+    _cj_theme_ensure()  # 182.80: theme_state column must exist for the query below
     rows = db.session.execute(db.text("""
         SELECT id, filename, photographer, image_title, theme, batch_ref,
                wonder_score, aq_score, story_transfer_score,
@@ -19343,7 +19430,7 @@ def admin_contest_judge_review(batch_ref):
                override_master_ref, override_subject_id,
                raw_json
         FROM contest_judge_batch
-        WHERE batch_ref = :br
+        WHERE batch_ref = :br AND (theme_state IS NULL OR theme_state IN ('on_theme','jury_include'))
         ORDER BY composite_score DESC NULLS LAST
     """), {'br': batch_ref}).fetchall()
     if not rows:
@@ -19409,6 +19496,7 @@ def admin_contest_judge_scorecards(batch_ref):
     """
     if current_user.role != 'admin':
         abort(403)
+    _cj_theme_ensure()  # 182.80: theme_state column must exist for the query below
 
     # Selective export: ?ids=1,2,3
     ids_param = request.args.get('ids', '').strip()
@@ -19431,7 +19519,7 @@ def admin_contest_judge_scorecards(batch_ref):
                COALESCE(override_gap_note, gap_note) AS gap_note,
                genre_detected, override_subject_id
         FROM contest_judge_batch
-        WHERE batch_ref = :br
+        WHERE batch_ref = :br AND (theme_state IS NULL OR theme_state IN ('on_theme','jury_include'))
         ORDER BY composite_score DESC NULLS LAST
     """), {'br': batch_ref}).fetchall()
 
