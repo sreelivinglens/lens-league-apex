@@ -1,4 +1,4 @@
-# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP, simplified. '+ New open call' asks for a name and a theme word; a theme description is written for the founder to read, change and approve; then pictures are added to that open call (pairs with templates/admin_contest_judge.html 3.0). For an open call with an approved theme, every picture first gets a plain true/false theme check: fits go on to the normal evaluation, borderline pictures wait for the jury, pictures that do not fit are not evaluated and are shown last. Jury include / keep-out decisions need a name and reason and are logged; first theme decision stands on rescore. An open call with no approved theme behaves exactly as 182.79. Theme page in plain words, theme word editable, founder-only 'Remove the theme' (refused once any picture is checked). Open calls with a theme but no pictures are listed. Delete removes the call's theme too. Scorecards ZIP and Review page leave out pictures that were not evaluated. Upload page sends 3 pictures per request. Excel export no longer fails on pictures without a theme number. Audit-trail 'When' column on one line. Checks page: 'Start a new open call' link and a 'Theme' button per open call. No score formula, weight or modifier changed. RETAINS 182.79.)
+# SL-VERSION: 182.80 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): OPEN CALL THEME STEP, simplified. '+ New open call' asks for a name and a theme word; a theme description is written for the founder to read, change and approve; then pictures are added to that open call (pairs with templates/admin_contest_judge.html 3.0). For an open call with an approved theme, every picture first gets a plain true/false theme check: fits go on to the normal evaluation, borderline pictures wait for the jury, pictures that do not fit are not evaluated and are shown last. Jury include / keep-out decisions need a name and reason and are logged; first theme decision stands on rescore. An open call with no approved theme behaves exactly as 182.79. Theme page in plain words, theme word editable, founder-only 'Remove the theme' (refused once any picture is checked). Open calls with a theme but no pictures are listed. Delete removes the call's theme too. Scorecards ZIP and Review page leave out pictures that were not evaluated. Upload page sends 3 pictures per request. Excel export no longer fails on pictures without a theme number. Audit-trail 'When' column on one line. Excel: pictures not evaluated stay at the bottom with no rank number; one [theme] log line per theme decision and per jury decision. Checks page: 'Start a new open call' link and a 'Theme' button per open call. No score formula, weight or modifier changed. RETAINS 182.79.)
 # SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
@@ -16337,12 +16337,19 @@ def admin_contest_judge_export(batch_ref):
         else:
             return PatternFill('solid', fgColor='FEE2E2')
 
+    _xrank = 0
     for row_idx, row in enumerate(rows, 1):
         r = row_idx + 3
         fill = cream_fill if row_idx % 2 == 0 else PatternFill('solid', fgColor='FFFFFF')
+        # 182.80: a picture that was not evaluated stays in the list (at the bottom) but gets no rank number
+        if getattr(row, 'theme_state', None) in ('off_theme', 'borderline', 'jury_exclude'):
+            _rank_val = '—'
+        else:
+            _xrank += 1
+            _rank_val = _xrank
 
         data = [
-            row_idx,
+            _rank_val,
             row.photographer or 'Unknown',
             row.image_title or '',
             row.genre_detected or '',
@@ -17488,6 +17495,8 @@ def _cj_judge_gated(image_b64, photographer, title, theme, theme_threshold, batc
             return {'error': chk['error']}
         state = _cj_theme_state_from(chk['fits'], chk['confidence'])
         conf, reason, ver = chk['confidence'], chk['reason'], d.version
+        app.logger.info('[theme] check batch=%s photographer=%s title=%s fits=%s confidence=%s -> %s' % (
+            batch_ref, (photographer or '')[:40], (title or '')[:60], chk['fits'], conf, state))
         if state != 'on_theme':
             return _cj_theme_flag_verdict(state, conf, reason, ver)
     verdict = _cj_sonnet_judge(image_b64, photographer, title, theme_text, theme_threshold)
@@ -17905,6 +17914,7 @@ def admin_theme_decide(batch_ref, entry_id):
         db.session.execute(db.text("UPDATE contest_judge_batch SET theme_state='jury_exclude' WHERE id=:e"), {'e': entry_id})
         db.session.commit()
         _cj_theme_log(batch_ref, 'jury_keep_out', detail_base)
+        app.logger.info('[theme] JURY keep_out batch=%s entry=%d by=%s' % (batch_ref, entry_id, who))
         return redirect('/admin/theme/' + batch_ref)
     # include: run the full analysis now
     d = _cj_theme_active_def(batch_ref)
@@ -17939,6 +17949,7 @@ def admin_theme_decide(batch_ref, entry_id):
         _cj_runs_record(entry_id, batch_ref, verdict, image_b64, 'jury-include')
         _cj_theme_store_verdict(entry_id, verdict)
         _cj_theme_log(batch_ref, 'jury_include', detail_base + ' (full analysis run, composite %s)' % verdict.get('composite'))
+        app.logger.info('[theme] JURY include batch=%s entry=%d by=%s composite=%s' % (batch_ref, entry_id, who, verdict.get('composite')))
     except Exception as e:
         db.session.rollback()
         app.logger.error('[theme] include failed entry=%s: %s' % (entry_id, e))
