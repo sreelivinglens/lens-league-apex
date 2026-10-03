@@ -1,3 +1,4 @@
+# SL-VERSION: 182.70 (Session 235, 2026-10-03 -- FIX: removed a stray duplicate copy of the _clean_audit body that sat after _refresh_dash_mentor without its def line (95 lines). It ran after every mentor refresh and raised "name 'audit' is not defined" (found by the 182.69 traceback). The real _clean_audit function is unchanged. No scoring change. RETAINS 182.69.)
 # SL-VERSION: 182.69 (Session 235, 2026-10-03 -- DIAGNOSTIC + labels only: the two [dash_mentor] warning lines now also print the full traceback so the old "name 'audit' is not defined" fault can be located (no behaviour change). Stale version labels on the Checks, sign-off and score-audit pages corrected. RETAINS 182.68.)
 # SL-VERSION: 182.68 (Session 235, 2026-10-03 -- NEW: /admin/checks hub page (links to score audit and, per Open Call batch, run history, pixel report and sign-off; read-only, no emails). Pair with templates/admin.html admin-3.4. pixel_metrics.py now lives in engine/ (imported as engine.pixel_metrics). RETAINS 182.67.)
 # SL-VERSION: 182.67 (Session 235, 2026-10-03 -- NEW (staging, nothing live-tested): (1) Open Call RUN HISTORY: every judge run kept in new table contest_judge_runs, first run official, viewer /admin/contest-judge/runs/<batch>, CSV, founder-only make-official with reason; rescore routes snapshot today's result then record the new run; optional env SL_OC_KEEP_OFFICIAL=1 stops rescore overwriting the displayed result (default OFF = unchanged behaviour). (2) PIXEL REPORT (report only, changes no score): /admin/pixel-report/<batch>, uses new pixel_metrics.py, own table contest_pixel_metrics. (3) SIGN-OFF page: /admin/jury/<batch> creates private links (NO EMAIL SENT), /jury/review/<token> for jury/founder to approve or return, audit trail in contest_jury_log. RETAINS 182.66.)
@@ -6733,99 +6734,8 @@ CRITICAL RULES:
 
 
 
-    """
-    SL-176: Post-process audit dict before saving to DB.
-    Runs after build_audit_data(), before set_audit().
-
-    Fixes applied:
-    1. Deduplicates master photographer references across sections
-    2. Trims takeaway bullets to 2 max
-    3. Guards B&W edit suggestion for colour-rich genres
-    4. Removes verbatim repeat sentences across sections
-    """
-    import re as _re_ca
-
-    if not audit:
-        return audit
-
-    try:
-        # ── 1. Deduplicate master references (e.g. Ernst Haas in 3 sections) ──
-        _ref_fields = [
-            'what_stood_out', 'transferable_advice', 'background_check',
-            'byline_1', 'byline_2', 'byline_2_body', 'affective_state',
-            'assignment_tomorrow', 'note_on_eye', 'body_of_work',
-        ]
-        _master_re = _re_ca.compile(r'Search:\s*([^.<\n]{3,60})\.', _re_ca.IGNORECASE)
-        _seen_masters = set()
-        for _field in _ref_fields:
-            _val = (audit.get(_field) or '')
-            for _m in _master_re.findall(_val):
-                _nm = _m.strip().lower()
-                if _nm in _seen_masters:
-                    # Remove the "**Name** ...sentence... Search: Name." block
-                    audit[_field] = _re_ca.sub(
-                        r'\s*\*?\*?' + _re_ca.escape(_m.strip()) + r'\*?\*?[^.!?]*[.!?]?\s*'
-                        r'Search:\s*' + _re_ca.escape(_m.strip()) + r'\s*\.',
-                        '', audit[_field], flags=_re_ca.IGNORECASE
-                    ).strip()
-                    app.logger.info(f'[clean_audit] deduped master ref "{_nm}" from {_field}')
-                else:
-                    _seen_masters.add(_nm)
-
-        # ── 2. Trim take-away to 2 bullets max ──────────────────────────────
-        for _ta_field in ('one_takeaway', 'sherpa_takeaway', 'byline_2', 'byline_2_body'):
-            _ta = (audit.get(_ta_field) or '')
-            if _ta and '\u25a0' in _ta:
-                _parts = [p.strip() for p in _ta.split('\u25a0') if p.strip()]
-                if len(_parts) > 2:
-                    audit[_ta_field] = '\u25a0 ' + ' \u25a0 '.join(_parts[:2])
-                    app.logger.info(f'[clean_audit] {_ta_field} trimmed to 2 bullets')
-
-        # ── 3. Guard B&W edit suggestion for colour-rich genres ─────────────
-        _genre = (getattr(img, 'genre', '') or '').lower()
-        _colour_genres = {'creative', 'wildlife', 'landscape', 'street',
-                          'travel', 'nature', 'sport', 'fashion', 'concert'}
-        _edit_creative = (audit.get('edit_creative') or '')
-        if _edit_creative and _genre in _colour_genres:
-            _bw_re = _re_ca.compile(
-                r'convert\s+to\s+black\s+and\s+white|to\s+b\s*&\s*w|monochrome',
-                _re_ca.IGNORECASE
-            )
-            if _bw_re.search(_edit_creative):
-                _subject = (getattr(img, 'subject', '') or '').lower()
-                _is_grey = any(w in _subject + _edit_creative.lower()
-                               for w in ('grey', 'gray', 'mist', 'fog', 'rain',
-                                         'storm', 'overcast', 'silhouette', 'shadow'))
-                if not _is_grey:
-                    audit['edit_creative'] = _bw_re.sub(
-                        'develop a distinctive colour treatment', _edit_creative
-                    )
-                    app.logger.info(f'[clean_audit] B&W guard applied for genre={_genre}')
-
-        # ── 4. Remove verbatim sentence repeats from secondary sections ──────
-        _primary = (audit.get('what_stood_out') or audit.get('hard_truth') or '').strip()
-        if _primary:
-            _primary_fps = set()
-            for _s in _re_ca.split(r'(?<=[.!?])\s+', _primary):
-                _fp = _re_ca.sub(r'\s+', ' ', _s.strip().lower())
-                if len(_fp) > 25:
-                    _primary_fps.add(_fp)
-            for _sf in ('transferable_advice', 'background_check', 'byline_2'):
-                _sv = (audit.get(_sf) or '')
-                if not _sv:
-                    continue
-                _sents = _re_ca.split(r'(?<=[.!?])\s+', _sv)
-                _cleaned = [s for s in _sents
-                            if _re_ca.sub(r'\s+', ' ', s.strip().lower()) not in _primary_fps]
-                if len(_cleaned) < len(_sents):
-                    audit[_sf] = ' '.join(_cleaned).strip()
-                    app.logger.info(f'[clean_audit] removed {len(_sents)-len(_cleaned)} repeat sents from {_sf}')
-
-    except Exception as _ca_err:
-        app.logger.warning(f'[clean_audit] non-fatal: {_ca_err}')
-
-    return audit
-
+    # Session 235 (182.70): removed a stray duplicate of the _clean_audit body that sat here with no "def" line,
+    # which raised NameError: name 'audit' is not defined after every mentor refresh. The real _clean_audit is below.
 
 
 def _clean_audit(audit, img):
