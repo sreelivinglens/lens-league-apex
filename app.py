@@ -1,3 +1,4 @@
+# SL-VERSION: 182.73 (Session 235, 2026-10-03 -- FIX: repeat-upload score anchor ignored the audit copy saved in scored_phash_cache and demanded that the ORIGINAL image still exist, so delete + re-upload of the same picture re-rolled the score (founder test: 8.26, 8.26, 7.92). The guard now accepts the cached audit_json first; behaviour with a surviving original is unchanged. RETAINS 182.72.)
 # SL-VERSION: 182.72 (Session 235, 2026-10-03 -- FIX (email): percentile line was always blank (read a key that does not exist); now "Higher than N% of images in the League" as on the scorecard. Strength / Next leap headings in the email are now named from the scores (as the scorecard page does), not from the stored model label. RETAINS 182.71.)
 # SL-VERSION: 182.71 (Session 235, 2026-10-03 -- NEW: member scorecard email now rendered from templates/email_scorecard.html and expanded to the full scorecard (standing, why each dimension, story check, master reference, technical read, visual flow, imagine, body of work, path to recognition, edit suggestions). The old in-code builder stays as an automatic fallback. New admin route /admin/email-preview/<image_id> shows the email on screen and sends nothing. RETAINS 182.70.)
 # SL-VERSION: 182.70 (Session 235, 2026-10-03 -- FIX: removed a stray duplicate copy of the _clean_audit body that sat after _refresh_dash_mentor without its def line (95 lines). It ran after every mentor refresh and raised "name 'audit' is not defined" (found by the 182.69 traceback). The real _clean_audit function is unchanged. No scoring change. RETAINS 182.69.)
@@ -9571,8 +9572,12 @@ def upload():
                 # uploads of images scored before audit_json existed, or
                 # whose original was deleted without audit_json).
                 _orig_id = _anchored_score.get('original_image_id')
-                _has_audit = False
-                if _orig_id:
+                # Session 235 (182.73): the cache row keeps its OWN copy of audit_json (it survives
+                # deletion of the original, and the apply step below already prefers it). Accept it
+                # here too, so delete + re-upload of the same picture returns the stored score
+                # instead of falling through to the model and re-rolling.
+                _has_audit = bool(_anchored_score.get('audit_json'))
+                if _orig_id and not _has_audit:
                     try:
                         _audit_check = db.session.execute(
                             db.text("SELECT audit_json FROM images WHERE id = :iid"),
