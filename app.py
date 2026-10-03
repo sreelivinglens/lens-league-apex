@@ -1,3 +1,4 @@
+# SL-VERSION: 182.68 (Session 235, 2026-10-03 -- NEW: /admin/checks hub page (links to score audit and, per Open Call batch, run history, pixel report and sign-off; read-only, no emails). Pair with templates/admin.html admin-3.4. RETAINS 182.67.)
 # SL-VERSION: 182.67 (Session 235, 2026-10-03 -- NEW (staging, nothing live-tested): (1) Open Call RUN HISTORY: every judge run kept in new table contest_judge_runs, first run official, viewer /admin/contest-judge/runs/<batch>, CSV, founder-only make-official with reason; rescore routes snapshot today's result then record the new run; optional env SL_OC_KEEP_OFFICIAL=1 stops rescore overwriting the displayed result (default OFF = unchanged behaviour). (2) PIXEL REPORT (report only, changes no score): /admin/pixel-report/<batch>, uses new pixel_metrics.py, own table contest_pixel_metrics. (3) SIGN-OFF page: /admin/jury/<batch> creates private links (NO EMAIL SENT), /jury/review/<token> for jury/founder to approve or return, audit trail in contest_jury_log. RETAINS 182.66.)
 # SL-VERSION: 182.66 (Session 235, 2026-10-03 -- (1) Percentile pools separated: Sonnet images compare with the Sonnet pool only, Haiku (eValuate) images with the Haiku pool; Haiku never enters the Sonnet pool (needs scoring-227.2). A combined approximate figure is returned as combined_pct but is NOT displayed yet (wording awaits founder approval). (2) /admin/score-audit now reports whether pools are separated. 182.65 line retained below.)
 # SL-VERSION: 182.65 (Session 235, 2026-10-03 -- FIX: /admin/score-audit crashed when building its page (a literal percent sign in the page style clashed with the text-filling method). Page now filled with plain replacement. Still read-only. 182.64 line retained below.)
@@ -17321,6 +17322,36 @@ def jury_review_submit(token):
     _cj_jury_log(s.id, s.batch_ref, 'signed_' + status, comment)
     return redirect('/jury/review/%s' % token)
 
+
+# ═══ Session 235 (182.68): CHECKS HUB - one page that links the new tools (links only) ═══
+@app.route('/admin/checks')
+@login_required
+def admin_checks_hub():
+    if current_user.role != 'admin':
+        abort(403)
+    try:
+        batches = db.session.execute(db.text(
+            "SELECT batch_ref, COUNT(*) AS n, MAX(judged_at) AS last FROM contest_judge_batch "
+            "GROUP BY batch_ref ORDER BY MAX(judged_at) DESC NULLS LAST")).fetchall()
+    except Exception as _e:
+        db.session.rollback()
+        batches = []
+        app.logger.error(f'[checks_hub] {_e}')
+    rows = ''
+    for b in batches:
+        br = _html_escape_cj(b.batch_ref)
+        rows += ("<tr><td><b>%s</b><br>%d entries</td><td><a class='btn' href='/admin/contest-judge/runs/%s'>Run history</a></td>"
+                 "<td><a class='btn' href='/admin/pixel-report/%s'>Pixel report</a></td>"
+                 "<td><a class='btn' href='/admin/jury/%s'>Sign-off</a></td></tr>") % (br, b.n, br, br, br)
+    if not rows:
+        rows = "<tr><td colspan='4'>No Open Call batches found.</td></tr>"
+    body = ("<p><a href='/admin'>Back to the admin dashboard</a></p>"
+            "<div class='note'>These tools only show information or create private links. "
+            "The pixel report changes no score. The sign-off page sends no email.</div>"
+            "<h2>Member scores</h2><p><a class='btn' href='/admin/score-audit'>Score audit (read-only)</a></p>"
+            "<h2>Open Call batches</h2><div class='wrap'><table><tr><th>Batch</th><th>Every run kept</th>"
+            "<th>Measured facts</th><th>Jury / founder sign-off</th></tr>%s</table></div>") % rows
+    return _cj_runs_page('Checks and sign-off', body)
 
 @app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
 @login_required
