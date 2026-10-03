@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-3.1 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): 'New evaluation (trial)' card on the Open Call page with two buttons: 'Try the new evaluation (trial)' (asks for confirmation showing the number of engine calls, then runs; official results never change) and 'Download trial results' (trial beside official, as a spreadsheet). Pairs with app.py 182.81. RETAINS 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.0 (Session 235, 2026-10-03 -- SIMPLIFIED OPEN CALL PAGE (pairs with app.py 182.80, staging only). One flow: '+ New open call' asks for a name and a theme word only; a theme description is written for you to approve; then you add pictures to that open call (no retyping of names, no separate theme box or threshold). Pictures waiting for the jury or not fitting the theme are counted on this page and shown last. Upload sends 3 pictures at a time with a visible count. Plain words replace 'Sonnet' labels. Delete removes the open call and its theme. RETAINS 2.17 / 2.16 / 2.15 / 2.14 table, rescore, scorecards and Excel behaviour.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -226,6 +227,24 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
     <div class="msg" id="rescoreMsg"></div>
   </div>
 
+  <div class="card" id="newEvalCard">
+    <h3 style="font-size:19px;margin-bottom:8px">New evaluation (trial)</h3>
+    <p style="font-size:16px;line-height:1.65;margin-bottom:14px">Tries the new five-part evaluation on every picture in this open call. <strong>Your official results do not change.</strong> The trial is saved on its own and can be downloaded beside the official results. The engine is only called after you press the button and confirm the number of pictures.</p>
+    <div class="run-row">
+      <button class="btn btn-gold" id="newEvalBtn" onclick="newEvalStart()">
+        <i class="ti ti-flask"></i> Try the new evaluation (trial)
+      </button>
+      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_new_eval_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-file-spreadsheet"></i> Download trial results
+      </a>
+    </div>
+    <div class="prog" id="newEvalProg">
+      <div class="prog-track"><div class="prog-fill" id="newEvalFill"></div></div>
+      <div class="prog-text" id="newEvalText">Starting…</div>
+    </div>
+    <div class="msg" id="newEvalMsg"></div>
+  </div>
+
   <div class="results-wrap">
     <table class="rt" id="resultsTable">
       <thead>
@@ -295,6 +314,8 @@ var URL_BASE        = {{ url_for('admin_contest_judge')|tojson }};
 var URL_UPLOAD      = {{ url_for('admin_contest_judge_upload')|tojson }};
 var URL_RESCORE     = {{ url_for('admin_contest_judge_bulk_rescore', batch_ref=batch_ref or '_')|tojson }};
 var URL_STATUS      = {{ url_for('admin_contest_judge_bulk_rescore_status', job_id='JOBID')|tojson }};
+var URL_NE_COUNT    = {{ url_for('admin_contest_judge_new_eval_count', batch_ref=batch_ref or '_')|tojson }};
+var URL_NE_RUN      = {{ url_for('admin_contest_judge_new_eval_run', batch_ref=batch_ref or '_')|tojson }};
 var URL_DELETE      = {{ url_for('admin_contest_judge_delete_batch', batch_ref=batch_ref or '_')|tojson }};
 var BATCH_REF       = {{ batch_ref|tojson if batch_ref else 'null' }};
 var BATCH_N         = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
@@ -393,6 +414,45 @@ function pollRescore(id,btn){
       if(p.finished){ location.reload(); }
       else setTimeout(function(){ pollRescore(id,btn); },3000);
     }).catch(function(){ setTimeout(function(){ pollRescore(id,btn); },5000); });
+}
+/* -- NEW EVALUATION (TRIAL) -- */
+function neMsg(t,bad){
+  var m=document.getElementById('newEvalMsg');
+  m.style.display='block'; m.textContent=t;
+  m.style.background=bad?'#FEF2F2':'#F0FDF4'; m.style.color=bad?'#B91C1C':'#166534';
+}
+function newEvalStart(){
+  var btn=document.getElementById('newEvalBtn');
+  btn.disabled=true;
+  fetch(URL_NE_COUNT,{credentials:'same-origin'})
+    .then(function(r){ return r.json(); })
+    .then(function(c){
+      var n=c.with_picture;
+      if(!n){ neMsg('There are no pictures to evaluate in this open call.',true); btn.disabled=false; return; }
+      var ok=confirm('Try the new evaluation on '+n+' picture'+(n===1?'':'s')+'?\n\nThis calls the engine once per picture, '+n+' time'+(n===1?'':'s')+' at most, and costs money.\nYour official results will not change.');
+      if(!ok){ btn.disabled=false; return; }
+      document.getElementById('newEvalProg').style.display='block';
+      return fetch(URL_NE_RUN,{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:JSON.stringify({confirm:true})})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(!d.job_id){ neMsg(d.error||'The trial did not start.',true); btn.disabled=false; return; }
+          pollNewEval(d.job_id, btn);
+        });
+    })
+    .catch(function(){ neMsg('Could not reach the server. Nothing was started.',true); btn.disabled=false; });
+}
+function pollNewEval(id,btn){
+  fetch(URL_STATUS.replace('JOBID',id),{credentials:'same-origin'})
+    .then(function(r){ return r.json(); }).then(function(p){
+      if(p.total){
+        document.getElementById('newEvalFill').style.width=Math.round(100*p.done/p.total)+'%';
+        document.getElementById('newEvalText').textContent=p.done+' of '+p.total+' done'+(p.errors?' · '+p.errors+' could not be evaluated':'');
+      }
+      if(p.finished){
+        neMsg('Trial finished: '+p.done+' of '+p.total+' pictures'+(p.errors?' ('+p.errors+' could not be evaluated)':'')+'. Press "Download trial results" to read it.', !!p.errors);
+        btn.disabled=false;
+      } else setTimeout(function(){ pollNewEval(id,btn); },3000);
+    }).catch(function(){ setTimeout(function(){ pollNewEval(id,btn); },5000); });
 }
 </script>
 {% endraw %}
