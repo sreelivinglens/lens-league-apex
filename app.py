@@ -1,3 +1,4 @@
+# SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
 # SL-VERSION: 182.76 (Session 235, 2026-10-03 -- Run history pages now show 'You are logged in as: <email>. Founder access: YES/NO' (display only) so the founder can see why the make-official box is hidden; stale 'app.py 182.69' labels on the Open Call and sign-off pages corrected. No scoring change. RETAINS 182.75.)
 # SL-VERSION: 182.75 (Session 235, 2026-10-03 -- CHANGE: FIRST SCORE STANDS. The stored score for an identical picture (same member, phash, genre) is no longer overwritten by later scorings, so repeat uploads keep returning the first score. Only an old stored row with no audit copy may be replaced. Applies to normal upload and bulk upload. Existing stored rows are NOT changed. RETAINS 182.74.)
@@ -16680,20 +16681,66 @@ _CJ_RUNS_CSS = (
     "h1{font-size:28px}h2{font-size:23px}table{border-collapse:collapse;width:100%}"
     "th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}"
     "th{background:#eee}.wrap{overflow-x:auto}a{color:#0645ad}"
-    ".btn{display:inline-block;padding:12px 18px;background:#1a56db;color:#fff;border:0;"
-    "border-radius:6px;font-size:19px;text-decoration:none;cursor:pointer;min-height:44px}"
+    ".btn{display:inline-flex;align-items:center;box-sizing:border-box;padding:12px 18px;background:#1a56db;color:#fff;border:0;"
+    "border-radius:6px;font-size:19px;line-height:1.3;text-decoration:none;cursor:pointer;min-height:48px}"
     ".off{background:#e6f4ea;font-weight:bold}.note{background:#fff8e1;border:1px solid #e0b000;"
     "padding:10px;margin:12px 0}input[type=text],textarea{font-size:19px;width:100%;"
-    "box-sizing:border-box;padding:8px}</style>")
+    "box-sizing:border-box;padding:8px}"
+    ".nav{margin:0 0 18px 0;padding:10px 0;border-bottom:2px solid #1a56db}"
+    ".nav .btn{margin:4px 10px 4px 0}.btn.sec{background:#fff;color:#1a56db;border:2px solid #1a56db}"
+    "tr:nth-child(even) td{background:#f7f7f7}.small{font-size:16px;color:#444}"
+    ".foot{margin-top:28px;padding-top:10px;border-top:1px solid #ccc;font-size:16px;color:#555}"
+    ".hint{font-size:16px;color:#444;margin:4px 0}</style>")
+
+_CJ_TOOLS_VERSION = '182.78'
 
 
-def _cj_runs_page(title, body):
+def _cj_fmt_ts(v):
+    """182.78: readable India time for admin pages (stored values are UTC). Display only."""
+    try:
+        import datetime as _dtm
+        if v is None or v == '':
+            return ''
+        if isinstance(v, str):
+            v = _dtm.datetime.fromisoformat(v.replace('Z', '').split('+')[0])
+        v = v + _dtm.timedelta(hours=5, minutes=30)
+        h = v.hour % 12 or 12
+        return '%d %s %d, %d:%02d %s India time' % (v.day, v.strftime('%b'), v.year, h, v.minute,
+                                                    'am' if v.hour < 12 else 'pm')
+    except Exception:
+        return str(v)
+
+
+def _cj_entry_label(photographer, filename, title=None):
+    """182.78: admin tables name an entry by photographer and file, because the title is often just 'contest'."""
+    return ("<b>%s</b><br><span class='small'>%s</span>" % (
+        _html_escape_cj(photographer or 'Unknown'), _html_escape_cj(filename or title or '')))
+
+
+def _cj_admin_nav(show_checks=True):
+    return ("<div class='nav'><a class='btn' href='/admin'>&larr; Back to admin dashboard</a>"
+            + ("<a class='btn sec' href='/admin/checks'>Checks &amp; sign-off</a>" if show_checks else '')
+            + "</div>")
+
+
+def _cj_runs_page(title, body, nav_checks=True):
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_RUNS_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Open Call tools, app.py 182.76</p>"
-            + _cj_runs_whoami() +
-            "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
+            + _cj_admin_nav(nav_checks) +
+            "<h1>" + _html_escape_cj(title) + "</h1>" + body +
+            "<div class='foot'>" + _cj_runs_whoami_text() +
+            " &middot; SL-VERSION: Open Call tools, app.py " + _CJ_TOOLS_VERSION + "</div></body></html>")
+
+
+def _cj_runs_whoami_text():
+    try:
+        em = (getattr(current_user, 'email', '') or '').lower().strip()
+        ok = em in _CJ_RUNS_FOUNDER_EMAILS
+        return "Logged in as <b>%s</b> &middot; Founder access on this page: <b>%s</b>" % (
+            _html_escape_cj(em or 'unknown'), 'YES' if ok else 'NO')
+    except Exception:
+        return ''
 
 
 def _cj_runs_whoami():
@@ -16733,15 +16780,16 @@ def admin_contest_judge_runs(batch_ref):
     fmt = lambda v: '' if v is None else ('%.2f' % v)
     tr = ''
     for r in rows:
-        tr += ("<tr><td><a href='/admin/contest-judge/runs/%s/entry/%d'>%s</a></td><td>%s</td>"
+        tr += ("<tr><td><a href='/admin/contest-judge/runs/%s/entry/%d'>%s</a></td>"
                "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>") % (
-            _html_escape_cj(batch_ref), r.id, _html_escape_cj(r.image_title or r.filename),
-            _html_escape_cj(r.photographer), r.n, fmt(r.official), fmt(r.latest), fmt(r.shown))
+            _html_escape_cj(batch_ref), r.id, _cj_entry_label(r.photographer, r.filename, r.image_title),
+            r.n, fmt(r.official), fmt(r.latest), fmt(r.shown))
     note = ("<div class='note'>Runs are only recorded from now on. An entry with 0 runs has not been "
             "judged or re-judged since this feature went live. The first time such an entry is "
             "re-judged, today's stored result is kept as run 1 (official).</div>")
     body = (note + "<p><a class='btn' href='/admin/contest-judge/runs/%s/csv'>Download CSV</a></p>"
-            "<div class='wrap'><table><tr><th>Entry</th><th>Photographer</th><th>Runs kept</th>"
+            "<p class='hint'>Click an entry to see every run. On a phone, slide the table sideways.</p>"
+            "<div class='wrap'><table><tr><th>Entry (photographer and file)</th><th>Runs kept</th>"
             "<th>Official score</th><th>Latest run</th><th>Score shown on results</th></tr>%s</table></div>"
             ) % (_html_escape_cj(batch_ref), tr)
     return _cj_runs_page('Open Call run history: ' + batch_ref, body)
@@ -16767,10 +16815,10 @@ def admin_contest_judge_runs_entry(entry_id, batch_ref):
                    "<button class='btn' type='submit'>Make this the official run</button></form>") % r.id
         tr += ("<tr class='%s'><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
                "<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>") % (
-            'off' if r.is_official else '', r.run_no, _html_escape_cj(r.run_at), _html_escape_cj(r.source),
+            'off' if r.is_official else '', r.run_no, _html_escape_cj(_cj_fmt_ts(r.run_at)), _html_escape_cj(r.source),
             fmt(r.wonder), fmt(r.aq), fmt(r.story_transfer), fmt(r.disruption), fmt(r.dod), fmt(r.dm),
             fmt(r.composite),
-            ('OFFICIAL (%s, %s)<br>%s' % (_html_escape_cj(r.official_by), _html_escape_cj(r.official_at),
+            ('OFFICIAL (%s, %s)<br>%s' % (_html_escape_cj(r.official_by), _html_escape_cj(_cj_fmt_ts(r.official_at)),
                                           _html_escape_cj(r.official_reason or ''))) if r.is_official else btn)
     body = ("<p><a href='/admin/contest-judge/runs/%s'>Back to the list</a></p><div class='wrap'><table>"
             "<tr><th>Run</th><th>When</th><th>Source</th><th>Wonder</th><th>AQ</th><th>Story</th>"
@@ -16892,7 +16940,7 @@ def admin_pixel_report(batch_ref):
         g = (lambda k: '' if not m or m.get(k) is None else _html_escape_cj(m.get(k)))
         tr += ("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"
                "<td>%s</td><td>%s</td></tr>") % (
-            _html_escape_cj(r.image_title or r.filename), '' if r.composite_score is None else '%.2f' % r.composite_score,
+            _cj_entry_label(r.photographer, r.filename, r.image_title), '' if r.composite_score is None else '%.2f' % r.composite_score,
             g('tonal_type_provisional') or 'not measured yet', g('highlight_clipped_pct'), g('shadow_clipped_pct'),
             g('sharpness_overall'), g('horizon_tilt_deg'), g('distance_to_thirds_point'), g('entropy_bits'),
             g('negative_space_pct'))
@@ -16904,7 +16952,8 @@ def admin_pixel_report(batch_ref):
             "<form method='post' action='/admin/pixel-report/%s/run'><button class='btn' type='submit'>"
             "Measure the next 15 entries</button></form>"
             "<p><a class='btn' href='/admin/pixel-report/%s/csv'>Download CSV (all numbers)</a></p>"
-            "<div class='wrap'><table><tr><th>Entry</th><th>Score now</th><th>Picture type</th>"
+            "<p class='hint'>On a phone or iPad, slide the table sideways to see every column.</p>"
+            "<div class='wrap'><table><tr><th>Entry (photographer and file)</th><th>Score now</th><th>Picture type</th>"
             "<th>Blown highlights %%</th><th>Crushed shadows %%</th><th>Sharpness</th><th>Horizon tilt (deg)</th>"
             "<th>Distance to a thirds point</th><th>Entropy (bits)</th><th>Empty space %%</th></tr>%s</table></div>"
             ) % (done, len(rows), _html_escape_cj(ver), _html_escape_cj(batch_ref), _html_escape_cj(batch_ref), tr)
@@ -17057,13 +17106,15 @@ _CJ_JURY_CSS = _CJ_RUNS_CSS.replace('</style>',
     ".g{background:#1e7e34}.r{background:#b02a37}</style>")
 
 
-def _cj_jury_page(title, body):
+def _cj_jury_page(title, body, admin=False):
+    """admin=True adds the back-to-dashboard bar. Public sign-off pages never get it."""
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='robots' content='noindex,nofollow'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_JURY_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.76</p>"
-            "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
+            + (_cj_admin_nav(True) if admin else '') +
+            "<h1>" + _html_escape_cj(title) + "</h1>" + body +
+            "<div class='foot'>SL-VERSION: Sign-off page, app.py " + _CJ_TOOLS_VERSION + "</div></body></html>")
 
 
 @app.route('/admin/jury/<batch_ref>')
@@ -17072,7 +17123,7 @@ def admin_jury(batch_ref):
     if current_user.role != 'admin':
         abort(403)
     if not _cj_jury_ensure_tables():
-        return _cj_jury_page('Sign-off', '<p>Could not prepare tables. See Railway log.</p>'), 500
+        return _cj_jury_page('Sign-off', '<p>Could not prepare tables. See Railway log.</p>', admin=True), 500
     signers = db.session.execute(db.text(
         "SELECT * FROM contest_jury WHERE batch_ref=:b ORDER BY id"), {'b': batch_ref}).fetchall()
     base = request.host_url.rstrip('/')
@@ -17109,7 +17160,7 @@ def admin_jury(batch_ref):
             "<button class='btn' type='submit'>Create private link</button></form>"
             "<p><a href='/admin/jury/%s/log'>See the full audit trail</a></p>"
             ) % (_html_escape_cj(summary), tr, _html_escape_cj(batch_ref), _html_escape_cj(batch_ref))
-    return _cj_jury_page('Sign-off for ' + batch_ref, body)
+    return _cj_jury_page('Sign-off for ' + batch_ref, body, admin=True)
 
 
 @app.route('/admin/jury/<batch_ref>/add', methods=['POST'])
@@ -17124,7 +17175,7 @@ def admin_jury_add(batch_ref):
     email = (request.form.get('email') or '').strip()[:200]
     role = 'founder' if request.form.get('role') == 'founder' else 'jury'
     if not name:
-        return _cj_jury_page('Name needed', '<p>Please type a name and go back.</p>'), 400
+        return _cj_jury_page('Name needed', '<p>Please type a name and go back.</p>', admin=True), 400
     tok = _sec.token_hex(24)
     jid = db.session.execute(db.text(
         "INSERT INTO contest_jury (batch_ref, signer_name, signer_email, signer_role, token, created_by) "
@@ -17147,11 +17198,11 @@ def admin_jury_log(batch_ref):
         "LEFT JOIN contest_jury j ON j.id=l.jury_id WHERE l.batch_ref=:b ORDER BY l.id"),
         {'b': batch_ref}).fetchall()
     tr = ''.join("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (
-        _html_escape_cj(r.at), _html_escape_cj(r.signer_name or ''), _html_escape_cj(r.action),
+        _html_escape_cj(_cj_fmt_ts(r.at)), _html_escape_cj(r.signer_name or ''), _html_escape_cj(r.action),
         _html_escape_cj(r.detail), _html_escape_cj(r.ip)) for r in rows)
     return _cj_jury_page('Audit trail: ' + batch_ref,
-                         "<p><a href='/admin/jury/%s'>Back</a></p><div class='wrap'><table><tr><th>When</th><th>Who</th>"
-                         "<th>What</th><th>Detail</th><th>From</th></tr>%s</table></div>" % (_html_escape_cj(batch_ref), tr))
+                         "<p><a class='btn sec' href='/admin/jury/%s'>&larr; Back to the sign-off page</a></p><div class='wrap'><table><tr><th>When</th><th>Who</th>"
+                         "<th>What</th><th>Detail</th><th>From</th></tr>%s</table></div>" % (_html_escape_cj(batch_ref), tr), admin=True)
 
 
 def _cj_jury_signer(token):
@@ -17293,13 +17344,12 @@ def admin_checks_hub():
                  "<td><a class='btn' href='/admin/jury/%s'>Sign-off</a></td></tr>") % (br, b.n, br, br, br)
     if not rows:
         rows = "<tr><td colspan='4'>No Open Call batches found.</td></tr>"
-    body = ("<p><a href='/admin'>Back to the admin dashboard</a></p>"
-            "<div class='note'>These tools only show information or create private links. "
+    body = ("<div class='note'>These tools only show information or create private links. "
             "The pixel report changes no score. The sign-off page sends no email.</div>"
             "<h2>Member scores</h2><p><a class='btn' href='/admin/score-audit'>Score audit (read-only)</a></p>"
             "<h2>Open Call batches</h2><div class='wrap'><table><tr><th>Batch</th><th>Every run kept</th>"
             "<th>Measured facts</th><th>Jury / founder sign-off</th></tr>%s</table></div>") % rows
-    return _cj_runs_page('Checks and sign-off', body)
+    return _cj_runs_page('Checks and sign-off', body, nav_checks=False)
 
 @app.route('/admin/contest-judge/rescore-entry/<int:entry_id>', methods=['POST'])
 @login_required
@@ -17914,8 +17964,12 @@ def admin_score_audit():
             'th,td{border:1px solid #bbb;padding:10px;text-align:left;font-size:17px}th{background:#eee}'
             '.box{background:#fff;border:2px solid #c9a227;padding:14px;margin:14px 0}'
             'a.btn{display:inline-block;background:#1a1a18;color:#F5C518;padding:14px 20px;text-decoration:none;border-radius:6px;min-height:44px}'
+            '.nav{margin:0 0 18px 0;padding:10px 0;border-bottom:2px solid #1a56db}'
+            '.nav a{display:inline-block;margin:4px 10px 4px 0;padding:12px 18px;border-radius:6px;font-size:19px;text-decoration:none;min-height:44px;box-sizing:border-box}'
             '</style></head><body>'
-            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.69.</p>'
+            '<div class="nav"><a href="/admin" style="background:#1a56db;color:#fff">&larr; Back to admin dashboard</a>'
+            '<a href="/admin/checks" style="background:#fff;color:#1a56db;border:2px solid #1a56db">Checks &amp; sign-off</a></div>'
+            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version @@TOOLSVER@@.</p>'
             '<div class="box"><b>Percentile pool.</b><br>@@PCTMSG@@<br>Scored images: @@POOL@@ &mdash; Sonnet: @@POOLS@@, Haiku (eValuate): @@POOLH@@.</div>'
             '<h2>Recalculated from stored dimensions</h2>'
             '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>@@GROUPS@@</table>'
@@ -17924,7 +17978,7 @@ def admin_score_audit():
             '<p><a class="btn" href="?format=csv">Download every row (CSV)</a></p>'
             '<p>Mobile-track images are recalculated with mobile weights and without the Iconic Wall, Humanity, Plateau and Excellence rules, so their differences are only a guide.</p>'
             '</body></html>')
-    html = (html.replace('@@PCTMSG@@', _esc(pct_msg)).replace('@@POOLH@@', str(pool_haiku))
+    html = (html.replace('@@TOOLSVER@@', _CJ_TOOLS_VERSION).replace('@@PCTMSG@@', _esc(pct_msg)).replace('@@POOLH@@', str(pool_haiku))
             .replace('@@POOLS@@', str((pool_total - pool_haiku) if (pool_total is not None and pool_haiku is not None) else 'n/a'))
             .replace('@@POOL@@', str(pool_total)).replace('@@GROUPS@@', gr)
             .replace('@@BIG@@', br or '<tr><td colspan="7">None</td></tr>'))
@@ -33571,7 +33625,7 @@ def admin_email_preview(image_id):
         return _R(f'Subject: {_subj}\nLayout: {_peng}\n\n{_ptext}', mimetype='text/plain')
     banner = ('<div style="background:#fff8e1;border:1px solid #e0b000;padding:12px 16px;font:18px Arial;margin:0;">'
               'PREVIEW ONLY. Nothing was sent. Layout used: <b>%s</b>. Subject: %s &nbsp; '
-              '<a href="?text=1">See plain-text version</a></div>' % (_peng, _subj))
+              '<a href="?text=1">See plain-text version</a> &nbsp; <a href="/admin">&larr; Back to admin dashboard</a></div>' % (_peng, _subj))
     return banner + _phtml
 
 
