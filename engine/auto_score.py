@@ -1,4 +1,4 @@
-# SL-VERSION: 171.34 (Session 235, 2026-10-02 -- FIX: NS calibration anchors corrected. The 57% 'Not Sure' example was wrongly attached to the Nihang horseman; per the Constitution (survey) the Nihang horseman is 88% = YES and the 57% belongs to the woman in the white sari. Prompt text only; no scoring formula change. RETAINS 171.33.)
+# SL-VERSION: 171.35 (Session 235, 2026-10-03 -- NEW: Sonnet member score now CALCULATED IN CODE from the model's five dimension numbers (calculate_score), not taken from the model's own arithmetic. Kill switch: env SL_CODE_SCORE=0. Model's own number kept as _model_score. NS bonus handling unchanged (ns=''). Previous: 171.34 (Session 235, 2026-10-02 -- FIX: NS calibration anchors corrected. The 57% 'Not Sure' example was wrongly attached to the Nihang horseman; per the Constitution (survey) the Nihang horseman is 88% = YES and the 57% belongs to the woman in the white sari. Prompt text only; no scoring formula change. RETAINS 171.33.)
 # SL-VERSION: 171.33 (Session 228, 2026-09-28 — Story Transfer rubric fix for Open Call: AQ Story Transfer component now scores EMOTIONAL TRANSFER (does the feeling reach a stranger who cannot name the story?) not NARRATIVE LEGIBILITY (can a stranger name the plot?). Ambiguous images that produce strong emotional response — even when the viewer denies seeing a story — now score HIGH not LOW. Survey proof: n=233, father+newborn silhouette, "No Story" group chose it as Strongest image more than "Yes Story" group. RETAINS 171.32.)
 # SL-VERSION: 171.31 (Session 222, 2026-09-26 — BOW format fix: body_of_work prompt now requires "Frame 1: / Frame 2: / Frame 3: / Frame 4:" labels on separate lines. Prevents prose run-on that broke template frame-splitter. RETAINS 171.30.)
 # SL-VERSION: 171.30 (Session 218, 2026-09-11 — Final calibration fixes from R12 + 51-respondent survey: (1) WF/AQ coherence floors raised: AQ>=8.5→WF 8.0 min, AQ>=8.0→WF 7.5 min (was 7.0), AQ>=7.5→WF 7.0 min. Closes Haiku cold-scoring on Landscape/Portrait/Silhouette. (2) Birds VD guide lowered: swallow peak wing-spread = VD 7.0-7.5 (was 7.5-8.0). Confirmed overcorrection by human avg 7.85 and pro jury 7.50 vs Sonnet 8.32. RETAINS 171.29.) (Session 218, 2026-09-11 — Landscape DM fix: storm light/burning sky/golden shafts = transient element, DM 7.0-7.5 not static. Corrects consistent underscore of dramatic Landscape images confirmed by Pro jury (rank #5), All humans (rank #2), ChatGPT (rank #6) all placing Landscape above SL rank #7-9. RETAINS 171.28.) (Session 218, 2026-09-11 — Recognition Wonder + STEP 0b: (1) STEP 0b added — title/description reading as witness testimony before scoring WF/AQ. Anomaly detection for Street/Wildlife. (2) Recognition Wonder 5th WF signal — elderly face with dignity, uninhibited joy, unperformed private moment = WF 8.0-9.5. Named example: Louvre sunflower woman = WF 9.0. (3) Dignity Wonder — photographer stops for subject world overlooks = WF 8.0-9.0+. (4) WF/AQ coherence rule: if AQ>=8.0 WF floor 7.0, gap>2.0 is error. All in SYSTEM_BRIEF. RETAINS 171.27.)
@@ -934,6 +934,44 @@ def compute_mobile_weights(genre: str) -> dict:
         result[largest_key] += remainder
     # Round to 4dp for display — total will be 1.0 within float precision
     return {k: round(v, 4) for k, v in result.items()}
+
+
+CODE_SCORE_ENGINE_VERSION = "code-score-1 (auto_score 171.35, scoring-227.2)"
+
+
+def _apply_code_score(result, effective_genre, exif_context=""):
+    """Session 235: recompute score/tier/soul_bonus in code from the five
+    dimensions. Returns the same dict. Never raises for bad data - it just
+    leaves the model score in place and marks _score_source='model'."""
+    import os as _os
+    if _os.environ.get('SL_CODE_SCORE', '1').strip() == '0':
+        result['_score_source'] = 'model'
+        return result
+    dims = {}
+    for k in ('dod', 'disruption', 'dm', 'wonder', 'aq'):
+        v = result.get(k)
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            result['_score_source'] = 'model'
+            return result
+        dims[k] = float(v)
+    from engine.scoring import calculate_score
+    weights_override = None
+    _ctx = exif_context or ''
+    if 'MOBILE LEAGUE SCORING' in _ctx and 'DRONE GENRE' not in _ctx:
+        weights_override = compute_mobile_weights(effective_genre)
+    new_score, new_tier, new_soul, _checks = calculate_score(
+        effective_genre, dims['dod'], dims['disruption'], dims['dm'],
+        dims['wonder'], dims['aq'], ns='', weights_override=weights_override)
+    result['_model_score'] = result.get('score')
+    result['_model_tier'] = result.get('tier')
+    result['score'] = new_score
+    result['tier'] = new_tier
+    result['soul_bonus'] = bool(new_soul)
+    result['_score_source'] = 'code-mobile' if weights_override else 'code'
+    result['_engine_version'] = CODE_SCORE_ENGINE_VERSION
+    result['_score_checks'] = {k: v for k, v in _checks.items() if isinstance(v, (bool, int, float, str))}
+    print(f"[auto_score][code_score] model={result['_model_score']} -> code={new_score} tier={new_tier} source={result['_score_source']}")
+    return result
 
 
 SCORE_PROMPT = """Analyse this photograph using the Apex DDI Engine.
@@ -6390,6 +6428,18 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
     result['_effective_genre']           = effective_genre_for_weights
 
+    # ── Session 235 (171.35): score calculated IN CODE ─────────────────────
+    # The model supplies the five dimension numbers; the code applies the
+    # weights and the rules (Humanity, Soul, Plateau, Iconic Wall, Excellence).
+    # NS bonus is NOT applied here (ns='') - the app adds it afterwards exactly
+    # as before. Kill switch: set env SL_CODE_SCORE=0 to return to the model's
+    # own score. Any missing/non-numeric dimension -> model score is left alone.
+    try:
+        result = _apply_code_score(result, effective_genre_for_weights, exif_context)
+    except Exception as _cs_err:
+        print(f"[auto_score][code_score] SKIPPED (error, model score kept): {_cs_err}")
+        result['_score_source'] = 'model'
+
     # ── Post-processing: master repeat detection (Session 171.4) ──────────
     # The ONE MASTER PER SCORECARD rule is a prompt instruction but the engine
     # occasionally violates it — the same master name appears in transferable_advice
@@ -6835,6 +6885,10 @@ def build_audit_data(result, image_obj):
         "credit":               image_obj.photographer_name or "",
         "genre_tag":            f"{genre_tag_label}  ·  {fmt.upper()}",
         "soul_bonus":           result.get("soul_bonus", False),
+        # ── Session 235 (171.35): how the score was produced ──────────────
+        "score_source":         result.get("_score_source", "model"),
+        "model_score":          result.get("_model_score"),
+        "engine_version":       result.get("_engine_version", ""),
         "composition_technique": result.get("composition_technique", "NONE"),
         "iucn_tag":             result.get("iucn_tag"),
         "hard_truth":           result.get("hard_truth", ""),
