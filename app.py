@@ -1,3 +1,4 @@
+# SL-VERSION: 182.76 (Session 235, 2026-10-03 -- Run history pages now show 'You are logged in as: <email>. Founder access: YES/NO' (display only) so the founder can see why the make-official box is hidden; stale 'app.py 182.69' labels on the Open Call and sign-off pages corrected. No scoring change. RETAINS 182.75.)
 # SL-VERSION: 182.75 (Session 235, 2026-10-03 -- CHANGE: FIRST SCORE STANDS. The stored score for an identical picture (same member, phash, genre) is no longer overwritten by later scorings, so repeat uploads keep returning the first score. Only an old stored row with no audit copy may be replaced. Applies to normal upload and bulk upload. Existing stored rows are NOT changed. RETAINS 182.74.)
 # SL-VERSION: 182.74 (Session 235, 2026-10-03 -- FIX: upload route crashed with NameError _bg_nsfw_breastfeeding on a repeat-upload cache hit (variable only existed inside the background thread). Now defaulted to False in the route; behaviour otherwise unchanged. RETAINS 182.73.)
 # SL-VERSION: 182.73 (Session 235, 2026-10-03 -- FIX: repeat-upload score anchor ignored the audit copy saved in scored_phash_cache and demanded that the ORIGINAL image still exist, so delete + re-upload of the same picture re-rolled the score (founder test: 8.26, 8.26, 7.92). The guard now accepts the cached audit_json first; behaviour with a surviving original is unchanged. RETAINS 182.72.)
@@ -16688,8 +16689,21 @@ def _cj_runs_page(title, body):
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_RUNS_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Open Call tools, app.py 182.69</p>"
+            "<p style='color:#555'>SL-VERSION: Open Call tools, app.py 182.76</p>"
+            + _cj_runs_whoami() +
             "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
+
+
+def _cj_runs_whoami():
+    """182.76: shows who is logged in and whether the page treats them as founder. Display only."""
+    try:
+        em = (getattr(current_user, 'email', '') or '').lower().strip()
+        ok = em in _CJ_RUNS_FOUNDER_EMAILS
+        return ("<p style='font-size:18px;background:#fff8e1;border:1px solid #e0c060;padding:10px 14px;"
+                "border-radius:6px'>You are logged in as: <b>%s</b>. Founder access on this page: <b>%s</b>.</p>"
+                % (_html_escape_cj(em or 'unknown'), 'YES' if ok else 'NO'))
+    except Exception:
+        return ''
 
 
 def _html_escape_cj(x):
@@ -17046,7 +17060,7 @@ def _cj_jury_page(title, body):
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='robots' content='noindex,nofollow'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_JURY_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.69</p>"
+            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.76</p>"
             "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
 
 
