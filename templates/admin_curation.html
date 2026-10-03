@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_curation-1.2 (Session 235, 2026-10-04 — Batches: newest batch on top with a CSV button; older batches under 'Saved batches', each with CSV and Delete batch; one button for a CSV of everything. Needs app.py 182.84. Run Batch now sends a batch id. Previous: 1.1 genre dropdown from the live list.) #}
 {# SL-VERSION: admin_curation-1.1 (Session 235, 2026-10-04 — Genre dropdown now built from the live genre list passed by app.py 182.83, so it cannot go out of date. Nothing else changed. Previous: unversioned, 11 hand-typed genres.) #}
 {% extends "base.html" %}
 {% block title %}Bulk Special Run — Admin{% endblock %}
@@ -142,6 +143,31 @@
     text-transform: uppercase; padding: 10px 24px; min-height: 44px; background: var(--gold); color: #0D0D0B;
     border: none; border-radius: var(--radius-sm); cursor: pointer; }
 
+  .cur-batch-title { font-size: 17px; color: var(--text-secondary); margin: 0 0 16px; line-height: 1.5; }
+  .cur-batch-title strong { color: var(--text-primary); }
+  a.cur-btn-lg, button.cur-btn-lg {
+    display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 10px 18px; min-height: 48px; border-radius: var(--radius-sm); cursor: pointer;
+    background: var(--gold); color: #0D0D0B; border: 1px solid var(--gold);
+  }
+  a.cur-btn-lg.quiet { background: #F5F0E8; color: var(--text-primary); border-color: var(--border); }
+  button.cur-btn-lg.danger { background: rgba(220,50,50,.10); color: #b3261e; border-color: rgba(220,50,50,.35); }
+  .cur-saved { border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 14px; background: #FFFFFF; }
+  .cur-saved summary { list-style: none; cursor: pointer; padding: 14px 18px; min-height: 52px; font-size: 17px;
+    color: var(--text-primary); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .cur-saved summary::-webkit-details-marker { display: none; }
+  .cur-saved summary::before { content: "\25B6"; font-size: 13px; color: var(--text-muted); }
+  .cur-saved[open] summary::before { content: "\25BC"; }
+  .cur-saved .cur-saved-meta { font-size: 15px; color: var(--text-muted); }
+  .cur-saved-body { padding: 0 18px 18px; }
+  .cur-saved-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 16px; align-items: flex-start; }
+  .cur-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cur-table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 640px; }
+  .cur-table th { text-align: left; font-size: 13px; color: var(--text-muted); font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+  .cur-table td { padding: 8px 10px; border-bottom: 1px solid #F0EBE0; vertical-align: middle; color: var(--text-primary); }
+  .cur-mini { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; cursor: zoom-in; background: #F5F0E8; display: block; }
+
   @media(max-width: 900px) {
     .cur-grid { grid-template-columns: repeat(3, 1fr); }
   }
@@ -198,6 +224,13 @@
   </div>
 
   <div class="cur-panel">
+    {% if current_batch %}
+    <p class="cur-batch-title">Newest batch: <strong>{{ current_batch.label }}</strong> · {{ current_batch.count }} picture{{ 's' if current_batch.count != 1 }}</p>
+    <div class="cur-saved-actions">
+      <a class="cur-btn-lg" href="{{ url_for('admin_curation_export_csv', batch=current_batch.id) }}">Download CSV of this batch</a>
+      <a class="cur-btn-lg quiet" href="{{ url_for('admin_curation_export_csv', batch='all') }}">Download CSV of all batches</a>
+    </div>
+    {% endif %}
     <div class="cur-toolbar">
       <h3 style="margin-bottom:0;">Scored — Ranked Highest to Lowest, by Genre</h3>
       <div class="cur-toolbar-actions">
@@ -252,6 +285,54 @@
     <div class="empty-state">No curation images yet. Upload a batch above to get started.</div>
     {% endif %}
   </div>
+
+  {% if saved_batches %}
+  <div class="cur-panel">
+    <h3>Saved batches ({{ saved_batches|length }})</h3>
+    <p class="cur-note" style="margin:-6px 0 16px;font-size:15px;">Older batches are kept here until you delete them. Tap a batch to open it.</p>
+    {% for b in saved_batches %}
+    <details class="cur-saved">
+      <summary>
+        <strong>{{ b.label }}</strong>
+        <span class="cur-saved-meta">{{ b.count }} picture{{ 's' if b.count != 1 }}{% if b.top_score %} · top score {{ '%.2f'|format(b.top_score) }}{% endif %}{% if b.when %} · {{ b.when }}{% endif %}</span>
+      </summary>
+      <div class="cur-saved-body">
+        <div class="cur-saved-actions">
+          <a class="cur-btn-lg" href="{{ url_for('admin_curation_export_csv', batch=b.id) }}">Download CSV</a>
+          <form method="POST" action="{{ url_for('admin_curation_delete_batch') }}" style="margin:0;"
+                onsubmit="return confirm('Delete this whole batch and its {{ b.count }} picture{{ 's' if b.count != 1 }}?\n\n{{ b.label|replace("'", "")|replace('"', '')|replace('\\', '') }}\n\nThis cannot be undone.');">
+            <input type="hidden" name="batch_id" value="{{ b.id }}">
+            <button class="cur-btn-lg danger" type="submit">Delete batch</button>
+          </form>
+        </div>
+        <div class="cur-table-wrap">
+          <table class="cur-table">
+            <thead><tr><th>Picture</th><th>File</th><th>Genre</th><th>Score</th><th>Tier</th><th>DoD</th><th>Dis</th><th>DM</th><th>Won</th><th>AQ</th></tr></thead>
+            <tbody>
+              {% for gname, gimgs in b.genre_groups.items() %}
+              {% for img in gimgs %}
+              <tr>
+                <td><img class="cur-mini" src="{{ img.thumb_url or '' }}" alt="" data-full="{{ img.thumb_url or '' }}" data-caption="{{ img.original_filename or img.asset_name }} · {{ img.photographer_name }}"></td>
+                <td>{{ img.original_filename or img.asset_name }}</td>
+                <td>{{ gname }} #{{ loop.index }}</td>
+                <td><strong>{% if img.score %}{{ '%.2f'|format(img.score) }}{% else %}—{% endif %}</strong></td>
+                <td>{{ img.tier or '' }}</td>
+                <td>{% if img.dod_score %}{{ '%.1f'|format(img.dod_score) }}{% endif %}</td>
+                <td>{% if img.disruption_score %}{{ '%.1f'|format(img.disruption_score) }}{% endif %}</td>
+                <td>{% if img.dm_score %}{{ '%.1f'|format(img.dm_score) }}{% endif %}</td>
+                <td>{% if img.wonder_score %}{{ '%.1f'|format(img.wonder_score) }}{% endif %}</td>
+                <td>{% if img.aq_score %}{{ '%.1f'|format(img.aq_score) }}{% endif %}</td>
+              </tr>
+              {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+  {% endif %}
 
 </div>
 
@@ -342,6 +423,8 @@
     progressWrap.style.display = 'block';
     progressFill.style.width = '0%';
 
+    // One id for the whole press of Run Batch, so these pictures are saved together as one batch.
+    const batchId = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     let scored = 0;
     let failed = 0;
     const failedNames = [];       // display strings, all apparent failures
@@ -360,6 +443,7 @@
       formData.append('image', file);
       formData.append('genre', genreSel.value);
       formData.append('photographer_name', photogInp.value);
+      formData.append('batch_id', batchId);
 
       try {
         const resp = await fetch('{{ url_for("admin_curation_upload") }}', {
@@ -525,7 +609,7 @@
   const lightboxCaption = document.getElementById('cur-lightbox-caption');
   const lightboxClose   = document.getElementById('cur-lightbox-close');
 
-  document.querySelectorAll('.cur-card-thumb').forEach(thumb => {
+  document.querySelectorAll('.cur-card-thumb, .cur-mini').forEach(thumb => {
     thumb.addEventListener('click', () => {
       lightboxImg.src = thumb.dataset.full || thumb.src;
       lightboxCaption.textContent = thumb.dataset.caption || '';
