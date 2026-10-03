@@ -1,3 +1,4 @@
+# SL-VERSION: 182.72 (Session 235, 2026-10-03 -- FIX (email): percentile line was always blank (read a key that does not exist); now "Higher than N% of images in the League" as on the scorecard. Strength / Next leap headings in the email are now named from the scores (as the scorecard page does), not from the stored model label. RETAINS 182.71.)
 # SL-VERSION: 182.71 (Session 235, 2026-10-03 -- NEW: member scorecard email now rendered from templates/email_scorecard.html and expanded to the full scorecard (standing, why each dimension, story check, master reference, technical read, visual flow, imagine, body of work, path to recognition, edit suggestions). The old in-code builder stays as an automatic fallback. New admin route /admin/email-preview/<image_id> shows the email on screen and sends nothing. RETAINS 182.70.)
 # SL-VERSION: 182.70 (Session 235, 2026-10-03 -- FIX: removed a stray duplicate copy of the _clean_audit body that sat after _refresh_dash_mentor without its def line (95 lines). It ran after every mentor refresh and raised "name 'audit' is not defined" (found by the 182.69 traceback). The real _clean_audit function is unchanged. No scoring change. RETAINS 182.69.)
 # SL-VERSION: 182.69 (Session 235, 2026-10-03 -- DIAGNOSTIC + labels only: the two [dash_mentor] warning lines now also print the full traceback so the old "name 'audit' is not defined" fault can be located (no behaviour change). Stale version labels on the Checks, sign-off and score-audit pages corrected. RETAINS 182.68.)
@@ -33072,8 +33073,10 @@ def _send_scorecard_email(img, user, preview=False):
         _pct = compute_percentile(float(_score), genre=img.genre,
                                   camera_track=getattr(img, 'camera_track', None),
                                   pool=_pct_pool_for_image(img.id))
-        if _pct and _pct.get('genre_pct'):
-            _pct_text = f'Top {_pct["genre_pct"]}% \u00b7 {_genre}'
+        # Session 235 (182.72): the function returns top_pct (not genre_pct, which never existed), so the
+        # old line was always blank. Same wording as the scorecard page: "Higher than N% of images".
+        if _pct and _pct.get('top_pct') is not None:
+            _pct_text = f'Higher than {100 - int(_pct["top_pct"])}% of images in the League'
     except Exception:
         pass
 
@@ -33413,6 +33416,7 @@ def _send_scorecard_email(img, user, preview=False):
             ('Disruption',    'Visual Disruption',   ('dim_obs_vd', 'disruption_reasoning')),
             ('Emotion',       'Affective Quotient',  ('dim_obs_aq', 'aq_reasoning')),
         ]
+        _lab_of = {_f: _l for _l, _f, _k in _why_def}   # scorecard names; the page names strength/next leap from the scores, so the email does too
         _why_rows = []
         for _lab, _full, _keys in _why_def:
             _txt = ''
@@ -33466,8 +33470,8 @@ def _send_scorecard_email(img, user, preview=False):
             subject=_subject, name=_name, genre=_genre, title=_title, score=f'{_score:.2f}', tier=_tier,
             pct_text=_pct_text, thumb=_thumb, img_url=_img_url, site=_site, hero_html=_hero_html,
             dims=_dims_t, standing=_standing, impression=_impr,
-            strength_name=(_a.get('strength_name') or '').strip(), strength_obs=(_a.get('strength_obs') or '').strip(),
-            next_leap_name=(_a.get('next_leap_name') or '').strip(), next_leap_obs=(_a.get('next_leap_obs') or '').strip(),
+            strength_name=f'{_lab_of[_hi]} \u2014 {_dim_scores[_hi]:.2f}', strength_obs=(_a.get('strength_obs') or '').strip(),
+            next_leap_name=f'{_lab_of[_weakest_name]} \u2014 {_weakest_score:.2f}', next_leap_obs=(_a.get('next_leap_obs') or '').strip(),
             why_rows=_why_rows, ns_label=_ns_label, ns_text=' '.join(_em_paras(_a.get('dim_obs_ns'))),
             wso_html=_wso, bck_html=_bck, nxt_html=_nxt, weakest_name=_weakest_name,
             weakest_score=f'{_weakest_score:.1f}',
