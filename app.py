@@ -1,3 +1,4 @@
+# SL-VERSION: 182.84 (Session 235, 2026-10-04 -- NEW (staging only): Curation batches. Every 'Run Batch' press is now one saved batch (new nullable columns images.curation_batch_id / curation_batch_label, added on first use; nothing existing is changed or rescored). Page shows the newest batch on top and older ones under 'Saved batches'. New routes: GET /admin/curation/export-csv?batch=<id|all> (CSV, no engine call) and POST /admin/curation/delete-batch (deletes one batch's pictures, same deletion as the existing bulk delete). Existing curation pictures with no batch are grouped once by photographer + genre + upload day when the page is opened. RETAINS 182.83.)
 # SL-VERSION: 182.83 (Session 235, 2026-10-04 -- CHANGE: the Curation page (/admin/curation) is now given the live genre list (GENRE_IDS) so its genre dropdown follows the real genres. One line in admin_curation(); no scoring, upload or database change. Paired with admin.html 3.5 (Curation links) and admin_curation.html 1.1. RETAINS 182.82.)
 # SL-VERSION: 182.82 (Session 235, 2026-10-03 -- CHANGE (staging only, nothing live-tested): the new-evaluation trial is now a TAB on the Open Call page ('Official results' | 'New evaluation (trial)', ?tab=trial) with the same kind of table and pictures as the official one, plus a 'Read reasons' row for each picture (five reasons, principles, story reason). Replaces the card + spreadsheet-only view of 182.81. Reads saved trial results only: no engine call, no new table, nothing in contest_judge_batch written. New helper _cj_new_eval_entries(); the page route passes trial_entries. RETAINS 182.81.)
 # SL-VERSION: 182.81 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): NEW FIVE-DIMENSION EVALUATION, TRIAL. Button on the Open Call page ('Try the new evaluation (trial)', 'Download trial results'). Five dimensions each 1 to 10 with a reason, Degree of Difficulty = average of situational and technical plus principle bonus, overall = plain average (no weights), Story = tag only, no genre ceilings, Iconic Wall one sentence, cap 9.9; Soul Bonus, Humanity Check, Excellence Bonus dropped. Own table contest_judge_new_eval (every trial run kept); contest_judge_batch and the old engine are NEVER written or changed. Nothing runs until an admin presses the button and confirms the number of engine calls. New routes: /admin/contest-judge/new-eval-count, new-eval-run, new-eval-csv. Wording: claude/OPENCALL_PROMPT_DRAFT_S235.md v1.1. RETAINS 182.80.)
@@ -23486,22 +23487,241 @@ def admin_curation():
               .filter_by(user_id=current_user.id, is_admin_curation=True)
               .order_by(Image.score.desc().nullslast(), Image.created_at.desc())
               .all())
-    # Segregate by genre — a curator reviewing a mixed batch (accidentally
-    # or intentionally spanning genres) sees each genre's own best-to-worst
-    # ranking, since DDI weights differ by genre and scores aren't directly
-    # comparable across them.
-    genre_groups = {}
-    for img in images:
-        genre_groups.setdefault(img.genre or 'Unspecified', []).append(img)
-    # Groups themselves ordered by each genre's top score, so the strongest
-    # genre in the batch surfaces first.
-    genre_groups = dict(sorted(
-        genre_groups.items(),
-        key=lambda kv: (kv[1][0].score or 0),
-        reverse=True
-    ))
-    return render_template('admin_curation.html', genre_groups=genre_groups, images=images,
-                           genres=GENRE_IDS)
+
+    def _group_by_genre(imgs):
+        # Segregate by genre — a curator reviewing a mixed batch (accidentally
+        # or intentionally spanning genres) sees each genre's own best-to-worst
+        # ranking, since DDI weights differ by genre and scores aren't directly
+        # comparable across them. Groups ordered by each genre's top score.
+        groups = {}
+        for _im in imgs:
+            groups.setdefault(_im.genre or 'Unspecified', []).append(_im)
+        return dict(sorted(groups.items(), key=lambda kv: (kv[1][0].score or 0), reverse=True))
+
+    # ── Batches (182.84) ────────────────────────────────────────────────────
+    # Falls back to the old single list if the batch columns cannot be added.
+    current_batch = None
+    saved_batches = []
+    if _cur_ensure_batch_columns():
+        try:
+            _cur_backfill_batches(current_user.id)
+            _rows = db.session.execute(db.text(
+                "SELECT id, curation_batch_id, curation_batch_label FROM images "
+                "WHERE user_id = :u AND is_admin_curation = TRUE"
+            ), {'u': current_user.id}).fetchall()
+            _meta = {r[0]: (r[1], r[2]) for r in _rows}
+            _batches = {}
+            for _im in images:  # images already ordered best score first
+                _bid, _blabel = _meta.get(_im.id, (None, None))
+                _bid = _bid or 'none'
+                _b = _batches.setdefault(_bid, {
+                    'id': _bid, 'label': _blabel or 'Earlier uploads',
+                    'images': [], 'newest': None})
+                _b['images'].append(_im)
+                if _im.created_at and (_b['newest'] is None or _im.created_at > _b['newest']):
+                    _b['newest'] = _im.created_at
+            _ordered = sorted(_batches.values(),
+                              key=lambda b: (b['newest'] or datetime.min), reverse=True)
+            for _b in _ordered:
+                _b['count'] = len(_b['images'])
+                _b['genre_groups'] = _group_by_genre(_b['images'])
+                _top = [i.score for i in _b['images'] if i.score]
+                _b['top_score'] = max(_top) if _top else None
+                _b['when'] = ((_b['newest'] + timedelta(hours=5, minutes=30)).strftime('%-d %b %Y')
+                              if _b['newest'] else '')
+            if _ordered:
+                current_batch = _ordered[0]
+                saved_batches = _ordered[1:]
+        except Exception as _cb_err:
+            db.session.rollback()
+            app.logger.error(f'[admin_curation] batch grouping failed, showing single list: {_cb_err}')
+            current_batch = None
+            saved_batches = []
+
+    if current_batch:
+        genre_groups = current_batch['genre_groups']
+        shown_images = current_batch['images']
+    else:
+        genre_groups = _group_by_genre(images)
+        shown_images = images
+    return render_template('admin_curation.html', genre_groups=genre_groups, images=shown_images,
+                           genres=GENRE_IDS, current_batch=current_batch,
+                           saved_batches=saved_batches)
+
+
+# ---------------------------------------------------------------------------
+# Curation batches (182.84)
+# Each "Run Batch" press = one batch. Two nullable columns on images hold the
+# batch id and a readable label. Added on first use; nothing existing changes.
+# ---------------------------------------------------------------------------
+_CUR_BATCH_COLS_OK = False
+_CUR_IST = timedelta(hours=5, minutes=30)
+
+
+def _cur_ensure_batch_columns():
+    """Add the two batch columns if missing. Returns True when they exist."""
+    global _CUR_BATCH_COLS_OK
+    if _CUR_BATCH_COLS_OK:
+        return True
+    try:
+        db.session.execute(db.text(
+            "ALTER TABLE images ADD COLUMN IF NOT EXISTS curation_batch_id VARCHAR(40)"))
+        db.session.execute(db.text(
+            "ALTER TABLE images ADD COLUMN IF NOT EXISTS curation_batch_label VARCHAR(200)"))
+        db.session.commit()
+        _CUR_BATCH_COLS_OK = True
+        return True
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[admin_curation] batch columns could not be added: {_e}')
+        return False
+
+
+def _cur_day_label(photographer, when_utc):
+    """Readable batch name for grouped older pictures: Photographer, day."""
+    _day = (when_utc + _CUR_IST).strftime('%-d %b') if when_utc else ''
+    return f"{photographer or 'Unattributed'} \u00b7 {_day}".strip(' \u00b7')
+
+
+def _cur_legacy_batch(photographer, genre, when_utc):
+    """(batch_id, label) for a picture that has no batch yet: same photographer
+    and upload day (India time) share one batch. Genre is ignored on purpose."""
+    import hashlib as _hl
+    _day = (when_utc + _CUR_IST).strftime('%Y-%m-%d') if when_utc else 'unknown'
+    _key = f"{photographer or ''}|{_day}"
+    return ('old-' + _hl.md5(_key.encode('utf-8')).hexdigest()[:10],
+            _cur_day_label(photographer, when_utc))
+
+
+def _cur_backfill_batches(user_id):
+    """One-time grouping of this admin's curation pictures that have no batch."""
+    rows = db.session.execute(db.text(
+        "SELECT id, photographer_name, genre, created_at FROM images "
+        "WHERE user_id = :u AND is_admin_curation = TRUE AND curation_batch_id IS NULL"
+    ), {'u': user_id}).fetchall()
+    if not rows:
+        return 0
+    for r in rows:
+        _bid, _lbl = _cur_legacy_batch(r[1], r[2], r[3])
+        db.session.execute(db.text(
+            "UPDATE images SET curation_batch_id = :b, curation_batch_label = :l WHERE id = :i"
+        ), {'b': _bid, 'l': _lbl, 'i': r[0]})
+    db.session.commit()
+    app.logger.info(f'[admin_curation] grouped {len(rows)} older pictures into batches')
+    return len(rows)
+
+
+def _cur_csv_safe(v):
+    """Stop spreadsheet programs from running a cell that starts with = + - @."""
+    s = '' if v is None else str(v)
+    return ("'" + s) if s[:1] in ('=', '+', '-', '@') else s
+
+
+@app.route('/admin/curation/export-csv')
+@login_required
+@admin_required
+def admin_curation_export_csv():
+    """CSV of one batch (?batch=<id>) or all batches (?batch=all). No engine call."""
+    import csv as _csv
+    import io as _io
+    import re as _re
+    if not _cur_ensure_batch_columns():
+        flash('Batches are not available right now. Please try again.', 'error')
+        return redirect(url_for('admin_curation'))
+    _cur_backfill_batches(current_user.id)
+    batch = (request.args.get('batch') or 'all').strip()
+    sql = ("SELECT id, curation_batch_id, curation_batch_label FROM images "
+           "WHERE user_id = :u AND is_admin_curation = TRUE")
+    params = {'u': current_user.id}
+    if batch != 'all':
+        sql += " AND curation_batch_id = :b"
+        params['b'] = batch
+    meta = {r[0]: (r[1], r[2]) for r in db.session.execute(db.text(sql), params).fetchall()}
+    if not meta:
+        flash('No pictures found for that batch.', 'error')
+        return redirect(url_for('admin_curation'))
+    imgs = (Image.query.filter(Image.id.in_(list(meta.keys())))
+            .order_by(Image.score.desc().nullslast(), Image.created_at.desc()).all())
+    # rank within batch + genre, best score first (same as the page)
+    ranks, seen = {}, {}
+    for im in imgs:
+        k = (meta[im.id][0], im.genre or 'Unspecified')
+        seen[k] = seen.get(k, 0) + 1
+        ranks[im.id] = seen[k] if im.score else ''
+    newest = {}
+    for im in imgs:
+        _b = meta[im.id][0]
+        _t = im.created_at or datetime.min
+        if _b not in newest or _t > newest[_b]:
+            newest[_b] = _t
+    order = sorted(imgs, key=lambda im: (
+        -newest[meta[im.id][0]].timestamp() if newest[meta[im.id][0]] != datetime.min else 0,
+        meta[im.id][0] or '', im.genre or '',
+        ranks[im.id] if ranks[im.id] != '' else 9999))
+    buf = _io.StringIO()
+    w = _csv.writer(buf)
+    w.writerow(['Batch', 'Photographer', 'Genre', 'Rank in batch and genre', 'File name',
+                'Overall score', 'Tier', 'Difficulty (DoD)', 'Disruption', 'Decisive Moment',
+                'Wonder', 'Affect Quotient', 'Archetype', 'Uploaded (India time)', 'Image ID'])
+    for im in order:
+        up = (im.created_at + _CUR_IST).strftime('%Y-%m-%d %H:%M') if im.created_at else ''
+        def _n(x):
+            return '' if x is None or x == 0 else round(float(x), 2)
+        w.writerow([_cur_csv_safe(meta[im.id][1] or 'Earlier uploads'),
+                    _cur_csv_safe(im.photographer_name), _cur_csv_safe(im.genre),
+                    ranks[im.id], _cur_csv_safe(im.original_filename or im.asset_name),
+                    _n(im.score), _cur_csv_safe(im.tier), _n(im.dod_score),
+                    _n(im.disruption_score), _n(im.dm_score), _n(im.wonder_score),
+                    _n(im.aq_score), _cur_csv_safe(im.archetype), up, im.id])
+    if batch == 'all':
+        slug = 'all_batches'
+    else:
+        first_label = next(iter(meta.values()))[1] or 'batch'
+        slug = _re.sub(r'[^A-Za-z0-9]+', '_', first_label).strip('_')[:40] or 'batch'
+    fname = f"curation_{slug}_{(datetime.utcnow() + _CUR_IST).strftime('%Y%m%d_%H%M')}.csv"
+    from flask import Response as _Resp
+    data = '\ufeff' + buf.getvalue()  # BOM so Excel reads accents correctly
+    app.logger.info(f'[admin_curation] csv export batch={batch} rows={len(order)} admin={current_user.id}')
+    return _Resp(data, mimetype='text/csv; charset=utf-8',
+                 headers={'Content-Disposition': f'attachment; filename="{fname}"'})
+
+
+@app.route('/admin/curation/delete-batch', methods=['POST'])
+@login_required
+@admin_required
+def admin_curation_delete_batch():
+    """Delete every picture in one saved batch. Same deletion as the bulk delete."""
+    batch = (request.form.get('batch_id') or '').strip()
+    if not batch or not _cur_ensure_batch_columns():
+        flash('No batch selected.', 'error')
+        return redirect(url_for('admin_curation'))
+    ids = [r[0] for r in db.session.execute(db.text(
+        "SELECT id FROM images WHERE user_id = :u AND is_admin_curation = TRUE "
+        "AND curation_batch_id = :b"), {'u': current_user.id, 'b': batch}).fetchall()]
+    if not ids:
+        flash('That batch has no pictures.', 'error')
+        return redirect(url_for('admin_curation'))
+    imgs = Image.query.filter(Image.id.in_(ids), Image.user_id == current_user.id,
+                              Image.is_admin_curation == True).all()
+    deleted = 0
+    try:
+        for img in imgs:
+            try:
+                if img.thumb_path and os.path.exists(img.thumb_path):
+                    os.remove(img.thumb_path)
+            except Exception as _f_err:
+                app.logger.warning(f'[admin_curation] thumb file delete warning (id={img.id}): {_f_err}')
+            db.session.delete(img)
+            deleted += 1
+        db.session.commit()
+    except Exception as _d_err:
+        db.session.rollback()
+        app.logger.error(f'[admin_curation] delete batch failed batch={batch}: {_d_err}')
+        flash('Delete failed. Nothing was removed. Please try again.', 'error')
+        return redirect(url_for('admin_curation'))
+    app.logger.info(f'[admin_curation] batch deleted batch={batch} pictures={deleted} admin={current_user.id}')
+    flash(f'Batch deleted: {deleted} picture{"s" if deleted != 1 else ""} removed.', 'success')
+    return redirect(url_for('admin_curation'))
 
 
 @app.route('/admin/curation/verify-recent', methods=['POST'])
@@ -23565,6 +23785,9 @@ def admin_curation_upload():
     photographer = (request.form.get('photographer_name') or '').strip() or 'Unattributed'
     sub_genre    = (request.form.get('sub_genre') or '').strip() or None
     api_key      = os.getenv('ANTHROPIC_API_KEY', '')
+    import re as _re_b
+    batch_id     = _re_b.sub(r'[^A-Za-z0-9_-]', '', (request.form.get('batch_id') or ''))[:40]
+    _batch_ok    = _cur_ensure_batch_columns()
 
     result = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
     try:
@@ -23610,6 +23833,26 @@ def admin_curation_upload():
         )
         db.session.add(img)
         db.session.flush()
+
+        # Batch tag (182.84). A failure here must never stop the upload.
+        if _batch_ok:
+            try:
+              with db.session.begin_nested():  # savepoint: a failure here cannot spoil the upload
+                  if batch_id:
+                      _lbl_row = db.session.execute(db.text(
+                          "SELECT curation_batch_label FROM images WHERE curation_batch_id = :b "
+                          "AND curation_batch_label IS NOT NULL LIMIT 1"), {'b': batch_id}).fetchone()
+                      _b_id = batch_id
+                      _b_label = _lbl_row[0] if _lbl_row else (
+                          f"{photographer} \u00b7 {genre} \u00b7 "
+                          f"{(datetime.utcnow() + _CUR_IST).strftime('%-d %b, %-I:%M %p').replace('AM', 'am').replace('PM', 'pm')}")
+                  else:
+                      _b_id, _b_label = _cur_legacy_batch(photographer, genre, datetime.utcnow())
+                  db.session.execute(db.text(
+                      "UPDATE images SET curation_batch_id = :b, curation_batch_label = :l WHERE id = :i"
+                  ), {'b': _b_id, 'l': _b_label, 'i': img.id})
+            except Exception as _bt_err:
+                app.logger.warning(f'[admin_curation] batch tag failed (non-fatal): {_bt_err}')
 
         if api_key:
             from engine.auto_score import auto_score_ddi_fast
