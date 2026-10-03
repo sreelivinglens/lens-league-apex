@@ -16138,6 +16138,7 @@ def admin_contest_judge_upload():
                 'theme_score':   verdict.get('theme_score'),
                 'theme_relevant': verdict.get('theme_relevant'),
                 'genre_detected': verdict.get('genre_detected', ''),
+                'theme_state':   verdict.get('theme_state'),
             })
 
         except Exception as e:
