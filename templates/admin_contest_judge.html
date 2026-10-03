@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.15 (Session 235, 2026-10-03 -- THEME STEP (pairs with app.py 182.80, staging only): (1) upload result list no longer crashes on a picture with no overall number (it showed 'Upload failed' and skipped the page reload when a picture was outside the theme); such pictures now show 'Outside the theme' or 'Waiting for the jury'. (2) 'Theme step' button next to Delete call, and a note on the new-call card telling you to set the theme meaning first using exactly the same call name. No scoring change. RETAINS 2.14.) #}
 {# SL-VERSION: admin_contest_judge-2.14 (Session 234, 2026-10-02 -- CLEANUP: Haiku and Compare tabs removed from Open Call dashboard (D1/D2/D3 -- Open Call judging is Sonnet-only now, Haiku retired for this feature; Haiku free-tier member evaluations elsewhere on the platform are untouched). Page is Sonnet-only, no tab bar. Removed: Haiku tab, Compare tab, Run Haiku / Haiku CSV / Haiku+Sonnet Scorecards buttons, batch selector "Haiku check" indicator, and the JS that drove them. BUGFIX (pre-existing, found while chasing the "Unexpected token '{'" console error): the "Delete call" button built its onclick from {{ batch_ref|tojson }} inside a double-quoted HTML attribute -- any batch name with an apostrophe (e.g. "Founder's Picks") produced malformed HTML because tojson's own quotes collided with the attribute's quotes. Fixed by passing the value through a data-batch-ref attribute instead and reading it in JS via this.dataset.batchRef. RETAINS 2.12 for the Sonnet tab content.) #}
 <!DOCTYPE html>
 <html lang="en">
@@ -118,6 +119,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
     </select>
     {% if batch_ref %}
     <span class="batch-meta">{{ batch_meta.n }} entries</span>
+    <a class="btn-line btn" style="min-height:44px;padding:0 16px;font-size:15px;text-decoration:none" href="/admin/theme/{{ batch_ref|urlencode }}"><i class="ti ti-target"></i> Theme step</a>
     <button class="btn-del" data-batch-ref="{{ batch_ref }}" onclick="deleteBatch(this.dataset.batchRef)">
       <i class="ti ti-trash"></i> Delete call
     </button>
@@ -134,6 +136,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
   {# -- UPLOAD CARD (always visible so new calls can be created) -- #}
   <div class="card">
     <div class="card-title"><i class="ti ti-upload"></i> Upload images — new or existing open call</div>
+    <div class="guide">To have each picture checked against the theme, first open the <a href="/admin/checks">Checks page</a>, type the call name in the Theme step box, and approve the meaning. Then type <strong>exactly the same call name</strong> below. Without that, the call is judged the old way.</div>
     <div class="upload-cfg">
       <div class="field">
         <label for="batchName">Open call name</label>
@@ -324,7 +327,12 @@ function _doUpload(files, batchRef, theme, thresh, logId, msgId){
     .then(function(d){
       if(log){
         var html='';
-        (d.results||[]).forEach(function(r){ html+='<p class="ok">✓ '+r.photographer+' — '+r.filename+' ('+r.composite.toFixed(2)+')</p>'; });
+        (d.results||[]).forEach(function(r){
+          if(r.composite===null||r.composite===undefined){
+            var why=(r.theme_state==='borderline')?'Waiting for the jury':'Outside the theme';
+            html+='<p class="skip">• '+r.photographer+' — '+r.filename+' ('+why+', not analysed)</p>';
+          } else { html+='<p class="ok">✓ '+r.photographer+' — '+r.filename+' ('+Number(r.composite).toFixed(2)+')</p>'; }
+        });
         (d.reused||[]).forEach(function(r){ html+='<p class="skip">↩ '+r+' (already scored, skipped)</p>'; });
         (d.errors||[]).forEach(function(r){ html+='<p class="err">✗ '+(r.filename||r)+'</p>'; });
         log.innerHTML=html||'<p class="ok">Done.</p>';
