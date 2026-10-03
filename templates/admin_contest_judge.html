@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-2.16 (Session 235, 2026-10-03 -- NEW OPEN CALL: a '+ New open call' button at the top (works from any call without touching it); the new-call card has a 'Step 1: set the theme meaning for this name' button; the upload log says whether the theme check was ON or OFF for that call name. Choosing '- choose an open call -' now also opens the new-call card (before, it reopened the latest call). Pairs with app.py 182.80. RETAINS 2.15.) #}
 {# SL-VERSION: admin_contest_judge-2.15 (Session 235, 2026-10-03 -- THEME STEP (pairs with app.py 182.80, staging only): (1) upload result list no longer crashes on a picture with no overall number (it showed 'Upload failed' and skipped the page reload when a picture was outside the theme); such pictures now show 'Outside the theme' or 'Waiting for the jury'. (2) 'Theme step' button next to Delete call, and a note on the new-call card telling you to set the theme meaning first using exactly the same call name. No scoring change. RETAINS 2.14.) #}
 {# SL-VERSION: admin_contest_judge-2.14 (Session 234, 2026-10-02 -- CLEANUP: Haiku and Compare tabs removed from Open Call dashboard (D1/D2/D3 -- Open Call judging is Sonnet-only now, Haiku retired for this feature; Haiku free-tier member evaluations elsewhere on the platform are untouched). Page is Sonnet-only, no tab bar. Removed: Haiku tab, Compare tab, Run Haiku / Haiku CSV / Haiku+Sonnet Scorecards buttons, batch selector "Haiku check" indicator, and the JS that drove them. BUGFIX (pre-existing, found while chasing the "Unexpected token '{'" console error): the "Delete call" button built its onclick from {{ batch_ref|tojson }} inside a double-quoted HTML attribute -- any batch name with an apostrophe (e.g. "Founder's Picks") produced malformed HTML because tojson's own quotes collided with the attribute's quotes. Fixed by passing the value through a data-batch-ref attribute instead and reading it in JS via this.dataset.batchRef. RETAINS 2.12 for the Sonnet tab content.) #}
 <!DOCTYPE html>
@@ -108,6 +109,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 
   {# -- BATCH SELECTOR -- #}
   <div class="batch-bar">
+    <a class="btn btn-gold" style="min-height:44px;padding:0 18px;font-size:16px;text-decoration:none" href="{{ url_for('admin_contest_judge') }}?new=1"><i class="ti ti-plus"></i> New open call</a>
     <label for="batchSel">Open call</label>
     <select class="batch-sel" id="batchSel" onchange="switchBatch(this.value)">
       <option value="">— choose an open call —</option>
@@ -134,8 +136,8 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
   </div>
 
   {# -- UPLOAD CARD (always visible so new calls can be created) -- #}
-  <div class="card">
-    <div class="card-title"><i class="ti ti-upload"></i> Upload images — new or existing open call</div>
+  <div class="card" id="newcall">
+    <div class="card-title"><i class="ti ti-upload"></i> New open call</div>
     <div class="guide">To have each picture checked against the theme, first open the <a href="/admin/checks">Checks page</a>, type the call name in the Theme step box, and approve the meaning. Then type <strong>exactly the same call name</strong> below. Without that, the call is judged the old way.</div>
     <div class="upload-cfg">
       <div class="field">
@@ -151,6 +153,8 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
         <input id="threshInput" type="number" value="6.0" min="1" max="10" step="0.5" style="font-size:16px">
       </div>
     </div>
+    <p style="margin:0 0 14px"><button type="button" class="btn btn-line" onclick="goTheme()"><i class="ti ti-target"></i> Step 1: set the theme meaning for this name</button></p>
+    <p class="run-note" style="margin-bottom:14px">Step 2: after the meaning is approved, come back here, type the same name, and add the pictures below.</p>
     <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="ev(event,'over')" ondragleave="ev(event,'out')" ondrop="ev(event,'drop')">
       <div class="drop-icon"><i class="ti ti-photo"></i></div>
       <p><strong>Click to choose images</strong> or drag and drop here</p>
@@ -282,7 +286,12 @@ var BATCH_N         = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
 /* -- BATCH SWITCH & DELETE -- */
 function switchBatch(v){
   if(v) window.location = URL_BASE + '?batch=' + encodeURIComponent(v);
-  else window.location = URL_BASE;
+  else window.location = URL_BASE + '?new=1';
+}
+function goTheme(){
+  var name=document.getElementById('batchName').value.trim();
+  if(!name){ alert('Type the open call name first.'); return; }
+  window.location='/admin/theme-go?batch='+encodeURIComponent(name);
 }
 function deleteBatch(ref){
   if(!confirm('Delete "' + ref + '" and all ' + BATCH_N + ' scored entries?\n\nThis removes all Sonnet scores, Haiku scores and stored images. It cannot be undone.')) return;
@@ -335,7 +344,8 @@ function _doUpload(files, batchRef, theme, thresh, logId, msgId){
         });
         (d.reused||[]).forEach(function(r){ html+='<p class="skip">↩ '+r+' (already scored, skipped)</p>'; });
         (d.errors||[]).forEach(function(r){ html+='<p class="err">✗ '+(r.filename||r)+'</p>'; });
-        log.innerHTML=html||'<p class="ok">Done.</p>';
+        var gate = (d.theme_gate===true) ? '<p class="ok"><strong>Theme check: ON</strong> for this call.</p>' : '<p class="skip"><strong>Theme check: OFF</strong> — no approved theme meaning for this exact call name, so pictures were judged the old way.</p>';
+        log.innerHTML=gate+(html||'<p class="ok">Done.</p>');
       }
       if(d.batch_ref) setTimeout(function(){ window.location=URL_BASE+'?batch='+encodeURIComponent(d.batch_ref); },1200);
     })
