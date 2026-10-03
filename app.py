@@ -1,4 +1,5 @@
-# SL-VERSION: 182.68 (Session 235, 2026-10-03 -- NEW: /admin/checks hub page (links to score audit and, per Open Call batch, run history, pixel report and sign-off; read-only, no emails). Pair with templates/admin.html admin-3.4. RETAINS 182.67.)
+# SL-VERSION: 182.69 (Session 235, 2026-10-03 -- DIAGNOSTIC + labels only: the two [dash_mentor] warning lines now also print the full traceback so the old "name 'audit' is not defined" fault can be located (no behaviour change). Stale version labels on the Checks, sign-off and score-audit pages corrected. RETAINS 182.68.)
+# SL-VERSION: 182.68 (Session 235, 2026-10-03 -- NEW: /admin/checks hub page (links to score audit and, per Open Call batch, run history, pixel report and sign-off; read-only, no emails). Pair with templates/admin.html admin-3.4. pixel_metrics.py now lives in engine/ (imported as engine.pixel_metrics). RETAINS 182.67.)
 # SL-VERSION: 182.67 (Session 235, 2026-10-03 -- NEW (staging, nothing live-tested): (1) Open Call RUN HISTORY: every judge run kept in new table contest_judge_runs, first run official, viewer /admin/contest-judge/runs/<batch>, CSV, founder-only make-official with reason; rescore routes snapshot today's result then record the new run; optional env SL_OC_KEEP_OFFICIAL=1 stops rescore overwriting the displayed result (default OFF = unchanged behaviour). (2) PIXEL REPORT (report only, changes no score): /admin/pixel-report/<batch>, uses new pixel_metrics.py, own table contest_pixel_metrics. (3) SIGN-OFF page: /admin/jury/<batch> creates private links (NO EMAIL SENT), /jury/review/<token> for jury/founder to approve or return, audit trail in contest_jury_log. RETAINS 182.66.)
 # SL-VERSION: 182.66 (Session 235, 2026-10-03 -- (1) Percentile pools separated: Sonnet images compare with the Sonnet pool only, Haiku (eValuate) images with the Haiku pool; Haiku never enters the Sonnet pool (needs scoring-227.2). A combined approximate figure is returned as combined_pct but is NOT displayed yet (wording awaits founder approval). (2) /admin/score-audit now reports whether pools are separated. 182.65 line retained below.)
 # SL-VERSION: 182.65 (Session 235, 2026-10-03 -- FIX: /admin/score-audit crashed when building its page (a literal percent sign in the page style clashed with the text-filling method). Page now filled with plain replacement. Still read-only. 182.64 line retained below.)
@@ -6723,7 +6724,8 @@ CRITICAL RULES:
         app.logger.info(f'[dash_mentor] refreshed for user {user_id} (Sonnet)')
 
     except Exception as _dm_err:
-        app.logger.warning(f'[dash_mentor] non-fatal error for user {user_id}: {_dm_err}')
+        import traceback as _tb_dm2
+        app.logger.warning(f'[dash_mentor] non-fatal error for user {user_id}: {_dm_err}\n{_tb_dm2.format_exc()}')
         try:
             db.session.rollback()
         except Exception:
@@ -10848,7 +10850,8 @@ def upload():
                                 try:
                                     _refresh_dash_mentor(_img.user_id)
                                 except Exception as _dm_bg_err:
-                                    app.logger.warning(f'[dash_mentor] bg refresh failed: {_dm_bg_err}')
+                                    import traceback as _tb_dm
+                                    app.logger.warning(f'[dash_mentor] bg refresh failed: {_dm_bg_err}\n{_tb_dm.format_exc()}')
 
                                 # SL 175: Refresh expensive dashboard caches (aea_dash, poty_tracker, wallet_hud)
                                 # Non-fatal — eliminates ~12 DB queries per dashboard load
@@ -16756,7 +16759,7 @@ def _cj_runs_page(title, body):
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_RUNS_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Open Call run history, app.py 182.67</p>"
+            "<p style='color:#555'>SL-VERSION: Open Call tools, app.py 182.69</p>"
             "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
 
 
@@ -16927,7 +16930,7 @@ def admin_pixel_report(batch_ref):
     if not _cj_px_ensure_table():
         return _cj_runs_page('Pixel report', '<p>Could not prepare the table. See Railway log.</p>'), 500
     try:
-        import pixel_metrics as _pm
+        from engine import pixel_metrics as _pm
         ver = _pm.METRICS_VERSION
     except Exception as _ie:
         return _cj_runs_page('Pixel report', '<p>pixel_metrics.py is missing or failed to load: %s</p>' % _html_escape_cj(_ie)), 500
@@ -16970,7 +16973,7 @@ def admin_pixel_report_run(batch_ref):
         abort(403)
     if not _cj_px_ensure_table():
         abort(500)
-    import pixel_metrics as _pm
+    from engine import pixel_metrics as _pm
     import tempfile as _tf
     import storage as _st
     todo = db.session.execute(db.text("""
@@ -17017,7 +17020,7 @@ def admin_pixel_report_csv(batch_ref):
     if not _cj_px_ensure_table():
         abort(500)
     import csv as _csv, io as _io
-    import pixel_metrics as _pm
+    from engine import pixel_metrics as _pm
     rows = db.session.execute(db.text("""
         SELECT b.id, b.filename, b.photographer, b.composite_score, m.metrics_json
         FROM contest_judge_batch b
@@ -17114,7 +17117,7 @@ def _cj_jury_page(title, body):
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<meta name='robots' content='noindex,nofollow'>"
             "<title>" + _html_escape_cj(title) + "</title>" + _CJ_JURY_CSS + "</head><body>"
-            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.67</p>"
+            "<p style='color:#555'>SL-VERSION: Sign-off page, app.py 182.69</p>"
             "<h1>" + _html_escape_cj(title) + "</h1>" + body + "</body></html>")
 
 
@@ -17967,7 +17970,7 @@ def admin_score_audit():
             '.box{background:#fff;border:2px solid #c9a227;padding:14px;margin:14px 0}'
             'a.btn{display:inline-block;background:#1a1a18;color:#F5C518;padding:14px 20px;text-decoration:none;border-radius:6px;min-height:44px}'
             '</style></head><body>'
-            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.65.</p>'
+            '<h1>Score audit</h1><p>Read-only. Nothing on this page changes any score. Version 182.69.</p>'
             '<div class="box"><b>Percentile pool.</b><br>@@PCTMSG@@<br>Scored images: @@POOL@@ &mdash; Sonnet: @@POOLS@@, Haiku (eValuate): @@POOLH@@.</div>'
             '<h2>Recalculated from stored dimensions</h2>'
             '<table><tr><th>Group</th><th>Images</th><th>Cannot recalculate</th><th>Score would differ</th><th>Tier would differ</th><th>Mean change</th><th>Largest change</th></tr>@@GROUPS@@</table>'
