@@ -1,3 +1,4 @@
+# SL-VERSION: 182.79 (Session 235, 2026-10-03 -- (1) Public sign-off page polish: 'Place N' headings (no more repeated 'contest'; a real title is still shown), photographer line kept in normal view and removed in blind view, signed card shows readable India time, Approve/Return buttons full width; audit trail now records that the no-entry box was ticked plus the comment. (2) Old in-code email builder removed; the template is the only layout and a tiny plain safety-net email is sent if the template fails to render. RETAINS 182.78.)
 # SL-VERSION: 182.78 (Session 235, 2026-10-03 -- POLISH (admin pages only, no scoring/emails/members): every Open Call admin page (Checks, Run history, entry runs, Pixel report, Sign-off admin, Audit trail, Score audit, email preview) now has a large '<- Back to admin dashboard' bar; entries are named by photographer and file instead of 'contest'; admin times shown as readable India time; version labels come from one constant; page footer shows login/founder status. Public sign-off review pages are NOT changed (no admin link, same layout). RETAINS 182.77.)
 # SL-VERSION: 182.77 (Session 235, 2026-10-03 -- admin@shutterleague.com (the founder's staging/production admin login) added to the Open Call make-official founder list, on founder approval. Also lets that login see founder-only controls wherever _CJ_RUNS_FOUNDER_EMAILS is used. No scoring change. RETAINS 182.76.)
 # SL-VERSION: 182.76 (Session 235, 2026-10-03 -- Run history pages now show 'You are logged in as: <email>. Founder access: YES/NO' (display only) so the founder can see why the make-official box is hidden; stale 'app.py 182.69' labels on the Open Call and sign-off pages corrected. No scoring change. RETAINS 182.75.)
@@ -16692,7 +16693,7 @@ _CJ_RUNS_CSS = (
     ".foot{margin-top:28px;padding-top:10px;border-top:1px solid #ccc;font-size:16px;color:#555}"
     ".hint{font-size:16px;color:#444;margin:4px 0}</style>")
 
-_CJ_TOOLS_VERSION = '182.78'
+_CJ_TOOLS_VERSION = '182.79'
 
 
 def _cj_fmt_ts(v):
@@ -17101,8 +17102,8 @@ _CJ_JURY_CSS = _CJ_RUNS_CSS.replace('</style>',
     ".card{border:1px solid #888;border-radius:8px;padding:12px;margin:14px 0}"
     ".card img{max-width:100%;height:auto;border-radius:6px}"
     ".ok{background:#e6f4ea}.ret{background:#fdecea}"
-    ".btn2{display:inline-block;padding:14px 20px;border:0;border-radius:6px;font-size:20px;"
-    "min-height:48px;cursor:pointer;color:#fff;margin:6px 6px 6px 0}"
+    ".btn2{display:block;width:100%;box-sizing:border-box;text-align:center;padding:16px 20px;border:0;"
+    "border-radius:8px;font-size:21px;min-height:56px;cursor:pointer;color:#fff;margin:12px 0}"
     ".g{background:#1e7e34}.r{background:#b02a37}</style>")
 
 
@@ -17236,12 +17237,15 @@ def jury_review(token):
         narrative = raw.get('narrative') or r.theme_note or ''
         gap = r.gap_note or raw.get('gap_note') or ''
         who = '' if blind else '<br>by %s' % _html_escape_cj(r.photographer)
-        cards += ("<div class='card'><h2>Place %d: %s</h2><p>%s</p>"
+        _tt = (r.image_title or '').strip()
+        _generic = (not _tt) or _tt.lower() in ('contest', 'untitled') or _tt.lower() == (r.filename or '').strip().lower()
+        _head = 'Place %d' % i + ('' if _generic else ' &mdash; ' + _html_escape_cj(_tt))
+        cards += ("<div class='card'><h2>%s</h2><p>%s</p>"
                   "<img src='/jury/review/%s/img/%d' alt='Entry %d'>"
                   "<p><b>Score %.2f</b> &nbsp; Wonder %s &middot; Feeling %s &middot; Story %s &middot; "
                   "Stops the eye %s &middot; Difficulty %s &middot; Moment %s</p>"
                   "<p><b>What the engine said:</b> %s</p><p><b>Weakest point:</b> %s</p></div>") % (
-            i, _html_escape_cj(r.image_title or r.filename), who.replace('<br>', ''), s.token, r.id, i,
+            _head, who.replace('<br>', ''), s.token, r.id, i,
             r.composite_score, f(r.wonder_score), f(r.aq_score), f(r.story_transfer_score),
             f(r.disruption_score), f(r.dod_score), f(r.dm_score),
             _html_escape_cj(narrative), _html_escape_cj(gap))
@@ -17249,7 +17253,7 @@ def jury_review(token):
         form = ("<div class='card %s'><h2>You have already signed: %s</h2><p>%s</p><p>Date: %s</p>"
                 "<p>If this is a mistake, please tell the founder. He can give you a fresh link.</p></div>") % (
             'ok' if s.status == 'approved' else 'ret', _html_escape_cj(s.status.upper()),
-            _html_escape_cj(s.comment or ''), _html_escape_cj(s.signed_at))
+            _html_escape_cj(s.comment or ''), _html_escape_cj(_cj_fmt_ts(s.signed_at)))
     else:
         form = ("<form method='post' action='/jury/review/%s/submit' class='card'>"
                 "<h2>Your decision</h2>"
@@ -17318,7 +17322,8 @@ def jury_review_submit(token):
         "UPDATE contest_jury SET status=:s, comment=:c, no_entry_declared=TRUE, signed_at=NOW() "
         "WHERE id=:i AND status='pending'"), {'s': status, 'c': comment, 'i': s.id})
     db.session.commit()
-    _cj_jury_log(s.id, s.batch_ref, 'signed_' + status, comment)
+    _cj_jury_log(s.id, s.batch_ref, 'signed_' + status,
+                 'No-entry confirmation ticked. ' + (('Comment: ' + comment) if comment else 'No comment.'))
     return redirect('/jury/review/%s' % token)
 
 
@@ -33130,28 +33135,6 @@ def _send_scorecard_email(img, user, preview=False):
     _weakest_name  = min(_dim_scores, key=_dim_scores.get)
     _weakest_score = _dim_scores[_weakest_name]
 
-    def _dim_cell(full_name, score):
-        short = _dim_short[full_name]
-        if full_name == _weakest_name:
-            return (
-                '<td style="text-align:center;background:rgba(200,168,75,0.2);'
-                'padding:10px 2px;border-left:1px solid rgba(200,168,75,0.2);'
-                'border-right:1px solid rgba(200,168,75,0.2);">'
-                f'<div style="font-size:14px;font-weight:700;color:#F5C518;'
-                f'font-family:monospace;">{score:.1f} &#8595;</div>'
-                f'<div style="font-size:12px;color:#C8A84B;text-transform:uppercase;'
-                f'letter-spacing:0.5px;margin-top:3px;">{short}</div></td>'
-            )
-        return (
-            '<td style="text-align:center;padding:12px 4px;">'
-            f'<div style="font-size:14px;font-weight:600;color:#F5C518;'
-            f'font-family:monospace;">{score:.1f}</div>'
-            f'<div style="font-size:12px;color:rgba(255,255,255,0.3);text-transform:uppercase;'
-            f'letter-spacing:0.5px;margin-top:3px;">{short}</div></td>'
-        )
-
-    _dim_row = ''.join(_dim_cell(n, s) for n, s in _dim_scores.items())
-
     # Percentile
     _pct_text = ''
     try:
@@ -33200,17 +33183,6 @@ def _send_scorecard_email(img, user, preview=False):
             )
     except Exception:
         pass
-
-    # User image
-    _img_html = ''
-    if _thumb:
-        _img_html = (
-            '<tr><td style="padding:0 0 4px;">'
-            f'<a href="{_img_url}" style="display:block;text-decoration:none;">'
-            f'<img src="{_thumb}" alt="{_title}" '
-            f'style="width:100%;max-width:560px;height:auto;display:block;" '
-            f'onerror="this.style.display=\'none\'"></a></td></tr>'
-        )
 
     # Weekly challenge
     _wc_html = ''
@@ -33288,9 +33260,6 @@ def _send_scorecard_email(img, user, preview=False):
     except Exception:
         pass
 
-    # UAT notice — removed Session 205. Block was stale, all UAT users treated as regular users.
-    _uat_html = ''
-
     # Location
     _loc_html = ''
     _user_city = getattr(user, 'city', None) or 'Bengaluru'
@@ -33311,177 +33280,21 @@ def _send_scorecard_email(img, user, preview=False):
     _fb_yes = f'{_site}/email-feedback?uid={user.id}&etype=scorecard&v=yes'
     _fb_no  = f'{_site}/email-feedback?uid={user.id}&etype=scorecard&v=no'
 
-    # What your eye caught
-    _wso_html = ''
-    if _wso:
-        _wso_html = (
-            '<tr><td style="padding:0 0 22px;">'
-            '<div style="border-left:3px solid #C8A84B;padding-left:16px;">'
-            '<div style="font-size:11px;letter-spacing:2px;color:#888;'
-            'text-transform:uppercase;margin-bottom:8px;font-family:monospace;">'
-            'What your eye caught</div>'
-            f'{_wso}'
-            '</div></td></tr>'
-        )
-
-    # Improvement prescription
-    _bck_html = ''
-    if _bck:
-        _bck_html = (
-            '<tr><td style="padding:0 0 22px;">'
-            '<div style="border-radius:6px;overflow:hidden;">'
-            '<div style="background:#854F0B;padding:9px 16px;">'
-            '<span style="font-size:11px;letter-spacing:2px;color:#FFF3CD;'
-            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
-            f'To improve your {_weakest_name}</span></div>'
-            '<div style="background:#D6E0F0;padding:14px 16px;">'
-            f'{_bck}'
-            '</div></div></td></tr>'
-        )
-
-    # Next assignment
-    _nxt_html = ''
-    if _nxt:
-        _nxt_html = (
-            '<tr><td style="padding:0 0 14px;">'
-            '<div style="border-radius:6px;overflow:hidden;border:1.5px solid #C8A84B;">'
-            '<div style="background:#C8A84B;padding:9px 16px;">'
-            '<span style="font-size:11px;letter-spacing:2px;color:#2a1800;'
-            'text-transform:uppercase;font-family:monospace;font-weight:700;">'
-            'Your next assignment</span></div>'
-            '<div style="background:#FFFBF0;padding:14px 16px;">'
-            f'{_nxt}'
-            '<p style="margin:0;font-size:12px;color:#854F0B;font-family:monospace;">'
-            'This assignment expires in 48 hours.</p>'
-            '</div></div></td></tr>'
-        )
-
-    # Assemble HTML using parts list — no implicit/explicit concat mixing
-    parts = []
-    parts.append('<!DOCTYPE html><html><head>')
-    parts.append('<meta charset="UTF-8">')
-    parts.append('<meta name="viewport" content="width=device-width,initial-scale=1">')
-    parts.append('</head>')
-    parts.append('<body style="margin:0;padding:0;background:#E8E4DC;font-family:-apple-system,Arial,sans-serif;">')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0">')
-    parts.append('<tr><td align="center" style="padding:24px 16px;">')
-    parts.append('<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #D0C8B0;border-radius:4px;max-width:560px;width:100%;overflow:hidden;">')
-
-    # Header
-    parts.append('<tr><td style="background:#0F1F3D;padding:18px 28px;">')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
-    parts.append('<td>')
-    parts.append('<div style="font-family:monospace;font-size:14px;letter-spacing:2.5px;color:#ffffff;text-transform:uppercase;font-weight:700;">Shutter League</div></td>')
-    parts.append('<td style="text-align:right;font-family:monospace;font-size:12px;color:rgba(200,168,75,0.6);letter-spacing:1px;">Apex DDI Engine<br>Evaluation Report</td>')
-    parts.append('</tr></table></td></tr>')
-
-    # Grandmaster hero
-    parts.append(_hero_html)
-
-    # Body open
-    parts.append('<tr><td style="padding:22px 28px 0;">')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0">')
-
-    # Greeting
-    parts.append('<tr><td style="padding:0 0 20px;">')
-    parts.append(f'<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.8;">Hi {_name},<br><br>')
-    parts.append(f'Your {_genre} photograph {_title} has been evaluated.</p></td></tr>')
-
-    # User image
-    parts.append(_img_html)
-
-    # Score block
-    parts.append('<tr><td style="padding:0 0 22px;">')
-    parts.append('<div style="background:#0F1F3D;border-radius:6px;overflow:hidden;">')
-    parts.append('<div style="padding:14px 20px 10px;">')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
-    parts.append('<td>')
-    parts.append(f'<span style="font-family:monospace;font-size:30px;font-weight:700;color:#F5C518;line-height:1;">{_score:.2f}</span>')
-    parts.append(f'&nbsp;&nbsp;<span style="font-family:monospace;font-size:15px;font-weight:600;color:#ffffff;">{_tier}</span>')
-    parts.append(f'<br><span style="font-size:11px;color:rgba(255,255,255,0.4);">{_pct_text}</span>')
-    parts.append('</td>')
-    parts.append(f'<td style="text-align:right;font-size:11px;color:rgba(255,255,255,0.3);font-family:monospace;">{_title}<br>{_genre}</td>')
-    parts.append('</tr></table></div>')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.08);">')
-    parts.append(f'<tr>{_dim_row}</tr>')
-    parts.append('</table></div></td></tr>')
-
-    # What your eye caught
-    parts.append(_wso_html)
-
-    # Weakest dimension — diagnosis
-    parts.append('<tr><td style="padding:0 0 10px;">')
-    parts.append('<div style="border-radius:6px;overflow:hidden;">')
-    parts.append('<div style="background:#2C3E6B;padding:9px 16px;">')
-    parts.append(f'<span style="font-size:11px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;font-family:monospace;font-weight:700;">Your weakest dimension \u2014 {_weakest_name} \u00b7 {_weakest_score:.1f}</span>')
-    parts.append('</div>')
-    parts.append('<div style="background:#E8EDF5;padding:14px 16px;">')
-    parts.append('<p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a18;">This is the dimension the engine found most room to grow in on this frame.</p>')
-    parts.append('</div></div></td></tr>')
-
-    # Improvement prescription
-    parts.append(_bck_html)
-
-    # Next assignment
-    parts.append(_nxt_html)
-
-    # Location advisory
-    parts.append(_loc_html)
-
-    # Evaluations remaining
-    parts.append('<tr><td style="padding:0 0 14px;">')
-    parts.append('<div style="border-radius:6px;overflow:hidden;">')
-    parts.append('<div style="background:#2C3E6B;padding:9px 16px;">')
-    parts.append('<span style="font-size:11px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;font-family:monospace;font-weight:700;">Your account</span>')
-    parts.append('</div>')
-    parts.append('<div style="background:#E8EDF5;padding:14px 16px;">')
-    parts.append('<table width="100%" cellpadding="0" cellspacing="0"><tr>')
-    parts.append(f'<td><span style="font-family:monospace;font-size:28px;font-weight:700;color:#0F1F3D;">{_evals}</span>')
-    parts.append('<span style="font-size:12px;color:#4A4840;display:block;margin-top:3px;">evaluations remaining this month</span></td>')
-    parts.append(f'<td style="text-align:right;"><a href="{_img_url}" style="font-size:12px;color:#2C3E6B;text-decoration:none;font-family:monospace;font-weight:600;">View evaluation \u2192</a></td>')
-    parts.append('</tr></table>')
-    parts.append('</div></div></td></tr>')
-
-    # Weekly challenge
-    parts.append(_wc_html)
-
-    # Fresh from SL
-    parts.append(_news_html)
-
-    # UAT notice
-    parts.append(_uat_html)
-
-    # CTA
-    parts.append('<tr><td style="padding:0 0 22px;">')
-    parts.append(f'<a href="{_site}/upload" style="display:block;background:#0F1F3D;color:#C8A84B;font-family:monospace;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 28px;text-decoration:none;border-radius:6px;text-align:center;">')
-    parts.append('Your eye is still sharp from this. Upload your next image \u2192</a></td></tr>')
-
-    # Sign off
-    parts.append('<tr><td style="padding:0 0 22px;">')
-    parts.append(f'<p style="margin:0 0 3px;font-size:14px;color:#4A4840;">\u2014 Shutter League</p>')
-    parts.append(f'<p style="margin:0;font-size:15px;color:#888;">{CONTACT_EMAIL}</p>')
-    parts.append('</td></tr>')
-
-    # Close body table
-    parts.append('</table></td></tr>')
-
-    # Footer
-    parts.append('<tr><td style="background:#F5F0E8;padding:12px 28px;border-top:1px solid #E0D8C8;">')
-    parts.append('<p style="margin:0;font-size:12px;color:#888;line-height:1.9;">')
-    parts.append('Was this useful?&nbsp;')
-    parts.append(f'<a href="{_fb_yes}" style="color:#C8A84B;text-decoration:none;font-weight:600;">Yes</a>')
-    parts.append('&nbsp;\u00b7&nbsp;')
-    parts.append(f'<a href="{_fb_no}" style="color:#C8A84B;text-decoration:none;font-weight:600;">No</a>')
-    parts.append('&nbsp;&nbsp;&nbsp;\u00b7&nbsp;&nbsp;&nbsp;')
-    parts.append(f'<a href="{_unsub_url}" style="color:#999;text-decoration:none;">Unsubscribe from evaluation emails</a>')
-    parts.append('</p></td></tr>')
-
-    # Close outer tables
-    parts.append('</table></td></tr></table>')
-    parts.append('</body></html>')
-
-    _html = ''.join(parts)   # old builder: kept as the automatic fallback (remove after staging pass)
-    _email_engine = 'fallback'
+    # 182.79: the old in-code HTML builder was removed. The template below is the only layout.
+    # If the template cannot render, this short plain email is sent instead, so a member always gets
+    # their score and a link to the full evaluation.
+    _html = (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        '<body style="margin:0;padding:16px;font-family:Arial,sans-serif;font-size:18px;line-height:1.6;color:#111;">'
+        f'<p>Hi {_name},</p>'
+        f'<p>Your {_genre} photograph {_title} has been evaluated: <b>{_score:.2f}</b> &middot; {_tier}.</p>'
+        f'<p><a href="{_img_url}" style="font-size:20px;">View your full evaluation</a></p>'
+        f'<p style="font-size:15px;color:#666;">Shutter League &middot; {CONTACT_EMAIL}<br>'
+        f'<a href="{_unsub_url}" style="color:#666;">Unsubscribe from evaluation emails</a></p>'
+        '</body></html>'
+    )
+    _email_engine = 'safety-net'
 
     # ── Session 235 (182.71): full-scorecard email from templates/email_scorecard.html ──────────
     _ex = {}
@@ -33572,7 +33385,7 @@ def _send_scorecard_email(img, user, preview=False):
         _email_engine = 'template'
     except Exception as _tpl_err:
         import traceback as _tb_em
-        app.logger.warning(f'[scorecard_email] template failed, using fallback: {_tpl_err}\n{_tb_em.format_exc()}')
+        app.logger.warning(f'[scorecard_email] template failed, sending the short safety-net email: {_tpl_err}\n{_tb_em.format_exc()}')
 
     _plain = lambda h: _mdre.sub(r'\n{3,}', '\n\n', _mdre.sub(r'<[^>]+>', '\n', h or '')).strip()
     _wso_t, _bck_t, _nxt_t = _plain(_wso), _plain(_bck), _plain(_nxt)
