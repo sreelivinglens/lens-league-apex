@@ -1,4 +1,4 @@
-# SL-VERSION: 182.90 (Session 236, 2026-10-04 -- CHANGE (staging only): scorecard individual download now returns a full PDF (not a PNG) using reportlab (already installed on Railway). Replaces _ne_scorecard_pillow_png (PNG via Pillow, was getting cut off) with _ne_scorecard_reportlab_pdf -- A4 page, blue header with overall badge, five dimension rows each with label/score/bar/full-reason text, story transfer block, SL footer. No cutoff -- reportlab flows content to as many pages as needed. Fallback: if reportlab import fails, returns the HTML file. Route filename changes from .png to .pdf. ZIP route unchanged (still HTML). RETAINS 182.89.)
+# SL-VERSION: 182.91 (Session 236, 2026-10-04 -- CHANGE (staging only): individual scorecard download now serves the full _ne_scorecard_html(e) page (photo, dimension bars, principles, story -- exactly what the admin sees on screen) opened inline in a new browser tab, with window.print() auto-called on load so the Save-as-PDF dialog appears immediately. No new libraries. The button target="_blank" already opens a new tab. Removes the reportlab PDF and Pillow PNG approaches (both lacked the photo and full layout). ZIP route unchanged. RETAINS 182.90.)
 # SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
 # SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
 # SL-VERSION: 182.85 (Session 236, 2026-10-04 -- FIX (same bug confirmed on staging that crashed production): /dashboard raises UndefinedError for any Sonnet/admin account whose users.mentor_advice_json holds the Haiku Sherpa shape ({'observation':...}, no 'detail') because dashboard.html line 572 reads mentor_advice.detail. Dashboard route now passes mentor_advice to the template ONLY when it is a dict carrying title, action and detail as non-empty text; otherwise None, so the template's own fallback shows. The saved data is NOT changed or deleted -- the Haiku page still reads the same field. Haiku route, _is_sonnet_user and login redirects untouched. Same fix already proven on production as 182.19.1. RETAINS 182.84.)
@@ -19036,6 +19036,7 @@ body{{font-family:"Avenir Next","Avenir","Segoe UI",-apple-system,BlinkMacSystem
 @media(max-width:560px){{.body{{padding:18px}}}}
 @media print{{body{{background:#fff;padding:0}} .card{{box-shadow:none;border:1px solid #ccc}}}}
 </style>
+<script>window.addEventListener('load',function(){{window.print();}});</script>
 </head>
 <body>
 <div class="card">
@@ -19255,10 +19256,10 @@ def _ne_scorecard_reportlab_pdf(e):
 @app.route('/admin/contest-judge/new-eval-scorecard/<int:entry_id>')
 @login_required
 def admin_contest_judge_new_eval_scorecard(entry_id):
-    """Download the trial evaluation scorecard for one picture as a PDF.
-    Builds the PDF with reportlab (already installed on Railway) -- full A4 page,
-    no text cutoff. Falls back to the self-contained HTML file if reportlab is missing.
-    v182.90."""
+    """Serve the full trial evaluation scorecard for one picture as an inline HTML page.
+    The page contains the photo, dimension bars, principles, story section -- identical to
+    what the admin sees on screen. window.print() fires on load so the browser immediately
+    shows the Save-as-PDF / Print dialog. No download libraries needed. v182.91."""
     if current_user.role != 'admin':
         abort(403)
     _cj_new_eval_ensure_table()
@@ -19286,21 +19287,9 @@ def admin_contest_judge_new_eval_scorecard(entry_id):
     trial_rank = {r.entry_id: i + 1 for i, r in enumerate(
         sorted(trial_rows, key=lambda r: -(r.overall or 0)))}
     e = _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank)
-    safe_title = (pic.image_title or str(entry_id)).replace('/', '_').replace(' ', '_')
-    try:
-        pdf_bytes = _ne_scorecard_reportlab_pdf(e)
-        return app.response_class(
-            pdf_bytes, mimetype='application/pdf',
-            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.pdf"'})
-    except RuntimeError as _rte:
-        # Log clearly to Railway console so admin knows what is missing
-        app.logger.error(str(_rte))
-        # Graceful fallback: self-contained HTML -- admin can open and print-to-PDF in browser
-        # No custom X-SL-Scorecard-Error header (gunicorn rejects non-ASCII header values)
-        html = _ne_scorecard_html(e)
-        return app.response_class(
-            html, mimetype='text/html',
-            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"'})
+    html = _ne_scorecard_html(e)
+    # Serve inline -- browser opens in new tab, window.print() triggers Save-as-PDF dialog
+    return app.response_class(html, mimetype='text/html; charset=utf-8')
 
 
 @app.route('/admin/contest-judge/new-eval-scorecard-zip/<path:batch_ref>')
