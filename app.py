@@ -1,3 +1,4 @@
+# SL-VERSION: 182.97 (Session 236, 2026-10-04 -- NEW FEATURE (staging only, not yet pushed): founder reported there was no way to export the member list, and no single admin page listing Haiku, Sonnet and UAT members together with email/ID. Added: (1) two small helper functions, _sl_prelaunch_uat_ids() (finds the pre-launch "Sonnet free trial" cohort -- accounts created before HAIKU_LAUNCH_DATE that scored real, non-/try images and never got a real paid or UAT plan -- and treats them as UAT/Learning rather than Haiku, matching how the existing UAT admin panel already explains this group) and _sl_classify_user_type(user, prelaunch_ids) (gives one consistent label -- "Sonnet (paid)", "UAT / Learning", or "Haiku (free tier)" -- reusable anywhere a user needs a type). (2) The existing but orphaned /admin/users route (admin_users(), renders admin_users.html) now also tags every user object with a .user_type attribute using the new classifier, wrapped in try/except so a classification failure cannot break the page -- the route's existing behavior and template are otherwise untouched. (3) A brand new route, /admin/users/export.csv (admin_users_export_csv()), which streams a CSV download of the member list -- all members by default, or just one segment via ?type=sonnet / ?type=uat / ?type=haiku -- with columns ID, Name, Email, Type, Plan, Track, City, Joined, Active, Scored images, Best evaluation, Last scored. Nothing in the paying/UAT/Haiku member panels' existing queries, the scoring pipeline, or any other route was touched. Needs a staging test: open /admin/users and confirm it still loads with no error; then click each new "CSV" download link added in admin.html (Paid subscribers, UAT & Learning, Haiku members panels) and confirm each downloaded file opens in Excel/Sheets with the right columns and only that segment's rows, and that the row counts roughly match each panel's on-screen badge count. RETAINS 182.96.)
 # SL-VERSION: 182.96 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed, Open Call narrative prompt only): same species-misnaming gap as 182.95, fixed in the second place it exists. _CJ_HAIKU_EXTRA (the Open Call narrative prompt, ~line 20249) had a SPECIES NAMING instruction that pushed the model to always name a species confidently when possible, but it had no caution against naming it WRONG and no requirement to stay consistent across impression / score_read / strength / next_leap. Fix: added one paragraph directly after the existing SPECIES NAMING rule -- same substance as the 182.95 fix for /try -- naming the egret/heron-vs-seagull mistake specifically, requiring the same subject name be used everywhere it is mentioned, and telling the model to fall back to a generic term when not confident rather than guess. Nothing else in this prompt, the six-dimension arithmetic, or any other route touched. Needs a staging test: rerun or rescore an Open Call entry with an easily-confused bird/animal subject and check the written fields stay consistent. RETAINS 182.95.)
 # SL-VERSION: 182.95 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed, free-tier /try prompt only): founder reported a Haiku /try evaluation calling egrets "seagull" throughout the written commentary (impression, next_leap, the Visual Disruption and Affective Quotient reasons) even though species_note itself was correctly left blank. Root cause: the "CONSERVATIVE IDENTIFICATION ONLY" discipline in the Haiku scoring prompt (_try_run_haiku, the big prompt string ~line 43743) was scoped to the species_note field alone -- every other free-text field (impression, dim_obs_*, next_leap_obs, etc.) had no instruction to stay consistent with that identification, so the model was free to casually name the subject something else, and did. Fix: added one new instruction block, "SUBJECT NAME CONSISTENCY", directly after the existing species_note rules, telling the model to (a) use the exact same subject name everywhere in its response that it uses in species_note, (b) never introduce a different specific name in passing, with egret/heron-vs-seagull given as the named example since that is the exact mistake seen, and (c) fall back to a generic term ("the bird", "the wading bird") in every field when it is not confident, rather than guessing a specific name anywhere. Nothing else in the prompt, the scoring arithmetic, or any other route touched. This is prompt wording only -- it changes what the model is told, not any number. Needs a staging test: run a fresh /try upload on a similar subject (egrets, herons, or any easily-confused bird) and confirm the written text no longer misnames it. The existing seagull-labelled evaluation already stored (image 142) is not corrected by this -- its text was written before this change; it would need a rescore to pick up new wording, and a rescore is a separate decision. RETAINS 182.94.)
 # SL-VERSION: 182.94 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed): the single-scorecard Save-as-PDF view (/admin/contest-judge/new-eval-scorecard/<entry_id>) was not showing the evaluated photo. Root cause in _ne_build_entry_dict(): thumb_url was built by passing pic.thumb_path (already a full R2 public URL, written that way at upload time) into storage.public_url(), a function that expects a bare object key -- the same mistake the rest of the file avoids (e.g. _ne_fetch_photo_bytes calls storage.key_from_url() first; the working trial grid just checks thumb_path.startswith('http')). The result was a malformed, 404-ing image URL, so the <img> tag was present but silently failed to load -- nothing visible in the print view. Fix: thumb_url is now built the same proven way the working grid/list routes build it (pic.thumb_path directly if it starts with 'http', else a /static/ fallback for any legacy local path). No other part of the scorecard, the ZIP route, or the PDF routes touched. Needs a staging test: open the scorecard for any already-evaluated picture and confirm the photo now appears before Save-as-PDF. RETAINS 182.93.)
@@ -24164,6 +24165,45 @@ def toggle_calibration_example(image_id):
     return redirect(url_for('admin_dashboard'))
 
 
+def _sl_prelaunch_uat_ids():
+    """The 'pre-launch Sonnet free trial' cohort: registered before Haiku existed,
+    no paid/UAT/beta/learning/play plan, but has at least one non-Haiku scored
+    picture (MIM workshop participants etc). Same definition the UAT & Learning
+    panel on /admin already uses -- kept in one place so the CSV export and that
+    panel can never silently drift apart. v182.97."""
+    try:
+        _rows = db.session.execute(db.text(
+            "SELECT DISTINCT u.id FROM users u "
+            "JOIN images i ON i.user_id = u.id "
+            "WHERE u.created_at < :launch "
+            "AND u.role != 'admin' "
+            "AND (u.subscription_plan IS NULL "
+            "     OR u.subscription_plan NOT IN ('monthly','halfyearly','annual','uat','beta','learning','play')) "
+            "AND (i.is_haiku_try IS NULL OR i.is_haiku_try = FALSE)"
+        ), {'launch': HAIKU_LAUNCH_DATE}).fetchall()
+        return {r[0] for r in _rows}
+    except Exception as _pe:
+        app.logger.warning(f'[user_type] prelaunch cohort query failed: {_pe}')
+        return set()
+
+
+def _sl_classify_user_type(user, prelaunch_ids):
+    """One label per user: 'Sonnet (paid)', 'UAT / Learning', or 'Haiku (free tier)'.
+    Mirrors, in order, the same three definitions the /admin dashboard's three
+    panels (Paid subscribers, UAT & Learning, Haiku members) already use --
+    this does not invent a new rule, it names the existing one so it can be
+    exported and shown in one list. Admins are not classified (caller filters
+    them out first). v182.97."""
+    _plan = (getattr(user, 'subscription_plan', None) or '').strip()
+    if _plan in ('uat', 'beta', 'learning'):
+        return 'UAT / Learning'
+    if getattr(user, 'is_subscribed', False) and _plan in ('monthly', 'halfyearly', 'annual'):
+        return 'Sonnet (paid)'
+    if user.id in prelaunch_ids:
+        return 'UAT / Learning'
+    return 'Haiku (free tier)'
+
+
 @app.route('/admin/users')
 @login_required
 @admin_required
@@ -24180,9 +24220,82 @@ def admin_users():
     _paid_plans = ('monthly', 'halfyearly', 'annual')
     paid_users  = [u for u in users if u.is_subscribed and u.subscription_plan in _paid_plans]
     paid_count  = len(paid_users)
+    # v182.97: attach a .user_type label to every user (Sonnet / UAT / Haiku),
+    # same classification the CSV export uses. Does not require any template
+    # change to be safe -- admin_users.html keeps working exactly as before,
+    # and can start reading user.user_type whenever it is updated to show it.
+    try:
+        _prelaunch_ids = _sl_prelaunch_uat_ids()
+        for _u in users:
+            _u.user_type = _sl_classify_user_type(_u, _prelaunch_ids)
+    except Exception as _ute:
+        app.logger.warning(f'[admin_users] user_type tagging failed: {_ute}')
     return render_template('admin_users.html', users=users,
                            new_today=new_today, new_7days=new_7days,
                            paid_users=paid_users, paid_count=paid_count)
+
+
+@app.route('/admin/users/export.csv')
+@login_required
+@admin_required
+def admin_users_export_csv():
+    """Download a CSV of members. ?type=sonnet | uat | haiku | all (default all).
+    Built fresh from the database every time (no row limit, unlike the 50-row
+    Haiku panel on /admin) so the file always matches what is actually in the
+    database, not just what fits on one dashboard screen. v182.97, built on
+    founder request (Session 236, 4 Oct 2026) -- there was previously no way
+    to export the member list at all."""
+    _type_filter = (request.args.get('type') or 'all').strip().lower()
+    if _type_filter not in ('all', 'sonnet', 'uat', 'haiku'):
+        _type_filter = 'all'
+    _type_label = {'sonnet': 'Sonnet (paid)', 'uat': 'UAT / Learning',
+                   'haiku': 'Haiku (free tier)'}.get(_type_filter)
+
+    _users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
+    _prelaunch_ids = _sl_prelaunch_uat_ids()
+
+    # One aggregate query for scored-image counts + best score + last-scored date,
+    # instead of one query per user -- this export can cover hundreds of members.
+    _agg_rows = db.session.execute(db.text(
+        "SELECT user_id, COUNT(*) AS scored_count, MAX(score) AS best_score, "
+        "MAX(scored_at) AS last_scored_at "
+        "FROM images WHERE status = 'scored' GROUP BY user_id"
+    )).fetchall()
+    _agg = {r.user_id: r for r in _agg_rows}
+
+    import csv as _csv_users
+    import io as _io_users
+    out = _io_users.StringIO()
+    w = _csv_users.writer(out)
+    w.writerow(['ID', 'Name', 'Email', 'Type', 'Plan', 'Track', 'City', 'Joined',
+                'Active', 'Scored images', 'Best evaluation', 'Last scored'])
+
+    _written = 0
+    for _u in _users:
+        _utype = _sl_classify_user_type(_u, _prelaunch_ids)
+        if _type_label and _utype != _type_label:
+            continue
+        _a = _agg.get(_u.id)
+        w.writerow([
+            _u.id,
+            _u.full_name or _u.username or '',
+            _u.email or '',
+            _utype,
+            _u.subscription_plan or '',
+            _u.subscription_track or '',
+            getattr(_u, 'city', '') or '',
+            _u.created_at.strftime('%Y-%m-%d') if _u.created_at else '',
+            'Yes' if getattr(_u, 'is_active', True) else 'No',
+            int(_a.scored_count) if _a else 0,
+            f'{_a.best_score:.2f}' if _a and _a.best_score is not None else '',
+            _a.last_scored_at.strftime('%Y-%m-%d') if _a and _a.last_scored_at else '',
+        ])
+        _written += 1
+
+    app.logger.info(f'[admin_users_export_csv] type={_type_filter} rows={_written} by={current_user.email}')
+    _fname = f'SL_Users_{_type_filter}_{datetime.utcnow().strftime("%Y%m%d")}.csv'
+    return app.response_class(out.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{_fname}"'})
 
 
 # ═══════════════════════════════════════════════════════════════════════════
