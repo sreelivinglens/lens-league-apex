@@ -1,3 +1,4 @@
+# SL-VERSION: 182.93 (Session 236, 2026-10-04 -- FIX: photographer report PDF was killing the gunicorn worker (SIGKILL, out of memory). Root cause: full-resolution contest JPEGs (5-20MB each) loaded into RAM for every image before PDF assembly -- 44 images = 200-800MB peak. Fix: _ne_fetch_photo_bytes now resizes the image to max 400x400px using Pillow immediately after download (Pillow already installed on Railway), deletes the temp file, and returns only the small JPEG bytes (~15-40KB). _ne_rl_photo_flowable unchanged. Both Top 10 and Photographer Report routes benefit. RETAINS 182.92.)
 # SL-VERSION: 182.92 (Session 236, 2026-10-04 -- NEW (staging only): two new trial-evaluation PDF routes, both with photo snapshots fetched from R2. (1) GET /admin/contest-judge/new-eval-top10-pdf/<batch_ref> -- Top 10 summary PDF (reportlab A4): ranked table of the top 10 pictures, each with a 50mm photo thumbnail embedded from R2, photographer name, image title, overall score, strongest dimension highlighted green, weakest flagged red. (2) GET /admin/contest-judge/new-eval-photographer-report/<batch_ref> -- Per-photographer feedback PDF (one section per photographer, sorted by standing): all images evaluated, dimension averages, strongest and weakest dimension called out, one line of specific improvement advice drawn from the weakest dimension reason, photo thumbnail per image. Both use the same R2 download pattern as 182.35/182.32. Template admin_contest_judge.html updated to 3.7 with two new buttons in the trial action bar. RETAINS 182.91.)
 # SL-VERSION: 182.91 (Session 236, 2026-10-04 -- CHANGE (staging only): individual scorecard download now serves the full _ne_scorecard_html(e) page (photo, dimension bars, principles, story -- exactly what the admin sees on screen) opened inline in a new browser tab, with window.print() auto-called on load so the Save-as-PDF dialog appears immediately. No new libraries. The button target="_blank" already opens a new tab. Removes the reportlab PDF and Pillow PNG approaches (both lacked the photo and full layout). ZIP route unchanged. RETAINS 182.90.)
 # SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
@@ -19365,29 +19366,47 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
         headers={'Content-Disposition': f'attachment; filename="SL_Scorecards_{safe_ref}.zip"'})
 
 
-def _ne_fetch_photo_bytes(thumb_path):
-    """Fetch one photo from R2 as raw bytes for embedding in reportlab. Returns bytes or None.
-    Uses storage.download_file() + storage.key_from_url() -- same as 182.35 ZIP route.
-    v182.92."""
+def _ne_fetch_photo_bytes(thumb_path, max_px=400):
+    """Fetch one photo from R2, resize to max_px on the longest side using Pillow, return
+    small JPEG bytes suitable for PDF embedding (~15-40 KB). Returns None on failure.
+    Resizing immediately after download prevents multi-hundred-MB RAM peaks when
+    building PDFs from many full-resolution contest images. Pillow is already installed
+    on Railway. Temp file deleted before returning. v182.93."""
     if not thumb_path:
         return None
+    _tmp_name = None
     try:
         import tempfile as _tmpf
         import storage as _ne_st
+        from PIL import Image as _PILImg
+        import io as _ne_io
+
         _key = _ne_st.key_from_url(thumb_path)
         _tmp = _tmpf.NamedTemporaryFile(suffix='.jpg', delete=False)
+        _tmp_name = _tmp.name
         _tmp.close()
-        ok = _ne_st.download_file(_key, _tmp.name)
+
+        ok = _ne_st.download_file(_key, _tmp_name)
         if not ok:
-            _cj_os.unlink(_tmp.name)
             return None
-        with open(_tmp.name, 'rb') as fh:
-            data = fh.read()
-        _cj_os.unlink(_tmp.name)
-        return data
+
+        # Open, shrink immediately, discard the large pixel buffer
+        with _PILImg.open(_tmp_name) as img:
+            img = img.convert('RGB')
+            img.thumbnail((max_px, max_px), _PILImg.LANCZOS)
+            out = _ne_io.BytesIO()
+            img.save(out, format='JPEG', quality=75, optimize=True)
+            return out.getvalue()
+
     except Exception as _ex:
-        app.logger.warning('[ne_fetch_photo] failed: %s', _ex)
+        app.logger.warning('[ne_fetch_photo] failed thumb_path=%s: %s', thumb_path, _ex)
         return None
+    finally:
+        if _tmp_name:
+            try:
+                _cj_os.unlink(_tmp_name)
+            except Exception:
+                pass
 
 
 def _ne_rl_photo_flowable(photo_bytes, width_mm, height_mm):
