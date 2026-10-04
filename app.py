@@ -1,4 +1,4 @@
-# SL-VERSION: 182.89 (Session 236, 2026-10-04 -- FIX (staging only): scorecard downloads were broken -- two bugs: (1) em-dash in X-SL-Scorecard-Error fallback header rejected by gunicorn ("Invalid HTTP Header"), custom header removed entirely (error still logged to Railway console); (2) Playwright not installed on Railway, replaced with Pillow-based PNG drawing (_ne_html_to_png replaced by _ne_scorecard_pillow_png) -- draws scorecard directly: white card, blue header, photographer/title, 5 dimension bars with scores and reasons, overall badge, story tag. Pure Python, no browser dependency. Pillow already in requirements.txt. ZIP route unchanged (still HTML). RETAINS 182.88.)
+# SL-VERSION: 182.90 (Session 236, 2026-10-04 -- CHANGE (staging only): scorecard individual download now returns a full PDF (not a PNG) using reportlab (already installed on Railway). Replaces _ne_scorecard_pillow_png (PNG via Pillow, was getting cut off) with _ne_scorecard_reportlab_pdf -- A4 page, blue header with overall badge, five dimension rows each with label/score/bar/full-reason text, story transfer block, SL footer. No cutoff -- reportlab flows content to as many pages as needed. Fallback: if reportlab import fails, returns the HTML file. Route filename changes from .png to .pdf. ZIP route unchanged (still HTML). RETAINS 182.89.)
 # SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
 # SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
 # SL-VERSION: 182.85 (Session 236, 2026-10-04 -- FIX (same bug confirmed on staging that crashed production): /dashboard raises UndefinedError for any Sonnet/admin account whose users.mentor_advice_json holds the Haiku Sherpa shape ({'observation':...}, no 'detail') because dashboard.html line 572 reads mentor_advice.detail. Dashboard route now passes mentor_advice to the template ONLY when it is a dict carrying title, action and detail as non-empty text; otherwise None, so the template's own fallback shows. The saved data is NOT changed or deleted -- the Haiku page still reads the same field. Haiku route, _is_sonnet_user and login redirects untouched. Same fix already proven on production as 182.19.1. RETAINS 182.84.)
@@ -19097,209 +19097,168 @@ def _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank):
     }
 
 
-def _ne_scorecard_pillow_png(e):
-    """Render the trial evaluation scorecard for entry dict e as a PNG using Pillow.
-    No browser required -- draws directly with ImageDraw. Returns raw PNG bytes.
-    Card layout: white background, blue header (photographer + title + overall badge),
-    five dimension rows with score bar + reason text, story tag, SL footer.
-    v182.89."""
+def _ne_scorecard_reportlab_pdf(e):
+    """Render the trial evaluation scorecard for entry dict e as a PDF using reportlab.
+    A4 page, full reason text -- no cutoff. Returns raw PDF bytes.
+    Layout: blue header (photographer, title, overall badge), five dimension rows
+    (label, score, proportional bar, full reason text), story transfer block, SL footer.
+    reportlab is already installed on Railway (no requirements change needed). v182.90."""
     try:
-        from PIL import Image, ImageDraw, ImageFont
-        import io as _io_sc
+        from reportlab.lib.pagesizes import A4 as _RL_A4
+        from reportlab.lib import colors as _RL_C
+        from reportlab.lib.units import mm as _RL_mm
+        from reportlab.platypus import (SimpleDocTemplate as _RL_Doc, Paragraph as _RL_P,
+                                        Spacer as _RL_Sp, HRFlowable as _RL_HR,
+                                        Table as _RL_T, TableStyle as _RL_TS,
+                                        KeepTogether as _RL_KT)
+        from reportlab.lib.styles import getSampleStyleSheet as _RL_SS, ParagraphStyle as _RL_PS
+        from reportlab.lib.enums import TA_RIGHT as _RL_RIGHT, TA_CENTER as _RL_CTR
+        import io as _io_rl
     except ImportError:
-        raise RuntimeError('[scorecard_png] Pillow not installed -- add "Pillow" to requirements.txt.')
+        raise RuntimeError('[scorecard_pdf] reportlab not installed.')
 
-    # ── palette ──────────────────────────────────────────────────────────────
-    C_BG        = (255, 255, 255)
-    C_HEADER    = (23, 63, 117)       # SL dark blue
-    C_HEADER_TXT= (255, 255, 255)
-    C_BAR_FILL  = (41, 121, 201)      # SL mid-blue
-    C_BAR_BG    = (220, 232, 245)
-    C_DIM_LABEL = (23, 63, 117)
-    C_SCORE_TXT = (23, 63, 117)
-    C_REASON    = (60, 60, 60)
-    C_BORDER    = (200, 215, 235)
-    C_OVERALL   = (23, 63, 117)
-    C_STORY_YES = (39, 130, 80)
-    C_STORY_NO  = (180, 50, 50)
-    C_STORY_NS  = (120, 90, 30)
-    C_FOOTER    = (150, 150, 150)
-    C_DIVIDER   = (210, 225, 240)
+    # ── colours & constants ───────────────────────────────────────────────────
+    _SL_BLUE  = _RL_C.HexColor('#173F75')
+    _SL_MID   = _RL_C.HexColor('#2979C9')
+    _SL_LIGHT = _RL_C.HexColor('#DCE8F5')
+    _SL_GREY  = _RL_C.HexColor('#3C3C3C')
+    _SL_GREEN = _RL_C.HexColor('#277852')
+    _SL_RED   = _RL_C.HexColor('#B43232')
+    _SL_AMBER = _RL_C.HexColor('#785A1E')
+    _SL_FOG   = _RL_C.HexColor('#969696')
+    _WHITE    = _RL_C.white
 
-    W = 760
-    PAD = 36
-    BAR_H = 16
-    BAR_W = 260
-    ROW_H = 110      # height per dimension row
+    _mm = _RL_mm
+    _W  = 210*_mm - 30*_mm   # A4 usable width
 
-    # ── fonts (fallback to default if no system fonts) ────────────────────────
-    def _font(size, bold=False):
-        candidates = []
-        if bold:
-            candidates = ['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-                          '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-                          '/System/Library/Fonts/Helvetica.ttc']
-        else:
-            candidates = ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-                          '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-                          '/System/Library/Fonts/Helvetica.ttc']
-        for p in candidates:
-            try:
-                return ImageFont.truetype(p, size)
-            except Exception:
-                pass
-        try:
-            return ImageFont.load_default(size=size)
-        except Exception:
-            return ImageFont.load_default()
+    # ── styles ────────────────────────────────────────────────────────────────
+    _base = _RL_SS()['Normal']
+    def _S(n, **kw):
+        return _RL_PS(n, parent=_base, **kw)
 
-    fnt_title   = _font(22, bold=True)
-    fnt_sub     = _font(15)
-    fnt_label   = _font(14, bold=True)
-    fnt_score   = _font(20, bold=True)
-    fnt_reason  = _font(13)
-    fnt_small   = _font(12)
-    fnt_footer  = _font(11)
-    fnt_overall = _font(36, bold=True)
-    fnt_badge   = _font(13)
+    _sPhot  = _S('p_phot',  fontSize=18, fontName='Helvetica-Bold',   textColor=_WHITE,    leading=22)
+    _sTitle = _S('p_title', fontSize=12, fontName='Helvetica',         textColor=_RL_C.HexColor('#B0C8E8'), leading=16)
+    _sRank  = _S('p_rank',  fontSize=10, fontName='Helvetica',         textColor=_RL_C.HexColor('#8AAAD0'), leading=14)
+    _sDLbl  = _S('p_dlbl',  fontSize=11, fontName='Helvetica-Bold',   textColor=_SL_BLUE,  leading=14)
+    _sDScr  = _S('p_dscr',  fontSize=16, fontName='Helvetica-Bold',   textColor=_SL_BLUE,  leading=18, alignment=_RL_RIGHT)
+    _sReas  = _S('p_reas',  fontSize=10, fontName='Helvetica',         textColor=_SL_GREY,  leading=14, spaceAfter=2)
+    _sFoot  = _S('p_foot',  fontSize=8,  fontName='Helvetica',         textColor=_SL_FOG,   leading=10)
+    _sFootR = _S('p_footr', fontSize=8,  fontName='Helvetica',         textColor=_SL_FOG,   leading=10, alignment=_RL_RIGHT)
+    _sOvBig = _S('p_ovbig', fontSize=32, fontName='Helvetica-Bold',   textColor=_WHITE,    alignment=_RL_CTR, leading=36)
+    _sOvLbl = _S('p_ovlbl', fontSize=9,  fontName='Helvetica',         textColor=_RL_C.HexColor('#B0C8E8'), alignment=_RL_CTR, leading=11)
 
-    dims = [
-        ('Degree of Difficulty', e.get('dod') or 0,
-         e.get('dod_situational_reason') or e.get('dod_technical_reason') or ''),
-        ('Disruption',           e.get('disruption') or 0, e.get('disruption_reason') or ''),
-        ('Decisive Moment',      e.get('dm') or 0,         e.get('dm_reason') or ''),
-        ('Wonder',               e.get('wonder') or 0,     e.get('wonder_reason') or ''),
-        ('Affective Quotient',   e.get('aq') or 0,         e.get('aq_reason') or ''),
-    ]
+    buf = _io_rl.BytesIO()
+    doc = _RL_Doc(buf, pagesize=_RL_A4,
+                  leftMargin=15*_mm, rightMargin=15*_mm,
+                  topMargin=12*_mm, bottomMargin=12*_mm,
+                  title=f"SL Scorecard – {e.get('photographer','')}")
 
-    # ── helper: wrap text to max width ───────────────────────────────────────
-    def _wrap(draw, text, font, max_w):
-        words = str(text).split()
-        lines, cur = [], []
-        for w in words:
-            test = ' '.join(cur + [w])
-            try:
-                tw = draw.textlength(test, font=font)
-            except Exception:
-                tw = len(test) * 7
-            if tw <= max_w or not cur:
-                cur.append(w)
-            else:
-                lines.append(' '.join(cur))
-                cur = [w]
-        if cur:
-            lines.append(' '.join(cur))
-        return lines
-
-    # ── first pass: measure total height ─────────────────────────────────────
-    # Header: 110px, each dim row: ROW_H, story row: 60, footer: 50
-    HEADER_H = 110
-    STORY_H  = 60
-    FOOTER_H = 50
-    total_h = HEADER_H + len(dims) * ROW_H + STORY_H + FOOTER_H + PAD
-
-    img  = Image.new('RGB', (W, total_h), C_BG)
-    draw = ImageDraw.Draw(img)
-
-    # ── card border ───────────────────────────────────────────────────────────
-    draw.rectangle([0, 0, W - 1, total_h - 1], outline=C_BORDER, width=2)
+    fl = []   # flowables list
 
     # ── header block ──────────────────────────────────────────────────────────
-    draw.rectangle([0, 0, W, HEADER_H], fill=C_HEADER)
+    photographer = e.get('photographer') or 'Unknown'
+    img_title    = e.get('image_title') or e.get('title') or ''
+    rank_str     = f"Standing #{e.get('rank')}" if e.get('rank') else ''
+    overall      = e.get('overall') or 0
 
-    # overall badge (right side)
-    overall_val = e.get('overall') or 0
-    badge_txt   = f'{overall_val:.1f}'
-    badge_x     = W - PAD - 70
-    draw.ellipse([badge_x, 12, badge_x + 70, 82], fill=C_BAR_FILL)
-    try:
-        bw = draw.textlength(badge_txt, font=fnt_overall)
-    except Exception:
-        bw = len(badge_txt) * 18
-    draw.text((badge_x + (70 - bw) / 2, 18), badge_txt, font=fnt_overall, fill=C_HEADER_TXT)
-    draw.text((badge_x + 8, 85), 'Overall', font=fnt_badge, fill=(180, 205, 240))
+    left_cell = [_RL_P(photographer, _sPhot), _RL_P(img_title, _sTitle)]
+    if rank_str:
+        left_cell.append(_RL_P(rank_str, _sRank))
+    right_cell = [_RL_P(f'{overall:.1f}', _sOvBig), _RL_P('Overall', _sOvLbl)]
 
-    # photographer + title
-    photographer = e.get('photographer') or ''
-    title        = e.get('image_title') or ''
-    rank_txt     = f'Standing #{e.get("rank") or "-"}' if e.get('rank') else ''
-    draw.text((PAD, 18), photographer, font=fnt_title, fill=C_HEADER_TXT)
-    draw.text((PAD, 48), title,        font=fnt_sub,   fill=(180, 205, 240))
-    if rank_txt:
-        draw.text((PAD, 72), rank_txt, font=fnt_small, fill=(160, 190, 230))
+    hdr = _RL_T([[left_cell, right_cell]],
+                colWidths=[_W - 28*_mm, 28*_mm])
+    hdr.setStyle(_RL_TS([
+        ('BACKGROUND', (0,0), (-1,-1), _SL_BLUE),
+        ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
+        ('LEFTPADDING',(0,0),(0,-1), 6*_mm),
+        ('RIGHTPADDING',(-1,0),(-1,-1), 3*_mm),
+        ('TOPPADDING', (0,0),(-1,-1), 5*_mm),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 5*_mm),
+    ]))
+    fl.append(hdr)
+    fl.append(_RL_Sp(1, 4*_mm))
 
-    # ── dimension rows ────────────────────────────────────────────────────────
-    y = HEADER_H + 10
+    # ── five dimension rows ───────────────────────────────────────────────────
+    _dod_reason = ((e.get('dod_situational_reason') or '') + ' ' +
+                   (e.get('dod_technical_reason') or '')).strip()
+    dims = [
+        ('Degree of Difficulty', e.get('dod') or 0,        _dod_reason),
+        ('Disruption',           e.get('disruption') or 0, e.get('disruption_reason') or ''),
+        ('Decisive Moment',      e.get('dm') or 0,          e.get('dm_reason') or ''),
+        ('Wonder',               e.get('wonder') or 0,      e.get('wonder_reason') or ''),
+        ('Affective Quotient',   e.get('aq') or 0,          e.get('aq_reason') or ''),
+    ]
+    _BAR_H = 4*_mm
+
     for dim_name, dim_score, dim_reason in dims:
-        # divider
-        draw.line([(PAD, y), (W - PAD, y)], fill=C_DIVIDER, width=1)
-        y += 10
+        lbl_row = _RL_T(
+            [[_RL_P(dim_name, _sDLbl), _RL_P(f'{dim_score:.1f}', _sDScr)]],
+            colWidths=[_W - 16*_mm, 16*_mm])
+        lbl_row.setStyle(_RL_TS([
+            ('VALIGN',(0,0),(-1,-1),'BOTTOM'),
+            ('LEFTPADDING',(0,0),(-1,-1),0), ('RIGHTPADDING',(0,0),(-1,-1),0),
+            ('TOPPADDING',(0,0),(-1,-1),0),  ('BOTTOMPADDING',(0,0),(-1,-1),1),
+        ]))
+        fill_w  = max(0.5*_mm, _W * dim_score / 10)
+        empty_w = _W - fill_w
+        bar = _RL_T([['', '']], colWidths=[fill_w, empty_w], rowHeights=[_BAR_H])
+        bar.setStyle(_RL_TS([
+            ('BACKGROUND',(0,0),(0,0), _SL_MID),
+            ('BACKGROUND',(1,0),(1,0), _SL_LIGHT),
+            ('LEFTPADDING',(0,0),(-1,-1),0), ('RIGHTPADDING',(0,0),(-1,-1),0),
+            ('TOPPADDING',(0,0),(-1,-1),0),  ('BOTTOMPADDING',(0,0),(-1,-1),0),
+        ]))
+        fl.append(_RL_KT([
+            lbl_row,
+            _RL_Sp(1, 1*_mm),
+            bar,
+            _RL_Sp(1, 1.5*_mm),
+            _RL_P(dim_reason or ' ', _sReas),
+            _RL_Sp(1, 3*_mm),
+            _RL_HR(width=_W, thickness=0.5, color=_SL_LIGHT),
+            _RL_Sp(1, 3*_mm),
+        ]))
 
-        # label + score
-        draw.text((PAD, y), dim_name, font=fnt_label, fill=C_DIM_LABEL)
-        score_txt = f'{dim_score:.1f}'
-        try:
-            sw = draw.textlength(score_txt, font=fnt_score)
-        except Exception:
-            sw = len(score_txt) * 10
-        draw.text((W - PAD - sw, y - 4), score_txt, font=fnt_score, fill=C_SCORE_TXT)
-
-        # score bar
-        bar_y = y + 26
-        bar_x = PAD
-        draw.rectangle([bar_x, bar_y, bar_x + BAR_W, bar_y + BAR_H], fill=C_BAR_BG)
-        fill_w = int(BAR_W * min(dim_score, 10) / 10)
-        if fill_w > 0:
-            draw.rectangle([bar_x, bar_y, bar_x + fill_w, bar_y + BAR_H], fill=C_BAR_FILL)
-
-        # reason text (wrapped)
-        reason_x  = PAD
-        reason_y  = bar_y + BAR_H + 8
-        reason_lines = _wrap(draw, dim_reason, fnt_reason, W - PAD * 2 - 20)
-        for ln in reason_lines[:3]:   # max 3 lines per dim
-            draw.text((reason_x, reason_y), ln, font=fnt_reason, fill=C_REASON)
-            reason_y += 17
-
-        y = bar_y + BAR_H + 8 + 3 * 17 + 8  # fixed row bottom (keeps alignment)
-
-    # ── story row ─────────────────────────────────────────────────────────────
-    draw.line([(PAD, y), (W - PAD, y)], fill=C_DIVIDER, width=1)
-    y += 12
-    story_raw = str(e.get('story') or '').strip().lower()
-    story_label = {'yes': 'Story Transfer: Yes', 'no': 'Story Transfer: No',
+    # ── story transfer block ──────────────────────────────────────────────────
+    story_raw   = str(e.get('story') or '').strip().lower()
+    story_label = {'yes': 'Story Transfer: Yes',
+                   'no':  'Story Transfer: No',
                    'not_sure': 'Story Transfer: Not sure'}.get(story_raw, f'Story: {story_raw}')
-    story_col = C_STORY_YES if story_raw == 'yes' else (C_STORY_NO if story_raw == 'no' else C_STORY_NS)
-    draw.text((PAD, y), story_label, font=fnt_label, fill=story_col)
-    story_reason_lines = _wrap(draw, e.get('story_reason') or '', fnt_reason, W - PAD * 2)
-    sy = y + 22
-    for ln in story_reason_lines[:2]:
-        draw.text((PAD, sy), ln, font=fnt_reason, fill=C_REASON)
-        sy += 16
+    story_col   = _SL_GREEN if story_raw == 'yes' else (_SL_RED if story_raw == 'no' else _SL_AMBER)
+    _sStory     = _S('p_story', fontSize=11, fontName='Helvetica-Bold', textColor=story_col, leading=14)
+    fl.append(_RL_KT([
+        _RL_P(story_label, _sStory),
+        _RL_Sp(1, 1*_mm),
+        _RL_P(e.get('story_reason') or ' ', _sReas),
+        _RL_Sp(1, 5*_mm),
+    ]))
 
-    # ── footer ─────────────────────────────────────────────────────────────────
-    fy = total_h - FOOTER_H + 14
-    draw.line([(PAD, fy - 10), (W - PAD, fy - 10)], fill=C_DIVIDER, width=1)
-    draw.text((PAD, fy), 'shutterleague.com  ·  Making Images Matter', font=fnt_footer, fill=C_FOOTER)
-    run_at_str = str(e.get('run_at') or '')[:16]
-    try:
-        fw = draw.textlength(run_at_str, font=fnt_footer)
-    except Exception:
-        fw = len(run_at_str) * 6
-    draw.text((W - PAD - fw, fy), run_at_str, font=fnt_footer, fill=C_FOOTER)
+    # ── footer ────────────────────────────────────────────────────────────────
+    run_at = str(e.get('run_at') or '')[:16]
+    ftr = _RL_T(
+        [[_RL_P('shutterleague.com  ·  Making Images Matter', _sFoot),
+          _RL_P(run_at, _sFootR)]],
+        colWidths=[_W * 0.6, _W * 0.4])
+    ftr.setStyle(_RL_TS([
+        ('LEFTPADDING',(0,0),(-1,-1),0), ('RIGHTPADDING',(0,0),(-1,-1),0),
+        ('TOPPADDING',(0,0),(-1,-1),0),  ('BOTTOMPADDING',(0,0),(-1,-1),0),
+    ]))
+    fl.append(_RL_HR(width=_W, thickness=0.5, color=_SL_LIGHT))
+    fl.append(_RL_Sp(1, 2*_mm))
+    fl.append(ftr)
 
-    # ── encode to PNG bytes ───────────────────────────────────────────────────
-    buf = _io_sc.BytesIO()
-    img.save(buf, format='PNG', optimize=True)
+    doc.build(fl)
     return buf.getvalue()
 
 
 @app.route('/admin/contest-judge/new-eval-scorecard/<int:entry_id>')
 @login_required
 def admin_contest_judge_new_eval_scorecard(entry_id):
-    """Download the trial evaluation scorecard for one picture as a PNG image.
-    Renders the self-contained HTML scorecard card via Playwright headless Chromium.
-    Falls back to returning the HTML with an error header if Playwright is unavailable,
-    so the Railway console shows exactly what is missing. v182.88."""
+    """Download the trial evaluation scorecard for one picture as a PDF.
+    Builds the PDF with reportlab (already installed on Railway) -- full A4 page,
+    no text cutoff. Falls back to the self-contained HTML file if reportlab is missing.
+    v182.90."""
     if current_user.role != 'admin':
         abort(403)
     _cj_new_eval_ensure_table()
@@ -19329,21 +19288,19 @@ def admin_contest_judge_new_eval_scorecard(entry_id):
     e = _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank)
     safe_title = (pic.image_title or str(entry_id)).replace('/', '_').replace(' ', '_')
     try:
-        png_bytes = _ne_scorecard_pillow_png(e)
+        pdf_bytes = _ne_scorecard_reportlab_pdf(e)
         return app.response_class(
-            png_bytes, mimetype='image/png',
-            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.png"'})
+            pdf_bytes, mimetype='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.pdf"'})
     except RuntimeError as _rte:
-        # Log clearly so the Railway console shows what is needed (Pillow missing etc.)
+        # Log clearly to Railway console so admin knows what is missing
         app.logger.error(str(_rte))
-        # Graceful fallback: HTML so the admin can still print-to-PDF
-        # Note: no custom X-SL-Scorecard-Error header -- gunicorn rejects non-ASCII header values
+        # Graceful fallback: self-contained HTML -- admin can open and print-to-PDF in browser
+        # No custom X-SL-Scorecard-Error header (gunicorn rejects non-ASCII header values)
         html = _ne_scorecard_html(e)
         return app.response_class(
             html, mimetype='text/html',
-            headers={
-                'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"',
-            })
+            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"'})
 
 
 @app.route('/admin/contest-judge/new-eval-scorecard-zip/<path:batch_ref>')
