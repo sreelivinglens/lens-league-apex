@@ -1,3 +1,4 @@
+# SL-VERSION: 182.92 (Session 236, 2026-10-04 -- NEW (staging only): two new trial-evaluation PDF routes, both with photo snapshots fetched from R2. (1) GET /admin/contest-judge/new-eval-top10-pdf/<batch_ref> -- Top 10 summary PDF (reportlab A4): ranked table of the top 10 pictures, each with a 50mm photo thumbnail embedded from R2, photographer name, image title, overall score, strongest dimension highlighted green, weakest flagged red. (2) GET /admin/contest-judge/new-eval-photographer-report/<batch_ref> -- Per-photographer feedback PDF (one section per photographer, sorted by standing): all images evaluated, dimension averages, strongest and weakest dimension called out, one line of specific improvement advice drawn from the weakest dimension reason, photo thumbnail per image. Both use the same R2 download pattern as 182.35/182.32. Template admin_contest_judge.html updated to 3.7 with two new buttons in the trial action bar. RETAINS 182.91.)
 # SL-VERSION: 182.91 (Session 236, 2026-10-04 -- CHANGE (staging only): individual scorecard download now serves the full _ne_scorecard_html(e) page (photo, dimension bars, principles, story -- exactly what the admin sees on screen) opened inline in a new browser tab, with window.print() auto-called on load so the Save-as-PDF dialog appears immediately. No new libraries. The button target="_blank" already opens a new tab. Removes the reportlab PDF and Pillow PNG approaches (both lacked the photo and full layout). ZIP route unchanged. RETAINS 182.90.)
 # SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
 # SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
@@ -19362,6 +19363,455 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
     return app.response_class(
         buf.read(), mimetype='application/zip',
         headers={'Content-Disposition': f'attachment; filename="SL_Scorecards_{safe_ref}.zip"'})
+
+
+def _ne_fetch_photo_bytes(thumb_path):
+    """Fetch one photo from R2 as raw bytes for embedding in reportlab. Returns bytes or None.
+    Uses storage.download_file() + storage.key_from_url() -- same as 182.35 ZIP route.
+    v182.92."""
+    if not thumb_path:
+        return None
+    try:
+        import tempfile as _tmpf
+        import storage as _ne_st
+        _key = _ne_st.key_from_url(thumb_path)
+        _tmp = _tmpf.NamedTemporaryFile(suffix='.jpg', delete=False)
+        _tmp.close()
+        ok = _ne_st.download_file(_key, _tmp.name)
+        if not ok:
+            _cj_os.unlink(_tmp.name)
+            return None
+        with open(_tmp.name, 'rb') as fh:
+            data = fh.read()
+        _cj_os.unlink(_tmp.name)
+        return data
+    except Exception as _ex:
+        app.logger.warning('[ne_fetch_photo] failed: %s', _ex)
+        return None
+
+
+def _ne_rl_photo_flowable(photo_bytes, width_mm, height_mm):
+    """Convert raw photo bytes to a reportlab Image flowable. Returns None on failure. v182.92."""
+    if not photo_bytes:
+        return None
+    try:
+        from reportlab.platypus import Image as _RLImg
+        import io as _bio
+        return _RLImg(_bio.BytesIO(photo_bytes), width=width_mm, height=height_mm, kind='proportional')
+    except Exception as _ex:
+        app.logger.warning('[ne_rl_photo] failed: %s', _ex)
+        return None
+
+
+def _ne_top10_pdf(batch_ref):
+    """Build the Top 10 summary PDF for a trial evaluation batch. Returns raw PDF bytes. v182.92."""
+    from reportlab.lib.pagesizes import A4 as _A4
+    from reportlab.lib import colors as _C
+    from reportlab.lib.units import mm as _mm
+    from reportlab.platypus import (SimpleDocTemplate as _Doc, Paragraph as _P,
+                                    Spacer as _Sp, Table as _T, TableStyle as _TS,
+                                    HRFlowable as _HR, KeepTogether as _KT)
+    from reportlab.lib.styles import getSampleStyleSheet as _SS, ParagraphStyle as _PS
+    from reportlab.lib.enums import TA_CENTER as _CTR, TA_RIGHT as _RGHT
+    import io as _io
+
+    _BLUE  = _C.HexColor('#173F75')
+    _MID   = _C.HexColor('#2979C9')
+    _LIGHT = _C.HexColor('#DCE8F5')
+    _GREY  = _C.HexColor('#3C3C3C')
+    _GREEN = _C.HexColor('#1A6B3C')
+    _RED   = _C.HexColor('#B43232')
+    _LGREY = _C.HexColor('#F5F7FA')
+    _FOG   = _C.HexColor('#969696')
+    _WHITE = _C.white
+
+    _base = _SS()['Normal']
+    def _S(n, **kw): return _PS(n, parent=_base, **kw)
+    _sHdr   = _S('hdr',   fontSize=20, fontName='Helvetica-Bold', textColor=_WHITE, leading=24)
+    _sSubH  = _S('subh',  fontSize=10, fontName='Helvetica',      textColor=_C.HexColor('#B0C8E8'), leading=13)
+    _sRank  = _S('rank',  fontSize=22, fontName='Helvetica-Bold', textColor=_BLUE,  alignment=_CTR, leading=26)
+    _sName  = _S('name',  fontSize=12, fontName='Helvetica-Bold', textColor=_GREY,  leading=15)
+    _sTitle = _S('title', fontSize=10, fontName='Helvetica',      textColor=_FOG,   leading=13)
+    _sScore = _S('score', fontSize=20, fontName='Helvetica-Bold', textColor=_BLUE,  alignment=_CTR, leading=24)
+    _sScLbl = _S('sclbl', fontSize=8,  fontName='Helvetica',      textColor=_FOG,   alignment=_CTR, leading=10)
+    _sDim   = _S('dim',   fontSize=9,  fontName='Helvetica-Bold', textColor=_GREEN, leading=12)
+    _sWeak  = _S('weak',  fontSize=9,  fontName='Helvetica-Bold', textColor=_RED,   leading=12)
+    _sFoot  = _S('foot',  fontSize=8,  fontName='Helvetica',      textColor=_FOG,   leading=10)
+    _sFootR = _S('footr', fontSize=8,  fontName='Helvetica',      textColor=_FOG,   alignment=_RGHT, leading=10)
+    _sTitle2= _S('t2',    fontSize=10, fontName='Helvetica',      textColor=_GREY,  leading=13)
+
+    # ── gather top 10 entries ─────────────────────────────────────────────────
+    rows = db.session.execute(db.text("""
+        SELECT ne.id AS eid, ne.overall, ne.dod, ne.disruption, ne.dm, ne.wonder, ne.aq,
+               ne.raw_json, ne.run_at,
+               b.filename, b.image_title, b.photographer, b.thumb_path
+        FROM contest_judge_new_eval ne
+        JOIN contest_judge_batch b ON b.id = ne.entry_id
+        WHERE b.batch_ref = :br
+          AND ne.id IN (
+              SELECT MAX(id) FROM contest_judge_new_eval WHERE entry_id = ne.entry_id
+          )
+        ORDER BY ne.overall DESC NULLS LAST
+        LIMIT 10
+    """), {'br': batch_ref}).fetchall()
+
+    if not rows:
+        raise ValueError('No trial results found for this batch.')
+
+    _DIM_NAMES = ['Degree of Difficulty', 'Disruption', 'Decisive Moment', 'Wonder', 'Affective Quotient']
+    _DIM_KEYS  = ['dod', 'disruption', 'dm', 'wonder', 'aq']
+
+    buf = _io.BytesIO()
+    _W = 210*_mm - 24*_mm   # A4 usable width
+    doc = _Doc(buf, pagesize=_A4,
+               leftMargin=12*_mm, rightMargin=12*_mm,
+               topMargin=12*_mm, bottomMargin=12*_mm,
+               title=f'SL Top 10 – {batch_ref}')
+    fl = []
+
+    # ── page header ───────────────────────────────────────────────────────────
+    hdr_tbl = _T([[
+        [_P('Top 10 — New Evaluation Trial', _sHdr),
+         _P(batch_ref, _sSubH)],
+        _P('shutterleague.com', _sSubH)
+    ]], colWidths=[_W * 0.7, _W * 0.3])
+    hdr_tbl.setStyle(_TS([
+        ('BACKGROUND', (0,0), (-1,-1), _BLUE),
+        ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
+        ('LEFTPADDING',(0,0),(0,-1), 5*_mm),
+        ('RIGHTPADDING',(-1,0),(-1,-1), 4*_mm),
+        ('TOPPADDING', (0,0),(-1,-1), 5*_mm),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 5*_mm),
+    ]))
+    fl.append(hdr_tbl)
+    fl.append(_Sp(1, 5*_mm))
+
+    for rank_i, row in enumerate(rows, 1):
+        dim_vals = [getattr(row, k) or 0 for k in _DIM_KEYS]
+        best_i   = dim_vals.index(max(dim_vals))
+        worst_i  = dim_vals.index(min(dim_vals))
+
+        # photo
+        photo_bytes = _ne_fetch_photo_bytes(row.thumb_path)
+        photo_fl = _ne_rl_photo_flowable(photo_bytes, 50*_mm, 50*_mm)
+
+        # rank + score cell
+        rank_cell = [
+            _P(f'#{rank_i}', _sRank),
+            _Sp(1, 2*_mm),
+            _P(f'{(row.overall or 0):.2f}', _sScore),
+            _P('overall', _sScLbl),
+        ]
+
+        # info cell
+        info_cell = [
+            _P(row.photographer or 'Unknown', _sName),
+            _P(row.image_title or row.filename or '', _sTitle),
+            _Sp(1, 3*_mm),
+        ]
+        for di, (dname, dval) in enumerate(zip(_DIM_NAMES, dim_vals)):
+            label = f'▲ {dname}: {dval:.1f}' if di == best_i else (
+                    f'▼ {dname}: {dval:.1f}' if di == worst_i else
+                    f'{dname}: {dval:.1f}')
+            style = _sDim if di == best_i else (_sWeak if di == worst_i else _sTitle2)
+            info_cell.append(_P(label, style))
+
+        # build row: [photo | rank+score | info]
+        pic_cell = [photo_fl, _Sp(1, 2*_mm)] if photo_fl else [_P('—', _sTitle)]
+        entry_tbl = _T(
+            [[pic_cell, rank_cell, info_cell]],
+            colWidths=[52*_mm, 28*_mm, _W - 80*_mm]
+        )
+        entry_tbl.setStyle(_TS([
+            ('VALIGN',      (0,0), (-1,-1), 'TOP'),
+            ('BACKGROUND',  (0,0), (-1,-1), _LGREY if rank_i % 2 == 0 else _WHITE),
+            ('LEFTPADDING', (0,0), (-1,-1), 3*_mm),
+            ('RIGHTPADDING',(0,0), (-1,-1), 3*_mm),
+            ('TOPPADDING',  (0,0), (-1,-1), 4*_mm),
+            ('BOTTOMPADDING',(0,0),(-1,-1), 4*_mm),
+        ]))
+        fl.append(_KT([entry_tbl, _Sp(1, 2*_mm)]))
+
+    # ── footer ────────────────────────────────────────────────────────────────
+    fl.append(_HR(width=_W, thickness=0.5, color=_LIGHT))
+    fl.append(_Sp(1, 2*_mm))
+    run_date = str(rows[0].run_at or '')[:16] if rows else ''
+    ftr = _T([[
+        _P('Shutter League  ·  shutterleague.com  ·  Making Images Matter', _sFoot),
+        _P(run_date, _sFootR)
+    ]], colWidths=[_W * 0.65, _W * 0.35])
+    ftr.setStyle(_TS([
+        ('LEFTPADDING',(0,0),(-1,-1),0), ('RIGHTPADDING',(0,0),(-1,-1),0),
+        ('TOPPADDING',(0,0),(-1,-1),0),  ('BOTTOMPADDING',(0,0),(-1,-1),0),
+    ]))
+    fl.append(ftr)
+
+    doc.build(fl)
+    return buf.getvalue()
+
+
+def _ne_photographer_report_pdf(batch_ref):
+    """Build a per-photographer feedback PDF for the trial evaluation. One section per
+    photographer, sorted by best standing. Each section: photo thumbnail + all evaluated
+    images, dimension averages, strongest + weakest dimension called out, one line of
+    specific improvement advice from the weakest dimension reason. v182.92."""
+    from reportlab.lib.pagesizes import A4 as _A4
+    from reportlab.lib import colors as _C
+    from reportlab.lib.units import mm as _mm
+    from reportlab.platypus import (SimpleDocTemplate as _Doc, Paragraph as _P,
+                                    Spacer as _Sp, Table as _T, TableStyle as _TS,
+                                    HRFlowable as _HR, KeepTogether as _KT,
+                                    PageBreak as _PB)
+    from reportlab.lib.styles import getSampleStyleSheet as _SS, ParagraphStyle as _PS
+    from reportlab.lib.enums import TA_CENTER as _CTR, TA_RIGHT as _RGHT
+    import io as _io
+
+    _BLUE  = _C.HexColor('#173F75')
+    _MID   = _C.HexColor('#2979C9')
+    _LIGHT = _C.HexColor('#DCE8F5')
+    _GREY  = _C.HexColor('#3C3C3C')
+    _GREEN = _C.HexColor('#1A6B3C')
+    _RED   = _C.HexColor('#B43232')
+    _AMBER = _C.HexColor('#785A1E')
+    _FOG   = _C.HexColor('#969696')
+    _LGREY = _C.HexColor('#F5F7FA')
+    _WHITE = _C.white
+
+    _base = _SS()['Normal']
+    def _S(n, **kw): return _PS(n, parent=_base, **kw)
+    _sHdr   = _S('rhdr',  fontSize=18, fontName='Helvetica-Bold', textColor=_WHITE, leading=22)
+    _sSubH  = _S('rsubh', fontSize=9,  fontName='Helvetica',      textColor=_C.HexColor('#B0C8E8'), leading=12)
+    _sPhotN = _S('rphn',  fontSize=16, fontName='Helvetica-Bold', textColor=_BLUE, leading=20)
+    _sScore = _S('rsc',   fontSize=24, fontName='Helvetica-Bold', textColor=_BLUE, alignment=_CTR, leading=28)
+    _sScLbl = _S('rsclbl',fontSize=8,  fontName='Helvetica',      textColor=_FOG,  alignment=_CTR, leading=10)
+    _sDimSt = _S('rdimst',fontSize=11, fontName='Helvetica-Bold', textColor=_GREEN, leading=14)
+    _sDimWk = _S('rdimwk',fontSize=11, fontName='Helvetica-Bold', textColor=_RED,   leading=14)
+    _sAdvice= _S('radv',  fontSize=10, fontName='Helvetica',      textColor=_AMBER, leading=14, spaceAfter=2)
+    _sImgT  = _S('rimt',  fontSize=10, fontName='Helvetica-Bold', textColor=_GREY,  leading=13)
+    _sImgSc = _S('rimsc', fontSize=9,  fontName='Helvetica',      textColor=_FOG,   leading=12)
+    _sDimR  = _S('rdimr', fontSize=9,  fontName='Helvetica',      textColor=_GREY,  leading=12)
+    _sFoot  = _S('rfoot', fontSize=8,  fontName='Helvetica',      textColor=_FOG,   leading=10)
+    _sFootR = _S('rfootr',fontSize=8,  fontName='Helvetica',      textColor=_FOG,   alignment=_RGHT, leading=10)
+    _sSecHd = _S('rsech', fontSize=13, fontName='Helvetica-Bold', textColor=_BLUE,  leading=16)
+    _sNote  = _S('rnote', fontSize=9,  fontName='Helvetica',      textColor=_FOG,   leading=12)
+
+    # ── gather all trial entries for this batch ───────────────────────────────
+    rows = db.session.execute(db.text("""
+        SELECT ne.id AS eid, ne.overall, ne.dod, ne.disruption, ne.dm, ne.wonder, ne.aq,
+               ne.raw_json, ne.run_at,
+               b.id AS entry_id, b.filename, b.image_title, b.photographer, b.thumb_path
+        FROM contest_judge_new_eval ne
+        JOIN contest_judge_batch b ON b.id = ne.entry_id
+        WHERE b.batch_ref = :br
+          AND ne.id IN (
+              SELECT MAX(id) FROM contest_judge_new_eval WHERE entry_id = ne.entry_id
+          )
+        ORDER BY b.photographer, ne.overall DESC NULLS LAST
+    """), {'br': batch_ref}).fetchall()
+
+    if not rows:
+        raise ValueError('No trial results found for this batch.')
+
+    # group by photographer
+    from collections import OrderedDict as _OD
+    phot_map = _OD()
+    for r in rows:
+        pname = r.photographer or 'Unknown'
+        phot_map.setdefault(pname, []).append(r)
+
+    _DIM_NAMES = ['Degree of Difficulty', 'Disruption', 'Decisive Moment', 'Wonder', 'Affective Quotient']
+    _DIM_KEYS  = ['dod', 'disruption', 'dm', 'wonder', 'aq']
+    _DIM_ADVICE = {
+        'dod':        'Challenge yourself with harder technical or situational conditions — a difficult moment, tricky light, or an unexpected angle that few could have captured.',
+        'disruption': 'Look for images that break the expected — a colour that jars, a form that defies, a moment that rewrites the scene. Work the edges of your genre conventions.',
+        'dm':         'Train yourself to anticipate the peak moment rather than chase it. Study the gesture, the glance, the split second before action resolves.',
+        'wonder':     'Ask yourself whether your image rewards a second look. Add a layer of visual surprise — an unexpected juxtaposition, a hidden detail, a poetic contradiction.',
+        'aq':         'Before pressing the shutter, ask what emotion you want the viewer to feel. Let that intent shape every technical choice — exposure, distance, framing, timing.',
+    }
+
+    # sort photographers by their best overall score
+    phot_best = {pname: max(r.overall or 0 for r in prows) for pname, prows in phot_map.items()}
+    sorted_phots = sorted(phot_map.keys(), key=lambda p: -phot_best[p])
+
+    buf = _io.BytesIO()
+    _W = 210*_mm - 24*_mm
+    doc = _Doc(buf, pagesize=_A4,
+               leftMargin=12*_mm, rightMargin=12*_mm,
+               topMargin=12*_mm, bottomMargin=12*_mm,
+               title=f'SL Feedback Letters – {batch_ref}')
+    fl = []
+
+    # ── cover header ──────────────────────────────────────────────────────────
+    cov_tbl = _T([[
+        [_P('Evaluation Feedback — New Trial', _sHdr),
+         _P(batch_ref, _sSubH)],
+        _P(f'{len(rows)} images · {len(phot_map)} photographers', _sSubH)
+    ]], colWidths=[_W * 0.72, _W * 0.28])
+    cov_tbl.setStyle(_TS([
+        ('BACKGROUND', (0,0), (-1,-1), _BLUE),
+        ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
+        ('LEFTPADDING',(0,0),(0,-1), 5*_mm),
+        ('RIGHTPADDING',(-1,0),(-1,-1), 4*_mm),
+        ('TOPPADDING', (0,0),(-1,-1), 5*_mm),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 5*_mm),
+    ]))
+    fl.append(cov_tbl)
+    fl.append(_Sp(1, 6*_mm))
+
+    for phot_idx, pname in enumerate(sorted_phots):
+        prows = phot_map[pname]
+        if phot_idx > 0:
+            fl.append(_PB())   # one page per photographer
+
+        # ── photographer header ───────────────────────────────────────────────
+        avg_overall = sum(r.overall or 0 for r in prows) / len(prows)
+        dim_avgs = {}
+        for k in _DIM_KEYS:
+            dim_avgs[k] = sum(getattr(r, k) or 0 for r in prows) / len(prows)
+        best_key  = max(dim_avgs, key=dim_avgs.get)
+        worst_key = min(dim_avgs, key=dim_avgs.get)
+        best_name  = _DIM_NAMES[_DIM_KEYS.index(best_key)]
+        worst_name = _DIM_NAMES[_DIM_KEYS.index(worst_key)]
+        advice_text = _DIM_ADVICE.get(worst_key, '')
+
+        # pull one sentence of actual reason from weakest dimension across images
+        for r in prows:
+            try:
+                rj = json.loads(r.raw_json) if isinstance(r.raw_json, str) else (r.raw_json or {})
+                raw_reason = rj.get(f'{worst_key}_reason') or rj.get(f'{worst_key}_situational_reason') or ''
+                if raw_reason:
+                    first_sent = raw_reason.split('.')[0].strip()
+                    if len(first_sent) > 15:
+                        advice_text = f'The engine noted: "{first_sent}." To improve: {_DIM_ADVICE.get(worst_key, "")}'
+                        break
+            except Exception:
+                pass
+
+        # summary panel
+        sum_left = [
+            _P(pname, _sPhotN),
+            _Sp(1, 2*_mm),
+            _P(f'{len(prows)} image{"" if len(prows)==1 else "s"} evaluated', _sNote),
+        ]
+        sum_right = [
+            _P(f'{avg_overall:.2f}', _sScore),
+            _P('avg overall', _sScLbl),
+        ]
+        sum_tbl = _T([[sum_left, sum_right]], colWidths=[_W - 28*_mm, 28*_mm])
+        sum_tbl.setStyle(_TS([
+            ('BACKGROUND', (0,0), (-1,-1), _LGREY),
+            ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
+            ('LEFTPADDING',(0,0),(0,-1), 4*_mm),
+            ('RIGHTPADDING',(-1,0),(-1,-1), 3*_mm),
+            ('TOPPADDING', (0,0),(-1,-1), 4*_mm),
+            ('BOTTOMPADDING',(0,0),(-1,-1), 4*_mm),
+            ('BOX', (0,0),(-1,-1), 0.5, _LIGHT),
+        ]))
+        fl.append(sum_tbl)
+        fl.append(_Sp(1, 3*_mm))
+
+        # strengths / weaknesses
+        fl.append(_KT([
+            _P(f'▲ Strongest dimension: {best_name} ({dim_avgs[best_key]:.1f})', _sDimSt),
+            _Sp(1, 1*_mm),
+            _P(f'▼ Area to develop: {worst_name} ({dim_avgs[worst_key]:.1f})', _sDimWk),
+            _Sp(1, 2*_mm),
+            _P(f'Advice: {advice_text}', _sAdvice),
+            _Sp(1, 4*_mm),
+        ]))
+
+        # ── per-image entries ─────────────────────────────────────────────────
+        fl.append(_P('Images evaluated in this open call:', _sSecHd))
+        fl.append(_Sp(1, 2*_mm))
+
+        for img_i, r in enumerate(prows):
+            photo_bytes = _ne_fetch_photo_bytes(r.thumb_path)
+            photo_fl = _ne_rl_photo_flowable(photo_bytes, 45*_mm, 45*_mm)
+
+            img_title_str = r.image_title or r.filename or ''
+            dim_lines = []
+            for k, dname in zip(_DIM_KEYS, _DIM_NAMES):
+                val = getattr(r, k) or 0
+                marker = '▲' if k == best_key else ('▼' if k == worst_key else '·')
+                dim_lines.append(_P(f'{marker} {dname}: {val:.1f}', _sDimR))
+
+            # fetch weakest dim reason for this image
+            try:
+                rj2 = json.loads(r.raw_json) if isinstance(r.raw_json, str) else (r.raw_json or {})
+                reason_txt = rj2.get(f'{worst_key}_reason') or rj2.get(f'{worst_key}_situational_reason') or ''
+            except Exception:
+                reason_txt = ''
+
+            info_cell = [
+                _P(img_title_str, _sImgT),
+                _P(f'Overall: {(r.overall or 0):.2f}', _sImgSc),
+                _Sp(1, 2*_mm),
+            ] + dim_lines
+            if reason_txt:
+                info_cell += [_Sp(1, 1*_mm), _P(f'({worst_name} note: {reason_txt[:180]})', _sDimR)]
+
+            pic_cell = [photo_fl, _Sp(1, 2*_mm)] if photo_fl else [_P('No photo', _sNote)]
+            img_tbl = _T([[pic_cell, info_cell]],
+                         colWidths=[47*_mm, _W - 47*_mm])
+            img_tbl.setStyle(_TS([
+                ('VALIGN',       (0,0), (-1,-1), 'TOP'),
+                ('LEFTPADDING',  (0,0), (-1,-1), 3*_mm),
+                ('RIGHTPADDING', (0,0), (-1,-1), 3*_mm),
+                ('TOPPADDING',   (0,0), (-1,-1), 3*_mm),
+                ('BOTTOMPADDING',(0,0), (-1,-1), 3*_mm),
+                ('BACKGROUND',   (0,0), (-1,-1), _LGREY if img_i % 2 == 0 else _WHITE),
+            ]))
+            fl.append(_KT([img_tbl, _Sp(1, 2*_mm)]))
+
+        # per-photographer footer line
+        fl.append(_HR(width=_W, thickness=0.5, color=_LIGHT))
+        fl.append(_Sp(1, 1*_mm))
+        fl.append(_P('Shutter League  ·  shutterleague.com  ·  Making Images Matter', _sFoot))
+        fl.append(_Sp(1, 2*_mm))
+
+    doc.build(fl)
+    return buf.getvalue()
+
+
+@app.route('/admin/contest-judge/new-eval-top10-pdf/<path:batch_ref>')
+@login_required
+def admin_contest_judge_new_eval_top10_pdf(batch_ref):
+    """Top 10 summary PDF for a trial evaluation batch. Photo thumbnails embedded from R2.
+    reportlab only -- no new dependencies. v182.92."""
+    if current_user.role != 'admin':
+        abort(403)
+    try:
+        pdf_bytes = _ne_top10_pdf(batch_ref)
+    except ValueError as ve:
+        return str(ve), 404
+    except Exception as ex:
+        app.logger.error('[ne_top10_pdf] batch=%s error=%s', batch_ref, ex)
+        return f'PDF build failed: {ex}', 500
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        pdf_bytes, mimetype='application/pdf',
+        headers={'Content-Disposition': f'attachment; filename="SL_Top10_{safe_ref}.pdf"'})
+
+
+@app.route('/admin/contest-judge/new-eval-photographer-report/<path:batch_ref>')
+@login_required
+def admin_contest_judge_new_eval_photographer_report(batch_ref):
+    """Per-photographer feedback letter PDF. One section per photographer, photo thumbnails
+    embedded from R2, dimension averages, strongest/weakest called out, specific advice.
+    reportlab only -- no new dependencies. v182.92."""
+    if current_user.role != 'admin':
+        abort(403)
+    try:
+        pdf_bytes = _ne_photographer_report_pdf(batch_ref)
+    except ValueError as ve:
+        return str(ve), 404
+    except Exception as ex:
+        app.logger.error('[ne_phot_report] batch=%s error=%s', batch_ref, ex)
+        return f'PDF build failed: {ex}', 500
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        pdf_bytes, mimetype='application/pdf',
+        headers={'Content-Disposition': f'attachment; filename="SL_FeedbackLetters_{safe_ref}.pdf"'})
 
 
 @app.route('/admin/contest-judge/ddi-compare-run/<path:batch_ref>', methods=['POST'])
