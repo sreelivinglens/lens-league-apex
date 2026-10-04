@@ -1,3 +1,4 @@
+# SL-VERSION: 182.94 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed): the single-scorecard Save-as-PDF view (/admin/contest-judge/new-eval-scorecard/<entry_id>) was not showing the evaluated photo. Root cause in _ne_build_entry_dict(): thumb_url was built by passing pic.thumb_path (already a full R2 public URL, written that way at upload time) into storage.public_url(), a function that expects a bare object key -- the same mistake the rest of the file avoids (e.g. _ne_fetch_photo_bytes calls storage.key_from_url() first; the working trial grid just checks thumb_path.startswith('http')). The result was a malformed, 404-ing image URL, so the <img> tag was present but silently failed to load -- nothing visible in the print view. Fix: thumb_url is now built the same proven way the working grid/list routes build it (pic.thumb_path directly if it starts with 'http', else a /static/ fallback for any legacy local path). No other part of the scorecard, the ZIP route, or the PDF routes touched. Needs a staging test: open the scorecard for any already-evaluated picture and confirm the photo now appears before Save-as-PDF. RETAINS 182.93.)
 # SL-VERSION: 182.93 (Session 236, 2026-10-04 -- FIX: photographer report PDF was killing the gunicorn worker (SIGKILL, out of memory). Root cause: full-resolution contest JPEGs (5-20MB each) loaded into RAM for every image before PDF assembly -- 44 images = 200-800MB peak. Fix: _ne_fetch_photo_bytes now resizes the image to max 400x400px using Pillow immediately after download (Pillow already installed on Railway), deletes the temp file, and returns only the small JPEG bytes (~15-40KB). _ne_rl_photo_flowable unchanged. Both Top 10 and Photographer Report routes benefit. RETAINS 182.92.)
 # SL-VERSION: 182.92 (Session 236, 2026-10-04 -- NEW (staging only): two new trial-evaluation PDF routes, both with photo snapshots fetched from R2. (1) GET /admin/contest-judge/new-eval-top10-pdf/<batch_ref> -- Top 10 summary PDF (reportlab A4): ranked table of the top 10 pictures, each with a 50mm photo thumbnail embedded from R2, photographer name, image title, overall score, strongest dimension highlighted green, weakest flagged red. (2) GET /admin/contest-judge/new-eval-photographer-report/<batch_ref> -- Per-photographer feedback PDF (one section per photographer, sorted by standing): all images evaluated, dimension averages, strongest and weakest dimension called out, one line of specific improvement advice drawn from the weakest dimension reason, photo thumbnail per image. Both use the same R2 download pattern as 182.35/182.32. Template admin_contest_judge.html updated to 3.7 with two new buttons in the trial action bar. RETAINS 182.91.)
 # SL-VERSION: 182.91 (Session 236, 2026-10-04 -- CHANGE (staging only): individual scorecard download now serves the full _ne_scorecard_html(e) page (photo, dimension bars, principles, story -- exactly what the admin sees on screen) opened inline in a new browser tab, with window.print() auto-called on load so the Save-as-PDF dialog appears immediately. No new libraries. The button target="_blank" already opens a new tab. Removes the reportlab PDF and Pillow PNG approaches (both lacked the photo and full layout). ZIP route unchanged. RETAINS 182.90.)
@@ -19067,15 +19068,20 @@ body{{font-family:"Avenir Next","Avenir","Segoe UI",-apple-system,BlinkMacSystem
 
 def _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank):
     """Shared helper: build the entry dict used by _ne_scorecard_html and the PNG renderer.
-    Keeps the two scorecard routes (single PNG + ZIP HTML) in sync. v182.88."""
+    Keeps the two scorecard routes (single PNG + ZIP HTML) in sync. v182.88.
+    v182.94: thumb_url now built the same way the working trial grid builds it --
+    pic.thumb_path already holds the full R2 public URL (it is written that way at
+    upload time; see the grid/list routes a few hundred lines above). The previous
+    code passed that full URL into storage.public_url(), which expects a bare
+    object KEY, not a URL -- it was given to the key-based downloader everywhere
+    else in this file (_ne_fetch_photo_bytes uses storage.key_from_url() first).
+    That produced a malformed, 404-ing image URL, so the scorecard's photo slot
+    rendered as nothing (thumb_tag only emits the <img> when thumb_url is truthy,
+    but a broken URL is still truthy -- the browser just failed to load it, which
+    is why the print/Save-as-PDF view showed no photo at all)."""
     story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
-    thumb_url = ''
-    if pic.thumb_path:
-        try:
-            import storage as _r2sc
-            thumb_url = _r2sc.public_url(pic.thumb_path)
-        except Exception:
-            thumb_url = pic.thumb_path or ''
+    thumb_url = pic.thumb_path if (pic.thumb_path or '').startswith('http') else (
+        f'/static/{pic.thumb_path}' if pic.thumb_path else '')
     princ = []
     for p in (rj.get('dod_principles') or []):
         if isinstance(p, dict) and p.get('name'):
