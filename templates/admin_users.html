@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_users-1.0 (Session 236, 2026-10-04 -- NEW (staging only, not yet pushed): founder asked how to tell Sonnet / Haiku / UAT members apart on this page, and for the summary cards to be clickable filters, on top of the app.py v182.97 / admin.html v3.6 CSV export feature already built. Added: (1) the Status column is now a Type column, showing a colored badge from the server-computed user.user_type ("Sonnet (paid)" blue, "UAT / Learning" gold, "Haiku (free tier)" purple) with a safe fallback to the old Free/UAT/Subscribed badge logic if user_type is ever missing, so this page cannot break even if that attribute is absent. (2) The "Active UAT" / "Paid" / "Free Tier" stat cards now count by the same user_type classifier instead of the old separate is_subscribed/subscription_plan checks, so the numbers on this page always agree with the Type badges in the table below them -- renamed to "Sonnet (Paid)" / "UAT / Learning" / "Haiku (Free)" to match. (3) All four top stat cards (Total / Sonnet / UAT / Haiku) are now clickable: clicking one filters the table to just that group (client-side, no reload), with the active card highlighted; the two "Joined" cards are informational only and not clickable, same as before. (4) A small "Export CSV" row (All / Sonnet / UAT / Haiku) added above the table, linking to the /admin/users/export.csv route from app.py v182.97 -- same destination as the CSV buttons already added to admin.html's three member panels, so a download can also be started from this page directly. Nothing about the UAT activate/revoke flow, the Paid Subscribers panel, or the Delete flow was touched. Needs a staging test: open /admin/users, confirm the Type column shows the right label for a known Sonnet/UAT/Haiku account, click each of the four filter cards and confirm the table narrows correctly and "Total Members" brings everything back, and confirm each Export CSV link downloads. FIRST VERSION of this file's version header -- no prior SL-VERSION line existed.) #}
 {% extends "base.html" %}
 {% block title %}User Management — Admin{% endblock %}
 
@@ -32,11 +33,21 @@
   .user-handle { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-email  { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
   .badge { display: inline-block; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-  .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
-  .badge-sub  { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
-  .badge-free { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
+  .badge-uat    { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
+  .badge-sub    { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
+  .badge-free   { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
+  .badge-sonnet { background: rgba(44,62,107,.12); color: #2C3E6B; border: 1px solid rgba(44,62,107,.35); }
+  .badge-haiku  { background: rgba(107,33,168,.12); color: #6B21A8; border: 1px solid rgba(107,33,168,.35); }
   .badge-incomplete { background: #fde8e8; color: #c0392b; border: 1px solid rgba(192,57,43,.25); display: block; margin-top: 4px; width: fit-content; }
   .row-incomplete td { background: rgba(192,57,43,.03); }
+  .stat-card[data-filter] { cursor: pointer; transition: box-shadow .15s, transform .1s; }
+  .stat-card[data-filter]:hover { box-shadow: 0 3px 10px rgba(0,0,0,.12); }
+  .stat-card[data-filter]:active { transform: translateY(1px); }
+  .stat-card.active { box-shadow: 0 0 0 2px var(--gold) inset, 0 1px 4px rgba(0,0,0,.05); }
+  .export-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .export-lbl { font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+  .export-link { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; text-decoration: none; padding: 7px 14px; min-height: 44px; display: inline-flex; align-items: center; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .filter-note { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin: -18px 0 18px; }
   .track-select { font-family: var(--font-mono); font-size: 13px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 6px; color: var(--text-secondary); min-height: 44px; }
   .btn-action { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1px; padding: 5px 10px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
   .btn-action.activate { background: var(--gold); color: #0D0D0B; }
@@ -135,21 +146,21 @@
 
   <!-- Stats -->
   <div class="stats-row">
-    <div class="stat-card">
+    <div class="stat-card active" data-filter="all" onclick="slFilterUsers(this)">
       <div class="stat-val">{{ users|length }}</div>
       <div class="stat-lbl">Total Members</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val">{{ users|selectattr('subscription_plan', 'equalto', 'uat')|list|length }}</div>
-      <div class="stat-lbl">Active UAT</div>
+    <div class="stat-card" data-filter="Sonnet (paid)" onclick="slFilterUsers(this)" style="border-top:3px solid #2C3E6B;">
+      <div class="stat-val" style="color:#2C3E6B;">{{ users|selectattr('user_type', 'equalto', 'Sonnet (paid)')|list|length }}</div>
+      <div class="stat-lbl">Sonnet (Paid)</div>
     </div>
-    <div class="stat-card" style="border-top:3px solid #2C3E6B;">
-      <div class="stat-val" style="color:#2C3E6B;">{{ paid_count }}</div>
-      <div class="stat-lbl">Paid</div>
+    <div class="stat-card" data-filter="UAT / Learning" onclick="slFilterUsers(this)" style="border-top:3px solid var(--gold-dark);">
+      <div class="stat-val">{{ users|selectattr('user_type', 'equalto', 'UAT / Learning')|list|length }}</div>
+      <div class="stat-lbl">UAT / Learning</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val">{{ users|rejectattr('is_subscribed')|list|length }}</div>
-      <div class="stat-lbl">Free Tier</div>
+    <div class="stat-card" data-filter="Haiku (free tier)" onclick="slFilterUsers(this)" style="border-top:3px solid #6B21A8;">
+      <div class="stat-val" style="color:#6B21A8;">{{ users|selectattr('user_type', 'equalto', 'Haiku (free tier)')|list|length }}</div>
+      <div class="stat-lbl">Haiku (Free)</div>
     </div>
     <div class="stat-card" style="border-top: 3px solid var(--gold);">
       <div class="stat-val">{{ new_today }}</div>
@@ -159,6 +170,16 @@
       <div class="stat-val">{{ new_7days }}</div>
       <div class="stat-lbl">Last 7 Days</div>
     </div>
+  </div>
+  <div class="filter-note">Click a card above (Total / Sonnet / UAT / Haiku) to filter the table to just that group. <span id="slFilterStatus"></span></div>
+
+  <!-- Export -->
+  <div class="export-row">
+    <span class="export-lbl">Export CSV:</span>
+    <a class="export-link" style="background:#F5F0E8;color:var(--text-secondary);" href="{{ url_for('admin_users_export_csv', type='all') }}">All</a>
+    <a class="export-link" style="background:rgba(44,62,107,.08);color:#2C3E6B;border-color:rgba(44,62,107,.3);" href="{{ url_for('admin_users_export_csv', type='sonnet') }}">Sonnet</a>
+    <a class="export-link" style="background:rgba(200,168,75,.15);color:var(--gold-dark);border-color:var(--gold-dark);" href="{{ url_for('admin_users_export_csv', type='uat') }}">UAT</a>
+    <a class="export-link" style="background:rgba(107,33,168,.08);color:#6B21A8;border-color:rgba(107,33,168,.3);" href="{{ url_for('admin_users_export_csv', type='haiku') }}">Haiku</a>
   </div>
 
   <!-- Users table -->
@@ -170,14 +191,14 @@
         <th class="col-email">Email</th>
         <th class="col-joined">Joined</th>
         <th class="col-images">Imgs</th>
-        <th class="col-status">Status</th>
+        <th class="col-status">Type</th>
         <th class="col-action">UAT Track &amp; Action</th>
         <th class="col-delete">Delete</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="slUsersTbody">
       {% for user in users %}
-      <tr {% if not user.onboarding_complete %}class="row-incomplete"{% endif %}>
+      <tr data-type="{{ user.user_type or '' }}" {% if not user.onboarding_complete %}class="row-incomplete"{% endif %}>
         <td class="col-member">
           <div class="user-name">
             <a href="{{ url_for('admin_user_detail', user_id=user.id) }}">{{ user.full_name or user.username }}</a>
@@ -188,7 +209,13 @@
         <td class="col-joined">{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</td>
         <td class="col-images">{{ user.images|length if user.images else 0 }}</td>
         <td>
-          {% if user.is_subscribed %}
+          {% if user.user_type == 'Sonnet (paid)' %}
+            <span class="badge badge-sonnet">Sonnet</span>
+          {% elif user.user_type == 'UAT / Learning' %}
+            <span class="badge badge-uat">UAT</span>
+          {% elif user.user_type == 'Haiku (free tier)' %}
+            <span class="badge badge-haiku">Haiku</span>
+          {% elif user.is_subscribed %}
             {% if user.subscription_plan in ('uat', 'beta') %}
               <span class="badge badge-uat">UAT</span>
             {% else %}
@@ -227,7 +254,7 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="6" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
+        <td colspan="7" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -246,6 +273,30 @@ function confirmDelete(name, imageCount, isSubscribed) {
   }
   msg += `\nThis cannot be undone.`;
   return confirm(msg);
+}
+
+// v1.0 (Session 236): click a stat card to filter the table below to that
+// member type. "all" shows everyone. Purely client-side -- no reload, no
+// data refetch -- so it works instantly even with hundreds of rows.
+function slFilterUsers(card) {
+  document.querySelectorAll('.stat-card[data-filter]').forEach(function (c) {
+    c.classList.remove('active');
+  });
+  card.classList.add('active');
+  var filter = card.getAttribute('data-filter');
+  var rows = document.querySelectorAll('#slUsersTbody tr[data-type]');
+  var shown = 0;
+  rows.forEach(function (row) {
+    var match = (filter === 'all') || (row.getAttribute('data-type') === filter);
+    row.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var statusEl = document.getElementById('slFilterStatus');
+  if (statusEl) {
+    statusEl.textContent = (filter === 'all')
+      ? ''
+      : 'Showing ' + shown + ' of ' + rows.length + '.';
+  }
 }
 </script>
 {% endblock %}
