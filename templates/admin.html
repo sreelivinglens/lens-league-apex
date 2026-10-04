@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.6 (Session 236, 2026-10-04 — Founder request: no way to export the member list, and no single place showing Haiku/Sonnet/UAT members together. Added: (1) a new "Users" item at the top of the Members sidebar group, linking to the existing /admin/users page, with a badge showing the combined paid+UAT+Haiku count. (2) A "CSV" download link in each of the three existing member panel headers (Paid subscribers, UAT & Learning, Haiku members) — each links to the new /admin/users/export.csv?type=... route (app.py v182.97) and downloads that one segment as a spreadsheet file with ID, Name, Email, Type, Plan, Joined, Scored images, Best evaluation, Last scored. The links use event.stopPropagation() so clicking "CSV" does not also collapse/expand the panel underneath it. No existing table, button or route was removed or renamed. RETAINS admin-3.5.) #}
 {# SL-VERSION: admin-3.5 (Session 235, 2026-10-04 — Links and note only: Curation (Bulk Special Run, /admin/curation) added to the sidebar (Images group), the mobile menu and Quick actions; the grey bulk-upload note now points to it. No other change. RETAINS admin-3.4.) #}
 {# SL-VERSION: admin-3.4 (Session 235, 2026-10-03 — Links only: new Checks hub (/admin/checks) added to the sidebar (Open Call group), the mobile menu and Quick actions; Score audit link added. No other change. RETAINS admin-3.3.) #}
 {# SL-VERSION: admin-3.3 (Session 230, 2026-09-30 — UNIFIED: Removed Haiku comparison sidebar item (desktop + mobile) — functionality merged into Contest Judge 3-tab page. RETAINS admin-3.2.) #}
@@ -532,6 +533,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   <div class="sb-group">
     <div class="sb-group-label">Members</div>
+    <a class="sb-item" href="{{ url_for('admin_users') }}" style="text-decoration:none">
+      <i class="ti ti-address-book"></i> Users
+      {% set _sb_total_members = (paid_users|length if paid_users else 0) + (uat_users|length if uat_users else 0) + stats.free_users %}
+      {% if _sb_total_members > 0 %}<span class="sb-badge" style="background:#E8EEF8;color:#1A2744">{{ _sb_total_members }}</span>{% endif %}
+    </a>
     <a class="sb-item" onclick="navTo('paid-subs','b-paid-body','cPS')"><i class="ti ti-star"></i> Paid subscribers{% if paid_users %}<span class="sb-badge ok">{{ paid_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('uat-members','b-uat-body','cUAT')"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning{% if uat_users %}<span class="sb-badge warn">{{ uat_users|length }}</span>{% endif %}</a>
     <a class="sb-item" onclick="navTo('evolving-eye','b-ee-body','cEE')">
@@ -982,7 +988,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div id="paid-subs" class="section">
     <div class="sec-hdr" onclick="tog('paid-body','cPS')">
       <div class="sec-title"><i class="ti ti-star" style="color:#C8A84B"></i> Paid subscribers <span class="sec-badge ok">{{ stats.subscribers }}</span></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Sonnet · Camera + Mobile</span><span class="chev closed" id="cPS">▼</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Sonnet · Camera + Mobile</span><a href="{{ url_for('admin_users_export_csv', type='sonnet') }}" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600;color:#1A2744;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid #D8D4C8;border-radius:5px;background:#F7F5EF"><i class="ti ti-download"></i> CSV</a><span class="chev closed" id="cPS">▼</span></div>
     </div>
     <div id="b-paid-body" class="sec-body" style="display:none">
       {% if paid_users %}
@@ -1035,7 +1041,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div id="uat-members" class="section">
     <div class="sec-hdr" onclick="tog('uat-body','cUAT')">
       <div class="sec-title"><i class="ti ti-flask" style="color:#B45309"></i> UAT &amp; Learning <span class="sec-badge warn">{{ uat_users|length if uat_users else 0 }}</span></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Non-paying · Sonnet access · newest first</span><span class="chev closed" id="cUAT">▼</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Non-paying · Sonnet access · newest first</span><a href="{{ url_for('admin_users_export_csv', type='uat') }}" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600;color:#1A2744;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid #D8D4C8;border-radius:5px;background:#F7F5EF"><i class="ti ti-download"></i> CSV</a><span class="chev closed" id="cUAT">▼</span></div>
     </div>
     <div id="b-uat-body" class="sec-body" style="display:none">
       <div class="guide" style="margin-bottom:12px;font-size:13px"><strong>UAT / beta / learning / Sonnet free trial</strong> — these members have or had Sonnet access but are not billed. Includes MIM workshop participants and pre-launch free trial users. Use Revoke UAT to move explicit UAT accounts to Haiku world, or toggle subscription to activate a paid plan.</div>
@@ -1159,7 +1165,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div id="haiku-members" class="section">
     <div class="sec-hdr" onclick="tog('haiku-body','cHM')">
       <div class="sec-title"><i class="ti ti-users" style="color:#6B21A8"></i> Haiku members <span class="sec-badge haiku">{{ stats.free_users }}</span></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Free tier · 10 evals lifetime</span><span class="chev closed" id="cHM">▼</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="sec-meta">Free tier · 10 evals lifetime</span><a href="{{ url_for('admin_users_export_csv', type='haiku') }}" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600;color:#1A2744;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid #D8D4C8;border-radius:5px;background:#F7F5EF"><i class="ti ti-download"></i> CSV</a><span class="chev closed" id="cHM">▼</span></div>
     </div>
     <div id="b-haiku-body" class="sec-body" style="display:none">
       {# haiku_users = raw SQL rows: id, full_name, username, email, city,
