@@ -1,3 +1,4 @@
+# SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
 # SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
 # SL-VERSION: 182.85 (Session 236, 2026-10-04 -- FIX (same bug confirmed on staging that crashed production): /dashboard raises UndefinedError for any Sonnet/admin account whose users.mentor_advice_json holds the Haiku Sherpa shape ({'observation':...}, no 'detail') because dashboard.html line 572 reads mentor_advice.detail. Dashboard route now passes mentor_advice to the template ONLY when it is a dict carrying title, action and detail as non-empty text; otherwise None, so the template's own fallback shows. The saved data is NOT changed or deleted -- the Haiku page still reads the same field. Haiku route, _is_sonnet_user and login redirects untouched. Same fix already proven on production as 182.19.1. RETAINS 182.84.)
 # SL-VERSION: 182.84 (Session 235, 2026-10-04 -- NEW (staging only): Curation batches. Every 'Run Batch' press is now one saved batch (new nullable columns images.curation_batch_id / curation_batch_label, added on first use; nothing existing is changed or rescored). Page shows the newest batch on top and older ones under 'Saved batches'. New routes: GET /admin/curation/export-csv?batch=<id|all> (CSV, no engine call) and POST /admin/curation/delete-batch (deletes one batch's pictures, same deletion as the existing bulk delete). Existing curation pictures with no batch are grouped once by photographer + genre + upload day when the page is opened. RETAINS 182.83.)
@@ -18927,6 +18928,289 @@ def admin_contest_judge_new_eval_edit(entry_id):
         db.session.rollback()
         app.logger.error(f'[new_eval_edit] entry={entry_id}: {e}')
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+def _ne_scorecard_html(e):
+    """Render a self-contained HTML scorecard for one trial entry dict (from _cj_new_eval_entries).
+    No server dependencies -- everything inline. Used by both the single-scorecard and ZIP routes.
+    v182.87."""
+    thumb_tag = ''
+    if e.get('thumb_url'):
+        thumb_tag = f'<img src="{e["thumb_url"]}" alt="" style="width:100%;max-height:340px;object-fit:cover;display:block;border-radius:10px 10px 0 0;background:#dce8f7">'
+
+    def _bar(val, strongest):
+        pct = round((val or 0) / 10 * 100, 1)
+        fill_color = '#1b4f91' if strongest else '#5b84bc'
+        return (f'<div style="display:flex;align-items:center;gap:8px;min-width:160px">'
+                f'<div style="flex:1;height:8px;background:#d3e2f3;border-radius:4px;overflow:hidden">'
+                f'<div style="width:{pct}%;height:100%;background:{fill_color};border-radius:4px"></div></div>'
+                f'<span style="font-size:15px;font-weight:700;color:#1b4f91;min-width:32px;text-align:right">{val:.1f}</span>'
+                f'</div>')
+
+    dims = [
+        ('1', 'Degree of Difficulty', e.get('dod') or 0,
+         (e.get('dod_situational_reason') or '') + ' ' + (e.get('dod_technical_reason') or '')),
+        ('2', 'Disruption', e.get('disruption') or 0, e.get('disruption_reason') or ''),
+        ('3', 'Decisive Moment', e.get('dm') or 0, e.get('dm_reason') or ''),
+        ('4', f"Wonder{(' (' + e['wonder_kind'] + ')') if e.get('wonder_kind') else ''}",
+         e.get('wonder') or 0, e.get('wonder_reason') or ''),
+        ('5', f"Affective Quotient{(' (' + e['aq_feeling'] + ')') if e.get('aq_feeling') else ''}",
+         e.get('aq') or 0, e.get('aq_reason') or ''),
+    ]
+    max_val = max((d[2] for d in dims), default=0)
+    dims_html = ''
+    for num, name, val, reason in dims:
+        strongest = (val == max_val and val > 0)
+        badge = ('<span style="background:#1b4f91;color:#fff;font-size:11px;font-weight:700;'
+                 'padding:3px 9px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase">Strongest</span>'
+                 if strongest else '')
+        dims_html += (
+            f'<div style="margin-bottom:20px">'
+            f'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
+            f'<span style="width:26px;height:26px;border-radius:50%;border:2px solid #1b4f91;'
+            f'color:#1b4f91;font-size:13px;font-weight:700;display:inline-flex;align-items:center;'
+            f'justify-content:center;flex-shrink:0;background:#fff">{num}</span>'
+            f'<span style="font-size:16px;font-weight:700;color:#1b2a4a;flex:1;min-width:100px">{name}</span>'
+            f'{_bar(val, strongest)}{badge}</div>'
+            f'<p style="font-size:15px;color:#1b2a4a;line-height:1.6;margin:0 0 0 36px">{reason}</p>'
+            f'</div>'
+        )
+
+    # Principles
+    princ_html = ''
+    if e.get('principles'):
+        rows_html = ''
+        for pr in e['principles']:
+            parts = pr.split('): ', 1)
+            name_part = parts[0].split(' (')[0] if parts else pr
+            desc_part = parts[1] if len(parts) > 1 else ''
+            rows_html += (
+                f'<div style="display:grid;grid-template-columns:160px 1fr;gap:10px 14px;margin-bottom:12px">'
+                f'<span style="background:#f0dba8;color:#5c4416;font-size:13px;font-weight:700;'
+                f'padding:5px 10px;border-radius:10px;align-self:start;text-align:center">{name_part}</span>'
+                f'<span style="font-size:15px;color:#3a2e14;line-height:1.6">{desc_part}</span></div>'
+            )
+        princ_html = (
+            f'<div style="margin:28px 0 0">'
+            f'<div style="font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:#1b4f91;font-weight:800;margin-bottom:12px">Principles at work</div>'
+            f'<div style="background:#fbf3e6;border:1px solid #eedcbb;border-radius:12px;padding:20px 22px">{rows_html}</div></div>'
+        )
+
+    # Story
+    story_html = ''
+    story_tag = e.get('story') or ''
+    story_reason = e.get('story_reason') or ''
+    if story_tag or story_reason:
+        story_html = (
+            f'<div style="margin:24px 0 0">'
+            f'<div style="font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:#1b4f91;font-weight:800;margin-bottom:12px">Story</div>'
+            f'<div style="background:#fff;border:1px solid #dce6f3;border-radius:12px;padding:18px 20px">'
+            f'<span style="display:inline-block;background:#eaf2fb;color:#1b4f91;font-size:13px;font-weight:700;'
+            f'padding:4px 12px;border-radius:10px;margin-bottom:8px">{story_tag}</span>'
+            f'<p style="font-size:15px;color:#1b2a4a;line-height:1.6;margin:0">{story_reason}</p></div></div>'
+        )
+
+    run_at_str = ''
+    if e.get('run_at'):
+        try:
+            run_at_str = e['run_at'].strftime('%-d %b %Y')
+        except Exception:
+            run_at_str = str(e['run_at'])[:10]
+
+    dod_detail = (f'Difficulty built from: situation {(e.get("dod_situational") or 0):.1f}, '
+                  f'technical {(e.get("dod_technical") or 0):.1f}, '
+                  f'plus {(e.get("dod_bonus") or 0):.1f} for principles clearly applied.')
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evaluation — {e.get('title') or 'Untitled'}</title>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:"Avenir Next","Avenir","Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:#F5F3EF;color:#1b2a4a;padding:32px 16px 60px}}
+.card{{max-width:720px;margin:0 auto;background:#eaf2fb;border:2px solid #9fc0e8;border-radius:14px;overflow:hidden;box-shadow:0 6px 22px rgba(27,79,145,.16)}}
+.body{{padding:26px}}
+@media(max-width:560px){{.body{{padding:18px}}}}
+@media print{{body{{background:#fff;padding:0}} .card{{box-shadow:none;border:1px solid #ccc}}}}
+</style>
+</head>
+<body>
+<div class="card">
+{thumb_tag}
+<div class="body">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px">
+    <span style="font-size:52px;font-weight:800;color:#1b4f91;line-height:1">{(e.get('overall') or 0):.2f}</span>
+    <span style="font-size:14px;color:#3b5c93;text-transform:uppercase;letter-spacing:.08em;font-weight:600">evaluation</span>
+  </div>
+  <p style="font-size:15px;color:#2a4a7a;margin-bottom:24px;font-weight:500">
+    {e.get('photographer') or '—'} &middot; {e.get('title') or 'Untitled'}
+    {('&middot; standing #' + str(e['rank'])) if e.get('rank') else ''}
+  </p>
+  <div style="font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:#3b5c93;font-weight:700;margin-bottom:16px">The five dimensions</div>
+  {dims_html}
+  <div style="font-size:13px;color:#3b5c93;letter-spacing:.06em;text-transform:uppercase;margin-top:24px;padding-top:14px;border-top:2px solid #9fc0e8;font-weight:600;text-align:center">
+    {dod_detail}{(' Evaluated ' + run_at_str + '.') if run_at_str else ''}
+  </div>
+</div>
+</div>
+{princ_html}
+{story_html}
+</body>
+</html>"""
+
+
+@app.route('/admin/contest-judge/new-eval-scorecard/<int:entry_id>')
+@login_required
+def admin_contest_judge_new_eval_scorecard(entry_id):
+    """Download the trial evaluation scorecard for one picture as a self-contained HTML file.
+    Builds the same card layout as the trial detail view in the template. v182.87."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_new_eval_ensure_table()
+    # Fetch the picture row for metadata
+    pic = db.session.execute(db.text(
+        "SELECT b.id, b.photographer, b.image_title, b.thumb_path, b.batch_ref, b.composite_score "
+        "FROM contest_judge_batch b WHERE b.id = :eid"
+    ), {'eid': entry_id}).fetchone()
+    if not pic:
+        abort(404)
+    # Fetch the latest trial row
+    t = db.session.execute(db.text(
+        "SELECT wonder, aq, disruption, dm, dod, dod_situational, dod_technical, dod_bonus, "
+        "story, overall, raw_json, run_at "
+        "FROM contest_judge_new_eval WHERE entry_id = :eid ORDER BY id DESC LIMIT 1"
+    ), {'eid': entry_id}).fetchone()
+    if not t:
+        abort(404)
+    try:
+        rj = _cj_json.loads(t.raw_json or '{}')
+    except Exception:
+        rj = {}
+    story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
+    # Compute official standing for this entry
+    off_rows = db.session.execute(db.text(
+        "SELECT id, composite_score FROM contest_judge_batch WHERE batch_ref = :br ORDER BY composite_score DESC NULLS LAST"
+    ), {'br': pic.batch_ref}).fetchall()
+    off_rank = {r.id: i + 1 for i, r in enumerate(off_rows)}
+    # Compute trial standing
+    trial_rows = db.session.execute(db.text(
+        "SELECT DISTINCT ON (entry_id) entry_id, overall FROM contest_judge_new_eval "
+        "WHERE batch_ref = :br ORDER BY entry_id, id DESC"
+    ), {'br': pic.batch_ref}).fetchall()
+    trial_sorted = sorted(trial_rows, key=lambda r: -(r.overall or 0))
+    trial_rank = {r.entry_id: i + 1 for i, r in enumerate(trial_sorted)}
+    princ = []
+    for p in (rj.get('dod_principles') or []):
+        if isinstance(p, dict) and p.get('name'):
+            princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
+    thumb_url = ''
+    if pic.thumb_path:
+        try:
+            import storage as _r2sc
+            thumb_url = _r2sc.public_url(pic.thumb_path)
+        except Exception:
+            thumb_url = pic.thumb_path or ''
+    e = {
+        'id': pic.id, 'photographer': pic.photographer or 'Unknown',
+        'title': pic.image_title or '',
+        'thumb_url': thumb_url,
+        'overall': t.overall, 'wonder': t.wonder, 'aq': t.aq, 'disruption': t.disruption,
+        'dm': t.dm, 'dod': t.dod, 'dod_situational': t.dod_situational,
+        'dod_technical': t.dod_technical, 'dod_bonus': t.dod_bonus,
+        'story': story_words.get(t.story, t.story or ''),
+        'story_reason': rj.get('story_reason', ''),
+        'wonder_reason': rj.get('wonder_reason', ''), 'wonder_kind': rj.get('wonder_kind', ''),
+        'aq_reason': rj.get('aq_reason', ''), 'aq_feeling': rj.get('aq_feeling', ''),
+        'disruption_reason': rj.get('disruption_reason', ''),
+        'dm_reason': rj.get('dm_reason', ''),
+        'dod_situational_reason': rj.get('dod_situational_reason', ''),
+        'dod_technical_reason': rj.get('dod_technical_reason', ''),
+        'principles': princ, 'run_at': t.run_at,
+        'rank': trial_rank.get(entry_id),
+    }
+    html = _ne_scorecard_html(e)
+    safe_title = (pic.image_title or str(entry_id)).replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        html, mimetype='text/html',
+        headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"'})
+
+
+@app.route('/admin/contest-judge/new-eval-scorecard-zip/<path:batch_ref>')
+@login_required
+def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
+    """Download all trial evaluation scorecards for one open call as a ZIP of self-contained HTML files.
+    One file per evaluated picture. Uses only stdlib zipfile -- no new installs. v182.87."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_new_eval_ensure_table()
+    import zipfile as _zf
+    import io as _zio
+    story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
+    # Latest trial row per picture
+    rows = db.session.execute(db.text("""
+        SELECT DISTINCT ON (n.entry_id)
+               b.id AS eid, b.photographer, b.image_title, b.thumb_path,
+               n.wonder, n.aq, n.disruption, n.dm, n.dod,
+               n.dod_situational, n.dod_technical, n.dod_bonus,
+               n.story, n.overall, n.raw_json, n.run_at
+        FROM contest_judge_new_eval n
+        JOIN contest_judge_batch b ON b.id = n.entry_id
+        WHERE n.batch_ref = :br
+        ORDER BY n.entry_id, n.id DESC
+    """), {'br': batch_ref}).fetchall()
+    if not rows:
+        return app.response_class('No trial evaluations found for this open call.', status=404, mimetype='text/plain')
+    # Trial standings
+    trial_sorted = sorted(rows, key=lambda r: -(r.overall or 0))
+    trial_rank = {r.eid: i + 1 for i, r in enumerate(trial_sorted)}
+    # Resolve thumb URLs once
+    try:
+        import storage as _r2zip
+        def _thumb(path): return _r2zip.public_url(path) if path else ''
+    except Exception:
+        def _thumb(path): return path or ''
+    buf = _zio.BytesIO()
+    with _zf.ZipFile(buf, 'w', _zf.ZIP_DEFLATED) as zout:
+        for r in trial_sorted:
+            try:
+                rj = _cj_json.loads(r.raw_json or '{}')
+            except Exception:
+                rj = {}
+            princ = []
+            for p in (rj.get('dod_principles') or []):
+                if isinstance(p, dict) and p.get('name'):
+                    princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
+            e = {
+                'id': r.eid, 'photographer': r.photographer or 'Unknown',
+                'title': r.image_title or '',
+                'thumb_url': _thumb(r.thumb_path),
+                'overall': r.overall, 'wonder': r.wonder, 'aq': r.aq,
+                'disruption': r.disruption, 'dm': r.dm, 'dod': r.dod,
+                'dod_situational': r.dod_situational, 'dod_technical': r.dod_technical,
+                'dod_bonus': r.dod_bonus,
+                'story': story_words.get(r.story, r.story or ''),
+                'story_reason': rj.get('story_reason', ''),
+                'wonder_reason': rj.get('wonder_reason', ''), 'wonder_kind': rj.get('wonder_kind', ''),
+                'aq_reason': rj.get('aq_reason', ''), 'aq_feeling': rj.get('aq_feeling', ''),
+                'disruption_reason': rj.get('disruption_reason', ''),
+                'dm_reason': rj.get('dm_reason', ''),
+                'dod_situational_reason': rj.get('dod_situational_reason', ''),
+                'dod_technical_reason': rj.get('dod_technical_reason', ''),
+                'principles': princ, 'run_at': r.run_at,
+                'rank': trial_rank.get(r.eid),
+            }
+            html_bytes = _ne_scorecard_html(e).encode('utf-8')
+            rank_prefix = f'{trial_rank.get(r.eid, 0):03d}'
+            safe_title = (r.image_title or str(r.eid)).replace('/', '_').replace(' ', '_')
+            fname = f'{rank_prefix}_{safe_title}.html'
+            zout.writestr(fname, html_bytes)
+    buf.seek(0)
+    safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
+    return app.response_class(
+        buf.read(), mimetype='application/zip',
+        headers={'Content-Disposition': f'attachment; filename="SL_Scorecards_{safe_ref}.zip"'})
 
 
 @app.route('/admin/contest-judge/ddi-compare-run/<path:batch_ref>', methods=['POST'])
