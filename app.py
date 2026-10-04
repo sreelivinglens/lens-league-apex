@@ -1,3 +1,4 @@
+# SL-VERSION: 182.19.1 (Session 235, 2026-10-04 -- PRODUCTION HOTFIX, ONE CHANGE ONLY: /dashboard returned Internal Server Error for any Sonnet/admin account whose users.mentor_advice_json held the Haiku Sherpa shape (has 'observation', no 'detail'), because dashboard.html reads mentor_advice.detail. The dashboard route now passes mentor_advice to the template only when it carries title, action and detail as text; otherwise None, so the page's own fallback text shows. Saved data is not changed. Nothing else touched. RETAINS 182.19.)
 # SL-VERSION: 182.19 (Session 218, 2026-09-10 — Calibration rescore: POST /admin/calibration/rescore/<id> (single row, uses stored thumb_path) and POST /admin/calibration/rescore-bulk (multi-row). Both Sonnet and Haiku paths. No file re-upload needed. Returns same JSON shape as upload route.)
 
 import os
@@ -5916,6 +5917,17 @@ def dashboard():
             _mentor_advice = _maj.loads(_urow_mentor_json)
     except Exception as _ma_err:
         app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
+    # 182.19.1: the same column also holds the Haiku Sherpa shape ({'observation': ...},
+    # no 'detail'). dashboard.html needs title + action + detail; any other shape
+    # would crash the page. Hide the card instead (template fallback shows). Data untouched.
+    if _mentor_advice is not None:
+        _ma_ok = isinstance(_mentor_advice, dict) and all(
+            isinstance(_mentor_advice.get(_k), str) and _mentor_advice.get(_k).strip()
+            for _k in ('title', 'action', 'detail')
+        )
+        if not _ma_ok:
+            app.logger.info(f'[dashboard] mentor_advice_json for user {_uid} is not the dashboard shape - card skipped')
+            _mentor_advice = None
 
     _evolving_eye_json = None
     _evolving_eye_data = None
