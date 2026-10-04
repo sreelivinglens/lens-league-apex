@@ -1,3 +1,4 @@
+# SL-VERSION: 182.88 (Session 236, 2026-10-04 -- CHANGE (staging only, nothing live-tested): individual scorecard download now renders a PNG image via Playwright headless Chromium (screenshots the .card element at 760px wide). New helpers: _ne_build_entry_dict() (shared entry dict builder), _ne_html_to_png() (Playwright renderer with Railway/Docker path support and --no-sandbox args). If Playwright is not installed the route falls back to HTML and logs clearly to Railway console. ZIP route unchanged (still HTML). RETAINS 182.87.)
 # SL-VERSION: 182.87 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): scorecard download routes. GET /admin/contest-judge/new-eval-scorecard/<entry_id> returns one picture's trial evaluation as a self-contained downloadable HTML scorecard. GET /admin/contest-judge/new-eval-scorecard-zip/<batch_ref> returns all evaluated pictures in one ZIP (stdlib zipfile, no new installs), files named 001_Title.html in trial standing order. Shared helper _ne_scorecard_html() renders the same card layout as the trial detail view. No DB change, no engine call, no new table. Pairs with admin_contest_judge.html 3.5. RETAINS 182.86.)
 # SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
 # SL-VERSION: 182.85 (Session 236, 2026-10-04 -- FIX (same bug confirmed on staging that crashed production): /dashboard raises UndefinedError for any Sonnet/admin account whose users.mentor_advice_json holds the Haiku Sherpa shape ({'observation':...}, no 'detail') because dashboard.html line 572 reads mentor_advice.detail. Dashboard route now passes mentor_advice to the template ONLY when it is a dict carrying title, action and detail as non-empty text; otherwise None, so the template's own fallback shows. The saved data is NOT changed or deleted -- the Haiku page still reads the same field. Haiku route, _is_sonnet_user and login redirects untouched. Same fix already proven on production as 182.19.1. RETAINS 182.84.)
@@ -19061,50 +19062,10 @@ body{{font-family:"Avenir Next","Avenir","Segoe UI",-apple-system,BlinkMacSystem
 </html>"""
 
 
-@app.route('/admin/contest-judge/new-eval-scorecard/<int:entry_id>')
-@login_required
-def admin_contest_judge_new_eval_scorecard(entry_id):
-    """Download the trial evaluation scorecard for one picture as a self-contained HTML file.
-    Builds the same card layout as the trial detail view in the template. v182.87."""
-    if current_user.role != 'admin':
-        abort(403)
-    _cj_new_eval_ensure_table()
-    # Fetch the picture row for metadata
-    pic = db.session.execute(db.text(
-        "SELECT b.id, b.photographer, b.image_title, b.thumb_path, b.batch_ref, b.composite_score "
-        "FROM contest_judge_batch b WHERE b.id = :eid"
-    ), {'eid': entry_id}).fetchone()
-    if not pic:
-        abort(404)
-    # Fetch the latest trial row
-    t = db.session.execute(db.text(
-        "SELECT wonder, aq, disruption, dm, dod, dod_situational, dod_technical, dod_bonus, "
-        "story, overall, raw_json, run_at "
-        "FROM contest_judge_new_eval WHERE entry_id = :eid ORDER BY id DESC LIMIT 1"
-    ), {'eid': entry_id}).fetchone()
-    if not t:
-        abort(404)
-    try:
-        rj = _cj_json.loads(t.raw_json or '{}')
-    except Exception:
-        rj = {}
+def _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank):
+    """Shared helper: build the entry dict used by _ne_scorecard_html and the PNG renderer.
+    Keeps the two scorecard routes (single PNG + ZIP HTML) in sync. v182.88."""
     story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
-    # Compute official standing for this entry
-    off_rows = db.session.execute(db.text(
-        "SELECT id, composite_score FROM contest_judge_batch WHERE batch_ref = :br ORDER BY composite_score DESC NULLS LAST"
-    ), {'br': pic.batch_ref}).fetchall()
-    off_rank = {r.id: i + 1 for i, r in enumerate(off_rows)}
-    # Compute trial standing
-    trial_rows = db.session.execute(db.text(
-        "SELECT DISTINCT ON (entry_id) entry_id, overall FROM contest_judge_new_eval "
-        "WHERE batch_ref = :br ORDER BY entry_id, id DESC"
-    ), {'br': pic.batch_ref}).fetchall()
-    trial_sorted = sorted(trial_rows, key=lambda r: -(r.overall or 0))
-    trial_rank = {r.entry_id: i + 1 for i, r in enumerate(trial_sorted)}
-    princ = []
-    for p in (rj.get('dod_principles') or []):
-        if isinstance(p, dict) and p.get('name'):
-            princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
     thumb_url = ''
     if pic.thumb_path:
         try:
@@ -19112,7 +19073,11 @@ def admin_contest_judge_new_eval_scorecard(entry_id):
             thumb_url = _r2sc.public_url(pic.thumb_path)
         except Exception:
             thumb_url = pic.thumb_path or ''
-    e = {
+    princ = []
+    for p in (rj.get('dod_principles') or []):
+        if isinstance(p, dict) and p.get('name'):
+            princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
+    return {
         'id': pic.id, 'photographer': pic.photographer or 'Unknown',
         'title': pic.image_title or '',
         'thumb_url': thumb_url,
@@ -19130,11 +19095,107 @@ def admin_contest_judge_new_eval_scorecard(entry_id):
         'principles': princ, 'run_at': t.run_at,
         'rank': trial_rank.get(entry_id),
     }
+
+
+def _ne_html_to_png(html_str):
+    """Render scorecard HTML to a PNG using Playwright (sync API, headless Chromium).
+    Returns raw PNG bytes, or raises RuntimeError with a descriptive message if
+    Playwright is not available or Chromium cannot be found. v182.88."""
+    try:
+        from playwright.sync_api import sync_playwright as _pw_sync
+    except ImportError:
+        raise RuntimeError(
+            '[scorecard_png] playwright Python package not installed. '
+            'Add "playwright" to requirements.txt and run "playwright install chromium".')
+    import tempfile as _tmpsc, os as _osc
+    tmp = _tmpsc.NamedTemporaryFile(suffix='.html', delete=False, mode='w', encoding='utf-8')
+    try:
+        tmp.write(html_str)
+        tmp.close()
+        file_url = 'file://' + tmp.name
+        with _pw_sync() as pw:
+            # Try the pre-installed Chromium path first (Railway / Docker), then let
+            # Playwright discover its own installation.
+            _PREINSTALLED = '/opt/pw-browsers/chromium'
+            launch_kwargs = {'headless': True, 'args': ['--no-sandbox', '--disable-dev-shm-usage']}
+            if _osc.path.isdir(_PREINSTALLED):
+                launch_kwargs['executable_path'] = _PREINSTALLED
+            browser = pw.chromium.launch(**launch_kwargs)
+            try:
+                page = browser.new_page(viewport={'width': 760, 'height': 1200})
+                page.goto(file_url, wait_until='networkidle', timeout=15000)
+                # Screenshot only the .card element — same card shown in the trial tab
+                card = page.query_selector('.card')
+                if card:
+                    png_bytes = card.screenshot(type='png')
+                else:
+                    # Fallback: full-page screenshot if the selector is missing
+                    png_bytes = page.screenshot(full_page=True, type='png')
+            finally:
+                browser.close()
+        return png_bytes
+    except RuntimeError:
+        raise
+    except Exception as _pwe:
+        raise RuntimeError(f'[scorecard_png] Playwright render failed: {_pwe}')
+    finally:
+        try:
+            _osc.unlink(tmp.name)
+        except Exception:
+            pass
+
+
+@app.route('/admin/contest-judge/new-eval-scorecard/<int:entry_id>')
+@login_required
+def admin_contest_judge_new_eval_scorecard(entry_id):
+    """Download the trial evaluation scorecard for one picture as a PNG image.
+    Renders the self-contained HTML scorecard card via Playwright headless Chromium.
+    Falls back to returning the HTML with an error header if Playwright is unavailable,
+    so the Railway console shows exactly what is missing. v182.88."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_new_eval_ensure_table()
+    pic = db.session.execute(db.text(
+        "SELECT b.id, b.photographer, b.image_title, b.thumb_path, b.batch_ref, b.composite_score "
+        "FROM contest_judge_batch b WHERE b.id = :eid"
+    ), {'eid': entry_id}).fetchone()
+    if not pic:
+        abort(404)
+    t = db.session.execute(db.text(
+        "SELECT wonder, aq, disruption, dm, dod, dod_situational, dod_technical, dod_bonus, "
+        "story, overall, raw_json, run_at "
+        "FROM contest_judge_new_eval WHERE entry_id = :eid ORDER BY id DESC LIMIT 1"
+    ), {'eid': entry_id}).fetchone()
+    if not t:
+        abort(404)
+    try:
+        rj = _cj_json.loads(t.raw_json or '{}')
+    except Exception:
+        rj = {}
+    trial_rows = db.session.execute(db.text(
+        "SELECT DISTINCT ON (entry_id) entry_id, overall FROM contest_judge_new_eval "
+        "WHERE batch_ref = :br ORDER BY entry_id, id DESC"
+    ), {'br': pic.batch_ref}).fetchall()
+    trial_rank = {r.entry_id: i + 1 for i, r in enumerate(
+        sorted(trial_rows, key=lambda r: -(r.overall or 0)))}
+    e = _ne_build_entry_dict(entry_id, pic, t, rj, trial_rank)
     html = _ne_scorecard_html(e)
     safe_title = (pic.image_title or str(entry_id)).replace('/', '_').replace(' ', '_')
-    return app.response_class(
-        html, mimetype='text/html',
-        headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"'})
+    try:
+        png_bytes = _ne_html_to_png(html)
+        return app.response_class(
+            png_bytes, mimetype='image/png',
+            headers={'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.png"'})
+    except RuntimeError as _rte:
+        # Log clearly so the Railway console shows what is needed
+        app.logger.error(str(_rte))
+        # Graceful fallback: return the HTML so the admin can still print-to-PDF
+        return app.response_class(
+            html, mimetype='text/html',
+            headers={
+                'Content-Disposition': f'attachment; filename="SL_Scorecard_{safe_title}.html"',
+                'X-SL-Scorecard-Error': 'PNG render unavailable — see Railway logs'
+            })
 
 
 @app.route('/admin/contest-judge/new-eval-scorecard-zip/<path:batch_ref>')
@@ -19147,7 +19208,6 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
     _cj_new_eval_ensure_table()
     import zipfile as _zf
     import io as _zio
-    story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
     # Latest trial row per picture
     rows = db.session.execute(db.text("""
         SELECT DISTINCT ON (n.entry_id)
@@ -19162,15 +19222,14 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
     """), {'br': batch_ref}).fetchall()
     if not rows:
         return app.response_class('No trial evaluations found for this open call.', status=404, mimetype='text/plain')
-    # Trial standings
     trial_sorted = sorted(rows, key=lambda r: -(r.overall or 0))
     trial_rank = {r.eid: i + 1 for i, r in enumerate(trial_sorted)}
-    # Resolve thumb URLs once
+    story_words = {'yes': 'Yes', 'no': 'No', 'not_sure': 'Not sure'}
     try:
         import storage as _r2zip
-        def _thumb(path): return _r2zip.public_url(path) if path else ''
+        def _thumb_zip(path): return _r2zip.public_url(path) if path else ''
     except Exception:
-        def _thumb(path): return path or ''
+        def _thumb_zip(path): return path or ''
     buf = _zio.BytesIO()
     with _zf.ZipFile(buf, 'w', _zf.ZIP_DEFLATED) as zout:
         for r in trial_sorted:
@@ -19184,8 +19243,7 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
                     princ.append(f"{p.get('name')} ({p.get('family', '')}): {p.get('decision', '')}")
             e = {
                 'id': r.eid, 'photographer': r.photographer or 'Unknown',
-                'title': r.image_title or '',
-                'thumb_url': _thumb(r.thumb_path),
+                'title': r.image_title or '', 'thumb_url': _thumb_zip(r.thumb_path),
                 'overall': r.overall, 'wonder': r.wonder, 'aq': r.aq,
                 'disruption': r.disruption, 'dm': r.dm, 'dod': r.dod,
                 'dod_situational': r.dod_situational, 'dod_technical': r.dod_technical,
@@ -19198,8 +19256,7 @@ def admin_contest_judge_new_eval_scorecard_zip(batch_ref):
                 'dm_reason': rj.get('dm_reason', ''),
                 'dod_situational_reason': rj.get('dod_situational_reason', ''),
                 'dod_technical_reason': rj.get('dod_technical_reason', ''),
-                'principles': princ, 'run_at': r.run_at,
-                'rank': trial_rank.get(r.eid),
+                'principles': princ, 'run_at': r.run_at, 'rank': trial_rank.get(r.eid),
             }
             html_bytes = _ne_scorecard_html(e).encode('utf-8')
             rank_prefix = f'{trial_rank.get(r.eid, 0):03d}'
