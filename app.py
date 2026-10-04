@@ -1,3 +1,5 @@
+# SL-VERSION: 182.86 (Session 236, 2026-10-04 -- NEW (staging only, nothing live-tested): the Open Call trial tab's cramped 11-column table is replaced by a picture-card grid plus a full evaluation-card detail view per picture (dimension order Degree of Difficulty, Disruption, Decisive Moment, Wonder, Affective Quotient -- founder-approved mock). Reads existing contest_judge_new_eval data only, through the existing _cj_new_eval_entries() helper; no change to the engine, the arithmetic, or any official result. New: judge_note column on contest_judge_new_eval (idempotent ALTER, default NULL) carries a judge's note per picture, separate from the official haiku_judge_note on contest_judge_batch. New route POST /admin/contest-judge/new-eval-edit/<entry_id> saves judge_note, or patches one reason field inside raw_json (wonder_reason, aq_reason, disruption_reason, dm_reason, dod_situational_reason, dod_technical_reason, story_reason) -- same pattern as the existing /admin/contest-judge/haiku-edit route. KNOWN GAP, surfaced in the template, not hidden: this trial engine does not generate a narrative ("What the picture is") or a master reference, so the detail view does not show those sections -- only what the engine actually produces (five dimensions with reasons, principles, Story tag). Download-as-image and ZIP-of-cards are explicitly NOT built in this version -- separate scope, own signal needed. Pairs with templates/admin_contest_judge.html 3.3. RETAINS 182.85.)
+# SL-VERSION: 182.85 (Session 236, 2026-10-04 -- FIX (same bug confirmed on staging that crashed production): /dashboard raises UndefinedError for any Sonnet/admin account whose users.mentor_advice_json holds the Haiku Sherpa shape ({'observation':...}, no 'detail') because dashboard.html line 572 reads mentor_advice.detail. Dashboard route now passes mentor_advice to the template ONLY when it is a dict carrying title, action and detail as non-empty text; otherwise None, so the template's own fallback shows. The saved data is NOT changed or deleted -- the Haiku page still reads the same field. Haiku route, _is_sonnet_user and login redirects untouched. Same fix already proven on production as 182.19.1. RETAINS 182.84.)
 # SL-VERSION: 182.84 (Session 235, 2026-10-04 -- NEW (staging only): Curation batches. Every 'Run Batch' press is now one saved batch (new nullable columns images.curation_batch_id / curation_batch_label, added on first use; nothing existing is changed or rescored). Page shows the newest batch on top and older ones under 'Saved batches'. New routes: GET /admin/curation/export-csv?batch=<id|all> (CSV, no engine call) and POST /admin/curation/delete-batch (deletes one batch's pictures, same deletion as the existing bulk delete). Existing curation pictures with no batch are grouped once by photographer + genre + upload day when the page is opened. RETAINS 182.83.)
 # SL-VERSION: 182.83 (Session 235, 2026-10-04 -- CHANGE: the Curation page (/admin/curation) is now given the live genre list (GENRE_IDS) so its genre dropdown follows the real genres. One line in admin_curation(); no scoring, upload or database change. Paired with admin.html 3.5 (Curation links) and admin_curation.html 1.1. RETAINS 182.82.)
 # SL-VERSION: 182.82 (Session 235, 2026-10-03 -- CHANGE (staging only, nothing live-tested): the new-evaluation trial is now a TAB on the Open Call page ('Official results' | 'New evaluation (trial)', ?tab=trial) with the same kind of table and pictures as the official one, plus a 'Read reasons' row for each picture (five reasons, principles, story reason). Replaces the card + spreadsheet-only view of 182.81. Reads saved trial results only: no engine call, no new table, nothing in contest_judge_batch written. New helper _cj_new_eval_entries(); the page route passes trial_entries. RETAINS 182.81.)
@@ -6115,6 +6117,18 @@ def dashboard():
             _mentor_advice = _maj.loads(_urow_mentor_json)
     except Exception as _ma_err:
         app.logger.warning(f'[dashboard] mentor_advice_json fetch: {_ma_err}')
+
+    # 182.85: the same column also holds the Haiku Sherpa shape ({'observation': ...},
+    # no 'detail'). dashboard.html needs title + action + detail; any other shape
+    # would crash the page. Hide the card instead (template fallback shows). Data untouched.
+    if _mentor_advice is not None:
+        _ma_ok = isinstance(_mentor_advice, dict) and all(
+            isinstance(_mentor_advice.get(_k), str) and _mentor_advice.get(_k).strip()
+            for _k in ('title', 'action', 'detail')
+        )
+        if not _ma_ok:
+            app.logger.info(f'[dashboard] mentor_advice_json for user {_uid} is not the dashboard shape - card skipped')
+            _mentor_advice = None
 
     _evolving_eye_json = None
     _evolving_eye_data = None
@@ -18616,6 +18630,15 @@ def _cj_new_eval_ensure_table():
         )
     """))
     db.session.commit()
+    # 182.86: a judge's note per picture, separate from the official haiku_judge_note
+    # (that column lives on contest_judge_batch, this one on the trial's own table).
+    # Idempotent — safe to run on every request, matches the existing column-add pattern.
+    try:
+        db.session.execute(db.text(
+            "ALTER TABLE contest_judge_new_eval ADD COLUMN IF NOT EXISTS judge_note TEXT"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def _cj_new_eval_rows(batch_ref):
@@ -18638,7 +18661,7 @@ def _cj_new_eval_entries(batch_ref, base_entries):
     latest = {}
     for r in db.session.execute(db.text(
             "SELECT DISTINCT ON (entry_id) entry_id, wonder, aq, disruption, dm, dod, "
-            "dod_situational, dod_technical, dod_bonus, story, overall, notes, raw_json "
+            "dod_situational, dod_technical, dod_bonus, story, overall, notes, raw_json, judge_note, run_at "
             "FROM contest_judge_new_eval WHERE batch_ref = :br ORDER BY entry_id, id DESC"),
             {'br': batch_ref}).fetchall():
         latest[r.entry_id] = r
@@ -18678,6 +18701,14 @@ def _cj_new_eval_entries(batch_ref, base_entries):
                 'story': story_words.get(t.story, t.story or ''),
                 'reasons': [(a, b) for a, b in reasons if b],
                 'principles': princ, 'notes': t.notes or '',
+                'judge_note': t.judge_note or '', 'run_at': t.run_at,
+                'wonder_reason': rj.get('wonder_reason', ''), 'wonder_kind': rj.get('wonder_kind', ''),
+                'aq_reason': rj.get('aq_reason', ''), 'aq_feeling': rj.get('aq_feeling', ''),
+                'disruption_reason': rj.get('disruption_reason', ''),
+                'dm_reason': rj.get('dm_reason', ''),
+                'dod_situational_reason': rj.get('dod_situational_reason', ''),
+                'dod_technical_reason': rj.get('dod_technical_reason', ''),
+                'story_reason': rj.get('story_reason', ''),
             })
             ranked.append(item)
         elif flagged:
@@ -18844,6 +18875,58 @@ def admin_contest_judge_new_eval_csv(batch_ref):
     safe_ref = batch_ref.replace('/', '_').replace(' ', '_')
     return app.response_class(out.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="SL_NewEvaluation_Trial_{safe_ref}.csv"'})
+
+
+@app.route('/admin/contest-judge/new-eval-edit/<int:entry_id>', methods=['POST'])
+@login_required
+def admin_contest_judge_new_eval_edit(entry_id):
+    """Save a judge note, or patch one reason field inside raw_json, for the LATEST trial run
+    of one picture. Same pattern as the existing /admin/contest-judge/haiku-edit route, but on
+    contest_judge_new_eval (the trial's own table) rather than contest_judge_batch.
+    JSON: {note: str} -- saves judge_note on the latest row for this entry_id.
+    JSON: {field: str, value: str} -- patches one key inside the latest row's raw_json.
+    Returns {ok: true}. v182.86."""
+    if current_user.role != 'admin':
+        abort(403)
+    _cj_new_eval_ensure_table()
+    data = request.get_json(silent=True) or {}
+    _ALLOWED_NE_FIELDS = {'wonder_reason', 'aq_reason', 'disruption_reason', 'dm_reason',
+                          'dod_situational_reason', 'dod_technical_reason', 'story_reason'}
+    field = (data.get('field') or '').strip()
+    try:
+        latest_id_row = db.session.execute(db.text(
+            "SELECT id, raw_json FROM contest_judge_new_eval "
+            "WHERE entry_id = :eid ORDER BY id DESC LIMIT 1"
+        ), {'eid': entry_id}).fetchone()
+        if not latest_id_row:
+            return jsonify({'ok': False, 'error': 'No trial run found for this picture'}), 404
+        if field:
+            if field not in _ALLOWED_NE_FIELDS:
+                return jsonify({'ok': False, 'error': f'Field "{field}" not editable'}), 400
+            value = (data.get('value') or '').strip()
+            try:
+                existing = _cj_json.loads(latest_id_row.raw_json or '{}')
+            except Exception:
+                existing = {}
+            existing[field] = value
+            db.session.execute(db.text(
+                "UPDATE contest_judge_new_eval SET raw_json = :rj WHERE id = :rid"
+            ), {'rj': _cj_json.dumps(existing), 'rid': latest_id_row.id})
+            db.session.commit()
+            app.logger.info(f'[new_eval_edit] entry={entry_id} field={field} updated ({len(value)} chars)')
+            return jsonify({'ok': True})
+        else:
+            note = (data.get('note') or '').strip()
+            db.session.execute(db.text(
+                "UPDATE contest_judge_new_eval SET judge_note = :n WHERE id = :rid"
+            ), {'n': note or None, 'rid': latest_id_row.id})
+            db.session.commit()
+            app.logger.info(f'[new_eval_edit] entry={entry_id} judge note saved ({len(note)} chars)')
+            return jsonify({'ok': True})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[new_eval_edit] entry={entry_id}: {e}')
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 @app.route('/admin/contest-judge/ddi-compare-run/<path:batch_ref>', methods=['POST'])
