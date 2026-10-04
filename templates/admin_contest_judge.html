@@ -1,3 +1,4 @@
+{# SL-VERSION: admin_contest_judge-3.5 (Session 236, 2026-10-04 -- CHANGE (staging only, nothing live-tested): scorecard downloads added to the trial tab. "Download scorecard" button on every picture card links to /admin/contest-judge/new-eval-scorecard/<entry_id> (one self-contained HTML scorecard). "Download all scorecards (ZIP)" button in the action bar links to /admin/contest-judge/new-eval-scorecard-zip/<batch> (all evaluated pictures in one ZIP). Requires app.py 182.87. RETAINS 3.4 / 3.3 / 3.2 / 3.1 / 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.4 (Session 236, 2026-10-04 -- CHANGE (staging only, nothing live-tested): tap any picture thumbnail in the trial tab (the grid card or the opened full evaluation card) to see it full size, same lightbox pattern as admin_curation.html -- dark overlay, close button, click outside or Escape to close. Scoped entirely to the ev- prefixed trial elements; the official tab's small table thumbnail is untouched. No app.py change: reuses the thumb_url already passed to the template, no new route, no new engine call, no DB change. Pairs with app.py 182.86 (no change needed). RETAINS 3.3 / 3.2 / 3.1 / 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.2 (Session 235, 2026-10-03 -- CHANGE (staging only, nothing live-tested): the new-evaluation trial is now a TAB ('Official results' | 'New evaluation (trial)') with the same kind of table and pictures as the official one, and a 'Read reasons' row for each picture. The trial buttons live inside the trial tab; the official tab is as it was in 3.0. When a trial run finishes the page reloads to show the results. Pairs with app.py 182.82. RETAINS 3.1 / 3.0.) #}
 {# SL-VERSION: admin_contest_judge-3.1 (Session 235, 2026-10-03 -- NEW (staging only, nothing live-tested): 'New evaluation (trial)' card on the Open Call page with two buttons: 'Try the new evaluation (trial)' (asks for confirmation showing the number of engine calls, then runs; official results never change) and 'Download trial results' (trial beside official, as a spreadsheet). Pairs with app.py 182.81. RETAINS 3.0.) #}
@@ -147,6 +148,8 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
 .ev-pic-score-label{font-size:12px;color:#5b84bc;text-transform:uppercase;letter-spacing:0.05em}
 .ev-btn-view{width:100%;background:#eaf2fb;color:#1b4f91;font-size:14px;font-weight:700;padding:10px 0;border-radius:8px;border:1px solid #c5dcf3;cursor:pointer}
 .ev-btn-view:hover{background:#dce8f7}
+.ev-btn-scorecard{width:100%;background:#fff;color:#1b4f91;font-size:13px;font-weight:600;padding:8px 0;border-radius:8px;border:1px solid #c5dcf3;cursor:pointer;text-align:center;margin-top:7px;display:block}
+.ev-btn-scorecard:hover{background:#eaf2fb}
 
 .ev-detail{display:none;max-width:780px;margin:0 0 32px}
 .ev-detail.open{display:block}
@@ -316,6 +319,9 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
       <a class="btn btn-line" href="{{ url_for('admin_contest_judge_new_eval_csv', batch_ref=batch_ref) }}" style="text-decoration:none">
         <i class="ti ti-file-spreadsheet"></i> Download trial results
       </a>
+      <a class="btn btn-line" href="{{ url_for('admin_contest_judge_new_eval_scorecard_zip', batch_ref=batch_ref) }}" style="text-decoration:none">
+        <i class="ti ti-file-zip"></i> Download all scorecards (ZIP)
+      </a>
     </div>
     <div class="prog" id="newEvalProg">
       <div class="prog-track"><div class="prog-fill" id="newEvalFill"></div></div>
@@ -351,6 +357,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:15px;min-width:700px}
           <span class="ev-pic-score-label">evaluation</span>
         </div>
         <button class="ev-btn-view" type="button" onclick="evOpen({{ e.id }})">View full card</button>
+        <a class="ev-btn-scorecard" href="{{ url_for('admin_contest_judge_new_eval_scorecard', entry_id=e.id) }}" download style="text-decoration:none;display:block">&#8595; Download scorecard</a>
       </div>
     </div>
     {% endfor %}
@@ -640,6 +647,7 @@ var URL_NE_COUNT    = {{ url_for('admin_contest_judge_new_eval_count', batch_ref
 var URL_NE_RUN      = {{ url_for('admin_contest_judge_new_eval_run', batch_ref=batch_ref or '_')|tojson }};
 var URL_DELETE      = {{ url_for('admin_contest_judge_delete_batch', batch_ref=batch_ref or '_')|tojson }};
 var URL_NE_EDIT     = {{ url_for('admin_contest_judge_new_eval_edit', entry_id=0)|tojson }};
+var URL_NE_SCORECARD_ZIP = {{ url_for('admin_contest_judge_new_eval_scorecard_zip', batch_ref=batch_ref or '_')|tojson }};
 var BATCH_REF       = {{ batch_ref|tojson if batch_ref else 'null' }};
 var BATCH_N         = {{ batch_meta.n if batch_ref and batch_meta else 0 }};
 </script>
