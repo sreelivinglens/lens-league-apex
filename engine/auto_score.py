@@ -1,3 +1,64 @@
+# SL-VERSION: 171.44 (Session 237, 2026-10-05 -- founder: "dig into how we can make it work under 120
+# sec- check whats happening - at app level also from upload", then approved doing all three in order:
+# (3) token-usage logging, (1) cache the big prompt, (2) trim the dead repetition rule blocks.
+# (3) TOKEN-USAGE LOGGING: added _log_api_usage() and a call to it right after every API response is
+# parsed (vision, main scoring, the text-repeat corrective call, recalibrate_audit, auto_score_ddi_fast)
+# -- prints input/output/cache_read/cache_creation token counts to the Railway console. This replaces
+# every CHARACTER-COUNT GUESS this file's own version headers had been making about prompt size with
+# an actual measured number, and is the only way to confirm a cache_control block is really being hit
+# versus silently falling through to a full-price read.
+# (1) CACHE THE BIG PROMPT: SCORE_PROMPT (the single prompt string previously sent fresh, uncached,
+# every scoring call) was split into two constants: SCORE_PROMPT_HEAD (~240 lines, every {placeholder}
+# this call fills in per image -- genre, title, exif, masters pool, etc. -- built fresh each call, same
+# as before) and SCORE_PROMPT_STATIC_BODY (~3150 lines, confirmed to contain ZERO remaining placeholders
+# after the split). STATIC_BODY is now sent as a SECOND cached system block (its own cache_control,
+# alongside the existing SYSTEM_BRIEF block -- Anthropic's API supports multiple cache breakpoints in
+# one system array), instead of being re-formatted and re-sent inside the user message every call.
+# CORRECTED ESTIMATE, measured directly off the live file after the split (earlier session estimates in
+# this file's own prior headers used a STALE line-slice from before several edits shifted the file and
+# were simply wrong -- flagging that error rather than letting it stand): SYSTEM_BRIEF ~12,900 tokens
+# (already cached since 171.9-staging), SCORE_PROMPT_STATIC_BODY ~17,000 tokens (newly cached by this
+# version), SCORE_PROMPT_HEAD ~3,800 tokens (per-image, necessarily uncached). Total cached prefix goes
+# from ~12,900 to ~29,900 tokens.
+# ONE PRESERVED-BEHAVIOUR DETAIL: SCORE_PROMPT_STATIC_BODY contains one {{ / }} escaped-brace JSON
+# example that used to rely on .format() to collapse it to a literal { / } every call. Since this block
+# no longer goes through .format() at all, that escape was unescaped ONCE at the source level when the
+# split was made (confirmed: the model-visible text is byte-identical either way, verified programmatically
+# before shipping).
+# HONEST CAVEAT, NOT claimed as zero-risk: moving SCORE_PROMPT_STATIC_BODY into the system array also
+# moves its reading position relative to the image. Before this change, the model read [system brief] ->
+# [image] -> [full instructions, head+body as one block] -> [dynamic blocks]. After this change, it reads
+# [system brief] -> [system: static body instructions] -> [image] -> [head + dynamic blocks]. This
+# reordering is NOT avoidable while still getting the caching benefit -- Anthropic's cache requires the
+# cached block's prefix to be stable across calls, and the image (unique every call) cannot sit before a
+# cached block without breaking its cache every time. This is a real structural change, not purely
+# "infrastructure," and was not fully apparent until the actual message-construction code was read in
+# detail -- flagging it plainly rather than quietly shipping a reordering under an earlier "zero content
+# risk" description. NEEDS EXTRA SCRUTINY on the next live rescore: not just repetition/timing, but
+# whether tone, specificity, and field discipline hold up with instructions now read before the image
+# instead of after it.
+# (2) TRIMMED DEAD REPETITION RULES: removed the CROSS-FIELD REPETITION CHECK (171.36) and VISUAL
+# MATERIAL INVENTORY (171.40) blocks -- both verified via live rescores this session to NOT hold (171.40
+# specifically confirmed to make repetition WORSE). The code-level TEXT_REPEAT detector + corrective
+# re-ask (171.39/171.41-171.43) now does this job after the fact, with actual verification, rather than
+# hoping a wording instruction holds across ~20 fields in a very long prompt. Fixed one now-dangling
+# reference in the DIM OBS section that used to point at the removed VISUAL MATERIAL INVENTORY step.
+# FIELD OWNERSHIP RULE (171.37) was DELIBERATELY NOT touched in this pass -- its "OWNERSHIP REMINDER"
+# sub-notes are woven into 6+ individual field specs (dim_obs_dod, dim_obs_wonder, impression,
+# transferable_advice, and others); removing it cleanly means editing every one of those references too,
+# which is a separate, more careful edit than this pass and was deferred rather than rushed at this hour.
+# VERIFIED OFFLINE before shipping: full py_compile pass; re-ran all 8 offline tests from 171.43
+# (unaffected by this change, confirms nothing downstream broke); confirmed SCORE_PROMPT_HEAD still
+# formats cleanly with per-image values; confirmed SCORE_PROMPT_STATIC_BODY has zero remaining
+# placeholders and its one escaped-brace JSON example renders identically to before; confirmed no
+# dangling references to either removed block remain anywhere in the live prompt text (only historical
+# version-header comments mention them now, which are never sent to the model).
+# NOT YET VERIFIED LIVE (Rule 3) -- needs a real Railway rescore + full console log to confirm: (a) the
+# new [auto_score][usage][...] log lines appear and look sane; (b) cache_read_input_tokens is large and
+# non-zero on the second and later scoring calls within the 1h TTL window, proving the cache is actually
+# being hit; (c) total scoring latency actually drops; (d) no regression in tone, specificity, or field
+# discipline from either the instruction-reordering or the two removed rule blocks. RETAINS 171.43.
+#
 # SL-VERSION: 171.43 (Session 237, 2026-10-05 -- founder sent a 6th rescore of image 143 (log attached,
 # cut off mid-traceback; full traceback pasted on request) showing a NEW, more serious issue than text
 # repetition: the PDF founder sent back was confirmed via `diff` to be BYTE-FOR-BYTE IDENTICAL to the
@@ -1134,7 +1195,7 @@ def _apply_code_score(result, effective_genre, exif_context=""):
     return result
 
 
-SCORE_PROMPT = """Analyse this photograph using the Apex DDI Engine.
+SCORE_PROMPT_HEAD = """Analyse this photograph using the Apex DDI Engine.
 
 Genre: {genre}
 Photographer: {photographer}
@@ -1376,7 +1437,9 @@ ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
 - Indian photographers in the pool are weighted equally to international.
   Do not default to international names when an Indian master fits better.
 - {masters_pool_block}
+"""
 
+SCORE_PROMPT_STATIC_BODY = """
 AWARD-WINNING GUIDANCE — every scorecard:
 End background_check with one specific answer to: "What would this image need to
 be at award-winning level?" Be concrete. Genre-specific. Not generic.
@@ -1643,64 +1706,6 @@ Read all four cards together. Ask:
 2. Is there a sentence in any card that could have appeared in the last scorecard unchanged? If yes — make it specific to this image.
 3. Does every card feel like it is speaking to THIS photographer about THIS image — or does it feel like a template with the subject swapped in? If template — rewrite.
 
-CROSS-FIELD REPETITION CHECK — MANDATORY, WHOLE SCORECARD, NOT JUST THE FOUR CARDS:
-This scorecard has roughly twenty separate text fields (hard_truth/impression, transferable_advice,
-mentor_technical, background_check, dim_obs_dod, dim_obs_disruption, dim_obs_dm, dim_obs_wonder,
-dim_obs_aq, tech_read, visual_flow, imagine, conclusion, body_of_work, and more). Several of these
-fields can legitimately touch the same underlying FACT about the image (e.g. "shot from directly
-above" is relevant to difficulty, disruption, AND the technical read) — that overlap in subject
-matter is fine. What is NOT fine is restating the same OBSERVATION in near-identical sentence
-form in two or more fields. That reads as a stuck record, not twenty considered observations.
-BEFORE SUBMITTING, scan every field above for repeated claims. For each one you find:
-- Decide which ONE field is the natural home for it (usually the dimension it most directly
-  explains — e.g. a technique/access decision belongs primarily in dim_obs_dod or tech_read,
-  not restated again in impression, mentor_technical, AND transferable_advice).
-- In every OTHER field, either cut the sentence and replace it with a genuinely different
-  observation about the image, or — if the field truly needs to touch the same fact — describe
-  a DIFFERENT facet of it (what it cost the photographer vs. what it does for the viewer vs.
-  what the next version would need) rather than reusing the same wording and structure.
-WORKED EXAMPLE OF THE FAILURE MODE (do not reproduce this pattern): a scorecard where "the aerial
-angle is the decision — most photographers shoot at eye level, you found the overhead view" was
-written out, in slightly different words, in the opening impression, in transferable_advice, in
-mentor_technical, in dim_obs_disruption, AND in tech_read — five fields making the same point.
-One of those should have kept it; the other four needed a different observation each.
-This check runs in addition to, not instead of, the four-card check above.
-
-VISUAL MATERIAL INVENTORY — MANDATORY FIRST STEP, BEFORE WRITING ANY FIELD BELOW:
-This scorecard has roughly twenty text fields, each required to name something specific and
-image-grounded — not a generic photography concept. Before writing any of them, look at the
-image again and privately list (do NOT include this list in your JSON output) at least 10
-distinct, concrete things you can actually see in THIS frame. Not photography theory — actual
-visual facts: the vantage point and what it does to scale/perspective; each subject's exact pose,
-gesture, or body position; a specific colour or tonal relationship; a texture (water, fabric, metal,
-skin, fur, feather); a background or foreground element most viewers would miss on a first look;
-a shadow or light-direction detail; an edge-of-frame or corner detail; a spatial relationship
-between two elements; something deliberately absent or empty; a detail that reveals time of day,
-weather, or season.
-WHY THIS STEP EXISTS: on a visually simple image — one dominant composition idea (e.g. an
-aerial vantage point) plus one secondary technique (e.g. intentional motion blur) — there are
-usually only 2-3 "big" facts available, but twenty fields all need something specific to say.
-Without this step the engine has repeatedly fallen back to restating those same 2-3 big facts
-under different wording field after field — confirmed on live rescores where "shot from directly
-overhead" and "the yellow-blue colour relationship" led six, seven, even eight different fields even
-after the CROSS-FIELD REPETITION CHECK and FIELD OWNERSHIP RULE below were both in place.
-Neither of those rules forces the engine to find MORE material — they only police whether an
-already-found fact gets re-explained. An image never actually has only 2-3 observable things in
-it; it has dozens. Most fast readings just never look past the obvious one.
-RULE: once you have your list of 10+, assign each field below a DIFFERENT item from the list as
-its primary content. If a field's job is inherently about one of the two or three big facts (e.g.
-dim_obs_dod is inherently about access/difficulty), that field may use a big fact as its anchor —
-but it must still add an image-specific layer of detail beyond the bare framing already used
-elsewhere (an estimate of height or distance, the specific risk, the exact timing constraint) —
-never the same sentence shape already used for that fact in another field.
-IF YOU RUN OUT OF NEW MATERIAL FOR A FIELD: that is the signal to change the KIND of
-content for that field — the feeling it creates, a craft or technique note, a forward-looking
-possibility, what a different photographer would have done differently — rather than restating an
-already-used visual fact in new words. A field with a smaller, genuinely different observation is
-always better than a field restating the biggest fact again.
-This is prevention, done BEFORE writing — not cleanup done after, which is what FINAL CHECK
-and CROSS-FIELD REPETITION CHECK above are for. Do this step first.
-
 ═══════════════════════════════════════════════════════════
 NEW SCORECARD FIELDS — FORMAT DISCIPLINE RULES (Session 215)
 These fields appear in the JSON schema below. Each has strict rules.
@@ -1741,10 +1746,9 @@ what reverses it. Never write 'more detail would help', 'subject visibility limi
 make this transformation hit harder.
 
 DIM OBS — ONE SENTENCE PER DIMENSION:
-Before writing any of these five, confirm you completed the VISUAL MATERIAL INVENTORY above —
-these five fields are usually where the engine runs out of fresh material first, because all five sound
-like they should discuss the same big compositional fact. They should not. Pull five DIFFERENT
-items from your inventory.
+These five fields are usually where repetition starts, because all five sound like they should
+discuss the same big compositional fact. They should not — each of the five must point at a
+genuinely different, image-specific detail, not five angles on the same one fact.
 FIELD OWNERSHIP RULE — READ BEFORE WRITING ANY DIM OBS: each fact about the image has exactly
 ONE field that is allowed to explain WHY it matters. Other fields may refer to the fact in passing
 (a few words, no re-explanation) but must not re-argue it. The three facts that repeat most often:
@@ -2018,7 +2022,7 @@ dim_obs_*, or visual_flow. It lives ONLY in master_why (and the existing cards t
 use a different master from the pool per the ONE MASTER PER SCORECARD rule above).
 
 Return this exact JSON structure:
-{{
+{
   "dod": <float 0-10>,
   "disruption": <float 0-10>,
   "dm": <float 0-10>,
@@ -2153,7 +2157,7 @@ FORMAT:
   "ns": "<Is there a story? Three verdicts only: 'yes', 'not_sure', or 'no'. DEFAULT = 'not_sure'. THE WRITE-THE-SENTENCE METHOD: Before deciding, write one sentence: 'A [subject] is [verb] [consequence].' If you can write that sentence with a verb AND a consequence that carries meaning without a caption: consider YES. If you can only describe what you see: NOT SURE or NO. If nothing is happening: NO. FULL-FRAME SCAN: scan the entire frame — story may not be in the primary subject. CALIBRATION: YES (>75%): maternity shadow=91%, Nihang horseman=88%, monks walking=75%. NOT_SURE (50-75%): child+blossoms=65%, Kathak feet=65%, woman in white sari=57%. NO (<50%): mountain landscape=40%, swallow landing=44%, studio portrait=34%. AQ/NS INDEPENDENCE: beautiful ≠ story, powerful ≠ story. WILDLIFE: behaviour/disruption=story; subject only=NO. DEFAULT IS NOT_SURE. Do NOT default to yes.>",
   "dim_obs_ns": "<One sentence DEFENDING the verdict — do NOT describe the image. Write WHY it is yes/not_sure/no. YES: 'YES because [subject]+[action]+[consequence] are all readable without a caption: [specific element] completes the story.' NOT_SURE: 'NOT SURE because [specific element] is clear but [what is missing] prevents a complete narrative — viewer projects rather than reads.' NO: 'NO because only the subject is present: [specific description] — nothing is happening that another viewer could narrate without a caption.'>",
   "body_of_work": "<Four directional frames for what images alongside this one would build a coherent body of work. Second person, Sherpa voice. Present tense. DIRECTIONAL — not location advice, not 'go back'. Each frame names: the subject tension, the light or moment type, and what emotional register it would complete. Example for a wildlife image: 'The next frame in this body of work shows the same species in distress or conflict — not the perfect shot, the complicated one. That tension is what a series needs.' Write four distinct frames that together define a photographic project, not four variations of the same image. Max 120 words total across all four frames. No dimension names. No jargon.>"
-}}
+}
 
 AI DETECTION — evaluate BEFORE scoring:
 Set ai_suspicion to a value between 0.0 (certainly real photograph) and 1.0 (certainly AI-generated).
@@ -4871,6 +4875,41 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
+def _log_api_usage(tag, parsed_json):
+    """
+    SL-VERSION 171.44 (Session 237). Founder asked for a real cost/latency
+    investigation into why auto_score() hugs (and sometimes exceeds) the
+    external 120s ceiling. Every prior estimate in this file's own version
+    headers ("~63,000 tokens", "~13,000 tokens") was a CHARACTER-COUNT
+    GUESS (chars/4) — directionally useful but never an actual measured
+    number, because nothing in this file ever read the API's own `usage`
+    block. This fixes that: every call to the Anthropic API returns
+    `usage: {input_tokens, output_tokens, cache_creation_input_tokens,
+    cache_read_input_tokens}` whether anything asked for it or not — it
+    costs nothing extra to read, and reading it is the only way to confirm
+    whether a cache_control block is actually being hit on a given call
+    versus silently falling through to a full-price, full-latency read.
+    Call this with the tag naming which API call this was ('vision',
+    'main_scoring', 'text_repeat_fix') and the parsed response JSON (the
+    dict from response.json(), before extracting the text content) right
+    after every API call in this file. Never raises — a malformed or
+    missing usage block must never break scoring; it only means this one
+    log line is skipped.
+    """
+    try:
+        _u = parsed_json.get('usage') or {}
+        _in     = _u.get('input_tokens')
+        _out    = _u.get('output_tokens')
+        _cread  = _u.get('cache_read_input_tokens')
+        _ccreat = _u.get('cache_creation_input_tokens')
+        if _in is None and _out is None:
+            return  # no usage block at all — nothing to log
+        print(f"[auto_score][usage][{tag}] input={_in} output={_out} "
+              f"cache_read={_cread} cache_creation={_ccreat}")
+    except Exception as _ue:
+        print(f"[auto_score][usage][{tag}] could not read usage block: {_ue}")
+
+
 def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "", filename: str = "", user_city: str = "", location: str = "") -> dict:
     """
     Call 1 of the two-call architecture.
@@ -4998,6 +5037,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
             print(f"[vision_analyse] API error {response.status_code} — scoring will proceed without scene description")
             return {}
         content = response.json()
+        _log_api_usage("vision", content)
         text = ""
         for block in content.get("content", []):
             if block.get("type") == "text":
@@ -6287,6 +6327,7 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
             _log.append(f'[auto_score][TEXT_REPEAT_FIX] API error {_response.status_code} — keeping original text for all flagged fields')
             return result, _log
         _content = _response.json()
+        _log_api_usage("text_repeat_fix", _content)
         _text = ''
         for _block in _content.get("content", []):
             if _block.get("type") == "text":
@@ -6576,7 +6617,14 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         _fallback = _FALLBACK_MASTERS.get(genre, _FALLBACK_MASTERS.get('Street', ''))
         masters_pool_block = f"Pool for {genre}: {_fallback}."
 
-    prompt = SCORE_PROMPT.format(
+    # SL-VERSION 171.44 (Session 237): SCORE_PROMPT was split in two. SCORE_PROMPT_HEAD
+    # (above, ~240 lines) holds every {placeholder} this call fills in per image — it is
+    # built fresh every call, same as before. SCORE_PROMPT_STATIC_BODY (~3200 lines, the
+    # overwhelming majority of the original prompt) contains ZERO placeholders — confirmed
+    # by scanning it for any remaining single-brace token before this split shipped — so it
+    # is no longer run through .format() here at all; it is sent separately, as its own
+    # cached system block, below. See the payload construction for why this split exists.
+    prompt = SCORE_PROMPT_HEAD.format(
         genre                = genre,
         photographer         = photographer,
         title                = title,
@@ -6791,7 +6839,38 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                               # rescore variance observed. Anthropic's API is not fully
                               # deterministic even at temp=0, but this meaningfully tightens
                               # the range. No seed parameter exists on this API to combine with it.
-        "system": [{"type": "text", "text": effective_system, "cache_control": {"type": "ephemeral", "ttl": "1h"}}],
+        # SL-VERSION 171.44 (Session 237): two cached system blocks now, not one.
+        # Block 1 (effective_system / SYSTEM_BRIEF, ~13k tokens) was already cached
+        # since 171.9-staging. Block 2 (SCORE_PROMPT_STATIC_BODY, ~3200 lines / the
+        # large majority of the old SCORE_PROMPT) was NEVER cached before this —
+        # it was sent fresh, inside the user message, on every single scoring call,
+        # at full input-token processing cost. Measured root cause of the main
+        # scoring call's ~86-93s latency (founder's "make it work under 120s"
+        # investigation): this block is ~5x the size of SYSTEM_BRIEF and had zero
+        # caching benefit. It contains no per-image content at all (confirmed: zero
+        # remaining {placeholder} tokens after the split — see SCORE_PROMPT_HEAD
+        # above), so it is safe to send as its own stable, cached block rather than
+        # re-formatted and re-sent as part of the user message every time.
+        # Anthropic's API supports multiple cache breakpoints in one "system" array
+        # (each entry can carry its own cache_control) — this is the same mechanism
+        # already in use for block 1, just applied to the much bigger block 2 too.
+        # Caveat, not new: effective_system itself occasionally differs from plain
+        # SYSTEM_BRIEF (the sub-genre weight-override patch a few lines above) —
+        # on those calls block 1's cache already missed before this change; this
+        # change does not make that any worse, and block 2 is 100% unaffected by it
+        # since nothing in SCORE_PROMPT_STATIC_BODY depends on genre or sub-genre.
+        # No prompt WORDING changed anywhere — every instruction reads byte-identical
+        # to before the split (confirmed: the one {{ / }} JSON-example escape that
+        # .format() used to collapse is now pre-unescaped once in the source, so the
+        # model sees the exact same literal text either way).
+        # VERIFY on the next live rescore via the new [auto_score][usage][main_scoring]
+        # log line (SL-VERSION 171.44's other change) — cache_read_input_tokens should
+        # be large and non-zero on the second and later scoring calls within the 1h
+        # TTL window, proving the cache is actually being hit, not just configured.
+        "system": [
+            {"type": "text", "text": effective_system, "cache_control": {"type": "ephemeral", "ttl": "1h"}},
+            {"type": "text", "text": SCORE_PROMPT_STATIC_BODY, "cache_control": {"type": "ephemeral", "ttl": "1h"}},
+        ],
         "messages": [
             {
                 "role": "user",
@@ -6852,6 +6931,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         raise ValueError(f"API error {response.status_code}: {response.text}")
 
     content = response.json()
+    _log_api_usage("main_scoring", content)
     _stop_reason = content.get("stop_reason")
     if _stop_reason == "max_tokens":
         print(f"[auto_score][WARNING] Response truncated by max_tokens limit (stop_reason=max_tokens). JSON will likely be incomplete and unrepairable.")
@@ -7409,6 +7489,7 @@ def recalibrate_audit(image_path, genre, title, photographer, locked_score, lock
         raise ValueError(f"API error {response.status_code}: {response.text}")
 
     content = response.json()
+    _log_api_usage("recalibrate_audit", content)
     text = ""
     for block in content.get("content", []):
         if block.get("type") == "text":
@@ -7819,6 +7900,7 @@ def auto_score_ddi_fast(image_path, genre, sub_genre=None, camera_track=None):
         raise ValueError(f"API error {response.status_code}: {response.text}")
 
     content = response.json()
+    _log_api_usage("ddi_fast", content)
     text = ""
     for block in content.get("content", []):
         if block.get("type") == "text":
