@@ -1,3 +1,4 @@
+# SL-VERSION: 171.36 (Session 237, 2026-10-05 -- founder found a real engine error in the Egrets of Sasson Dock evaluation (image 143): tech_read wrote "egrets are sharp against motion blur in the background" when the photo shows the exact opposite -- the egrets' wings are intentionally motion-blurred and the boat/background is sharp. FIX 1: tech_read prompt now has a mandatory BLUR/SHARPNESS CHECK sub-step forcing the model to verify which specific element carries the blur before writing the sentence, instead of defaulting to the common "fast shutter froze the subject" trope. FIX 2: founder separately flagged heavy text repetition across scorecard fields -- verified against this same PDF: the same "shot from directly above / most photographers shoot at eye level" observation was restated in near-identical wording across 5 different fields (impression, transferable_advice, mentor_technical, dim_obs_disruption, tech_read), and the existing FINAL CHECK only ever covered the original four byline cards, never the newer dim_obs/tech_read/visual_flow/imagine fields added in Session 215. Added a CROSS-FIELD REPETITION CHECK (mandatory, whole-scorecard) immediately after the existing four-card FINAL CHECK, with a worked example matching this exact failure mode, instructing the model to assign each observation to one home field and give every other field a genuinely different angle. NEITHER fix changes any scoring formula, weight, or numeric dimension score -- narrative/prompt text only. NOT YET DEPLOYED -- founder to push and confirm via Railway console per standing rules; image 143's existing evaluation will still need a manual rescore once this is live to correct the text Carmen already saw. RETAINS 171.35.)
 # SL-VERSION: 171.35 (Session 235, 2026-10-03 -- NEW: Sonnet member score now CALCULATED IN CODE from the model's five dimension numbers (calculate_score), not taken from the model's own arithmetic. Kill switch: env SL_CODE_SCORE=0. Model's own number kept as _model_score. NS bonus handling unchanged (ns=''). Previous: 171.34 (Session 235, 2026-10-02 -- FIX: NS calibration anchors corrected. The 57% 'Not Sure' example was wrongly attached to the Nihang horseman; per the Constitution (survey) the Nihang horseman is 88% = YES and the 57% belongs to the woman in the white sari. Prompt text only; no scoring formula change. RETAINS 171.33.)
 # SL-VERSION: 171.33 (Session 228, 2026-09-28 — Story Transfer rubric fix for Open Call: AQ Story Transfer component now scores EMOTIONAL TRANSFER (does the feeling reach a stranger who cannot name the story?) not NARRATIVE LEGIBILITY (can a stranger name the plot?). Ambiguous images that produce strong emotional response — even when the viewer denies seeing a story — now score HIGH not LOW. Survey proof: n=233, father+newborn silhouette, "No Story" group chose it as Strongest image more than "Yes Story" group. RETAINS 171.32.)
 # SL-VERSION: 171.31 (Session 222, 2026-09-26 — BOW format fix: body_of_work prompt now requires "Frame 1: / Frame 2: / Frame 3: / Frame 4:" labels on separate lines. Prevents prose run-on that broke template frame-splitter. RETAINS 171.30.)
@@ -1483,6 +1484,29 @@ Read all four cards together. Ask:
 2. Is there a sentence in any card that could have appeared in the last scorecard unchanged? If yes — make it specific to this image.
 3. Does every card feel like it is speaking to THIS photographer about THIS image — or does it feel like a template with the subject swapped in? If template — rewrite.
 
+CROSS-FIELD REPETITION CHECK — MANDATORY, WHOLE SCORECARD, NOT JUST THE FOUR CARDS:
+This scorecard has roughly twenty separate text fields (hard_truth/impression, transferable_advice,
+mentor_technical, background_check, dim_obs_dod, dim_obs_disruption, dim_obs_dm, dim_obs_wonder,
+dim_obs_aq, tech_read, visual_flow, imagine, conclusion, body_of_work, and more). Several of these
+fields can legitimately touch the same underlying FACT about the image (e.g. "shot from directly
+above" is relevant to difficulty, disruption, AND the technical read) — that overlap in subject
+matter is fine. What is NOT fine is restating the same OBSERVATION in near-identical sentence
+form in two or more fields. That reads as a stuck record, not twenty considered observations.
+BEFORE SUBMITTING, scan every field above for repeated claims. For each one you find:
+- Decide which ONE field is the natural home for it (usually the dimension it most directly
+  explains — e.g. a technique/access decision belongs primarily in dim_obs_dod or tech_read,
+  not restated again in impression, mentor_technical, AND transferable_advice).
+- In every OTHER field, either cut the sentence and replace it with a genuinely different
+  observation about the image, or — if the field truly needs to touch the same fact — describe
+  a DIFFERENT facet of it (what it cost the photographer vs. what it does for the viewer vs.
+  what the next version would need) rather than reusing the same wording and structure.
+WORKED EXAMPLE OF THE FAILURE MODE (do not reproduce this pattern): a scorecard where "the aerial
+angle is the decision — most photographers shoot at eye level, you found the overhead view" was
+written out, in slightly different words, in the opening impression, in transferable_advice, in
+mentor_technical, in dim_obs_disruption, AND in tech_read — five fields making the same point.
+One of those should have kept it; the other four needed a different observation each.
+This check runs in addition to, not instead of, the four-card check above.
+
 ═══════════════════════════════════════════════════════════
 NEW SCORECARD FIELDS — FORMAT DISCIPLINE RULES (Session 215)
 These fields appear in the JSON schema below. Each has strict rules.
@@ -1553,6 +1577,16 @@ No career summaries. No 'is known for' as a construction — show the action ins
 
 TECHNICAL READ:
 tech_read: One paragraph, max 60 words. Forensic examination of this specific image.
+BLUR/SHARPNESS CHECK — MANDATORY, BEFORE WRITING THE SENTENCE: Look at each distinct
+element in the frame separately — main subject, any secondary subject, background/
+environment — and note which ONE actually shows blur in the pixels you can see. Do NOT
+default to "fast shutter froze the subject, the background/environment shows motion" —
+that is a common photography trope, not something you have checked. Photographers often
+deliberately blur the MOVING PART of the subject itself (wings, limbs, water, a spinning
+wheel) while keeping the environment sharp, to convey motion intentionally. Before naming
+a cause, state plainly which element carries the blur and describe its visual character
+(streaking, smearing, a directional trail) — then explain why, consistent with what you
+actually see, not with the more common narrative.
 (1) Is the primary subject sharp, soft, or affected by conditions beyond the photographer's
 control — atmospheric haze, rain, motion blur? Name the CAUSE, not just the effect. Defend
 the photographer where conditions caused limitations they could not avoid.
