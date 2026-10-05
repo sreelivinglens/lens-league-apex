@@ -13729,6 +13729,34 @@ def download_card_pdf(image_id):
     Replaces the compositor JPG-stitch approach with a WeasyPrint render of
     scorecard_pdf.html — same colour tokens, same sections, same layout as
     image_detail.html. Subscriber-only gate matches download_card().
+
+    SL-VERSION: 237.1 (Session 237, 2026-10-05 -- ENRICHMENT: founder reported
+    the Save-Card PDF didn't match the web evaluation page's quality for the
+    same image ("Egrets of Sasson Dock" test). Root cause: reportlab_card.py
+    already supported far more fields than this route ever passed it. Now
+    wires in: (1) the 14 fields it already supported but never received --
+    impression, what_next, body_of_work, master_name/why, dim_obs_dod/vd/
+    dm/wf/aq, tech_read, visual_flow, imagine, species_note -- all read with
+    the exact same audit_json keys image_detail.html itself reads, confirmed
+    line-for-line against that template before writing this; (2) percentile
+    line, reusing the exact pattern already fixed at this file's ~L35718
+    (member scorecard email, SL-182.72) after the same "reads a key that
+    doesn't exist" bug; (3) portfolio_data trend history and the "A pattern
+    in your work" narrative, reusing the exact spark()/trend_pill() math and
+    canned-message selection from public_card() (~L12736) and
+    image_detail.html's Repeat Mistake Detector (SL-181.20/181.21) verbatim
+    -- same 5 dimensions, same messages, same image.id % 2 variation; (4)
+    Photography Awards progress line, same 8.5/9.0 tiers and "to go" wording
+    as image_detail.html's launchpad card. Trust badges and the score
+    distribution bar needed no new data -- reportlab_card.py renders those
+    itself from score alone, same as the web page does.
+    Every new field is read with .get()/try-except and defaults to ''/None,
+    so a photo with no history, no percentile pool, or missing audit fields
+    still renders the exact PDF Session 141 produced -- verified locally
+    with both a fully-populated mock and a minimal one (rasterized and
+    visually inspected, not just syntax-checked) before this was touched.
+    NOT YET CONFIRMED LIVE per Rules 3/16 -- needs your push + Railway
+    console output + a real PDF download test on a live scored image.
     """
     img = Image.query.get_or_404(image_id)
     if not img.score:
@@ -13783,6 +13811,24 @@ def download_card_pdf(image_id):
     _mentor_1      = (_audit.get('mentor_location_1') or '').strip()
     _mentor_2      = (_audit.get('mentor_location_2') or '').strip()
 
+    # SL-237.1 — the 14 fields reportlab_card.py already supported but never
+    # received. Keys confirmed against image_detail.html (same audit_json,
+    # same key names, no remapping).
+    _impression    = (_audit.get('impression')    or '').strip()
+    _what_next     = (_audit.get('what_next')     or '').strip()
+    _body_of_work  = (_audit.get('body_of_work')  or '').strip()
+    _master_name   = (_audit.get('master_name')   or '').strip()
+    _master_why    = (_audit.get('master_why')    or '').strip()
+    _dim_obs_dod   = (_audit.get('dim_obs_dod')   or '').strip()
+    _dim_obs_vd    = (_audit.get('dim_obs_vd')    or '').strip()
+    _dim_obs_dm    = (_audit.get('dim_obs_dm')    or '').strip()
+    _dim_obs_wf    = (_audit.get('dim_obs_wf')    or '').strip()
+    _dim_obs_aq    = (_audit.get('dim_obs_aq')    or '').strip()
+    _tech_read     = (_audit.get('tech_read')     or '').strip()
+    _visual_flow   = (_audit.get('visual_flow')   or '').strip()
+    _imagine       = (_audit.get('imagine')       or '').strip()
+    _species_note  = (_audit.get('species_note')  or '').strip()
+
     # ── Dimension breakdown ──
     _dim_breakdown = []
     for _dattr, _dl1, _dl2 in [
@@ -13812,6 +13858,191 @@ def download_card_pdf(image_id):
 
     # ── Photo URL — prefer thumb_url (CDN), fall back to local path ──
     _photo_url = img.thumb_url or ''
+
+    # ── SL-237.1 — Percentile line. Exact reuse of the pattern already fixed
+    # at this file's ~L35718 (member scorecard email, SL-182.72): the field
+    # compute_percentile() actually returns is "top_pct", not "genre_pct".
+    _percentile_text = ''
+    try:
+        from engine.scoring import compute_percentile
+        _pct = compute_percentile(
+            float(img.score), genre=img.genre,
+            camera_track=getattr(img, 'camera_track', None),
+            pool=_pct_pool_for_image(img.id),
+        )
+        if _pct and _pct.get('top_pct') is not None:
+            _percentile_text = f'Higher than {100 - int(_pct["top_pct"])}% of images in the League'
+    except Exception as _pce:
+        app.logger.warning(f'[download_card_pdf] percentile: {_pce}')
+
+    # ── SL-237.1 — Photography Awards progress line. Same 8.5 / 9.0 tiers
+    # and "to go" wording as the launchpad card in image_detail.html.
+    # best_this_year computed the same way public_card() computes it
+    # (~L12844-12866) — Python max() over the year's scored images, not a
+    # SQL aggregate, to match the one pattern already proven on this model.
+    _award_progress_text = ''
+    try:
+        _now_ap     = datetime.utcnow()
+        _year_start = datetime(_now_ap.year, 1, 1)
+        _year_imgs  = db.session.query(Image).filter(
+            Image.user_id   == img.user_id,
+            Image.status    == 'scored',
+            Image.scored_at >= _year_start,
+        ).all()
+        _best_this_year = max((i.score for i in _year_imgs if i.score), default=None)
+
+        _score_f = float(img.score)
+        if _score_f >= 9.0:
+            _award_progress_text = 'Grandmaster-level recognition — this work qualifies for major awards'
+        elif _score_f >= 8.5:
+            _award_progress_text = 'Award-ready — 8.5+ is where Shutter League points you to open photography awards'
+        else:
+            _gap = round(8.5 - _score_f, 2)
+            if _best_this_year:
+                _award_progress_text = (
+                    f'{_gap} to go to Photography Awards (8.5)  ·  '
+                    f'best this year {float(_best_this_year):.2f}'
+                )
+            else:
+                _award_progress_text = f'{_gap} to go to Photography Awards (8.5)'
+    except Exception as _ae:
+        app.logger.warning(f'[download_card_pdf] award progress: {_ae}')
+
+    # ── SL-237.1 — portfolio_data ("How you're developing") + "A pattern in
+    # your work". Exact reuse of the trend/sparkline construction from
+    # public_card() (~L12736-12842) and the Repeat Mistake Detector's canned
+    # message selection from image_detail.html (SL-181.20/181.21) — same 5
+    # dimensions, same messages verbatim, same gating (>=6 plotted images,
+    # weakest dim must be Dipped/Steady, not Climbing), same image.id % 2
+    # variation for wording. Wrapped in try/except so any failure here still
+    # leaves the rest of the PDF (everything above) intact.
+    _portfolio_data = None
+    _pattern_text   = ''
+    try:
+        _owner_id     = img.user_id
+        _scored_count = db.session.query(Image).filter(
+            Image.user_id == _owner_id,
+            Image.status  == 'scored',
+        ).count()
+
+        if _scored_count >= 5:
+            _recent = db.session.query(
+                Image.aq_score, Image.dm_score, Image.dod_score,
+                Image.wonder_score, Image.disruption_score, Image.score
+            ).filter(
+                Image.user_id == _owner_id,
+                Image.status  == 'scored',
+            ).order_by(Image.scored_at.desc()).limit(30).all()
+
+            if _recent and len(_recent) >= 2:
+                _recent = list(reversed(_recent))
+
+                def _spark(values, height=30):
+                    # SL-237.1: only the point list is used here (reportlab draws
+                    # its own path, no SVG polyline string needed) — both return
+                    # paths deliberately return a plain list for a consistent type.
+                    if not values or len(values) < 2:
+                        return []
+                    mn, mx = min(values), max(values)
+                    rng = mx - mn if mx != mn else 1.0
+                    w_step = 300 / (len(values) - 1)
+                    pts = []
+                    for i, v in enumerate(values):
+                        x = round(i * w_step, 1)
+                        y = round(height - ((v - mn) / rng) * (height - 2) - 1, 1)
+                        pts.append({'x': x, 'y': y})
+                    return pts
+
+                def _trend_pill(values):
+                    if len(values) < 3:
+                        return None, None
+                    first  = sum(values[:len(values)//2]) / (len(values)//2)
+                    second = sum(values[len(values)//2:]) / (len(values) - len(values)//2)
+                    diff   = second - first
+                    if diff > 0.3:
+                        return '↑ Climbing — getting stronger', '#27500A'
+                    if diff < -0.3:
+                        return '↓ Dipped recently', '#72243E'
+                    return '— Steady — your next opportunity to grow', '#854F0B'
+
+                _feeling    = [r.aq_score         for r in _recent if r.aq_score         is not None]
+                _timing     = [r.dm_score         for r in _recent if r.dm_score         is not None]
+                _difficulty = [r.dod_score        for r in _recent if r.dod_score        is not None]
+                _impact     = [r.wonder_score     for r in _recent if r.wonder_score     is not None]
+                _disruption = [r.disruption_score for r in _recent if r.disruption_score is not None]
+
+                _dims = []
+                for _lbl, _vals, _color, _flat_color in [
+                    ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
+                    ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
+                    ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
+                    ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
+                ]:
+                    if len(_vals) >= 2:
+                        _pts            = _spark(_vals)
+                        _pill, _pc      = _trend_pill(_vals)
+                        _is_flat        = abs(max(_vals) - min(_vals)) < 0.5
+                        _dims.append({
+                            'label':      _lbl,
+                            'current':    _vals[-1],
+                            'points':     _pts,
+                            'color':      _flat_color if _is_flat else _color,
+                            'pill':       _pill,
+                            'pill_color': _pc,
+                        })
+
+                _portfolio_data = {
+                    'has_trends':    bool(_dims),
+                    'count':         _scored_count,
+                    'plotted_count': len(_recent),
+                    'dimensions':    _dims,
+                }
+
+                # "A pattern in your work" — canned messages copied verbatim
+                # from image_detail.html's _rmd_msgs (SL-181.20/181.21).
+                if _portfolio_data['has_trends'] and len(_recent) >= 6:
+                    _weakest_label, _weakest_val, _weakest_pill = '', 10.0, ''
+                    for _d in _dims:
+                        if _d['current'] < _weakest_val:
+                            _weakest_val   = _d['current']
+                            _weakest_label = _d['label']
+                            _weakest_pill  = _d['pill'] or ''
+                    if _weakest_label and ('Dipped' in _weakest_pill or 'Steady' in _weakest_pill):
+                        _rmd_msgs = {
+                            'Emotion': [
+                                'Your Emotion has been under pressure across recent images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.',
+                                'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and see what changes.',
+                            ],
+                            'Timing': [
+                                'Timing has been your most persistent challenge. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.',
+                                'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.',
+                            ],
+                            'Difficulty': [
+                                'You have been shooting within your comfort zone recently. The difficulty readings suggest familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.',
+                                'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.',
+                            ],
+                            'Visual Impact': [
+                                'Visual Impact has been steady but not climbing. Your frames are clear and well-composed — but not yet magnetic. The gap is usually in the light. Wait for one more improbable quality of light before pressing the shutter.',
+                                'Your Visual Impact has plateaued. The composition is working. The subject is right. The missing element is almost always the light quality — and that means being in the right place before the light arrives, not reacting to it after.',
+                            ],
+                            'Disruption': [
+                                'Your frames have been consistent but predictable lately. The Disruption reading suggests you are still working within conventions familiar to photographers of similar subjects. What would you do with this scene if you had never seen another photograph of it?',
+                                'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.',
+                            ],
+                        }
+                        _rmd_options = _rmd_msgs.get(_weakest_label, [
+                            'This dimension has been your most consistent gap. Patterns matter more than any single image. A deliberate session focused here will move it faster than hoping the next frame fixes it.',
+                            'Your evaluations here have been under quiet but consistent pressure. Worth addressing directly rather than waiting for it to resolve itself.',
+                        ])
+                        _pattern_text = _rmd_options[img.id % 2]
+            else:
+                _portfolio_data = {'has_trends': False, 'count': _scored_count}
+        else:
+            _portfolio_data = {'has_trends': False, 'count': _scored_count}
+    except Exception as _pfe:
+        app.logger.warning(f'[download_card_pdf] portfolio_data: {_pfe}')
+        _portfolio_data = None
 
     # ── Reportlab render — pure Python, no system dependencies ──
     try:
@@ -13847,6 +14078,27 @@ def download_card_pdf(image_id):
             'mentor_location_2': _mentor_2,
             'days_since_language': _days_since,
             'photo_url':         _photo_url,
+            # SL-237.1 — newly wired fields. All additive: reportlab_card.py
+            # skips any section whose key is missing or empty, so this is
+            # safe even if a field is blank for this particular evaluation.
+            'impression':        _impression,
+            'what_next':         _what_next,
+            'body_of_work':      _body_of_work,
+            'master_name':       _master_name,
+            'master_why':        _master_why,
+            'dim_obs_dod':       _dim_obs_dod,
+            'dim_obs_vd':        _dim_obs_vd,
+            'dim_obs_dm':        _dim_obs_dm,
+            'dim_obs_wf':        _dim_obs_wf,
+            'dim_obs_aq':        _dim_obs_aq,
+            'tech_read':         _tech_read,
+            'visual_flow':       _visual_flow,
+            'imagine':           _imagine,
+            'species_note':      _species_note,
+            'percentile_text':      _percentile_text,
+            'award_progress_text':  _award_progress_text,
+            'pattern_in_work_text': _pattern_text,
+            'portfolio_data':       _portfolio_data,
         }
         _pdf_bytes = build_scorecard_pdf(_pdf_data)
     except Exception as _rle:
