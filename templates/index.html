@@ -74,6 +74,7 @@
      (D) The embedded base64 gold crest emblem inside that block (~line 724) replaced with the real couple/wedding photograph from the founder's own example link (https://shutterleague.com/try/standing/1422), hosted at the real R2 URL (pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/0d8fc4aa-5c39-4fe6-95d9-964b6ad05359.jpg) -- confirmed reachable via WebFetch (returned real image bytes, not a 404). Block resized from a small 148px centred emblem to a full-bleed photo (object-fit:cover) inside the same gold-bordered card, with the same Unsplash onerror fallback pattern used everywhere else on this page.
      VERIFIED, not just screenshotted: rendered the full template twice under mocked data -- once with a realistic abundant pool (12 real images, Master/Grandmaster/Maverick tiers, deliberately NO Legend, matching what founder's own screenshots show exists in production) and once with zero real images (worst case). Read the actual generated HTML both times. Abundant case: League's 3 tiles show 3 distinct real photos with real tier captions, none forced to "Legend". Improvement section shows a distinct 4th real photo. eLevate crest block shows the real photo URL with the premium CSS. Zero-image case: League gracefully shows "From the League" on all 3 tiles -- no crash, no forced tier label, honest about the empty state. Template parses clean in both cases.
      NOT YET DONE / SEPARATE: this file has not been pushed anywhere -- founder pushes per Rule 16. The app.py gallery_images query this depends on was written earlier this session and still needs to be delivered/reviewed alongside this template if not already done. -->
+<!-- V17.8 (Session 237 continued, 5 Oct 2026, founder confirmed V17.7 working live on staging, two small polish requests): (1) eLevate evidence-crest-block (~line 367): was full-bleed photo (object-fit:cover filling the whole card), so the pastel-blue #E9EEF5 background approved in V17.7 never actually showed -- added 10px padding to the card so the pastel-blue frame is visible around the photo as the differentiator founder asked for, gold border unchanged. (2) League photo credits (~line 662): founder said photographer name alone is enough, tier should not be shown on the image -- lg_credit no longer appends " · {tier}"; now shows the photographer's name only, falling back to the existing "From the League" when no name is available (unchanged fallback, tier was never shown there either). VERIFIED: re-rendered the template with mocked data, read the actual output -- League caption now reads "Sri Chaitanya" with no tier suffix; evidence-crest-block CSS confirmed carrying the new 10px padding. Template parses clean. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -364,8 +365,8 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
    Separate from, and does not touch, the pricing section's already-approved V16.6 eLevate crest card. */
 .evidence-preview{margin:4px 0 20px;border:1px solid var(--rule);overflow:hidden;max-height:230px;border-radius:2px}
 .evidence-preview img{width:100%;display:block;object-fit:cover;object-position:top}
-.evidence-crest-block{margin:4px 0 20px;border:2px solid #BFA14A;background:#E9EEF5;box-shadow:0 24px 55px rgba(23,21,17,.18);overflow:hidden;max-height:230px;border-radius:2px;display:flex;align-items:center;justify-content:center}
-.evidence-crest-block img{width:100%;height:100%;display:block;object-fit:cover;object-position:top}
+.evidence-crest-block{margin:4px 0 20px;padding:10px;border:2px solid #BFA14A;background:#E9EEF5;box-shadow:0 24px 55px rgba(23,21,17,.18);overflow:hidden;max-height:230px;border-radius:2px;display:flex;align-items:center;justify-content:center}
+.evidence-crest-block img{width:100%;height:100%;display:block;object-fit:cover;object-position:top;border-radius:1px}
 .evidence-crest-block span{display:none}
 
 </style>
@@ -659,7 +660,7 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
         {% set _lg_fallback = ["https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88", "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1800&q=88", "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88"][li] %}
         <img src="{{ _lg_fallback }}" alt="A top-standing photograph from the League" loading="lazy">
         {% endif %}
-        {% set lg_credit = (lg_img.photographer_name ~ ' · ' ~ lg_img.tier) if (lg_img and lg_img.photographer_name and lg_img.tier) else (lg_img.photographer_name if (lg_img and lg_img.photographer_name) else (lg_img.tier if (lg_img and lg_img.tier) else 'From the League')) %}
+        {% set lg_credit = lg_img.photographer_name if (lg_img and lg_img.photographer_name) else 'From the League' %}
         <span>{{ lg_credit }}</span>
       </div>
       {% endfor %}
