@@ -3925,6 +3925,32 @@ def index():
                 "ORDER BY RANDOM() LIMIT 12"
             ), {'r2': _R2}).fetchall()
         carousel_images = [_row_to_ns(r, _car_fields) for r in _carousel_rows]
+
+        # Session 237: gallery_images — a broader real-photo pool for the homepage's
+        # Science/History/League/Improvement sections. carousel_images (score>=8.5,
+        # excludes mentor accounts, requires R2 thumb_url) and recent_images (deduped
+        # to one image per user) were both too narrow in practice — founder found most
+        # of the site's real scored photos belong to a small number of prolific
+        # accounts and were being excluded/collapsed to almost nothing. This query
+        # is the SAME proven WHERE-clause shape as the live /league/photographers
+        # route (league_haiku(), score>=8.0 and 6.0-7.99 queries) rather than a new
+        # pattern: no mentor exclusion, no per-user dedup (a photographer can supply
+        # more than one real photo), no R2-only thumb_url restriction, score>=6.0
+        # (Maverick tier and above) so there is always a real pool to draw from even
+        # though no image has ever reached Legend tier (founder-confirmed). Ordered
+        # by score DESC so the first results skew toward the strongest real work.
+        _gallery_rows = db.session.execute(db.text(
+            "SELECT id, user_id, thumb_url, tier, genre, score, photographer_name "
+            "FROM images "
+            "WHERE score >= 6.0 "
+            "  AND status='scored' AND thumb_url IS NOT NULL "
+            "  AND is_public=true AND is_flagged=false "
+            "  AND (is_haiku_try IS NOT TRUE) "
+            "ORDER BY score DESC LIMIT 30"
+        )).fetchall()
+        _gallery_fields = ['id','user_id','thumb_url','tier','genre','score','photographer_name']
+        gallery_images = [_row_to_ns(r, _gallery_fields) for r in _gallery_rows]
+
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -3942,11 +3968,13 @@ def index():
         logging.error(f'[index] EXCEPTION: {_idx_err}', exc_info=True)
         recent_images = []
         carousel_images = []
+        gallery_images = []
         active_challenge = None
         challenge_thumb = None
     resp = make_response(render_template('index.html',
                            recent_images=recent_images,
                            carousel_images=carousel_images,
+                           gallery_images=gallery_images,
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
                            now=datetime.utcnow()))
