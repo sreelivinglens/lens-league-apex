@@ -335,10 +335,14 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
 #cookie-banner button{background:#C8A84B;color:#1A1814;border:none;padding:8px 18px;border-radius:2px;font-weight:700;cursor:pointer;min-height:36px}
 #cb-dismiss{background:transparent;color:rgba(255,255,255,.6);font-size:20px;padding:4px 10px}
 
-.hero-lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
+.hero-lightbox{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
 .hero-lightbox.active{display:flex}
-.hero-lightbox img{max-width:94vw;max-height:94vh;object-fit:contain;border-radius:2px}
-.hero-lightbox-close{position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;line-height:1;opacity:.8}
+.hero-lightbox img{max-width:94vw;max-height:94vh;object-fit:contain;border-radius:2px;cursor:zoom-in}
+.hero-lightbox.zoomed{align-items:flex-start;justify-content:flex-start;overflow:auto;padding:40px}
+.hero-lightbox.zoomed img{max-width:none;max-height:none;width:auto;height:auto;cursor:zoom-out;margin:auto}
+.hero-lightbox-close{position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;line-height:1;opacity:.8;z-index:2001}
+.hero-lightbox-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.65);font-size:13px;letter-spacing:.02em;pointer-events:none;z-index:2001}
+.hero-lightbox.zoomed .hero-lightbox-hint{display:none}
 </style>
 </head>
 <body>
