@@ -282,8 +282,15 @@ def _draw_badge_icon(c, kind, cx, cy, size, color):
 
 
 class _TrustBadgeRow(Flowable):
-    """Three fixed trust-mark pills — same static labels the web page shows
-    (confirmed: hardcoded text there too, not computed from live data).
+    """Three trust-mark pills shown below the photo.
+
+    SL-VERSION fix (Session 237): the middle badge's "Calibrated · 312
+    images" was a hardcoded, never-updating number — confirmed stale
+    (frozen at 312 while the platform has long since passed that). Founder:
+    "the 312 -change that to dynamic state from here on." Now takes
+    calibrated_count from the caller (build_scorecard_pdf's data dict,
+    itself read live from the DB in app.py) and falls back to 312 only if
+    the caller passes nothing, so an old call site never breaks.
 
     SL-VERSION fix (post-render QA, Session 237): the icon characters were
     originally embedded in the label string itself (✓ ◉ ★). Rendered and
@@ -292,16 +299,16 @@ class _TrustBadgeRow(Flowable):
     those Unicode code points aren't in Helvetica's WinAnsi encoding. Now
     each icon is drawn as its own small vector shape via _draw_badge_icon,
     and the label is plain ASCII text — no font/glyph dependency at all."""
-    _BADGES = [
-        ('check', 'AI verified',             GREEN_LT, GREEN_BD, GREEN_LBL),
-        ('dot',   'Calibrated · 312 images', SKY_LT,   BLUE_BD,  BLUE_LBL),
-        ('star',  'Expert calibrated',       GOLD_LT,  GOLD_BD,  GOLD_DK),
-    ]
 
-    def __init__(self, width, extra_badge=None):
+    def __init__(self, width, extra_badge=None, calibrated_count=None):
         super().__init__()
         self._width = width
-        self._badges = list(self._BADGES)
+        _count = calibrated_count if calibrated_count else 312
+        self._badges = [
+            ('check', 'AI verified',                         GREEN_LT, GREEN_BD, GREEN_LBL),
+            ('dot',   f'Calibrated · {_count} images',       SKY_LT,   BLUE_BD,  BLUE_LBL),
+            ('star',  'Expert calibrated',                   GOLD_LT,  GOLD_BD,  GOLD_DK),
+        ]
         if extra_badge:
             self._badges.append(extra_badge)
         self._h = 7.5 * mm
@@ -649,8 +656,9 @@ def build_scorecard_pdf(data: dict) -> bytes:
     story.append(hdr_tbl)
     story.append(HR(space_before=2, space_after=8))
 
-    # Trust marks — same three fixed badges the web page shows
-    story.append(_TrustBadgeRow(avail))
+    # Trust marks — same three badges the web page shows. Middle one's count
+    # is live (SL-237.2) — see _TrustBadgeRow's docstring.
+    story.append(_TrustBadgeRow(avail, calibrated_count=data.get('calibrated_count')))
     story.append(Spacer(1, 8))
 
     # Photograph
