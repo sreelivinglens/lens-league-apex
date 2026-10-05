@@ -12951,6 +12951,19 @@ def public_card(token):
         if _dval is not None:
             _dim_breakdown.append({'score': _dval, 'l1': _dl1, 'l2': _dl2})
 
+    # ── SL-237.2 (Session 237) — "Calibrated · N images" made live, same
+    # query as image_detail()/download_card_pdf(). Passed defensively even
+    # though I have not seen card_public.html's source this session (not
+    # among the files available to me) — if that template also hardcodes
+    # "312" the variable is here ready to use; if it doesn't reference the
+    # badge at all, this is an unused, harmless context var. Flagging this
+    # gap in the handoff rather than guessing at that template's content.
+    _calibrated_count = 312
+    try:
+        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
+    except Exception as _cce:
+        app.logger.warning(f'[public_card] calibrated_count: {_cce}')
+
     return render_template(
         'card_public.html',
         image          = img,
@@ -12967,6 +12980,7 @@ def public_card(token):
         c4_body        = _c4,
         edit_base      = _edit_base,
         edit_creative  = _edit_creative,
+        calibrated_count = _calibrated_count,
     )
 
 
@@ -13296,6 +13310,17 @@ def image_detail(image_id):
         db.session.rollback()
         app.logger.warning(f'[image_detail] drawer gate: {_dge}')
 
+    # ── SL-237.2 (Session 237) — "Calibrated · N images" trust badge, made
+    # live (was hardcoded "312" in image_detail.html, confirmed stale).
+    # Same count the admin dashboard uses for "scored" (~L23281) — one
+    # definition of "calibrated" reused everywhere, not reinvented here.
+    _calibrated_count = 312
+    try:
+        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
+    except Exception as _cce:
+        db.session.rollback()
+        app.logger.warning(f'[image_detail] calibrated_count: {_cce}')
+
     # ── Pending peer eval check — show nudge only when user has work waiting ──
     _has_pending_eval = False
     try:
@@ -13326,6 +13351,7 @@ def image_detail(image_id):
                            all_masters=ALL_MASTERS,
                            drawer_active=_drawer_active,
                            has_pending_eval=_has_pending_eval,
+                           calibrated_count=_calibrated_count,
                            now=_now)
 
 
@@ -13903,6 +13929,22 @@ def download_card_pdf(image_id):
     except Exception as _pce:
         app.logger.warning(f'[download_card_pdf] percentile: {_pce}')
 
+    # ── SL-237.2 (Session 237) — "Calibrated · N images" trust badge, made
+    # live. Founder: "the 312 -change that to dynamic state from here on."
+    # Was a hardcoded string in both this PDF and image_detail.html,
+    # confirmed stale (frozen at 312 while the standing rules doc already
+    # lists 354 scored images) — it never updated on its own. Same count
+    # query the admin dashboard already uses for "scored" (Image.query.
+    # filter_by(status='scored').count(), app.py ~L23281) so this reads the
+    # same number an admin would see, not a new/different definition of
+    # "calibrated". Wrapped in try/except with the old 312 as a last-resort
+    # fallback — a failed count must never break PDF generation.
+    _calibrated_count = 312
+    try:
+        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
+    except Exception as _cce:
+        app.logger.warning(f'[download_card_pdf] calibrated_count: {_cce}')
+
     # ── SL-237.1 — Photography Awards progress line. Same 8.5 / 9.0 tiers
     # and "to go" wording as the launchpad card in image_detail.html.
     # best_this_year computed the same way public_card() computes it
@@ -14127,6 +14169,7 @@ def download_card_pdf(image_id):
             'award_progress_text':  _award_progress_text,
             'pattern_in_work_text': _pattern_text,
             'portfolio_data':       _portfolio_data,
+            'calibrated_count':     _calibrated_count,
         }
         _pdf_bytes = build_scorecard_pdf(_pdf_data)
     except Exception as _rle:
