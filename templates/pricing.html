@@ -1,4 +1,5 @@
 {# SL-VERSION: pricing-v4.0 (Session 223, 2026-09-26 — eValuation (20 evals ₹200, ₹10/image), eLevate Your Photography (Annual ₹4,000/48), POPULAR badge on eLevate, 10 free evaluations hero callout, updated comparison table, updated JS _planLabels/_planKeys/_planCharges. RETAINS 3.7 Razorpay logic, track modal, intl waitlist, CSS tokens.) #}
+{# SL-VERSION: pricing-v4.1 (Session 237, 2026-10-05, founder-reported: "i dont see activate Trial - 10 free ? is this intentional?" — confirmed yes, a real gap: the .pr-free-band was text-only, no link or button anywhere on the page led to the free 10 evaluations; the only clickable CTAs (eLevate/6-Months/eValuation buttons) all went straight into the paid Razorpay flow, and the "See a sample" links only open an already-scored example, not a path to start your own. Added one CTA button inside the free band, styled distinctly from the three paid-plan buttons (outlined, not filled, so it doesn't compete with "Join the League" as the primary action) linking to url_for('register') (same endpoint the homepage's own "START MY 10 FREE EVALUATIONS" button already uses) so an unauthenticated visitor can actually register and claim the 10 free evaluations from this page. Logged-in visitors reuse the page's existing _isLoggedIn flag via a small inline script so they go straight to try_page (upload) instead of back through registration. STATUS: review file only, not pushed. #}
 {% extends "base.html" %}
 {% block title %}Pricing · Shutter League{% endblock %}
 {% block body_class %}page-pricing{% endblock %}
@@ -81,6 +82,24 @@
   display: block;
   margin-top: 4px;
 }
+.pr-free-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 48px;
+  text-decoration: none;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1.5px solid var(--gold);
+  font-family: 'Inter', sans-serif;
+}
+.pr-free-cta:hover { background: var(--gold-subtle); }
 .pr-proof {
   max-width: 620px; margin: 28px auto 0;
   border-left: 3px solid var(--gold);
@@ -328,6 +347,7 @@
   <div class="pr-free-band">
     10 evaluations — free. No card required.
     <span>Upload your best photograph and see exactly what the platform sees. Five dimensions. One score. One improvement to work on.</span>
+    <div><a href="{{ url_for('try_page') if current_user.is_authenticated else url_for('register') }}" class="pr-free-cta">Start my 10 free evaluations →</a></div>
   </div>
   <div class="pr-proof">
     <p class="pr-proof-q">"I had never seen any photograph being described in a technical way which made me think, okay so a simple looking photo can actually be dissected like this."</p>
