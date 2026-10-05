@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# SL-VERSION: image_detail-237.1 (Session 237, 2026-10-05 — "Calibrated · 312 images" trust badge was a hardcoded, never-updating number, confirmed stale (frozen at 312 while the platform has long since passed that). Founder: "the 312 -change that to dynamic state from here on." Now reads {{ calibrated_count }}, passed live from image_detail()'s route in app.py (same Image.query.filter_by(status='scored').count() the admin dashboard already uses — one definition of "calibrated", not a new one). Falls back to 312 if the route ever fails to pass it, so a missing variable never breaks the page. RETAINS 182.32.) #}
 {# SL-VERSION: image_detail-182.32 (Session 222, 2026-09-26 — Master reference name is now a tappable link: opens Google search for photographer's work in new tab. Gold underline indicates tappable. RETAINS 182.31.)
 {# SL-VERSION: image_detail-182.27 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 182.26.)
 {# SL-VERSION: image_detail-182.26 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". RETAINS 182.25.)
@@ -802,7 +803,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {# ── SL-181.11 TRUST MARKS — immediately below photo, before evaluation ── #}
     <div class="sc-trust-row">
       <span class="sc-trust-badge sc-trust-ai">✓ AI verified</span>
-      <span class="sc-trust-badge sc-trust-cal">◉ Calibrated · 312 images</span>
+      <span class="sc-trust-badge sc-trust-cal">◉ Calibrated · {{ calibrated_count or 312 }} images</span>
       <span class="sc-trust-badge sc-trust-exp">★ Expert calibrated</span>
       {% if _is_pb %}<span class="sc-trust-badge" style="background:#fff8e6;color:var(--sc-gold-dk);border:0.5px solid var(--sc-gold)">↑ Personal best</span>{% endif %}
     </div>
