@@ -61,6 +61,7 @@
      (3) PHOTOS -- founder: "Photo count: you decide." Added real-photo slots (additive only, same already-proven pattern as the existing improvement-photo field: a static asset path with an onerror fallback to an already-used, already-approved Unsplash URL from this same file, so nothing new/unvetted was introduced) to the three sections confirmed to have zero imagery: Science (one supporting photo under the methodology link), History (one wide photo under "The system remembers"), and League (a 3-up photo strip above the tier cards). FLAG, same as the existing improvement-photo.jpg note: img/science-photo.jpg, img/history-photo.jpg, img/league-photo-1.jpg, img/league-photo-2.jpg, img/league-photo-3.jpg do not exist yet -- founder needs to supply them or these five slots keep showing the Unsplash placeholder.
      (4) EVALUATE/ELEVATE VISUAL CUES -- founder: "this is the base of the entire site...eLevate is Aspirational - Shows the LOP emblem - and probably needs more visual cues." This is the evidence/comparison section (id=evaluations), NOT the pricing section's featured card -- that V16.6 crest treatment is untouched, not duplicated. eValuate's card: the already-embedded example scorecard image (same base64 data already used for its download link, reused inline -- no new asset) now also shows as a small inline preview above the download link, so the card is not text-only. eLevate's card: the same already-approved League crest emblem already embedded for the pricing card (same base64 data, reused -- no new asset, no re-upload) now sits in its own dark showcase panel in the same position as eValuate's photo preview, directly answering the founder's "Shows the LOP emblem" request -- a different size/treatment (148px, dark-navy panel, no gold border/box-shadow) from the pricing section's featured-card crest (168px, pastel-blue card) so the two are visually distinct and nothing is duplicated. First pass used a tiny 46px icon next to the tag label; it left the eLevate card looking empty next to eValuate's new photo (901px vs 647px tall, self-caught via bounding-box measurement, not just eyeballing) -- replaced with the showcase panel, which brings the two cards to within 28px of each other.
      STATUS: review file only, NOT staging-ready, NOT pushed anywhere. Per Rules 3/16: only the founder's own Railway push and the shared live-console output make this "working" -- this build has been checked with Playwright screenshots at desktop/iPad/phone widths (see accompanying screenshots) for layout and contrast only, which is not a substitute for that live check. CARRIED FORWARD, NOT ADDRESSED HERE: the Rule 11 copy-sign-off flag on the "Go to my dashboard" auth-branched CTA label (still awaiting founder's explicit sign-off), and the "NOT VERIFIED" field-name note against the live app.py (still not independently re-checked against the current backend this session). RETAINS all V16 through V16.8 history above. -->
+<!-- V17.1 (Session 237 continued, 5 Oct 2026, founder instruction: "The 5 placeholder photos - pick up from dbase itself"): the 5 Science/History/League photo slots added in V17 no longer point at not-yet-uploaded static files. Checked app.py's own index() route (file already in hand this session) and confirmed carousel_images already carries up to 12 real scored images (score>=8.5, excludes mentor accounts, same query the hero photo already draws index 0 from) -- not just the single hero photo. Re-wired the 5 slots to the SAME already-passed carousel_images list, nothing added to app.py: Science reads carousel_images[1], History carousel_images[2], League's 3-up strip reads carousel_images[3]/[4]/[5]. Each slot keeps a real {% raw %}{% if %}{% endraw %} + onerror guard exactly like the existing hero binding, so an empty/short list (local dev, or fewer than 6 public scored images) falls back to the same already-approved Unsplash placeholder rather than breaking. League's caption now shows each photo's real tier (Master/Grandmaster/Legend) when the database has it, falling back to the photographer's name, then to the fixed tier labels only if neither is available. NOT VERIFIED (no live DB access this session): whether a typical production moment actually has 6+ qualifying public images at once -- if fewer than 6 exist, some slots will show the Unsplash placeholder until more images qualify; this is graceful degradation, not a bug, but founder should know placeholder photos may still appear some days depending on how many images currently score >=8.5 and are public. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -535,9 +536,14 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
         <h2>243 people.<br>26,730 responses.<em>What they revealed.</em></h2>
         <p class="lead">The perception study was not the same thing as the 1,000+ photograph calibration. It was a separate study: 243 people, 10 photographs, 11 questions — 26,730 individual responses designed to understand how people actually judge photographs.</p>
         <a class="text-link" href="https://shutterleague.com/science">Read the methodology →</a>
+        {% set sci_img = carousel_images[1] if carousel_images|length > 1 else none %}
         <div class="science-photo">
-          <img src="{{ url_for('static', filename='img/science-photo.jpg') }}" alt="Photograph from a perception-study session" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';">
-          <span>Inside the perception study</span>
+          {% if sci_img and sci_img.thumb_url %}
+          <img src="{{ sci_img.thumb_url }}" alt="{{ sci_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+          {% else %}
+          <img src="""" + '"' + FALLBACK + '"' + """ alt="Photograph from a perception-study session" loading="lazy">
+          {% endif %}
+          <span>{{ sci_img.photographer_name if sci_img and sci_img.photographer_name else 'From the League' }}</span>
         </div>
       </div>
       <div class="science-cards">
@@ -599,9 +605,14 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
         </div>
       </div>
     </div>
+    {% set hist_img = carousel_images[2] if carousel_images|length > 2 else none %}
     <div class="history-photo">
-      <img src="{{ url_for('static', filename='img/history-photo.jpg') }}" alt="A photographer's record of work over time" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';">
-      <div class="photo-note">Every evaluation adds to the record.</div>
+      {% if hist_img and hist_img.thumb_url %}
+      <img src="{{ hist_img.thumb_url }}" alt="{{ hist_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+      {% else %}
+      <img src="""" + '"' + FALLBACK + '"' + """ alt="A photographer's record of work over time" loading="lazy">
+      {% endif %}
+      <div class="photo-note">{{ 'By ' + hist_img.photographer_name if hist_img and hist_img.photographer_name else 'Every evaluation adds to the record.' }}</div>
     </div>
   </div>
 </section>
@@ -614,9 +625,17 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
       <div class="league-head-copy"><p>The League is where sustained photographic development becomes recognised standing — with deeper evaluations, mentorship, portfolio, exhibitions, sales and work opportunities.</p><div class="standing-definition"><b>Standing</b> Your recognised level as a photographer.</div><div class="earned">Earned by the photograph.</div></div>
     </div>
     <div class="league-photos">
-      <div class="league-photo"><img src="{{ url_for('static', filename='img/league-photo-1.jpg') }}" alt="A top-standing photograph from the League" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';"><span>Master</span></div>
-      <div class="league-photo"><img src="{{ url_for('static', filename='img/league-photo-2.jpg') }}" alt="A top-standing photograph from the League" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';"><span>Grandmaster</span></div>
-      <div class="league-photo"><img src="{{ url_for('static', filename='img/league-photo-3.jpg') }}" alt="A top-standing photograph from the League" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';"><span>Legend</span></div>
+      {% for li in range(3) %}
+      {% set lg_img = carousel_images[3 + li] if carousel_images|length > (3 + li) else none %}
+      <div class="league-photo">
+        {% if lg_img and lg_img.thumb_url %}
+        <img src="{{ lg_img.thumb_url }}" alt="{{ lg_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+        {% else %}
+        <img src="""" + '"' + FALLBACK + '"' + """ alt="A top-standing photograph from the League" loading="lazy">
+        {% endif %}
+        <span>{{ lg_img.tier if lg_img and lg_img.tier else (lg_img.photographer_name if lg_img and lg_img.photographer_name else ['Master','Grandmaster','Legend'][li]) }}</span>
+      </div>
+      {% endfor %}
     </div>
     <div class="tier-row">
       <div class="tier"><small>Recognised level</small><h3>Master</h3><p>A level of photographic standing established through your work.</p></div>
