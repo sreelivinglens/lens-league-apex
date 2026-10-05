@@ -62,6 +62,7 @@
      (4) EVALUATE/ELEVATE VISUAL CUES -- founder: "this is the base of the entire site...eLevate is Aspirational - Shows the LOP emblem - and probably needs more visual cues." This is the evidence/comparison section (id=evaluations), NOT the pricing section's featured card -- that V16.6 crest treatment is untouched, not duplicated. eValuate's card: the already-embedded example scorecard image (same base64 data already used for its download link, reused inline -- no new asset) now also shows as a small inline preview above the download link, so the card is not text-only. eLevate's card: the same already-approved League crest emblem already embedded for the pricing card (same base64 data, reused -- no new asset, no re-upload) now sits in its own dark showcase panel in the same position as eValuate's photo preview, directly answering the founder's "Shows the LOP emblem" request -- a different size/treatment (148px, dark-navy panel, no gold border/box-shadow) from the pricing section's featured-card crest (168px, pastel-blue card) so the two are visually distinct and nothing is duplicated. First pass used a tiny 46px icon next to the tag label; it left the eLevate card looking empty next to eValuate's new photo (901px vs 647px tall, self-caught via bounding-box measurement, not just eyeballing) -- replaced with the showcase panel, which brings the two cards to within 28px of each other.
      STATUS: review file only, NOT staging-ready, NOT pushed anywhere. Per Rules 3/16: only the founder's own Railway push and the shared live-console output make this "working" -- this build has been checked with Playwright screenshots at desktop/iPad/phone widths (see accompanying screenshots) for layout and contrast only, which is not a substitute for that live check. CARRIED FORWARD, NOT ADDRESSED HERE: the Rule 11 copy-sign-off flag on the "Go to my dashboard" auth-branched CTA label (still awaiting founder's explicit sign-off), and the "NOT VERIFIED" field-name note against the live app.py (still not independently re-checked against the current backend this session). RETAINS all V16 through V16.8 history above. -->
 <!-- V17.1 (Session 237 continued, 5 Oct 2026, founder instruction: "The 5 placeholder photos - pick up from dbase itself"): the 5 Science/History/League photo slots added in V17 no longer point at not-yet-uploaded static files. Checked app.py's own index() route (file already in hand this session) and confirmed carousel_images already carries up to 12 real scored images (score>=8.5, excludes mentor accounts, same query the hero photo already draws index 0 from) -- not just the single hero photo. Re-wired the 5 slots to the SAME already-passed carousel_images list, nothing added to app.py: Science reads carousel_images[1], History carousel_images[2], League's 3-up strip reads carousel_images[3]/[4]/[5]. Each slot keeps a real {% raw %}{% if %}{% endraw %} + onerror guard exactly like the existing hero binding, so an empty/short list (local dev, or fewer than 6 public scored images) falls back to the same already-approved Unsplash placeholder rather than breaking. League's caption now shows each photo's real tier (Master/Grandmaster/Legend) when the database has it, falling back to the photographer's name, then to the fixed tier labels only if neither is available. NOT VERIFIED (no live DB access this session): whether a typical production moment actually has 6+ qualifying public images at once -- if fewer than 6 exist, some slots will show the Unsplash placeholder until more images qualify; this is graceful degradation, not a bug, but founder should know placeholder photos may still appear some days depending on how many images currently score >=8.5 and are public. -->
+<!-- V17.2 (Session 237 continued, 5 Oct 2026, founder-reported bug from the live staging screenshot: League's 3 photo slots were all showing the exact same sunset photo). MY MISTAKE, not a data problem: the build script that wrote the V17.1 fallback image URLs had a Python string-concatenation error -- it was supposed to splice the actual Unsplash URL into the HTML, but left the literal, broken text `""" + FALLBACK + """` sitting inside the img src/onerror attributes instead of the real URL, in all 6 places across Science/History/League. This produced syntactically broken `src`/`onerror` attributes that happened to still resolve to SOMETHING in a real browser (hence a photo did appear) but not to the 3 different real database photos intended -- every slot that had fewer than the required carousel_images entries fell through to the same single broken-then-recovered fallback, which is why all 3 League tiles showed one identical image. ROOT CAUSE IN MY OWN PROCESS: my verification after V17.1 only checked that Jinja rendered without a Python exception and that screenshots showed *a* photo -- it never read the actual generated HTML text for these 6 attributes, so the broken string-concatenation artifact was invisible to the checks I ran. FIX: (1) replaced all 6 broken attributes with the literal, correct URLs -- verified this time by grepping the rendered output for the broken pattern and confirming zero matches, not just screenshotting; (2) added a second-tier fallback to `recent_images` (already passed to this template, already populated by app.py's index() route with up to 6 scored public images -- a looser bar than carousel_images' score>=8.5 cutoff) ahead of the final static placeholder, so the 3-identical-photo case should now be rare rather than the common case on a 40-user platform; (3) for the worst case (fewer than 2-3 qualifying images exist anywhere), League's 3 tiles now rotate between the two already-proven-live Unsplash fallbacks (the same ones already used elsewhere on this exact page) instead of repeating one photo 3 times, so even total degradation doesn't look like a broken repeat. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -536,12 +537,12 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
         <h2>243 people.<br>26,730 responses.<em>What they revealed.</em></h2>
         <p class="lead">The perception study was not the same thing as the 1,000+ photograph calibration. It was a separate study: 243 people, 10 photographs, 11 questions — 26,730 individual responses designed to understand how people actually judge photographs.</p>
         <a class="text-link" href="https://shutterleague.com/science">Read the methodology →</a>
-        {% set sci_img = carousel_images[1] if carousel_images|length > 1 else none %}
+        {% set sci_img = carousel_images[1] if carousel_images|length > 1 else (recent_images[0] if recent_images is defined and recent_images|length > 0 else none) %}
         <div class="science-photo">
           {% if sci_img and sci_img.thumb_url %}
-          <img src="{{ sci_img.thumb_url }}" alt="{{ sci_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+          <img src="{{ sci_img.thumb_url }}" alt="{{ sci_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';">
           {% else %}
-          <img src="""" + '"' + FALLBACK + '"' + """ alt="Photograph from a perception-study session" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88" alt="Photograph from a perception-study session" loading="lazy">
           {% endif %}
           <span>{{ sci_img.photographer_name if sci_img and sci_img.photographer_name else 'From the League' }}</span>
         </div>
@@ -605,12 +606,12 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
         </div>
       </div>
     </div>
-    {% set hist_img = carousel_images[2] if carousel_images|length > 2 else none %}
+    {% set hist_img = carousel_images[2] if carousel_images|length > 2 else (recent_images[1] if recent_images is defined and recent_images|length > 1 else none) %}
     <div class="history-photo">
       {% if hist_img and hist_img.thumb_url %}
-      <img src="{{ hist_img.thumb_url }}" alt="{{ hist_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+      <img src="{{ hist_img.thumb_url }}" alt="{{ hist_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';">
       {% else %}
-      <img src="""" + '"' + FALLBACK + '"' + """ alt="A photographer's record of work over time" loading="lazy">
+      <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88" alt="A photographer's record of work over time" loading="lazy">
       {% endif %}
       <div class="photo-note">{{ 'By ' + hist_img.photographer_name if hist_img and hist_img.photographer_name else 'Every evaluation adds to the record.' }}</div>
     </div>
@@ -626,12 +627,13 @@ footer{background:var(--cream);border-top:1px solid var(--rule);padding:55px 0 3
     </div>
     <div class="league-photos">
       {% for li in range(3) %}
-      {% set lg_img = carousel_images[3 + li] if carousel_images|length > (3 + li) else none %}
+      {% set lg_img = carousel_images[3 + li] if carousel_images|length > (3 + li) else (recent_images[2 + li] if recent_images is defined and recent_images|length > (2 + li) else none) %}
       <div class="league-photo">
         {% if lg_img and lg_img.thumb_url %}
-        <img src="{{ lg_img.thumb_url }}" alt="{{ lg_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='""" + FALLBACK + """';">
+        <img src="{{ lg_img.thumb_url }}" alt="{{ lg_img.genre or 'Photography' }} — from the League" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88';">
         {% else %}
-        <img src="""" + '"' + FALLBACK + '"' + """ alt="A top-standing photograph from the League" loading="lazy">
+        {% set _lg_fallback = ["https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88", "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1800&q=88", "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=88"][li] %}
+        <img src="{{ _lg_fallback }}" alt="A top-standing photograph from the League" loading="lazy">
         {% endif %}
         <span>{{ lg_img.tier if lg_img and lg_img.tier else (lg_img.photographer_name if lg_img and lg_img.photographer_name else ['Master','Grandmaster','Legend'][li]) }}</span>
       </div>
