@@ -1,3 +1,51 @@
+# SL-VERSION: 171.43 (Session 237, 2026-10-05 -- founder sent a 6th rescore of image 143 (log attached,
+# cut off mid-traceback; full traceback pasted on request) showing a NEW, more serious issue than text
+# repetition: the PDF founder sent back was confirmed via `diff` to be BYTE-FOR-BYTE IDENTICAL to the
+# PRIOR PDF -- proof that this rescore attempt crashed and nothing new was ever saved, despite running
+# to completion at full API cost. ROOT CAUSE, found in app.py (NOT this file): `_auto_score_with_timeout()`
+# wraps auto_score() in a ThreadPoolExecutor future with a HARD 120s ceiling, retries once, then raises
+# TimeoutError if the retry also exceeds 120s -- confirmed live via the traceback founder pasted:
+# "TimeoutError: auto_score did not complete within 120s on either attempt". Because Python threads
+# cannot be force-killed, a "timed out" attempt keeps running in the background to full completion
+# (burning real API cost) even though its result is discarded -- this is why the PDF never changed.
+# TWO SEPARATE CAUSES, both confirmed from the log timings:
+#   (1) PRE-EXISTING, NOT CAUSED BY ME: on this specific image, vision_analyse (~28s) + the main scoring
+#       call (~88-93s) alone already totalled ~116-121s -- already at or past the 120s ceiling BEFORE the
+#       text-repeat fix (171.41/171.42) ever ran. This lives entirely in app.py's timeout wrapper, a file
+#       I have not been asked to touch, and is not something this fix changes.
+#   (2) CAUSED BY ME: the 171.41/171.42 corrective re-ask adds its own 13-21s of latency on top of that
+#       already-exhausted budget -- on a run that was already borderline, this was the difference between
+#       a near-miss and a guaranteed double-timeout. This part is mine to fix, and this version fixes it.
+# FIX: made the corrective fix time-budget-aware instead of a fixed 60s httpx timeout. `_attempt_text_
+# repeat_fix()` now takes `max_wait_secs` and uses it as the httpx timeout (was hardcoded to 60s). At the
+# call site, a new guard computes what is actually left of a safe 110s internal budget (10s held back
+# under the external 120s ceiling for thread/logging overhead): if fewer than 15s remain, the corrective
+# fix is SKIPPED ENTIRELY (no API call made at all, logged plainly, original TEXT_REPEAT log stands as the
+# signal) -- otherwise it is called with max_wait_secs = min(remaining_budget, 45.0), so it never asks for
+# more time than is actually safe to spend. This can only reduce risk, never increase it: the fix now either
+# runs within a time budget it was never given before, or is skipped outright -- it never again adds
+# latency the external ceiling cannot absorb.
+# BUG CAUGHT AND FIXED DURING THIS EDIT, BEFORE ANY TESTING (code review): the first draft defined
+# `_t_fix_start = _time.time()` only inside the non-skip branch, but the unconditional final timing print
+# (`[auto_score][timing] text_repeat_fix: ...`) referenced it regardless of branch -- would have crashed
+# with NameError on every single skip, i.e. on exactly the case this fix exists to handle safely. Fixed by
+# moving the assignment before the if/else so it is always defined.
+# VERIFIED OFFLINE BEFORE SHIPPING (mocked httpx.post, zero real API calls, zero cost) -- 8 tests, all
+# passing: (1) empty-repeats no-op, (2) clean rewrite accepted, (3) still-duplicated rewrite correctly
+# rejected, (4) API error leaves original text untouched + no crash, (5) >8-fields-flagged safety cap still
+# skips with no API call, (6)-(7) the new max_wait_secs parameter correctly flows through to the httpx
+# timeout at both a generous (45s) and a tight (12s) budget, (8) THE CRITICAL CASE -- a faithful
+# reproduction of the exact call-site arithmetic and control flow with `_t_total_start` backdated to force
+# `_remaining_budget` below the 15s floor: confirmed the skip path makes NO API call, logs the SKIPPED
+# message, leaves the result completely unchanged, and does NOT crash on the final timing print (this is
+# the exact NameError risk described above, now confirmed fixed). Also confirmed the boundary and
+# moderate-budget cases pass the right value through to httpx's timeout.
+# NOT YET VERIFIED LIVE (Rule 3) -- this still needs a real Railway rescore + full (not cut-off) console
+# log before it can be called "working": whether the crash/stale-PDF issue is resolved, whether the
+# mentor_technical/tech_read duplicate founder asked to clean up is now gone, and that blur direction
+# still holds (confirmed correct on every rescore since 171.38).
+# RETAINS all of 171.42 below.
+#
 # SL-VERSION: 171.42 (Session 237, 2026-10-05 -- founder rescored a 5th time with 171.41 (corrective
 # re-ask) deployed: 10 repeat groups found, 7 fields fixed cleanly, 1 field (tech_read) correctly declined
 # by the safety check rather than shipped broken -- real progress, verified against the PDF (blur also
@@ -6107,7 +6155,7 @@ def _longest_common_run(words_a, words_b):
     return ' '.join(_best)
 
 
-def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn):
+def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn, max_wait_secs=45):
     """
     SL-VERSION 171.41 (Session 237). Founder: three prompt-wording attempts at
     the cross-field repetition problem (171.36, 171.37, 171.40) were each
@@ -6127,6 +6175,16 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         that are flagged, something deeper is wrong with this image's card and
         a blind rewrite is more likely to cause new damage than fix it; skip
         the fix entirely, log why, and leave the detector's log as the signal.
+    max_wait_secs (SL-VERSION 171.43, Session 237): the caller computes how
+    much of the external 120s hard ceiling (app.py's _auto_score_with_timeout,
+    outside this file) is already spent by vision_analyse + the main scoring
+    call, and passes down whatever is safely left. This call's own httpx
+    timeout is THAT value, not a fixed 60s — confirmed live that a fixed 60s
+    on an already-tight run (vision+main alone at ~121s, already past the
+    120s ceiling) pushed a borderline request into a guaranteed double
+    timeout, burning two full-cost scoring runs for a result that was never
+    saved. The caller skips calling this function at all when there isn't
+    enough budget left for a worthwhile attempt — see the call site.
     Returns (result, fix_log_lines) — fix_log_lines is a list of plain strings
     the caller prints, so every outcome (fixed / partial / skipped / failed) is
     visible in the Railway console exactly like every other check in this file.
@@ -6223,7 +6281,7 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
                 "temperature": 0.4,  # some variation is the point — a second identical rewrite helps no one
                 "messages": [{"role": "user", "content": _prompt}],
             },
-            timeout=60,
+            timeout=max_wait_secs,
         )
         if _response.status_code != 200:
             _log.append(f'[auto_score][TEXT_REPEAT_FIX] API error {_response.status_code} — keeping original text for all flagged fields')
@@ -7036,7 +7094,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     if _text_repeats:
         _log_text_repeat_pairs(_text_repeats, result, 'TEXT_REPEAT')
 
-        # ── Corrective re-ask (SL-VERSION 171.41) ──────────────────────────
+        # ── Corrective re-ask (SL-VERSION 171.41, time-budget-aware since 171.43) ──
         # Three prompt-wording attempts failed to hold (171.36, 171.37, 171.40
         # — the last one verified to make it WORSE on the live rescore).
         # Founder sign-off: "ok go" to the code-level corrective call flagged
@@ -7044,15 +7102,41 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         # only improve or no-op — see _attempt_text_repeat_fix's safety
         # invariant above. Timing is logged separately so this call's added
         # latency is visible, not hidden inside the total.
+        #
+        # SL-VERSION 171.43 (Session 237): app.py wraps auto_score() in a HARD
+        # 120s ceiling (_auto_score_with_timeout), outside this file, tried
+        # twice, then gives up entirely — confirmed live via the traceback
+        # founder sent ("auto_score did not complete within 120s on either
+        # attempt"), which meant a fully-run, fully-costed rescore was thrown
+        # away and never saved. On the run that failed, vision_analyse + the
+        # main scoring call alone already totalled ~121s on attempt 1 (zero
+        # headroom before this fix even started), and this fix's own latency
+        # (13-21s observed) is what pushed attempt 2 over as well. This code
+        # must never be the reason a request we don't control the ceiling on
+        # fails: compute what is actually left of a safe internal budget
+        # (target 110s, leaving 10s under the external 120s ceiling for
+        # thread/logging overhead) and either skip the fix outright when
+        # there isn't enough of it left for a worthwhile attempt, or hand the
+        # fix only as much time as is actually safe to spend.
+        _SAFE_INTERNAL_CEILING = 110.0
+        _MIN_WORTHWHILE_SECS = 15.0
         _t_fix_start = _time.time()
-        try:
-            result, _fix_log = _attempt_text_repeat_fix(
-                result, _text_repeats, _REPEAT_FIELDS, _NGRAM_LEN, _text_repeat_norm_words
-            )
-            for _line in _fix_log:
-                print(_line)
-        except Exception as _fix_err:
-            print(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED (unexpected error, original text kept): {_fix_err}')
+        _elapsed_before_fix = _t_fix_start - _t_total_start
+        _remaining_budget = _SAFE_INTERNAL_CEILING - _elapsed_before_fix
+        if _remaining_budget < _MIN_WORTHWHILE_SECS:
+            print(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED — only {_remaining_budget:.1f}s left of the {_SAFE_INTERNAL_CEILING:.0f}s safe '
+                  f'internal budget ({_elapsed_before_fix:.1f}s already spent on vision+scoring) — not enough headroom for a worthwhile '
+                  f'attempt without risking the external 120s timeout. Leaving the TEXT_REPEAT log above as the signal.')
+        else:
+            try:
+                result, _fix_log = _attempt_text_repeat_fix(
+                    result, _text_repeats, _REPEAT_FIELDS, _NGRAM_LEN, _text_repeat_norm_words,
+                    max_wait_secs=min(_remaining_budget, 45.0),
+                )
+                for _line in _fix_log:
+                    print(_line)
+            except Exception as _fix_err:
+                print(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED (unexpected error, original text kept): {_fix_err}')
         print(f"[auto_score][timing] text_repeat_fix: {_time.time() - _t_fix_start:.2f}s")
 
         # Re-run the same detector on the (possibly) patched result so the log
