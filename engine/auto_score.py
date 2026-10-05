@@ -1,3 +1,43 @@
+# SL-VERSION: 171.40 (Session 237, 2026-10-05 -- founder pushed back hard after 3 rescores still showed
+# repetition: "we never had such issues since 235 sessions before - why now? ... Fix once and for all after
+# thinking through." Real answer, after rereading all 4 rescored PDFs of this image side by side:
+# WHY THIS IMAGE, WHY NOW -- this is not a new bug introduced recently. It is a LATENT LIMIT in the
+# CROSS-FIELD REPETITION CHECK (171.36) and FIELD OWNERSHIP RULE (171.37) that most of the 235 prior
+# sessions never hit, because most scored images are visually busy enough (multiple subjects, a human
+# gesture, varied background detail) that twenty narrative fields can each find something genuinely
+# different to hook onto without anyone writing the rule that forces them to. THIS image -- an overhead
+# graphic shot of two birds against yellow rails and a blue deck -- has almost no other visual material:
+# essentially 2 big facts (the aerial vantage point, the intentional motion blur) and nothing else distinct
+# to point to. Both 171.36 and 171.37 police the EXPLANATION layer only -- "don't re-argue WHY a fact
+# matters once it's been explained" -- and both explicitly ALLOW every field to mention a fact "in passing."
+# On a visually rich image that allowance rarely fires because fields naturally land on different material.
+# On a visually thin image like this one, "in passing" mentions of the same 2 facts are ALL that is
+# available, so they compound across 6-8 fields even while technically obeying both rules -- confirmed
+# directly: the 171.39 rescore (clean vision_analyse grounding, detector live) still led with "shot directly
+# overhead / most photographers work at eye level" in 7 fields and repeated "yellow rails become leading
+# lines, the blue deck a colour field" verbatim in 3. Likely also true: this is probably the FIRST image in
+# 235 sessions to be rescored 4 times in a row with this level of line-by-line scrutiny -- it is possible
+# other visually-thin images have shown milder versions of this before and simply were never read this
+# closely. Not claiming certainty on that point -- only that the mechanism above is demonstrated, not
+# guessed.
+# THE FIX, aimed at the actual cause (too little raw material, not insufficiently strict policing): added a
+# VISUAL MATERIAL INVENTORY rule, read BEFORE any field is written, requiring the model to privately list
+# at least 10 distinct, concrete, image-specific visual facts (pose, texture, colour, shadow, edge detail,
+# spatial relationship, absence, time-of-day cue, etc) -- not photography theory, not the 2-3 obvious
+# facts -- then assign each of the ~20 fields a DIFFERENT item from that list as its primary content. A
+# field whose job requires one of the 2-3 big facts (dim_obs_dod on access, for instance) must still add
+# an image-specific layer beyond the bare framing already used elsewhere, or pivot to a different KIND of
+# content (feeling, craft note, forward possibility) rather than restate it. This is prevention -- done
+# before writing -- layered UNDERNEATH the two existing after-the-fact checks (171.36, 171.37), which
+# stay in place unchanged. Pointer added inside the DIM OBS block (the five fields most likely to
+# converge on the same 2-3 facts) directing back to the inventory. The 171.39 TEXT_REPEAT code
+# detector also stays in place unchanged as the ongoing QA signal -- it will tell us directly, on the next
+# rescore, whether this actually reduces what reaches the Railway log, which is the real test of whether
+# this worked rather than another claim before verification.
+# NOT YET DEPLOYED -- founder to push, rescore image 143 again, and send the new PDF + console log.
+# What "fixed" looks like this time: the TEXT_REPEAT log mostly/entirely clean, AND reading the actual
+# card, the overhead/colour facts appearing as single clean mentions rather than leading six-plus fields.
+# RETAINS 171.39.)
 # SL-VERSION: 171.39 (Session 237, 2026-10-05 -- founder rescored image 143 a third time on staging with 171.38 (max_tokens fix) deployed and sent the new PDF + console log: vision_analyse completed CLEAN this time (no "Failed" line, full scene data, species gate working) -- confirms the 171.38 max_tokens diagnosis was correct. BLUR FIX CONFIRMED WORKING under real grounding: tech_read correctly reads "Two egrets show motion blur... while the fishermen and deck are sharp -- the blur is on the moving subjects, not the environment." REPETITION FIX STILL NOT HOLDING even with clean grounding -- this is the proof that rules out "needs grounding" as the explanation: the "shot directly overhead / most photographers work at eye level / access" observation led in 7 fields (intro paragraph, THE PHOTOGRAPHER'S ADVICE, WHAT YOU CONTROLLED, Depth of Difficulty, Visual Disruption, Wonder Factor, Technical read), and the exact phrase "the yellow rails become leading lines, the blue deck a colour field" appeared word-for-word identical in 3 separate fields. Two different prompt-wording attempts (171.36 global rule, 171.37 Field Ownership Rule) have now both failed against this model at this prompt length, confirmed on 3 separate rescores. FOUNDER DECISION: rather than a third prompt-wording attempt, build a CODE-level detector instead ("yes do which is workable and clean"). ADDED: a cross-field text-repetition detector modeled exactly on the existing MASTER_REPEAT pattern (same function, ~30 lines below it) -- scans 16 narrative fields (impression, transferable_advice, mentor_technical, mentor_next, byline_1, byline_2, dim_obs_dod/disruption/dm/wonder/aq, tech_read, visual_flow, imagine, conclusion, hard_truth), finds any 6-consecutive-word phrase (normalised, case/punctuation-insensitive) shared verbatim across 2+ fields, and logs it clearly as [auto_score][TEXT_REPEAT] "<phrase>" appears in: <fields> in the Railway console. Verified against this exact PDF's actual field text in an isolated test before writing into this file: correctly caught all three known duplicates ("most photographers shoot fishing harbours from" in intro+what_you_controlled, "directly overhead the aerial vantage point" in tech_read+what_you_controlled, "the yellow rails become leading lines" in visual_disruption+what_you_controlled). DELIBERATELY DETECTION-ONLY, NOT AUTO-CORRECTING -- same reasoning as the existing MASTER_FIELDS comment: silently rewriting customer-facing scorecard prose in post-processing risks producing broken grammar or mangled meaning with no human review, which would be a worse outcome than the repeat itself on a live paying-customer product. This gives QA/Railway-log visibility into every future rescore going forward so repeats are caught before a scorecard reaches a photographer. A further fix (an automatic corrective API re-ask call that rewrites only the flagged fields) would actually remove the repeat from what the photographer sees, but adds latency/cost per flagged image and its own new failure surface -- NOT built here, flagged as a separate decision needing its own explicit sign-off given this is a live revenue product. NOT YET DEPLOYED -- founder to push and rescore; the Railway log should now show either "[text_repeat_check] OK" (clean) or "[TEXT_REPEAT]" lines naming the exact repeated phrase and fields, which is the evidence for whether to build the corrective re-ask call next. RETAINS 171.38.)
 # SL-VERSION: 171.38 (Session 237, 2026-10-05 -- founder rescored image 143 again on staging with 171.37 deployed and sent a new PDF: the blur bug REGRESSED (the exact wrong "egrets sharp / background blurred" sentence founder originally reported was back, now duplicated in both WHAT YOU CONTROLLED and tech_read) and the 171.37 Field Ownership repetition fix also did not hold (the "shot from directly overhead / you climbed / most photographers would not" observation still led 6-7 fields, colour theme repeated 5x). Founder supplied the Railway console log for this exact rescore. ROOT CAUSE FOUND: NOT a prompt-wording problem -- vision_analyse() failed on this run exactly as it had on the previous rescore ("[vision_analyse] Failed (Unterminated string starting at: line 119 column 3/17...)"), so scoring proceeded with an EMPTY scene-description dict both times, with no grounding to anchor the BLUR CHECK or FIELD OWNERSHIP instructions against -- the model fell back to the generic "fast shutter freezes the subject" trope and lost field discipline both times vision_analyse failed. Diagnosed the parse failure itself: vision_analyse()'s API call payload (line ~4767) was capped at max_tokens=1200. Both failures reported "line 119" at nearly the same character offset -- not random corruption, but the model's JSON response being cut off mid-string at the same point both times because this image's output (2 egrets, each needing a full subjects[] entry, plus scene_summary/species_evidence/suggested_subgenre_reason free-text fields) runs long, and JSON punctuation tokenizes less efficiently than prose. json.loads() hit an opened-but-never-closed string at the truncation point and threw "Unterminated string"; the except block at the end of vision_analyse() silently returns {} rather than surfacing this as a real failure. This exact failure class (max_tokens too low causing silent truncation) already happened once before in this same file on the MAIN scoring call -- see 171.12 (4000->6000) and 171.14 (6000->5000) below -- confirming this is a known recurring issue, now found on the SEPARATE vision_analyse() call for the first time. FIX: raised vision_analyse()'s max_tokens from 1200 to 2000 (one-line, mechanical change, not a prompt rewrite) to give multi-subject scenes room to complete the JSON before hitting the ceiling. Does not touch the main scoring call's existing max_tokens (already 5000 per 171.14) or any scoring formula. NOT YET DEPLOYED -- founder to push, rescore image 143 again, and send the new PDF + the Railway console log for that run so both (1) vision_analyse completing without the "Failed" line and (2) the blur/repetition text can be verified together -- a clean vision_analyse log with the SAME content bugs still present would mean this diagnosis was wrong and the underlying prompt fixes (171.36/171.37) need re-examination instead. RETAINS 171.37.)
 # SL-VERSION: 171.37 (Session 237, 2026-10-05 -- founder rescored image 143 on staging with 171.36 and sent the revised PDF: blur fix confirmed working (egrets correctly described as motion-blurred, background correctly described as sharp, 0 occurrences of the old wrong sentence) but the cross-field repetition fix from 171.36 only partially worked -- exact-phrase repeats went down but the same "shot from directly overhead / dock or drone access / most photographers would not attempt this" OBSERVATION was still the lead point in six different fields (impression, transferable_advice, mentor_technical, dim_obs_dod, dim_obs_disruption, tech_read), just reworded each time. Diagnosis: a single global rule, ~60% of the way through a 7000+ line prompt, asking the model to hold ~20 fields in mind and cross-check them is a weak instruction pattern for this model at this prompt length. STRONGER FIX: added an explicit FIELD OWNERSHIP RULE assigning each of the three facts that kept repeating (access/difficulty, compositional treatment, colour/visual impact) to exactly one owning field -- dim_obs_dod, dim_obs_disruption, and dim_obs_wonder respectively -- then added a short, local OWNERSHIP REMINDER directly inside the spec of every OTHER field that kept re-deriving these facts (impression, transferable_advice, mentor_technical, tech_read), pointing back to the owning field instead of re-explaining. This mirrors the existing MASTER PHOTOGRAPHER ownership pattern in this same prompt (one name, one field, self-check) rather than inventing a new mechanism. Local, field-adjacent instructions are the pattern that worked for the blur fix in 171.36; this applies the same pattern to repetition. NOT YET DEPLOYED -- founder to push, rescore the same image again, and compare against the 171.36 PDF before this counts as fixed. RETAINS 171.36.)
@@ -1510,6 +1550,41 @@ mentor_technical, in dim_obs_disruption, AND in tech_read — five fields making
 One of those should have kept it; the other four needed a different observation each.
 This check runs in addition to, not instead of, the four-card check above.
 
+VISUAL MATERIAL INVENTORY — MANDATORY FIRST STEP, BEFORE WRITING ANY FIELD BELOW:
+This scorecard has roughly twenty text fields, each required to name something specific and
+image-grounded — not a generic photography concept. Before writing any of them, look at the
+image again and privately list (do NOT include this list in your JSON output) at least 10
+distinct, concrete things you can actually see in THIS frame. Not photography theory — actual
+visual facts: the vantage point and what it does to scale/perspective; each subject's exact pose,
+gesture, or body position; a specific colour or tonal relationship; a texture (water, fabric, metal,
+skin, fur, feather); a background or foreground element most viewers would miss on a first look;
+a shadow or light-direction detail; an edge-of-frame or corner detail; a spatial relationship
+between two elements; something deliberately absent or empty; a detail that reveals time of day,
+weather, or season.
+WHY THIS STEP EXISTS: on a visually simple image — one dominant composition idea (e.g. an
+aerial vantage point) plus one secondary technique (e.g. intentional motion blur) — there are
+usually only 2-3 "big" facts available, but twenty fields all need something specific to say.
+Without this step the engine has repeatedly fallen back to restating those same 2-3 big facts
+under different wording field after field — confirmed on live rescores where "shot from directly
+overhead" and "the yellow-blue colour relationship" led six, seven, even eight different fields even
+after the CROSS-FIELD REPETITION CHECK and FIELD OWNERSHIP RULE below were both in place.
+Neither of those rules forces the engine to find MORE material — they only police whether an
+already-found fact gets re-explained. An image never actually has only 2-3 observable things in
+it; it has dozens. Most fast readings just never look past the obvious one.
+RULE: once you have your list of 10+, assign each field below a DIFFERENT item from the list as
+its primary content. If a field's job is inherently about one of the two or three big facts (e.g.
+dim_obs_dod is inherently about access/difficulty), that field may use a big fact as its anchor —
+but it must still add an image-specific layer of detail beyond the bare framing already used
+elsewhere (an estimate of height or distance, the specific risk, the exact timing constraint) —
+never the same sentence shape already used for that fact in another field.
+IF YOU RUN OUT OF NEW MATERIAL FOR A FIELD: that is the signal to change the KIND of
+content for that field — the feeling it creates, a craft or technique note, a forward-looking
+possibility, what a different photographer would have done differently — rather than restating an
+already-used visual fact in new words. A field with a smaller, genuinely different observation is
+always better than a field restating the biggest fact again.
+This is prevention, done BEFORE writing — not cleanup done after, which is what FINAL CHECK
+and CROSS-FIELD REPETITION CHECK above are for. Do this step first.
+
 ═══════════════════════════════════════════════════════════
 NEW SCORECARD FIELDS — FORMAT DISCIPLINE RULES (Session 215)
 These fields appear in the JSON schema below. Each has strict rules.
@@ -1550,6 +1625,10 @@ what reverses it. Never write 'more detail would help', 'subject visibility limi
 make this transformation hit harder.
 
 DIM OBS — ONE SENTENCE PER DIMENSION:
+Before writing any of these five, confirm you completed the VISUAL MATERIAL INVENTORY above —
+these five fields are usually where the engine runs out of fresh material first, because all five sound
+like they should discuss the same big compositional fact. They should not. Pull five DIFFERENT
+items from your inventory.
 FIELD OWNERSHIP RULE — READ BEFORE WRITING ANY DIM OBS: each fact about the image has exactly
 ONE field that is allowed to explain WHY it matters. Other fields may refer to the fact in passing
 (a few words, no re-explanation) but must not re-argue it. The three facts that repeat most often:
