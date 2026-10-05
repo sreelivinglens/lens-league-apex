@@ -1,3 +1,36 @@
+# SL-VERSION: 171.42 (Session 237, 2026-10-05 -- founder rescored a 5th time with 171.41 (corrective
+# re-ask) deployed: 10 repeat groups found, 7 fields fixed cleanly, 1 field (tech_read) correctly declined
+# by the safety check rather than shipped broken -- real progress, verified against the PDF (blur also
+# confirmed correct for the 4th consecutive run). Founder: "so lets clean up the duplicate one last run."
+# ROOT CAUSE of the one rejection, found before touching anything: the detector works in fixed 6-word
+# windows, and mentor_technical/tech_read actually shared a full 24-word IDENTICAL sentence ("The blur
+# on the egrets is intentional motion rendering, not a shutter speed accident...rather than specimens").
+# That produces ~19 overlapping 6-word grams all mapping to the same field pair; the code arbitrarily
+# logged and handed the correction model just ONE of them -- "shutter speed accident the technique
+# transforms", a confusing out-of-context mid-sentence slice -- never showing it the actual sentence to
+# remove. No wonder the rewrite attempt failed.
+# FIX: added _longest_common_run() -- a seed-and-extend longest-common-substring search (every
+# matching 6-word seed grown forward/backward while words keep matching) that finds the REAL full
+# shared phrase between two fields' actual text, not an arbitrary window. Used in three places: (1) the
+# main TEXT_REPEAT log, (2) the TEXT_REPEAT_AFTER_FIX log, (3) the correction prompt sent to the model
+# in _attempt_text_repeat_fix -- all three now show the true duplicate sentence, not a fragment.
+# CAUGHT BY TESTING BEFORE SHIPPING (critical, given this touches the safety check itself): checking
+# whether the FULL merged phrase still appears verbatim after a rewrite is too lenient -- a single inserted
+# word (e.g. "is the decision" -> "is still the decision") breaks the exact substring match and would have
+# let a barely-reworded, still-duplicated rewrite through UNDETECTED, silently weakening the exact safety
+# check this whole mechanism depends on. Caught by a dedicated regression test (TEST3, reproducing
+# that exact word-insertion case) before this ever reached a live run. FIXED: the rejection check now
+# slides a 6-word window across the merged phrase and rejects if ANY such window still appears in the
+# rewrite -- the same granularity the original detector used to find the repeat, so a genuine rewrite has
+# to clear the same bar it was judged by, while the human-facing log and the model-facing prompt still
+# show the full, clear phrase.
+# VERIFIED before delivery: full regression suite re-run (6 tests: no-op, clean-accept, reject-on-residual-
+# duplicate incl. the word-insertion case, API-error-unchanged, over-cap-skip, and the exact tonight's-
+# failure scenario reproduced end to end with the real field ordering) -- all pass. py_compile clean.
+# NOT YET DEPLOYED -- founder to push, rescore image 143 one more time, send the PDF + full console
+# log. What to look for: [TEXT_REPEAT_AFTER_FIX] should either not fire, or if it does, the phrase shown
+# will now be the real full sentence, not a confusing fragment -- either way, the log will finally say
+# something true. RETAINS 171.41.)
 # SL-VERSION: 171.41 (Session 237, 2026-10-05 -- founder rescored a 4th time with 171.40 (Visual Material
 # Inventory) deployed: made it WORSE, not better -- TEXT_REPEAT count went 7->11. The original "overhead/
 # colour" cluster did not move AT ALL (a full sentence -- "Shot from directly overhead -- the angle
@@ -6032,6 +6065,48 @@ _TEXT_REPEAT_FIELD_HINTS = {
 }
 
 
+def _longest_common_run(words_a, words_b):
+    """
+    SL-VERSION 171.42 (Session 237). The n-gram detector flags fixed 6-word
+    windows — when two fields share a full 24-word sentence verbatim, that
+    produces ~19 overlapping 6-word grams, and the code picked just ONE of
+    them (arbitrarily) to show in the log and to the corrective-fix model.
+    Confirmed live: the fix call was shown the fragment "shutter speed
+    accident the technique transforms" — a confusing mid-sentence slice — for
+    a field pair that actually shared a full, clean sentence verbatim. The
+    model's rewrite attempt for that field still failed the safety check and
+    was correctly rejected, but the REAL reason it struggled is that it was
+    never shown the actual duplicate it needed to remove.
+    This finds the true longest shared word-run between two word lists via a
+    standard seed-and-extend (every matching 6-word seed is grown forward and
+    backward as far as the words keep matching) — cheap and exact for text
+    this short, no approximation. Returns the longest run as a plain string,
+    or '' if none found (callers already know a repeat exists before calling
+    this, so '' should not occur in practice, but is handled safely).
+    """
+    from collections import defaultdict
+    _SEED = 6
+    _idx_a = defaultdict(list)
+    for _i in range(len(words_a) - _SEED + 1):
+        _idx_a[tuple(words_a[_i:_i + _SEED])].append(_i)
+    _best = []
+    for _j in range(len(words_b) - _SEED + 1):
+        _key = tuple(words_b[_j:_j + _SEED])
+        for _i in _idx_a.get(_key, []):
+            _fa, _fb = _i, _j
+            while _fa < len(words_a) and _fb < len(words_b) and words_a[_fa] == words_b[_fb]:
+                _fa += 1
+                _fb += 1
+            _ba, _bb = _i, _j
+            while _ba > 0 and _bb > 0 and words_a[_ba - 1] == words_b[_bb - 1]:
+                _ba -= 1
+                _bb -= 1
+            _run = words_a[_ba:_fa]
+            if len(_run) > len(_best):
+                _best = _run
+    return ' '.join(_best)
+
+
 def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn):
     """
     SL-VERSION 171.41 (Session 237). Founder: three prompt-wording attempts at
@@ -6058,19 +6133,24 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
     """
     _log = []
 
-    # Decide, per repeated phrase, which field keeps the content (the first one
-    # in canonical field order) and which fields must be rewritten.
-    _owner_of = {}      # phrase -> owning field (keeps its text)
-    _rewrite_reasons = {}  # field -> list of (phrase, owner_field)
+    # Decide, per repeated n-gram, which field keeps the content (the first
+    # one in canonical field order) and which fields must be rewritten —
+    # collapsed to a set of (owner, other) field PAIRS first, so each pair is
+    # only resolved to its real duplicate phrase once (see below), not once
+    # per overlapping 6-word window (SL-VERSION 171.42 — a 24-word identical
+    # sentence produces ~19 overlapping 6-grams; without this collapse the
+    # correction prompt showed the model an arbitrary, confusing 6-word
+    # mid-sentence slice instead of the sentence it actually needed to drop).
+    _owner_pairs = set()  # {(owner_field, field_to_rewrite), ...}
     for _phrase, _fields in text_repeats.items():
         _ordered = [f for f in repeat_fields if f in _fields]
         if len(_ordered) < 2:
             continue
         _owner = _ordered[0]
         for _f in _ordered[1:]:
-            _rewrite_reasons.setdefault(_f, []).append((_phrase, _owner))
+            _owner_pairs.add((_owner, _f))
 
-    _fields_to_rewrite = list(_rewrite_reasons.keys())
+    _fields_to_rewrite = sorted({_f for _owner, _f in _owner_pairs})
     if not _fields_to_rewrite:
         _log.append('[auto_score][TEXT_REPEAT_FIX] nothing to rewrite (no field had a non-owner repeat)')
         return result, _log
@@ -6079,6 +6159,23 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         _log.append(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED — {len(_fields_to_rewrite)} fields flagged, above the 8-field safety cap; '
                      f'this image\'s card needs a human look, not a blind rewrite. Fields: {", ".join(_fields_to_rewrite)}')
         return result, _log
+
+    # For each (owner, rewrite-field) pair, find the ACTUAL longest shared
+    # phrase from their real text — not an arbitrary 6-word window — so the
+    # model is shown the real sentence to remove, and the later safety check
+    # tests against the real duplicate too.
+    _rewrite_reasons = {}  # field -> list of (merged_phrase, owner_field)
+    for _owner, _f in _owner_pairs:
+        _owner_words = norm_words_fn(str(result.get(_owner, '') or ''))
+        _f_words = norm_words_fn(str(result.get(_f, '') or ''))
+        _merged = _longest_common_run(_owner_words, _f_words)
+        if _merged:
+            _rewrite_reasons.setdefault(_f, []).append((_merged, _owner))
+    # A field flagged by the raw detector but with no merged phrase found
+    # (should not happen, but never assume) still needs a hint — fall back to
+    # the field's plain presence in _fields_to_rewrite with an empty phrase.
+    for _f in _fields_to_rewrite:
+        _rewrite_reasons.setdefault(_f, [])
 
     # Build a compact, self-contained correction request — original text for
     # every flagged field, the phrase(s) to avoid in each, and which field
@@ -6097,7 +6194,13 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
     ]
     for _f in _fields_to_rewrite:
         _hint = _TEXT_REPEAT_FIELD_HINTS.get(_f, 'Keep the same format and length as the original.')
-        _phrases = '; '.join(f'"{p}" (already covered by {owner})' for p, owner in _rewrite_reasons[_f][:3])
+        # Longest, most informative merged phrases first; cap at 2 so the
+        # prompt stays readable even when a field overlaps with 2+ owners.
+        _top_phrases = sorted(_rewrite_reasons[_f], key=lambda pr: -len(pr[0]))[:2]
+        if _top_phrases:
+            _phrases = '; '.join(f'"{p}" (already covered by {owner})' for p, owner in _top_phrases)
+        else:
+            _phrases = '(restates another field — see full scorecard above for the overlap)'
         _lines.append(f'- {_f}: currently repeats: {_phrases}. FORMAT RULE: {_hint}')
     _lines.append('')
     _lines.append(
@@ -6148,9 +6251,25 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         _orig_wc = len(_orig_text.split())
         _new_wc = len(_new_text.split())
         _too_long = _orig_wc > 0 and _new_wc > max(_orig_wc * 2, _orig_wc + 25)
-        _still_has_phrase = any(
-            p.lower() in ' '.join(norm_words_fn(_new_text)) for p, _owner in _rewrite_reasons[_f]
-        )
+        # SL-VERSION 171.42 fix, caught by a regression test before shipping:
+        # checking whether the FULL merged phrase still appears verbatim is
+        # too lenient — inserting even one word (e.g. "is the decision" ->
+        # "is still the decision") breaks the exact substring match and lets
+        # a barely-reworded, still-duplicated rewrite through undetected.
+        # Slide a 6-word window over the merged phrase instead and reject if
+        # ANY such window still appears in the new text — this is the same
+        # granularity the original detector used to find the repeat in the
+        # first place, so a genuine rewrite has to clear the same bar.
+        _new_text_joined = ' '.join(norm_words_fn(_new_text))
+        _still_has_phrase = False
+        for _p, _owner in _rewrite_reasons[_f]:
+            _p_words = _p.split()
+            for _wi in range(len(_p_words) - ngram_len + 1):
+                if ' '.join(_p_words[_wi:_wi + ngram_len]) in _new_text_joined:
+                    _still_has_phrase = True
+                    break
+            if _still_has_phrase:
+                break
         if _too_long or _still_has_phrase:
             _still_bad.append(_f)
             _kept.append(_f)
@@ -6891,16 +7010,31 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             _ngram_fields.setdefault(_gram, set()).add(_rf_name)
 
     _text_repeats = {g: fs for g, fs in _ngram_fields.items() if len(fs) >= 2}
-    if _text_repeats:
-        _seen_pairs = set()
-        # Longest matching phrase per field-pair first, so overlapping n-grams
-        # from the same restated sentence collapse into one readable log line.
-        for _gram, _fields in sorted(_text_repeats.items(), key=lambda kv: -len(kv[0])):
+
+    def _log_text_repeat_pairs(_repeats_dict, _result_snapshot, _tag):
+        # SL-VERSION 171.42 — print the REAL longest shared phrase per field
+        # pair (via _longest_common_run against the fields' actual text), not
+        # an arbitrary one of the ~N overlapping 6-word windows that produced
+        # the detection. A 6-word window is enough to DETECT a repeat; it is
+        # not enough to honestly SHOW one, as 171.41's live run proved — the
+        # log said "shutter speed accident the technique transforms" for a
+        # pair that actually shared a full 24-word identical sentence.
+        _seen = set()
+        for _gram, _fields in sorted(_repeats_dict.items(), key=lambda kv: -len(kv[0])):
             _pair = tuple(sorted(_fields))
-            if _pair in _seen_pairs:
+            if _pair in _seen:
                 continue
-            _seen_pairs.add(_pair)
-            print(f'[auto_score][TEXT_REPEAT] "{_gram}" appears in: {", ".join(sorted(_fields))} — same observation restated, not reworded')
+            _seen.add(_pair)
+            _fa, _fb = _pair[0], _pair[1] if len(_pair) > 1 else _pair[0]
+            _merged = _longest_common_run(
+                _text_repeat_norm_words(str(_result_snapshot.get(_fa, '') or '')),
+                _text_repeat_norm_words(str(_result_snapshot.get(_fb, '') or '')),
+            ) or _gram
+            _suffix = 'still duplicated after corrective pass' if _tag == 'TEXT_REPEAT_AFTER_FIX' else 'same observation restated, not reworded'
+            print(f'[auto_score][{_tag}] "{_merged}" appears in: {", ".join(sorted(_fields))} — {_suffix}')
+
+    if _text_repeats:
+        _log_text_repeat_pairs(_text_repeats, result, 'TEXT_REPEAT')
 
         # ── Corrective re-ask (SL-VERSION 171.41) ──────────────────────────
         # Three prompt-wording attempts failed to hold (171.36, 171.37, 171.40
@@ -6934,13 +7068,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 _ngram_fields2.setdefault(_gram, set()).add(_rf_name)
         _text_repeats2 = {g: fs for g, fs in _ngram_fields2.items() if len(fs) >= 2}
         if _text_repeats2:
-            _seen_pairs2 = set()
-            for _gram, _fields in sorted(_text_repeats2.items(), key=lambda kv: -len(kv[0])):
-                _pair = tuple(sorted(_fields))
-                if _pair in _seen_pairs2:
-                    continue
-                _seen_pairs2.add(_pair)
-                print(f'[auto_score][TEXT_REPEAT_AFTER_FIX] "{_gram}" appears in: {", ".join(sorted(_fields))} — still duplicated after corrective pass')
+            _log_text_repeat_pairs(_text_repeats2, result, 'TEXT_REPEAT_AFTER_FIX')
         else:
             print('[auto_score][text_repeat_check_after_fix] OK — clean after corrective pass')
     else:
