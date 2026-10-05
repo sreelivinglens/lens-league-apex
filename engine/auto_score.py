@@ -1,3 +1,4 @@
+# SL-VERSION: 171.37 (Session 237, 2026-10-05 -- founder rescored image 143 on staging with 171.36 and sent the revised PDF: blur fix confirmed working (egrets correctly described as motion-blurred, background correctly described as sharp, 0 occurrences of the old wrong sentence) but the cross-field repetition fix from 171.36 only partially worked -- exact-phrase repeats went down but the same "shot from directly overhead / dock or drone access / most photographers would not attempt this" OBSERVATION was still the lead point in six different fields (impression, transferable_advice, mentor_technical, dim_obs_dod, dim_obs_disruption, tech_read), just reworded each time. Diagnosis: a single global rule, ~60% of the way through a 7000+ line prompt, asking the model to hold ~20 fields in mind and cross-check them is a weak instruction pattern for this model at this prompt length. STRONGER FIX: added an explicit FIELD OWNERSHIP RULE assigning each of the three facts that kept repeating (access/difficulty, compositional treatment, colour/visual impact) to exactly one owning field -- dim_obs_dod, dim_obs_disruption, and dim_obs_wonder respectively -- then added a short, local OWNERSHIP REMINDER directly inside the spec of every OTHER field that kept re-deriving these facts (impression, transferable_advice, mentor_technical, tech_read), pointing back to the owning field instead of re-explaining. This mirrors the existing MASTER PHOTOGRAPHER ownership pattern in this same prompt (one name, one field, self-check) rather than inventing a new mechanism. Local, field-adjacent instructions are the pattern that worked for the blur fix in 171.36; this applies the same pattern to repetition. NOT YET DEPLOYED -- founder to push, rescore the same image again, and compare against the 171.36 PDF before this counts as fixed. RETAINS 171.36.)
 # SL-VERSION: 171.36 (Session 237, 2026-10-05 -- founder found a real engine error in the Egrets of Sasson Dock evaluation (image 143): tech_read wrote "egrets are sharp against motion blur in the background" when the photo shows the exact opposite -- the egrets' wings are intentionally motion-blurred and the boat/background is sharp. FIX 1: tech_read prompt now has a mandatory BLUR/SHARPNESS CHECK sub-step forcing the model to verify which specific element carries the blur before writing the sentence, instead of defaulting to the common "fast shutter froze the subject" trope. FIX 2: founder separately flagged heavy text repetition across scorecard fields -- verified against this same PDF: the same "shot from directly above / most photographers shoot at eye level" observation was restated in near-identical wording across 5 different fields (impression, transferable_advice, mentor_technical, dim_obs_disruption, tech_read), and the existing FINAL CHECK only ever covered the original four byline cards, never the newer dim_obs/tech_read/visual_flow/imagine fields added in Session 215. Added a CROSS-FIELD REPETITION CHECK (mandatory, whole-scorecard) immediately after the existing four-card FINAL CHECK, with a worked example matching this exact failure mode, instructing the model to assign each observation to one home field and give every other field a genuinely different angle. NEITHER fix changes any scoring formula, weight, or numeric dimension score -- narrative/prompt text only. NOT YET DEPLOYED -- founder to push and confirm via Railway console per standing rules; image 143's existing evaluation will still need a manual rescore once this is live to correct the text Carmen already saw. RETAINS 171.35.)
 # SL-VERSION: 171.35 (Session 235, 2026-10-03 -- NEW: Sonnet member score now CALCULATED IN CODE from the model's five dimension numbers (calculate_score), not taken from the model's own arithmetic. Kill switch: env SL_CODE_SCORE=0. Model's own number kept as _model_score. NS bonus handling unchanged (ns=''). Previous: 171.34 (Session 235, 2026-10-02 -- FIX: NS calibration anchors corrected. The 57% 'Not Sure' example was wrongly attached to the Nihang horseman; per the Constitution (survey) the Nihang horseman is 88% = YES and the 57% belongs to the woman in the white sari. Prompt text only; no scoring formula change. RETAINS 171.33.)
 # SL-VERSION: 171.33 (Session 228, 2026-09-28 — Story Transfer rubric fix for Open Call: AQ Story Transfer component now scores EMOTIONAL TRANSFER (does the feeling reach a stranger who cannot name the story?) not NARRATIVE LEGIBILITY (can a stranger name the plot?). Ambiguous images that produce strong emotional response — even when the viewer denies seeing a story — now score HIGH not LOW. Survey proof: n=233, father+newborn silhouette, "No Story" group chose it as Strongest image more than "Yes Story" group. RETAINS 171.32.)
@@ -1520,6 +1521,11 @@ genuinely strong in this specific frame. Prove the engine saw THIS image.
 NEVER open with: 'This image', 'The photograph', 'Your composition', 'You saw'.
 NEVER mention dimensions by name, score numbers, what is missing, or what to do next.
 NEVER repeat any observation that will appear in conclusion or master_why.
+DOES NOT OWN ANY FACT — this field reacts to the image in one warm beat. It does not explain
+WHY the angle was hard to get, WHY the colours work, or any other mechanic — those explanations
+belong to dim_obs_dod, dim_obs_disruption, dim_obs_wonder, and tech_read respectively (see DIM
+OBS ownership rule below). If you catch yourself re-deriving a reason here, cut it — name what you
+see, not why it works.
 Score gate — same register as hard_truth:
 Score 4-6: warm and specific — 'What a scene to be at.' / 'Lovely instinct here.'
 Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct, and it paid off.'
@@ -1542,14 +1548,36 @@ what reverses it. Never write 'more detail would help', 'subject visibility limi
 make this transformation hit harder.
 
 DIM OBS — ONE SENTENCE PER DIMENSION:
+FIELD OWNERSHIP RULE — READ BEFORE WRITING ANY DIM OBS: each fact about the image has exactly
+ONE field that is allowed to explain WHY it matters. Other fields may refer to the fact in passing
+(a few words, no re-explanation) but must not re-argue it. The three facts that repeat most often:
+  - HOW the shot was physically achieved (angle, access, gear, vantage point, equipment needed,
+    why most photographers would not get this shot) — OWNED BY dim_obs_dod. tech_read may name
+    the angle/gear as a plain fact (e.g. "shot from overhead") but must NOT re-explain why that
+    access is hard or rare — that reasoning lives in dim_obs_dod only.
+  - WHAT the composition does differently from convention (the compositional treatment itself,
+    what it breaks or follows) — OWNED BY dim_obs_disruption. impression and transferable_advice
+    may name the compositional effect in one clause but must not re-derive why it is unconventional.
+  - WHY the colour/visual elements create impact (what stops the eye, the colour relationship) —
+    OWNED BY dim_obs_wonder. tech_read, dim_obs_disruption, and impression may mention the
+    colours exist but must not re-explain why that combination is what creates the pull.
+If you finish a draft and the access/difficulty reasoning, the compositional-break reasoning, or the
+colour-impact reasoning appears with its explanation in more than one field, that is the exact
+failure this rule exists to prevent — keep it in its owning field and cut or shorten it everywhere else.
+
 dim_obs_dod: Why THIS specific DOD score. Name the physical difficulty, access, or technical
-challenge — or what was missing. Image-specific. No generic dimension definition.
+challenge — or what was missing. Image-specific. No generic dimension definition. THIS FIELD
+OWNS the access/difficulty explanation — write the fullest version of it here.
 dim_obs_disruption: Why THIS disruption score. Name the specific compositional choice or
-treatment — what it broke from convention, or why it followed it. Image-specific.
+treatment — what it broke from convention, or why it followed it. Image-specific. THIS FIELD
+OWNS the compositional-break explanation — do not just repeat the access/difficulty point from
+dim_obs_dod in different words; say what the TREATMENT does, not how hard it was to get.
 dim_obs_dm: Why THIS moment score. Was this the peak of the act? If not, name exactly what
 stronger moment was available — what the photographer would have needed to wait for.
 dim_obs_wonder: Why THIS wonder score. Name the type (access, eye, cultural, emotional) and
-what created it — or what would have elevated it. Image-specific.
+what created it — or what would have elevated it. Image-specific. THIS FIELD OWNS the
+colour/visual-impact explanation (see FIELD OWNERSHIP RULE above) — write the fullest version
+of why the colours or visual elements create pull here, not just that they exist.
 dim_obs_aq: Why THIS AQ score. Name the specific emotion a stranger would feel and what
 in the image creates it. If no specific emotion: name what the image creates instead.
 All five: max 40 words each. Sherpa voice. Never a textbook definition.
@@ -1577,6 +1605,12 @@ No career summaries. No 'is known for' as a construction — show the action ins
 
 TECHNICAL READ:
 tech_read: One paragraph, max 60 words. Forensic examination of this specific image.
+OWNERSHIP REMINDER (see FIELD OWNERSHIP RULE above): this field does NOT own the
+access/difficulty explanation (dim_obs_dod does) or the colour-impact explanation
+(dim_obs_wonder does). You may name the angle or gear as a plain fact in one clause if it is
+needed to explain sharpness/exposure, but do not re-argue why that angle was hard to get or
+why the colours create impact — that reasoning belongs elsewhere and repeating it here is the
+exact duplication this rule exists to stop.
 BLUR/SHARPNESS CHECK — MANDATORY, BEFORE WRITING THE SENTENCE: Look at each distinct
 element in the frame separately — main subject, any secondary subject, background/
 environment — and note which ONE actually shows blur in the pixels you can see. Do NOT
@@ -1807,6 +1841,11 @@ Return this exact JSON structure:
   "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do — that belongs in background_check only. This field contains ONLY what worked and why it matters.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. BULLET FORMAT — 3 bullets. Each bullet is 2 lines: observation + what it means. Blank line between bullets.
 
+OWNERSHIP REMINDER: this card does not own the access/difficulty explanation (dim_obs_dod
+does) or the colour-impact explanation (dim_obs_wonder does) — see FIELD OWNERSHIP RULE.
+Name the DECISION the photographer made (what they did), not a re-argued case for why that
+decision was hard or rare to pull off — that belongs in dim_obs_dod only.
+
 GEAR-SPECIFIC COACHING RULES — MANDATORY when EXIF confirms the device:
 Apply these when the exact make/model is confirmed in the EXIF block above.
 Never invent gear that is not confirmed. Never suggest gear the photographer does not have.
@@ -1888,7 +1927,7 @@ FORMAT:
   "edit_creative": "<CREATIVE EDITS. ONE bullet. One transformation that changes the emotional register of the image. What would it become? Why would that be interesting? No score promises.\n\n▪ [The transformation — what it does to the image's feeling.]>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If scoring pattern strongly suggests different genre would score higher. Otherwise null. Same format as before.>",
   "what_stood_out": "<LEGACY FIELD — same as hard_truth. Populate with the same opening line for backward compatibility.>",
-  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. BULLET FORMAT — 3 bullets. Blank line between bullets.\n\n▪ [Applause adjective + the specific decision most photographers at this scene would not have made.]\n\n▪ [**Master name** — specific connection to their practice, linked. One sentence.]\n\n▪ [Why this image has a story. What the story is. One sentence.]>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. BULLET FORMAT — 3 bullets. Blank line between bullets. OWNERSHIP REMINDER: name the decision in ONE clause, no more — do not re-explain why it was hard to achieve (dim_obs_dod owns that) or why the colours/visuals work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE.\n\n▪ [Applause adjective + the specific decision most photographers at this scene would not have made — named, not re-argued.]\n\n▪ [**Master name** — specific connection to their practice, linked. One sentence.]\n\n▪ [Why this image has a story. What the story is. One sentence.]>",
   "background_check": "<CARD 3 BODY — same content as byline_1. Return identical text here for backward compatibility.>",
   "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
   "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. CRITICAL: This must NEVER be the same location where this image was shot. If the image was shot in Bharatpur, do NOT recommend Bharatpur. If the image was shot in Varanasi, do NOT recommend Varanasi. The advisory must be somewhere the photographer can go near their user_city — a new place, a new opportunity. Include: what is active NOW this season, best time of day, what the frame worth making looks like. NEVER mention travel time, drive time, walking time, or any distance in minutes or hours — you do not have the user's GPS or real-time location and any time estimate would be inaccurate and misleading. Use 'nearby' or 'close by' at most. Never write '[Location] is X minutes from you' or 'X hour drive'. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). HARD LENGTH LIMIT: 2 sentences maximum. If no seasonal_context provided, return null.>",
@@ -1896,15 +1935,15 @@ FORMAT:
   "mentor_location_3": "<Always return null. Third location advisory removed to reduce response length.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
   "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>",
-  "impression": "<SCORECARD OPENING PARAGRAPH. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. Max 60 words. Plain English. No jargon.>",
+  "impression": "<SCORECARD OPENING PARAGRAPH. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. OWNERSHIP REMINDER: react to what you see — do not explain WHY the angle was hard (dim_obs_dod owns that) or WHY the colours work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE. Max 60 words. Plain English. No jargon.>",
   "strength_name": "<Plain-English name of the strongest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "strength_obs": "<One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "next_leap_obs": "<One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
-  "dim_obs_dod": "<One sentence, max 40 words. Why this specific DOD score. Name the physical difficulty, access, or technical challenge — or what was missing. Image-specific. No generic dimension definition.>",
-  "dim_obs_disruption": "<One sentence, max 40 words. Why this disruption score. Name the specific compositional choice or treatment — what it broke from convention, or why it followed it. Image-specific.>",
+  "dim_obs_dod": "<One sentence, max 40 words. Why this specific DOD score. Name the physical difficulty, access, or technical challenge — or what was missing. Image-specific. No generic dimension definition. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above.>",
+  "dim_obs_disruption": "<One sentence, max 40 words. Why this disruption score. Name the specific compositional choice or treatment — what it broke from convention, or why it followed it. Image-specific. THIS FIELD OWNS the compositional-treatment explanation — do not just restate dim_obs_dod's access/difficulty point in different words.>",
   "dim_obs_dm": "<One sentence, max 40 words. Why this moment score. Was this the peak of the act? If not, name exactly what stronger moment was available and what the photographer would have needed to wait for. Image-specific.>",
-  "dim_obs_wonder": "<One sentence, max 40 words. Why this wonder score. Name the type (access, eye, cultural, emotional) and what created it — or what would have elevated it. Image-specific.>",
+  "dim_obs_wonder": "<One sentence, max 40 words. Why this wonder score. Name the type (access, eye, cultural, emotional) and what created it — or what would have elevated it. Image-specific. THIS FIELD OWNS the colour/visual-impact explanation — see FIELD OWNERSHIP RULE above.>",
   "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific.>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
