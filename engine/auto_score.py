@@ -1,3 +1,38 @@
+# SL-VERSION: 171.41 (Session 237, 2026-10-05 -- founder rescored a 4th time with 171.40 (Visual Material
+# Inventory) deployed: made it WORSE, not better -- TEXT_REPEAT count went 7->11. The original "overhead/
+# colour" cluster did not move AT ALL (a full sentence -- "Shot from directly overhead -- the angle
+# flattens the scene into a graphic composition where the yellow rails become framing lines and the blue
+# deck becomes a colour field" -- appeared verbatim in both mentor_technical and tech_read), proving the
+# inventory instruction failed for the same structural reason as 171.36's global rule: it's one more
+# instruction buried in an already enormous prompt, and I built it without learning from my own diagnosis
+# of why 171.36 failed. WORSE: a brand-new cluster appeared -- the "what would the 9+ version look like"
+# idea (peak wing extension, geometric sweet spot, stillness vs motion) repeated across FIVE fields
+# (byline_1, imagine, mentor_next, dim_obs_dm, mentor_technical) -- not model laziness this time but a
+# genuine PROMPT ARCHITECTURE problem: imagine, byline_1's second bullet, dim_obs_dm, and mentor_next
+# are each independently specced to answer "what would make this stronger," and for an image with one
+# obvious answer, four independently-asked questions produce one repeated answer. Three prompt-wording
+# attempts (171.36, 171.37, 171.40) have now failed or backfired, confirmed on 4 consecutive live rescores
+# of the same image -- conclusive evidence a wording-only fix cannot hold at this prompt length for this
+# model. FOUNDER SIGN-OFF: "ok go" to the corrective re-ask mechanism flagged as a separate decision in
+# 171.39/171.40 (adds cost/latency, so it needed its own go-ahead, unlike the first three attempts).
+# BUILT: _attempt_text_repeat_fix() -- when the existing TEXT_REPEAT detector (171.39, unchanged) fires,
+# this makes ONE additional, targeted, TEXT-ONLY follow-up call (no image re-send -- this is a rewrite of
+# already-grounded text, not new vision work) naming only the flagged fields and the exact phrase each
+# one shares with another field, asking the model to rewrite ONLY those fields. HARD SAFETY INVARIANT,
+# verified with 5 offline tests before this shipped (mocked httpx.post, zero real API calls, zero risk to
+# production during testing): this function can only IMPROVE the scorecard or NO-OP -- never make it
+# worse. Confirmed: (1) a clean rewrite is accepted and the owner field is left untouched; (2) a rewrite
+# that still contains the flagged phrase is REJECTED per-field and the original text is kept; (3) any API
+# error or JSON parse failure returns the result completely UNCHANGED; (4) more than 8 flagged fields in
+# one run skips the corrective call entirely (no API call made) rather than risk a blind rewrite on a card
+# that needs a human look instead. After the corrective pass, the SAME detector re-runs on the patched
+# result and logs [TEXT_REPEAT_AFTER_FIX] or a clean confirmation -- the real outcome, not an assumed
+# one, exactly like every other check in this file. Added timing log (text_repeat_fix) so the extra latency
+# this adds is visible on every run where it actually fires, not hidden inside the total.
+# NOT YET DEPLOYED -- founder to push, rescore image 143 again, and send the new PDF + FULL console
+# log (the TEXT_REPEAT_FIX and TEXT_REPEAT_AFTER_FIX lines are the evidence this either worked or
+# didn't -- if TEXT_REPEAT_AFTER_FIX still fires, that is the honest result to report, not something to
+# paper over). RETAINS 171.40.)
 # SL-VERSION: 171.40 (Session 237, 2026-10-05 -- founder pushed back hard after 3 rescores still showed
 # repetition: "we never had such issues since 235 sessions before - why now? ... Fix once and for all after
 # thinking through." Real answer, after rereading all 4 rescored PDFs of this image side by side:
@@ -5973,6 +6008,166 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
     return "\n" + "\n".join(lines) + "\n"
 
 
+# ── One-line format reminder per field, used ONLY by the corrective re-ask ────
+# below (_attempt_text_repeat_fix). Kept short and self-contained on purpose —
+# the full SCORE_PROMPT is 7000+ lines and this call does not re-send it; it
+# sends just enough of each flagged field's rules to keep the rewrite legal.
+_TEXT_REPEAT_FIELD_HINTS = {
+    'impression': 'SCORECARD OPENING PARAGRAPH. 2-3 sentences, max 60 words. Warm Sherpa tone. Never open with "This image", "The photograph", "You saw", "Your composition". Never mention dimension names, scores, or what is missing.',
+    'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, each line starting with the character ▪ then a space, a blank line between bullets.",
+    'mentor_technical': 'CARD 2 — WHAT YOUR EYE READ. 3 bullets (▪), each bullet 2 lines: observation, then what it means. Blank line between bullets.',
+    'mentor_next': 'ONE creative direction. Max two sentences. A possibility, never a correction.',
+    'byline_1': 'CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets.',
+    'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Bullet format (▪), blank line between bullets. Includes a gear-specific exercise, a 3-frame body-of-work sequence, and a philosophy line.',
+    'dim_obs_dod': 'One sentence, max 40 words. Sherpa voice. Names the access/difficulty fact for this image.',
+    'dim_obs_disruption': 'One sentence, max 40 words. Sherpa voice. Names the compositional-treatment fact for this image.',
+    'dim_obs_dm': 'One sentence, max 40 words. Sherpa voice. States whether this was the peak moment, or what stronger moment was missed.',
+    'dim_obs_wonder': 'One sentence, max 40 words. Sherpa voice. Names the colour/visual-impact fact for this image.',
+    'dim_obs_aq': 'One sentence, max 40 words. Sherpa voice. Names the specific emotion a stranger would feel.',
+    'tech_read': 'One paragraph, max 60 words. Forensic: sharpness cause, exposure (clipping/crush), one gear note only if EXIF present.',
+    'visual_flow': 'One sentence, max 40 words. Where the eye enters, how it travels, where it rests or what dead space exists.',
+    'imagine': 'One paragraph, max 80 words. Second person, present tense. Possibility language only ("imagine if", "there is a version of this image where"). No master name. No location advice.',
+    'conclusion': 'Max 90 words. Warm second-person platform voice. Must still end with the exact sentence: "The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed."',
+    'hard_truth': 'SCORECARD OPENING LINE. One or two short sentences. Warm, specific, score-appropriate applause.',
+}
+
+
+def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn):
+    """
+    SL-VERSION 171.41 (Session 237). Founder: three prompt-wording attempts at
+    the cross-field repetition problem (171.36, 171.37, 171.40) were each
+    verified against real rescores and each failed or made it worse — proof
+    that this specific model, at this prompt length, cannot reliably self-police
+    ~20 fields through instructions alone. Rather than a fourth wording guess,
+    this makes ONE targeted follow-up call, text-only (no image re-send), that
+    shows the model only the flagged fields + the exact repeated phrase each one
+    shares, and asks it to rewrite ONLY those fields.
+    HARD SAFETY INVARIANT — this function may only IMPROVE the result or NO-OP.
+    It must never leave the scorecard worse than it already was:
+      - Any API error, timeout, or JSON parse failure -> return result UNCHANGED.
+      - A rewritten field that is empty, wildly over length, or still contains
+        the same flagged phrase -> that ONE field's rewrite is discarded and the
+        ORIGINAL text is kept; this is checked per-field, not all-or-nothing.
+      - At most 8 fields are ever sent for rewrite in one call — if more than
+        that are flagged, something deeper is wrong with this image's card and
+        a blind rewrite is more likely to cause new damage than fix it; skip
+        the fix entirely, log why, and leave the detector's log as the signal.
+    Returns (result, fix_log_lines) — fix_log_lines is a list of plain strings
+    the caller prints, so every outcome (fixed / partial / skipped / failed) is
+    visible in the Railway console exactly like every other check in this file.
+    """
+    _log = []
+
+    # Decide, per repeated phrase, which field keeps the content (the first one
+    # in canonical field order) and which fields must be rewritten.
+    _owner_of = {}      # phrase -> owning field (keeps its text)
+    _rewrite_reasons = {}  # field -> list of (phrase, owner_field)
+    for _phrase, _fields in text_repeats.items():
+        _ordered = [f for f in repeat_fields if f in _fields]
+        if len(_ordered) < 2:
+            continue
+        _owner = _ordered[0]
+        for _f in _ordered[1:]:
+            _rewrite_reasons.setdefault(_f, []).append((_phrase, _owner))
+
+    _fields_to_rewrite = list(_rewrite_reasons.keys())
+    if not _fields_to_rewrite:
+        _log.append('[auto_score][TEXT_REPEAT_FIX] nothing to rewrite (no field had a non-owner repeat)')
+        return result, _log
+
+    if len(_fields_to_rewrite) > 8:
+        _log.append(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED — {len(_fields_to_rewrite)} fields flagged, above the 8-field safety cap; '
+                     f'this image\'s card needs a human look, not a blind rewrite. Fields: {", ".join(_fields_to_rewrite)}')
+        return result, _log
+
+    # Build a compact, self-contained correction request — original text for
+    # every flagged field, the phrase(s) to avoid in each, and which field
+    # already owns that content, plus a short format reminder per field.
+    _lines = [
+        'You are revising ONLY the fields listed below from a photography scorecard you already wrote. '
+        'Each one currently restates something another field already says — your job is to give each one '
+        'a genuinely different, still image-accurate observation instead. Do not re-paint the same fact in '
+        'new words; find a different true detail or a different kind of content (feeling, craft note, '
+        'actionable habit) for each one. Keep each field\'s existing format, tone, and length limit exactly.',
+        '',
+        'FULL CURRENT SCORECARD (for context only — do not rewrite fields not listed below):',
+        json.dumps({k: v for k, v in result.items() if isinstance(v, str)}, ensure_ascii=False, indent=2),
+        '',
+        'FIELDS TO REWRITE:',
+    ]
+    for _f in _fields_to_rewrite:
+        _hint = _TEXT_REPEAT_FIELD_HINTS.get(_f, 'Keep the same format and length as the original.')
+        _phrases = '; '.join(f'"{p}" (already covered by {owner})' for p, owner in _rewrite_reasons[_f][:3])
+        _lines.append(f'- {_f}: currently repeats: {_phrases}. FORMAT RULE: {_hint}')
+    _lines.append('')
+    _lines.append(
+        'Return ONLY a JSON object mapping each field name above to its new text, nothing else — '
+        'no markdown fences, no commentary. Example: {"impression": "...", "tech_read": "..."}'
+    )
+    _prompt = '\n'.join(_lines)
+
+    try:
+        _response = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":       MODEL,
+                "max_tokens":  1500,
+                "temperature": 0.4,  # some variation is the point — a second identical rewrite helps no one
+                "messages": [{"role": "user", "content": _prompt}],
+            },
+            timeout=60,
+        )
+        if _response.status_code != 200:
+            _log.append(f'[auto_score][TEXT_REPEAT_FIX] API error {_response.status_code} — keeping original text for all flagged fields')
+            return result, _log
+        _content = _response.json()
+        _text = ''
+        for _block in _content.get("content", []):
+            if _block.get("type") == "text":
+                _text += _block.get("text", "")
+        _text = re.sub(r"```json|```", "", _text).strip()
+        _rewrites = json.loads(_text)
+    except Exception as _e:
+        _log.append(f'[auto_score][TEXT_REPEAT_FIX] FAILED ({_e}) — keeping original text for all flagged fields')
+        return result, _log
+
+    _fixed, _kept, _still_bad = [], [], []
+    for _f in _fields_to_rewrite:
+        _new_text = str(_rewrites.get(_f, '') or '').strip()
+        _orig_text = str(result.get(_f, '') or '')
+        if not _new_text:
+            _kept.append(_f)
+            continue
+        # Sanity checks — never accept a rewrite that is obviously broken or
+        # that failed to actually remove the flagged phrase.
+        _orig_wc = len(_orig_text.split())
+        _new_wc = len(_new_text.split())
+        _too_long = _orig_wc > 0 and _new_wc > max(_orig_wc * 2, _orig_wc + 25)
+        _still_has_phrase = any(
+            p.lower() in ' '.join(norm_words_fn(_new_text)) for p, _owner in _rewrite_reasons[_f]
+        )
+        if _too_long or _still_has_phrase:
+            _still_bad.append(_f)
+            _kept.append(_f)
+            continue
+        result[_f] = _new_text
+        _fixed.append(_f)
+
+    if _fixed:
+        _log.append(f'[auto_score][TEXT_REPEAT_FIX] rewrote: {", ".join(_fixed)}')
+    if _still_bad:
+        _log.append(f'[auto_score][TEXT_REPEAT_FIX] rewrite rejected (still duplicated or malformed), kept original: {", ".join(_still_bad)}')
+    if not _fixed and not _still_bad:
+        _log.append('[auto_score][TEXT_REPEAT_FIX] model returned nothing usable — kept original text for all flagged fields')
+
+    return result, _log
+
+
 def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre="", image_number=1, previous_score=None, previous_audit=None, same_image_rescore=False, masters_by_genre=None):
     """
     Score an image using the Apex DDI Engine.
@@ -6706,6 +6901,48 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 continue
             _seen_pairs.add(_pair)
             print(f'[auto_score][TEXT_REPEAT] "{_gram}" appears in: {", ".join(sorted(_fields))} — same observation restated, not reworded')
+
+        # ── Corrective re-ask (SL-VERSION 171.41) ──────────────────────────
+        # Three prompt-wording attempts failed to hold (171.36, 171.37, 171.40
+        # — the last one verified to make it WORSE on the live rescore).
+        # Founder sign-off: "ok go" to the code-level corrective call flagged
+        # as a separate decision in 171.39/171.40's delivery notes. This can
+        # only improve or no-op — see _attempt_text_repeat_fix's safety
+        # invariant above. Timing is logged separately so this call's added
+        # latency is visible, not hidden inside the total.
+        _t_fix_start = _time.time()
+        try:
+            result, _fix_log = _attempt_text_repeat_fix(
+                result, _text_repeats, _REPEAT_FIELDS, _NGRAM_LEN, _text_repeat_norm_words
+            )
+            for _line in _fix_log:
+                print(_line)
+        except Exception as _fix_err:
+            print(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED (unexpected error, original text kept): {_fix_err}')
+        print(f"[auto_score][timing] text_repeat_fix: {_time.time() - _t_fix_start:.2f}s")
+
+        # Re-run the same detector on the (possibly) patched result so the log
+        # shows the ACTUAL outcome, never an assumed one.
+        _ngram_fields2 = {}
+        for _rf_name in _REPEAT_FIELDS:
+            _rf_text = str(result.get(_rf_name, '') or '')
+            if not _rf_text:
+                continue
+            _rf_words = _text_repeat_norm_words(_rf_text)
+            for _i in range(len(_rf_words) - _NGRAM_LEN + 1):
+                _gram = ' '.join(_rf_words[_i:_i + _NGRAM_LEN])
+                _ngram_fields2.setdefault(_gram, set()).add(_rf_name)
+        _text_repeats2 = {g: fs for g, fs in _ngram_fields2.items() if len(fs) >= 2}
+        if _text_repeats2:
+            _seen_pairs2 = set()
+            for _gram, _fields in sorted(_text_repeats2.items(), key=lambda kv: -len(kv[0])):
+                _pair = tuple(sorted(_fields))
+                if _pair in _seen_pairs2:
+                    continue
+                _seen_pairs2.add(_pair)
+                print(f'[auto_score][TEXT_REPEAT_AFTER_FIX] "{_gram}" appears in: {", ".join(sorted(_fields))} — still duplicated after corrective pass')
+        else:
+            print('[auto_score][text_repeat_check_after_fix] OK — clean after corrective pass')
     else:
         print('[auto_score][text_repeat_check] OK — no 6-word phrase repeated across narrative fields')
 
