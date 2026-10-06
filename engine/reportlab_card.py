@@ -1,5 +1,46 @@
 """
 Shutter League — Reportlab Scorecard PDF
+SL-VERSION: 237.4 (Session 238, 2026-10-06 — TWO founder-directed changes, both confirmed against the
+real "Egrets of Sasson Dock" web page exported to PDF and the Save-PDF output side by side.
+
+(1) "Visual flow" IS RENAMED "Where does the eye go?" — founder: "where does the eye go? havent you
+    put this out as a question - photographers naturally will get attracted to this statement".
+    Checked before changing anything: the phrase existed THREE times in auto_score.py (the scoring
+    gate at L2813, the field spec at L2572, the short spec at L7217) and all three are prompt-side
+    instructions to the model. It appeared ZERO times in anything a photographer ever sees. The
+    engine was asking the founder's question, scoring on it, then filing the answer under a label no
+    photographer has ever said out loud. Label only — the data key stays visual_flow, so nothing
+    downstream that reads that key changes. Companion edits in image_detail.html (web) and app.py
+    (182.105, the scorecard email) make the same relabel so one question appears on all three
+    surfaces at once; relabelling only one of the three would have been worse than leaving it.
+
+(2) PARAGRAPH CLUMPING IS FIXED AT THE RENDERER, AND IT IS RETROACTIVE — founder: "see how the paras
+    are being used - should not be clumped - give lines spaced. begin in new lines so that
+    readability is easier and cleaner". 237.3 raised the gap between paragraphs 5pt -> 11pt and
+    stated the remaining half was a generation-side fix. That was only half right, and the half it
+    got wrong is the half that matters: _paras() splits on a literal newline, and the model emits NO
+    newline at all in tech_read, visual_flow, master_why, imagine or any dim_obs_*. On the live card
+    tech_read is a single 150-word block, so it rendered as exactly one Paragraph flowable — one
+    wall, with an 11pt gap after it and nothing to apply that gap between. The web page is worse: it
+    drops the same raw string into a single <div> (image_detail.html L1146) and splits nothing.
+    FIX: new sl_reflow(), applied at the end of _clean() so it covers every prose field on the card
+    with no per-section wiring. It inserts a paragraph break at SENTENCE BOUNDARIES ONLY, grouping
+    sentences into ~48-word paragraphs, and it is a pure-whitespace transformation — not one word is
+    added, removed, reordered or reworded, so unlike a prose rewrite it CANNOT mangle grammar or
+    meaning. Guarded: a block that already contains a newline is returned untouched (an author's or
+    the model's own break always wins), a block of 55 words or fewer is returned untouched (short
+    fields like visual_flow stay one sentence as specified), decimals and f-stops cannot split
+    because the lookahead requires a capital letter, and an abbreviation list plus a single-initial
+    rule stop "f/2.8" / "1/125s" / "H. C. Bresson" breaking mid-name. Verified before writing into
+    this file against the actual tech_read string from the 6 Oct live card: 150-word wall -> 3
+    paragraphs of 72/60/39 words, asserted word-for-word identical to the input. The canonical
+    function lives HERE rather than in app.py because app.py already imports this module and the
+    reverse would be a circular import; app.py imports sl_reflow from here for the web template
+    filter, so the web page, the Save PDF and the email all break paragraphs identically.
+    This is a RENDERER fix, which means it also repairs every one of the 21 cards already evaluated
+    for this photographer, and every card on the platform, with no rescore and no new API call.
+NOT YET CONFIRMED LIVE — per Rules 3/16 this needs the founder's push, the Railway output and a real
+Save-PDF download test before it counts as working. RETAINS 237.3.)
 SL-VERSION: 237.3 (Session 237, 2026-10-06 — founder flagged paragraph breaks in the flowing-prose
 sections ("The Photographer's Advice", "What You Controlled", "What To Watch Next", "Keep This In
 Mind") were not visually legible — they rendered as one dense block. This file's paragraph splitter
@@ -135,7 +176,97 @@ def _clean(text):
     text = re.sub(r'\n{3,}', '\n\n', text)
     # Collapse horizontal whitespace
     text = re.sub(r'[ \t]+', ' ', text)
-    return text.strip()
+    # SL-237.4 — break a long single-block paragraph at sentence boundaries.
+    # Applied here, at the end of _clean(), so every prose field on the card
+    # gets it without per-section wiring. No-op on anything already broken or
+    # short. See sl_reflow() and this file's 237.4 header note.
+    return sl_reflow(text.strip())
+
+
+# ── Paragraph reflow (SL-237.4) ───────────────────────────────────────────────
+# Abbreviations that end in a period and are followed by a capitalised word, so
+# the sentence-boundary rule must not split after them. Photography prose is the
+# real source of risk here: shutter speeds, f-stops and focal lengths.
+_REFLOW_ABBREV = {
+    'mr', 'mrs', 'ms', 'dr', 'prof', 'st', 'vs', 'etc', 'e.g', 'i.e', 'no',
+    'fig', 'approx', 'ft', 'mm', 'cm', 'sec', 'min', 'ev', 'iso',
+    'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct',
+    'nov', 'dec',
+}
+
+# A sentence ends at . ! or ? — optionally followed by a closing quote or
+# bracket — then whitespace, then an opening quote/bracket and a CAPITAL. The
+# capital requirement is what makes decimals and apertures safe: "f/2.8 at" and
+# "1/125s to" are followed by lower case, so they never match.
+_REFLOW_SPLIT = re.compile(
+    r'(?<=[.!?])(["”’\')\]]?)\s+(?=["“\(\[]?[A-Z])'
+)
+
+
+def _reflow_sentences(text):
+    """Split text into sentences, skipping false boundaries after an
+    abbreviation or a single initial. Returns a list of sentence strings whose
+    concatenation is the input, word for word."""
+    parts, last = [], 0
+    for m in _REFLOW_SPLIT.finditer(text):
+        end  = m.end(1)
+        head = text[last:end]
+        toks = head.split()
+        bare = ''
+        if toks:
+            bare = re.sub(r'[^A-Za-z.]', '', toks[-1]).rstrip('.').lower()
+        # "approx." / "Fig." → not a sentence end. "H." → an initial, not an end.
+        if bare in _REFLOW_ABBREV or (len(bare) == 1 and bare.isalpha()):
+            continue
+        parts.append(head.strip())
+        last = m.end()
+    tail = text[last:].strip()
+    if tail:
+        parts.append(tail)
+    return [p for p in parts if p]
+
+
+def sl_reflow(text, target_words=48, min_words=55):
+    """Insert paragraph breaks into a long unbroken block of prose, at sentence
+    boundaries only.
+
+    PURE WHITESPACE. No word is added, removed, reordered or reworded — the
+    only change is that some single spaces between sentences become newlines.
+    That is why this is safe to run on live customer-facing scorecard text,
+    where an automatic prose REWRITE would not be.
+
+    Returned unchanged when:
+      * the text already contains a newline — an existing break always wins,
+        whether the model wrote it or an editor did;
+      * the text is min_words or shorter — short single-sentence fields such as
+        visual_flow are specified as one sentence and must stay that way;
+      * fewer than two sentences are found — nothing to break.
+
+    Imported by app.py for the web template filter and the scorecard email, so
+    all three surfaces break paragraphs identically.
+    """
+    if not text or '\n' in text:
+        return text
+    words = text.split()
+    if len(words) <= min_words:
+        return text
+    sents = _reflow_sentences(text)
+    if len(sents) < 2:
+        return text
+    out, cur, n = [], [], 0
+    for s in sents:
+        cur.append(s)
+        n += len(s.split())
+        if n >= target_words:
+            out.append(' '.join(cur))
+            cur, n = [], 0
+    if cur:
+        # Never leave a stub paragraph of a few words hanging on its own.
+        if out and n < 14:
+            out[-1] = out[-1] + ' ' + ' '.join(cur)
+        else:
+            out.append(' '.join(cur))
+    return '\n'.join(out)
 
 def _paras(text, style):
     """Split cleaned text on newlines → list of Paragraphs."""
@@ -607,24 +738,24 @@ def build_scorecard_pdf(data: dict) -> bytes:
         'body_indent':_sty('bindi',  size=11, leading=17, colour=DARK,        bold=False, space_after=11, left_indent=8*mm),
         'body_it':    _sty('bodyi',  size=11, leading=17, colour=DARK2,       bold=False, space_after=5),
         'opening':    _sty('open',   size=13, leading=20, colour=DARK,        bold=True,  space_after=8),
-        'impression': _sty('impr',   size=12, leading=18, colour=DARK,        bold=False, space_after=6),
+        'impression': _sty('impr',   size=12, leading=18, colour=DARK,        bold=False, space_after=10),
         'master_name':_sty('mname',  size=14, leading=18, colour=GOLD_DK,     bold=True,  space_after=3),
-        'master_why': _sty('mwhy',   size=11, leading=17, colour=DARK,        bold=False, space_after=6),
+        'master_why': _sty('mwhy',   size=11, leading=17, colour=DARK,        bold=False, space_after=10),
         'dim_obs_lbl':_sty('dolbl',  size=9,  leading=12, colour=GOLD_DK,     bold=True,  space_after=2, space_before=6),
-        'dim_obs':    _sty('dobs',   size=11, leading=17, colour=DARK,        bold=False, space_after=4),
-        'spec':       _sty('spec',   size=10, leading=15, colour=PISTA_TXT,   bold=False, space_after=4),
+        'dim_obs':    _sty('dobs',   size=11, leading=17, colour=DARK,        bold=False, space_after=10),
+        'spec':       _sty('spec',   size=10, leading=15, colour=PISTA_TXT,   bold=False, space_after=9),
         'tech_lbl':   _sty('tlbl',   size=8,  leading=10, colour=BLUE_LBL,    bold=True,  space_after=3, space_before=8),
-        'tech':       _sty('tech',   size=11, leading=17, colour=DARK,        bold=False, space_after=5),
+        'tech':       _sty('tech',   size=11, leading=17, colour=DARK,        bold=False, space_after=10),
         'vf_lbl':     _sty('vflbl',  size=8,  leading=10, colour=PURPLE_LBL,  bold=True,  space_after=3, space_before=8),
-        'vf':         _sty('vf',     size=11, leading=17, colour=DARK,        bold=False, space_after=5),
+        'vf':         _sty('vf',     size=11, leading=17, colour=DARK,        bold=False, space_after=10),
         'imagine_lbl':_sty('imlbl',  size=8,  leading=10, colour=PURPLE_LBL,  bold=True,  space_after=3, space_before=8),
-        'imagine':    _sty('imag',   size=11, leading=17, colour=PURPLE_TXT,  bold=False, space_after=5),
+        'imagine':    _sty('imag',   size=11, leading=17, colour=PURPLE_TXT,  bold=False, space_after=10),
         'path9_lbl':  _sty('p9lbl',  size=8,  leading=10, colour=PINK_LBL,    bold=True,  space_after=3, space_before=8),
-        'path9':      _sty('p9',     size=11, leading=17, colour=colors.HexColor('#3a1020'), bold=False, space_after=5),
+        'path9':      _sty('p9',     size=11, leading=17, colour=colors.HexColor('#3a1020'), bold=False, space_after=10),
         'edit_lbl':   _sty('elbl',   size=9,  leading=11, colour=GOLD_DK,     bold=True,  space_after=3, space_before=8),
-        'edit':       _sty('edit',   size=11, leading=17, colour=DARK2,       bold=False, space_after=5),
+        'edit':       _sty('edit',   size=11, leading=17, colour=DARK2,       bold=False, space_after=9),
         'loc_lbl':    _sty('lloc',   size=8,  leading=10, colour=GREEN_LBL,   bold=True,  space_after=3, space_before=8),
-        'loc':        _sty('loc',    size=11, leading=17, colour=GREEN_TXT,   bold=False, space_after=5),
+        'loc':        _sty('loc',    size=11, leading=17, colour=GREEN_TXT,   bold=False, space_after=9),
         'foot':       _sty('foot',   size=7,  leading=9,  colour=MUTED,       bold=False, space_after=0, align=TA_CENTER),
         'quote':      _sty('quote',  size=10, leading=15, colour=MUTED,       bold=False, space_after=3),
         'quote_attr': _sty('qattr',  size=8,  leading=10, colour=colors.HexColor('#AAAAAA'), bold=False, space_after=0),
@@ -890,10 +1021,11 @@ def build_scorecard_pdf(data: dict) -> bytes:
             story.append(p)
         story.append(HR())
 
-    # Visual flow
+    # Where does the eye go?  (SL-237.4 — was "Visual flow". Founder-directed;
+    # see this file's 237.4 header note. Data key unchanged.)
     visual_flow = _clean(data.get('visual_flow', ''))
     if visual_flow:
-        story.append(Paragraph('Visual flow', S['vf_lbl']))
+        story.append(Paragraph('Where does the eye go?', S['vf_lbl']))
         for p in _paras(visual_flow, S['vf']):
             story.append(p)
         story.append(HR())
