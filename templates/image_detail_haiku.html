@@ -1,4 +1,9 @@
-{# image_detail_haiku.html — SL-VERSION: 2.11 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 2.10.)
+{# image_detail_haiku.html — SL-VERSION: 2.12 (Session 237, 2026-10-06 — founder-flagged: the
+   "Save PDF" link at the top was plain small text, much less visible than the matching gold
+   button on the Sonnet member page. Restyled to a real gold button (#D6A428/#1A1814, same
+   colours as image_detail.html's "Download full scorecard PDF" button) -- same link target
+   (try_result_download), same position, visual weight only. Not yet confirmed live. RETAINS 2.11.)
+   SL-VERSION: 2.11 (Session 222, 2026-09-26 — NS labels simplified: YES→"Yes", NOT SURE→"Not sure", NO→"No". Question header changed to "Does the image have a story?" RETAINS 2.10.)
    SL-VERSION: 2.10 (Session 222, 2026-09-26 — NS verdict labels changed: YES→"Story coming through", NOT SURE→"Not sure", NO→"No story". dim_obs_ns suppressed on Haiku — verdict label only, no defence sentence. RETAINS 2.9.)
    SL-VERSION: 2.9 (Session 222, 2026-09-26 — NS label changed to "Is there a story?", sub-description removed, font colour fixed: dark text (#166534 green / #92400e amber / #64748b slate) on tinted backgrounds. RETAINS 2.8.)
    SL-VERSION: 2.8 (Session 221, 2026-09-25 — NS row moved AFTER band legend so numeric scale does not appear immediately after binary YES/NO. Green background fix: background!important on sl-dim-row overrides class CSS. RETAINS 2.7.)
@@ -29,8 +34,14 @@ main{padding:0!important;background:#E0DDD7}
 .sl-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 48px;border-bottom:0.5px solid rgba(26,39,68,0.10);background:#F5F3EF}
 .sl-topbar-back{font-size:14px;color:rgba(26,39,68,0.45);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
 .sl-topbar-back:hover{color:#C8A84B}
-.sl-topbar-save{font-size:14px;color:rgba(26,39,68,0.50);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
-.sl-topbar-save:hover{color:#C8A84B}
+/* SL-VERSION 2.12 (Session 237, 2026-10-06 -- founder-flagged: this link was plain
+   small text, easy to miss, while the Sonnet member page (image_detail.html) has a
+   prominent gold button for the same action ("Download full scorecard PDF"). Same
+   treatment here now -- same gold/dark colours (#D6A428 / #1A1814), real button
+   padding and background, not just styled text. Link target (try_result_download)
+   and position are unchanged -- visual weight only. RETAINS 2.11. */
+.sl-topbar-save{font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;text-decoration:none;color:#1A1814;background:#D6A428;padding:9px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.sl-topbar-save:hover{background:#C8A84B;color:#1A1814}
 
 /* IMAGE HERO — full, uncropped, natural ratio, object-fit:contain on dark bg */
 .sl-img-hero{position:relative;background:#0C1018;width:100%;overflow:hidden}
@@ -206,7 +217,7 @@ main{padding:0!important;background:#E0DDD7}
   {# ── TOP BAR ── #}
   <div class="sl-topbar">
     <a href="{{ url_for('try_gallery') }}" class="sl-topbar-back">← My evaluations</a>
-    <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="sl-topbar-save">Save PDF</a>
+    <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="sl-topbar-save">↓ Save PDF</a>
   </div>
 
   {# ════════ SCROLL 1 — THE VERDICT ════════ #}
