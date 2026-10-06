@@ -1,3 +1,19 @@
+# SL-VERSION: 182.100 (Session 237, 2026-10-06 -- label-consistency fix, founder-flagged:
+# the Sonnet member scorecard PDF showed THREE different label sets for the same five
+# dimensions on one document -- the top score band, the "Dimension Observations" section
+# below it, and the dashboard's "How you're developing" trend panel. Root cause found by
+# reading actual current source via GitHub (staging branch), not guessed: the top band
+# (_dim_breakdown, ~L13968) and the dashboard trend panel (templates/dashboard.html
+# _dim_field/_dim_field_mob, and this file's own _ts_label tuple ~L45525) each had their
+# own separate, independently-hardcoded plain-English paraphrase ("Whether the Timing Was
+# Right", "WOW Factor", etc.) that was never updated to match the canonical set this file's
+# own _DIM_NAMES dict (~L42882) already settled on in an earlier Session 237 edit: Depth of
+# Difficulty / Visual Disruption / Decisive Moment / Wonder Factor / Emotion (AQ). The
+# "Dimension Observations" section (engine/reportlab_card.py) already matched that set
+# correctly and needed no change. Fixed: _dim_breakdown (~L13968) and the _ts_label tuple
+# (~L45525) in this file, plus _dim_field/_dim_field_mob in templates/dashboard.html
+# (companion edit, SL-VERSION 178.5). NOT YET CONFIRMED LIVE -- needs push + a real PDF
+# download + a real dashboard view to confirm all three surfaces now agree. RETAINS 182.99.)
 # SL-VERSION: 182.99 (Session 237, 2026-10-06 -- naming fix only, no logic change: the 'aq' dimension's
 # display label "Authentic Quality" conflicted with the canonical public definition at
 # shutterleague.com/science ("Emotion" / "The Emotion It Creates") -- a contradiction
@@ -13965,13 +13981,22 @@ def download_card_pdf(image_id):
     _species_note  = (_audit.get('species_note')  or '').strip()
 
     # ── Dimension breakdown ──
+    # SL-VERSION: 182.100 (Session 237, 2026-10-06 -- label-consistency fix: this
+    # tuple used plain-English paraphrases ("Whether the Timing Was Right" etc.)
+    # found by the founder to mismatch the "Dimension Observations" labels lower
+    # on the same PDF (reportlab_card.py's dim_obs_map, which already uses the
+    # Session 237-approved canonical set: Depth of Difficulty / Visual Disruption
+    # / Decisive Moment / Wonder Factor / Emotion (AQ) -- see app.py's own
+    # _DIM_NAMES dict at ~L42882, Session 237, "per founder decision"). This was
+    # the one spot that was never updated to match that decision. Now aligned.
+    # RETAINS 182.99.
     _dim_breakdown = []
     for _dattr, _dl1, _dl2 in [
-        ('dod_score',        'How Difficult', 'It Was'),
-        ('disruption_score', 'Visual',        'Disruption'),
-        ('dm_score',         'Whether the Timing', 'Was Right'),
-        ('wonder_score',     'Whether it Made', 'You Feel'),
-        ('aq_score',         'The Emotion',   'It Creates'),
+        ('dod_score',        'Depth of',   'Difficulty'),
+        ('disruption_score', 'Visual',     'Disruption'),
+        ('dm_score',         'Decisive',   'Moment'),
+        ('wonder_score',     'Wonder',     'Factor'),
+        ('aq_score',         'Emotion',    '(AQ)'),
     ]:
         _dval = getattr(img, _dattr, None)
         if _dval is not None:
@@ -45522,10 +45547,13 @@ def try_standing(image_id):
                 if diff < -0.3: return '↓ Dipped recently'
                 return '— Steady — your next opportunity to grow'
 
+            # SL-VERSION 182.100 (Session 237, 2026-10-06) -- same label-consistency
+            # fix as _dim_breakdown above: aligned to the Session 237 canonical set
+            # (app.py _DIM_NAMES) instead of a separate plain-English paraphrase.
             for _ts_label, _ts_idx, _ts_own in [
-                ('Whether it made one feel something', 0, float(_row[11] or 0)),
-                ('Whether the timing was right',       1, float(_row[9]  or 0)),
-                ('How difficult it was',               2, float(_row[7]  or 0)),
+                ('Wonder Factor',   0, float(_row[11] or 0)),
+                ('Decisive Moment', 1, float(_row[9]  or 0)),
+                ('Depth of Difficulty', 2, float(_row[7]  or 0)),
             ]:
                 _ts_vals = [float(r[_ts_idx]) for r in _trend_rows if r[_ts_idx] is not None]
                 if len(_ts_vals) >= 2:
