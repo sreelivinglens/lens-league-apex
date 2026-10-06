@@ -1,3 +1,36 @@
+# SL-VERSION: 171.45 (Session 237, 2026-10-06 -- founder approved all three scorecard-reduction items
+# ("do 1, 2, 3") after reviewing the side-by-side duplicate-content analysis. (1) DELETED what_stood_out
+# and background_check from BOTH JSON output schemas (main scoring call ~line 2042 and the
+# recalibrate_audit call ~line 7230) -- both were confirmed-intentional backward-compat duplicates
+# (what_stood_out = copy of hard_truth, background_check = copy of byline_1) that the model was asked
+# to regenerate from scratch every time, including two dedicated instruction blocks that existed ONLY
+# to fill background_check ("THE 9+ GAP ANALYSIS" and "AWARD-WINNING GUIDANCE", ~40 lines of prompt and
+# real output tokens) -- both removed, since the field they fed is never read by any live template
+# (confirmed via grep: image_detail.html, card_public.html, image_detail_haiku.html, reportlab_card.py
+# all read hard_truth/byline_1 directly, never what_stood_out/background_check). (3) INVESTIGATED
+# mentor_technical vs tech_read per founder's explicit question -- confirmed mentor_technical has ZERO
+# live display reads (one comment-only mention in app.py) while tech_read IS the field actually shown
+# in image_detail.html's "Technical read" section -- REMOVED mentor_technical (and its ~55-line
+# GEAR-SPECIFIC COACHING RULES block: iPhone/Sony/Canon/Nikon/Fujifilm/Olympus device-specific advice --
+# also confirmed never displayed, since it only ever fed mentor_technical), KEPT tech_read. Redirected
+# the one functional use of mentor_technical (the over-processing coaching note in the
+# OVER-PROCESSING DETECTION check) into tech_read instead, with tech_read's cap raised 60->80 words for
+# the rare case that note fires. (2) ADDED explicit word caps to the three remaining uncapped "card"
+# fields: transferable_advice (90 words), byline_1 (90 words), byline_2 (110 words) -- in both JSON
+# schemas, the FIELD_HINTS corrective-rewrite dict, and the TEXT_REPEAT_FIELD_HINTS dict. Also cleaned
+# the now-stale mentor_technical/what_stood_out/background_check entries out of the MASTER_REPEAT and
+# TEXT_REPEAT field-scan lists, the species-consistency reminder, and the legacy "rows" Card-2 fallback
+# (now points at tech_read instead of the deleted mentor_technical, so the old fallback path in
+# app.py's public_card()/download_card_pdf() still has content if transferable_advice is ever empty).
+# NOT TOUCHED (flagged separately, needs its own founder sign-off): app.py itself still reads
+# what_stood_out/background_check in ~30 places. Most are already `.get('what_stood_out') or
+# .get('hard_truth')`-style fallbacks and will keep working correctly once those keys are simply absent
+# from new records -- but TWO spots read the dead field directly with NO fallback and will go BLANK on
+# every new score once this ships: (a) a raw SQL column `audit_json::json->>'what_stood_out' as
+# revelation` (~line 6994) and (b) a dict passthrough `_audit.get('what_stood_out', '')` (~line 27927,
+# paired with background_check at ~line 27929). These need a targeted app.py fix before/at the same time
+# this deploys -- NOT done here, pending explicit go-ahead, per standing rule against building without
+# signal. RETAINS 171.44.)
 # SL-VERSION: 171.44 (Session 237, 2026-10-05 -- founder: "dig into how we can make it work under 120
 # sec- check whats happening - at app level also from upload", then approved doing all three in order:
 # (3) token-usage logging, (1) cache the big prompt, (2) trim the dead repetition rule blocks.
@@ -954,7 +987,7 @@ WF (Wonder Factor):
   If the answer is YES — the photographer made a decision, found a moment,
   or achieved an access that genuinely separates this frame from the
   thousands of others made at the same event that day — score normally and
-  name that specific decision explicitly in hard_truth and what_stood_out.
+  name that specific decision explicitly in hard_truth.
 
   This gate exists because famous events inflate scores when the engine
   reads the EVENT's significance instead of the IMAGE's. McCurry, Raghu Rai,
@@ -1381,7 +1414,7 @@ CATCHLIGHT RULE (Bird/Wildlife/People — any living subject):
   no advisory — it tells the photographer you did not look at their image.
   THIS BAN IS GLOBAL — applies to ALL cards, not just the dedicated catchlight block.
   Do NOT mention "catchlight", "light in the eye", "eye lit up", or "eye would light up"
-  ANYWHERE in mentor_technical, transferable_advice, byline_1, or the assignment
+  ANYWHERE in transferable_advice, byline_1, or the assignment
   if the eye pre-condition above is not met. Not even as a passing suggestion.
 - If eye IS clearly visible and catchlight present → "The light in the eye makes the
   connection. That small bright spot is why this image feels alive. Always look for it —
@@ -1392,12 +1425,6 @@ CATCHLIGHT RULE (Bird/Wildlife/People — any living subject):
   what makes any living subject feel present rather than photographed. Position yourself
   so the light source is slightly in front of and above the subject. The eye lights up.
   Everything changes."
-
-THE 9+ GAP ANALYSIS — every scorecard:
-After scoring, identify the two weakest dimensions in plain English.
-In background_check, answer: "To reach a 9+ on this image, two things would need to align:
-[plain English description of gap 1] and [plain English description of gap 2].
-Here is what that frame would have looked like: [specific, visual, concrete description]."
 
 MASTER PHOTOGRAPHER REFERENCES:
 - Every card 1 (transferable_advice) MUST name one master.
@@ -1421,8 +1448,8 @@ ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
   ONCE across the entire scorecard. Check all four cards before finalising.
 - SELF-CHECK BEFORE RESPONDING — MANDATORY: Before writing your final JSON,
   scan every text field for master photographer names. If the same name appears
-  in more than one field — transferable_advice, byline_1, background_check,
-  what_stood_out, mentor_technical, mentor_next, byline_2, or any other field —
+  in more than one field — transferable_advice, byline_1,
+  mentor_next, byline_2, or any other field —
   that is a FAILURE. Rewrite the second occurrence with a DIFFERENT master from
   the pool before responding. A scorecard where Andre Kertesz (or any master name)
   appears in both transferable_advice AND byline_1 must never be submitted.
@@ -1440,24 +1467,6 @@ ONE MASTER PER SCORECARD — ABSOLUTE RULE: Each master photographer may appear
 """
 
 SCORE_PROMPT_STATIC_BODY = """
-AWARD-WINNING GUIDANCE — every scorecard:
-End background_check with one specific answer to: "What would this image need to
-be at award-winning level?" Be concrete. Genre-specific. Not generic.
-- Wildlife: "Award-winning wildlife frames are almost never portraits.
-  They show a moment of behaviour — an interaction, a decision, a consequence.
-  Judges have seen thousands of portraits. They remember the story.
-  Your frame is [score gap] away. The specific thing it needs: [one concrete thing]."
-- Landscape: "The landscape frames that win awards are not always the most beautiful.
-  They are the most surprising — the one angle, or the one moment, that changes what
-  the place means. [Reference photographer] found this at [specific location or image].
-  Your frame needs [one concrete thing] to reach that level."
-- Street: "The award-winning street frame is the one where three things happen at once
-  by accident — good light, an interesting person, and a background that adds meaning.
-  You have [X of 3]. The missing piece is [specific thing]."
-- Bird: "For bird photography, the frame that wins is the one with light in the eye,
-  the subject in the left or right third, and a background that is simple and separate.
-  Your frame has [what it has]. The one step: [specific thing]."
-
 GENRE-SPECIFIC ADVICE — wildlife/bird is different from landscape/street:
 WILDLIFE/BIRD:
   - Species ID matters. Behaviour matters more than portrait.
@@ -1634,8 +1643,8 @@ The image worked. Name exactly what made it work.
 Then: one creative direction that makes the next image untouchable.
 hard_truth: open with what this image IS and why it landed. Not what it missed.
 HARD_TRUTH ABSOLUTE RULE: NEVER mention the 9+ gap, score ceiling, what is missing,
-or what the image failed to achieve in hard_truth or what_stood_out. Those fields open
-with applause ONLY. The 9+ gap analysis belongs EXCLUSIVELY in background_check (Card 3).
+or what the image failed to achieve in hard_truth. This field opens
+with applause ONLY.
 A photographer who reads their opening line and finds a critique before a compliment
 feels judged, not mentored. Applaud first. Always. The gap comes later.
 
@@ -2039,85 +2048,11 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do — that belongs in background_check only. This field contains ONLY what worked and why it matters.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
-  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. BULLET FORMAT — 3 bullets. Each bullet is 2 lines: observation + what it means. Blank line between bullets.
-
-OWNERSHIP REMINDER: this card does not own the access/difficulty explanation (dim_obs_dod
-does) or the colour-impact explanation (dim_obs_wonder does) — see FIELD OWNERSHIP RULE.
-Name the DECISION the photographer made (what they did), not a re-argued case for why that
-decision was hard or rare to pull off — that belongs in dim_obs_dod only.
-
-GEAR-SPECIFIC COACHING RULES — MANDATORY when EXIF confirms the device:
-Apply these when the exact make/model is confirmed in the EXIF block above.
-Never invent gear that is not confirmed. Never suggest gear the photographer does not have.
-
-MOBILE PHONE (any iPhone, Samsung, Google Pixel, OnePlus, etc.):
-- For focus: say "press and hold on the subject until AE/AF lock appears — the yellow box locks
-  both focus and exposure so the frame stays sharp as you wait for the moment."
-- For low-light sharpness: say "switch to Night mode and brace against a wall or tree."
-- For telephoto: only on iPhone Pro/Pro Max — say "use your 5x zoom lens" NOT "use a longer lens."
-- For closeness: say "move physically closer — your phone's wide lens performs best at 30-50cm."
-- NEVER say: "use a faster lens", "shoot wide open", "use f/1.8", "use a 300mm", "use a tripod"
-  unless confirmed available. Mobile photographers do not think in f-stops or mm.
-
-iPHONE SPECIFICALLY:
-- iPhone 15 Pro / 16 Pro / Pro Max: "use your 5x optical zoom for compression"
-- iPhone 14 Pro / 15 standard: "use your 3x zoom" — note it is 3x not 5x
-- iPhone SE / standard models: "use portrait mode to add computational depth"
-- For any iPhone: "tap and hold to lock AE/AF, then slide the sun icon to adjust exposure"
-
-SONY ALPHA SERIES (A6000/A6100/A6400/A6600/A6700 etc.):
-- For action/wildlife: "increase burst rate — hold the shutter in continuous shooting mode
-  (set drive mode to Hi+ for up to 11fps) and shoot through the peak moment."
-- For sharpness: "set shutter speed to at least 1/[2x focal length]s — at 300mm that is 1/600s minimum."
-- For tracking: "switch AF mode to Wide Tracking or Zone AF — the subject will stay locked
-  even as it moves through the frame."
-- For reach: "if using the kit 18-135mm, 135mm is your longest — move closer or crop in post."
-
-CANON EOS R SERIES (R5/R6/R7/R8/R10/R50 etc.):
-- For action: "use Animal Eye AF — the camera will lock on and track the subject's eye automatically."
-- For burst: "switch to Electronic Shutter for silent 20fps — useful for skittish wildlife."
-- For low light: "the R5/R6 sensor handles ISO 3200-6400 cleanly — push the ISO and keep the
-  shutter speed high rather than sacrificing sharpness for exposure."
-
-NIKON Z SERIES (Z6/Z7/Z8/Z9/Z50/Z30 etc.):
-- For wildlife: "use subject-detection AF set to Animals — the Z system will hold the eye
-  even through partial cover."
-- For burst: "Z8/Z9 can shoot 20fps silently — use pre-release capture so the peak moment
-  is never missed."
-
-FUJIFILM (X-T/X-S/X-H series):
-- For colour: "the film simulation you chose affects the mood more than post-processing —
-  Velvia for saturation, Classic Chrome for muted documentary, Acros for black and white."
-- For reach: "the APS-C sensor gives you a 1.5x crop — a 300mm lens gives 450mm equivalent reach."
-
-OLYMPUS / OM SYSTEM (OM-D series):
-- For reach: "the Micro Four Thirds sensor doubles focal length — a 300mm lens gives 600mm
-  equivalent reach, more than most wildlife photographers carry."
-- For stabilisation: "IBIS on OM-D allows sharp handheld shots at 1/15s or slower — use it
-  for panning and low-light static subjects."
-
-THESE RULES OVERRIDE GENERIC ADVICE: When the device is confirmed, use these specific
-instructions. A photographer with a Sony A6600 and a 300mm lens does not need to be told
-"use a longer lens" — they need to know their burst rate, their minimum shutter speed,
-and how to keep AF locked. Give them that.
-
-CRITICAL EXIF HONESTY RULE: If the EXIF context says partial camera data, metadata missing, or no specific values are confirmed — DO NOT INVENT SETTINGS. Never write 1/1600s with a 600mm lens unless those exact values appear in the EXIF block. A wrong setting stated confidently destroys trust immediately. If EXIF is absent or partial: write around what is VISUALLY OBSERVABLE only — composition, light, subject placement, background quality. Apply sharpness chain, time-of-day, catchlight rules ONLY when the relevant EXIF values are explicitly confirmed.
-
-FORMAT:
-
-▪ [If EXIF confirmed: about settings and what they reveal. If EXIF absent/partial: about what is visually evident.]
-  [What this means. What to try next time.]
-
-▪ [Compositional or light observation.]
-  [What to try.]
-
-▪ [Strongest strength or clearest gap.]
-  [What this means going forward.]>",
+  "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max. No positional corrections.>",
-  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs.\n\n▪ [What this score level means for this photographer in plain English — one sentence. If Wonder score is 7.5+, this bullet must include the phrase 'made us feel' and name the specific emotion. Example: 'A score at this level means the image made us feel something — the tenderness here is real and a stranger would name it immediately.']\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 3 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ YOUR NEXT BODY OF WORK SEQUENCE: [THREE-FRAME EDITORIAL STORY. Think like a photo editor. NOT the same subject shot 3 ways — 3 DIFFERENT images that together tell one story. Name the story. Write it like a story editor pitching to a photographer: \"The story is [X]. Frame 1: [scene — what the reader sees first]. Frame 2: [the human moment that gives it meaning]. Frame 3: [the frame that stays with you after you close the book].\"]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs. HARD LENGTH LIMIT: 90 words total across all three bullets.\n\n▪ [What this score level means for this photographer in plain English — one sentence. If Wonder score is 7.5+, this bullet must include the phrase 'made us feel' and name the specific emotion. Example: 'A score at this level means the image made us feel something — the tenderness here is real and a stranger would name it immediately.']\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 3 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity. HARD LENGTH LIMIT: 110 words total across all three bullets.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ YOUR NEXT BODY OF WORK SEQUENCE: [THREE-FRAME EDITORIAL STORY. Think like a photo editor. NOT the same subject shot 3 ways — 3 DIFFERENT images that together tell one story. Name the story. Write it like a story editor pitching to a photographer: \"The story is [X]. Frame 1: [scene — what the reader sees first]. Frame 2: [the human moment that gives it meaning]. Frame 3: [the frame that stays with you after you close the book].\"]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -2127,9 +2062,7 @@ FORMAT:
   "edit_base": "<BASE EDITS. INTEGRITY RULE: score >= 8.0 — do NOT undo choices that earned the score. BULLET FORMAT — one edit per bullet. No score numbers. No 'Adds X to Y'. State what the edit does and WHY it helps the image. Plain English. Two or three bullets max.\n\n▪ [What to do — why it helps the image.]\n\n▪ [Second edit — why it helps.]\n\n▪ [Third if needed.]>",
   "edit_creative": "<CREATIVE EDITS. ONE bullet. One transformation that changes the emotional register of the image. What would it become? Why would that be interesting? No score promises.\n\n▪ [The transformation — what it does to the image's feeling.]>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If scoring pattern strongly suggests different genre would score higher. Otherwise null. Same format as before.>",
-  "what_stood_out": "<LEGACY FIELD — same as hard_truth. Populate with the same opening line for backward compatibility.>",
-  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. BULLET FORMAT — 3 bullets. Blank line between bullets. OWNERSHIP REMINDER: name the decision in ONE clause, no more — do not re-explain why it was hard to achieve (dim_obs_dod owns that) or why the colours/visuals work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE.\n\n▪ [Applause adjective + the specific decision most photographers at this scene would not have made — named, not re-argued.]\n\n▪ [**Master name** — specific connection to their practice, linked. One sentence.]\n\n▪ [Why this image has a story. What the story is. One sentence.]>",
-  "background_check": "<CARD 3 BODY — same content as byline_1. Return identical text here for backward compatibility.>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. BULLET FORMAT — 3 bullets. Blank line between bullets. HARD LENGTH LIMIT: 90 words total across all three bullets. OWNERSHIP REMINDER: name the decision in ONE clause, no more — do not re-explain why it was hard to achieve (dim_obs_dod owns that) or why the colours/visuals work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE.\n\n▪ [Applause adjective + the specific decision most photographers at this scene would not have made — named, not re-argued.]\n\n▪ [**Master name** — specific connection to their practice, linked. One sentence.]\n\n▪ [Why this image has a story. What the story is. One sentence.]>",
   "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
   "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. CRITICAL: This must NEVER be the same location where this image was shot. If the image was shot in Bharatpur, do NOT recommend Bharatpur. If the image was shot in Varanasi, do NOT recommend Varanasi. The advisory must be somewhere the photographer can go near their user_city — a new place, a new opportunity. Include: what is active NOW this season, best time of day, what the frame worth making looks like. NEVER mention travel time, drive time, walking time, or any distance in minutes or hours — you do not have the user's GPS or real-time location and any time estimate would be inaccurate and misleading. Use 'nearby' or 'close by' at most. Never write '[Location] is X minutes from you' or 'X hour drive'. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). HARD LENGTH LIMIT: 2 sentences maximum. If no seasonal_context provided, return null.>",
   "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window only — one sentence maximum. Null if only one location is relevant.>",
@@ -2148,7 +2081,7 @@ FORMAT:
   "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific.>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
-  "tech_read": "<One paragraph, max 60 words. Forensic: (1) sharpness — name CAUSE; (2) exposure — clipping or crush; CRITICAL: dark background ≠ night; (3) one gear observation if EXIF present. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Tone: senior editor examining a contact sheet.>",
+  "tech_read": "<One paragraph, max 60 words (max 80 words if an over-processing coaching note is required below). Forensic: (1) sharpness — name CAUSE; (2) exposure — clipping or crush; CRITICAL: dark background ≠ night; (3) one gear observation if EXIF present. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Tone: senior editor examining a contact sheet.>",
   "visual_flow": "<One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
   "imagine": "<One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. Max 80 words. No jargon. No dimension names. Pure vision.>",
   "conclusion": "<Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations from impression, byline_1, byline_2, or master_why. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. Max 90 words. If eval 2+: name the pattern across their work (one strength, one gap, max 50 words). If eval 1: 2-3 sentences then invite next photograph.>",
@@ -5112,7 +5045,7 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
     ]
     if species_id and species_id.lower() != "unknown":
         lines.append(f"Primary subject species: {species_id}")
-        lines.append(f"- Use this species name in all text fields (hard_truth, mentor_technical, mentor_moment, mentor_next, bylines).")
+        lines.append(f"- Use this species name in all text fields (hard_truth, tech_read, mentor_moment, mentor_next, bylines).")
         lines.append(f"- Do NOT write generic terms like 'the bird' or 'the animal' when the species is known.")
     lines.extend(subject_lines)
     lines.append(f"Behavioural act: {act}")
@@ -5129,7 +5062,7 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
         lines.append("")
         lines.append("COMPOSITIONAL CLASSIFICATION — GROUND TRUTH (do not contradict):")
         lines.append(f"Sub-genre classification and reasoning: {subgenre_reason}")
-        lines.append("- hard_truth and what_stood_out MUST be consistent with this reasoning.")
+        lines.append("- hard_truth MUST be consistent with this reasoning.")
         lines.append("- If it names specific staged elements (a set, a posed figure, controlled")
         lines.append("  lighting), do not describe the image overall as a spontaneous or 'found'")
         lines.append("  moment.")
@@ -5713,12 +5646,12 @@ def build_exif_context(exif_data: dict, camera_track: str = None,
             lines.append('')
             lines.append('If ANY detected:')
             lines.append('  Apply Technical DoD penalty (score Technical DoD lower).')
-            lines.append('  In mentor_technical, include this coaching note:')
+            lines.append('  In tech_read, include this coaching note:')
             lines.append('  "The processing choices have worked against the image\'s natural')
             lines.append('  strength." Then explain specifically what was detected.')
             lines.append('  Do NOT penalise Situational DoD.')
-            lines.append('  Do NOT mention over-processing in hard_truth or what_stood_out.')
-            lines.append('  Coaching note belongs in mentor_technical only.')
+            lines.append('  Do NOT mention over-processing in hard_truth.')
+            lines.append('  Coaching note belongs in tech_read only.')
             lines.append('')
 
             # ── Mobile genre capability map (Session 219) ────────────────────
@@ -6135,17 +6068,16 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
 # sends just enough of each flagged field's rules to keep the rewrite legal.
 _TEXT_REPEAT_FIELD_HINTS = {
     'impression': 'SCORECARD OPENING PARAGRAPH. 2-3 sentences, max 60 words. Warm Sherpa tone. Never open with "This image", "The photograph", "You saw", "Your composition". Never mention dimension names, scores, or what is missing.',
-    'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, each line starting with the character ▪ then a space, a blank line between bullets.",
-    'mentor_technical': 'CARD 2 — WHAT YOUR EYE READ. 3 bullets (▪), each bullet 2 lines: observation, then what it means. Blank line between bullets.',
+    'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, each line starting with the character ▪ then a space, a blank line between bullets. Max 90 words total.",
     'mentor_next': 'ONE creative direction. Max two sentences. A possibility, never a correction.',
-    'byline_1': 'CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets.',
-    'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Bullet format (▪), blank line between bullets. Includes a gear-specific exercise, a 3-frame body-of-work sequence, and a philosophy line.',
+    'byline_1': 'CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets. Max 90 words total.',
+    'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Bullet format (▪), blank line between bullets. Includes a gear-specific exercise, a 3-frame body-of-work sequence, and a philosophy line. Max 110 words total.',
     'dim_obs_dod': 'One sentence, max 40 words. Sherpa voice. Names the access/difficulty fact for this image.',
     'dim_obs_disruption': 'One sentence, max 40 words. Sherpa voice. Names the compositional-treatment fact for this image.',
     'dim_obs_dm': 'One sentence, max 40 words. Sherpa voice. States whether this was the peak moment, or what stronger moment was missed.',
     'dim_obs_wonder': 'One sentence, max 40 words. Sherpa voice. Names the colour/visual-impact fact for this image.',
     'dim_obs_aq': 'One sentence, max 40 words. Sherpa voice. Names the specific emotion a stranger would feel.',
-    'tech_read': 'One paragraph, max 60 words. Forensic: sharpness cause, exposure (clipping/crush), one gear note only if EXIF present.',
+    'tech_read': 'One paragraph, max 60 words (80 if an over-processing coaching note is included). Forensic: sharpness cause, exposure (clipping/crush), one gear note only if EXIF present.',
     'visual_flow': 'One sentence, max 40 words. Where the eye enters, how it travels, where it rests or what dead space exists.',
     'imagine': 'One paragraph, max 80 words. Second person, present tense. Possibility language only ("imagine if", "there is a version of this image where"). No master name. No location advice.',
     'conclusion': 'Max 90 words. Warm second-person platform voice. Must still end with the exact sentence: "The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed."',
@@ -7049,16 +6981,18 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # ── Post-processing: master repeat detection (Session 171.4) ──────────
     # The ONE MASTER PER SCORECARD rule is a prompt instruction but the engine
     # occasionally violates it — the same master name appears in transferable_advice
-    # AND byline_1/background_check. Detect this in code after scoring and log it
+    # AND byline_1. Detect this in code after scoring and log it
     # clearly so it surfaces in Railway logs and can be caught during QA.
     # This is detection only — the result is returned as-is (do not silently
     # modify scorecard text in post-processing). The log entry is the signal
     # to tighten the prompt further if violations persist.
+    # Session 237 scorecard-reduction pass: what_stood_out, background_check and
+    # mentor_technical were removed from the generation schema entirely (confirmed
+    # dead fields — never read by any live template) so they no longer need an
+    # entry here.
     _MASTER_FIELDS = [
-        'transferable_advice', 'byline_1', 'what_stood_out',
-        'mentor_technical', 'mentor_next', 'byline_2', 'hard_truth',
-        # background_check excluded — intentional duplicate of byline_1 (backward compat field)
-        # what_stood_out excluded — intentional duplicate of hard_truth
+        'transferable_advice', 'byline_1',
+        'mentor_next', 'byline_2', 'hard_truth',
     ]
     # Extract candidate master names: words of 3+ chars starting with uppercase,
     # appearing in the masters pool block, or any word that appears in 2+ fields
@@ -7126,7 +7060,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # is a bigger change with its own cost/risk tradeoff and needs its own
     # sign-off, not bundled into this detector.
     _REPEAT_FIELDS = [
-        'impression', 'transferable_advice', 'mentor_technical', 'mentor_next',
+        'impression', 'transferable_advice', 'mentor_next',
         'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
         'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
         'conclusion', 'hard_truth',
@@ -7333,18 +7267,15 @@ disruption/dm/wonder/aq/score/tier/soul_bonus/judge_referral/composition_techniq
   "wonder_reasoning": "<one sentence, image-specific, consistent with the locked Wonder score>",
   "aq_reasoning": "<one sentence, image-specific, consistent with the locked AQ score>",
   "hard_truth": "<scorecard opening line — see SCORE-RANGE OPENING REGISTER above. One or two short sentences.>",
-  "mentor_technical": "<CARD 2 — WHAT YOUR EYE READ. 3 bullets, blank line between. Each: observation + what it means.>",
   "mentor_moment": "<ONE sentence on whether this was the right moment, consistent with locked DM score.>",
   "mentor_next": "<ONE creative direction. Two sentences max.>",
-  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets, blank line between.>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. 2 bullets, blank line between.>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets, blank line between. Max 90 words total.>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. 2 bullets, blank line between. Max 110 words total.>",
   "badges_g": ["<specific strength>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap>", "<specific gap>"],
   "edit_base": "<BASE EDITS. 2-3 bullets. If locked_score >= 8.0, do not undo what earned the score.>",
   "edit_creative": "<ONE creative edit bullet.>",
-  "what_stood_out": "<same as hard_truth, for backward compatibility>",
-  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, blank line between. Include a master reference and the admin's reason as the central insight.>",
-  "background_check": "<same content as byline_1, for backward compatibility>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, blank line between. Include a master reference and the admin's reason as the central insight. Max 90 words total.>",
   "calibration_line": "<one or two sentences, percentile/context framing consistent with locked_score and locked_tier>",
   "emoji_rating": "<emoji count matching locked_score (per the normal scale) + tier in caps>"
 }}
@@ -7652,7 +7583,12 @@ def build_audit_data(result, image_obj):
             ("AQ",         result.get("aq", 0)),
         ],
         "rows": [
-            ("Technical",  result.get("mentor_technical", "")),
+            # Session 237 scorecard-reduction pass: mentor_technical was removed
+            # from the generation schema (confirmed dead — no live template ever
+            # read it). This legacy "Technical" row now falls back to tech_read,
+            # the field that is actually displayed, so the old Card-2 fallback
+            # path in app.py (public_card/download_card_pdf) still has content.
+            ("Technical",  result.get("tech_read", "")),
             ("Moment",     result.get("mentor_moment", "")),
             ("Next",       result.get("mentor_next", "")),
         ],
@@ -7661,9 +7597,7 @@ def build_audit_data(result, image_obj):
         "badges_g":          result.get("badges_g", []),
         "badges_w":          result.get("badges_w", []),
         # ── Sprint 2 — scorecard redesign fields ─────────────────────────────
-        "what_stood_out":    result.get("what_stood_out", ""),
         "transferable_advice": result.get("transferable_advice", ""),
-        "background_check":  result.get("background_check", ""),
         "mentor_location_1": result.get("mentor_location_1", None),
         "mentor_location_2": result.get("mentor_location_2", None),
         "mentor_location_3": result.get("mentor_location_3", None),
@@ -7775,8 +7709,8 @@ the genre weights above. Assign the correct tier and the closest-matching
 archetype.
 
 CRITICAL OUTPUT CONSTRAINT — READ BEFORE RESPONDING:
-This is a numbers-only request. Do NOT write hard_truth, what_stood_out,
-mentor_technical, mentor_moment, mentor_next, transferable_advice,
+This is a numbers-only request. Do NOT write hard_truth,
+mentor_moment, mentor_next, transferable_advice,
 byline_1, byline_2, calibration_line, judge_referral, soul_bonus_active,
 composition_technique, or any other narrative, commentary, or explanatory
 text. Do not explain your reasoning. Do not justify the score in prose.
