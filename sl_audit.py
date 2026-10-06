@@ -13,6 +13,27 @@ Usage:
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
+SL-VERSION: 1.1 (Session 238, 06 Oct 2026 -- ENGINE-FILE DISPATCH FIX, founder signal given.
+  THE BUG: the entry point sent EVERY .py file to audit_apppy(), the Flask-app audit. So
+  engine/auto_score.py was tested for render_template('dashboard.html'), render_template(
+  'login.html'), render_template('upload.html'), a dashboard peer queue and a RatingAssignment
+  insert -- none of which an engine module has ever had or should have. Result: a flat 7
+  failures on every single run, IDENTICAL before and after any edit (verified this session by
+  auditing the untouched 171.53 straight from git and getting the same seven). Because the
+  standing rule is "never deliver a file that fails sl_audit", that rule could never be
+  satisfied for the engine -- not in Session 238, not in any of the 237 sessions before it.
+  Every engine delivery ever made was made against a failing audit, so in practice the gate
+  was ignored for the single most important file in the product.
+  THE FIX: engine/library modules now route to a new audit_enginepy() with checks that can
+  actually apply -- AST parse, SL-VERSION + RETAINS chain, bare/silent except blocks (how the
+  171.38 and 171.54 safety-gate failures hid), hardcoded secrets, max_tokens headroom (the
+  recurring 171.12/171.14/171.38 silent-JSON-truncation bug class), the Session 238 cross-file
+  timing coupling warning on _SAFE_INTERNAL_CEILING, and debugger leftovers. The Flask audit
+  is NOT weakened or relaxed -- app.py and every template audit exactly as before, byte for
+  byte. Detection (_is_engine_py) is by CONTENT not path -- no routes, no render_template, no
+  Flask() -- so it holds for any future engine module without a path list to maintain.
+  RETAINS all Session 217/208/201/190/171/168 checks unchanged.)
+
 Session 217 (07 Sep 2026):
   CSI CARD BACKGROUND CHECKS UPDATED (Rule 41 — Session 216 design change):
     · CSI Card A: check changed from #2D1F00 (dark amber) → #FFF8E6 / #EDD89A (light amber)
@@ -1228,6 +1249,200 @@ def audit_email(filepath):
 
 
 # ── app.py audit ──────────────────────────────────────────────────────────────
+
+def _is_engine_py(src):
+    """
+    True when a .py file is an ENGINE/library module rather than the Flask app.
+
+    Session 238: added because the dispatcher sent EVERY .py file through
+    audit_apppy(), which tests for Flask routes and render_template() calls.
+    engine/auto_score.py has never had those and never should -- so it failed
+    7 checks on every run, identically before and after any edit, purely for
+    being a scoring engine instead of a web app. The standing rule is "never
+    deliver a file that fails sl_audit", which meant the engine could never be
+    delivered at all. The rule was unenforceable for this file, so in practice
+    it was ignored. Rather than weaken the Flask audit, engine files now get
+    their own audit with checks that can actually apply to them.
+
+    Detection is by content, not path, so it holds for any future engine
+    module: a Flask app declares routes and renders templates; an engine does
+    neither.
+    """
+    return ('@app.route' not in src
+            and 'render_template(' not in src
+            and 'Flask(' not in src)
+
+
+def audit_enginepy(filepath):
+    """
+    Audit for engine/library modules (engine/auto_score.py, pixel_metrics.py,
+    scoring.py and anything else with no routes or templates).
+
+    Checks only what is true of an engine: it parses, it is version-stamped,
+    it does not swallow errors silently, it carries no secrets, its API calls
+    have headroom, and -- project-specific, from the Session 238 incident --
+    its cross-file timing constant still carries its coupling warning.
+    """
+    _banner()
+    print(f'\n  FILE: {filepath}  [ENGINE MODULE]')
+    print()
+    _note('Engine module -- Flask route/template checks do not apply and are not run.')
+    _note('Rule 9: Present change for approval first. One change -> one deploy -> one verify.')
+
+    try:
+        with open(filepath, 'r') as f:
+            src = f.read()
+        lines = src.splitlines()
+        _ok(f'Loaded {filepath} ({len(lines)} lines)')
+    except Exception as e:
+        _fail(f'Could not load {filepath}: {e}')
+        sys.exit(1)
+
+    fails = 0
+
+    # ── AST parse ─────────────────────────────────────────────────────────────
+    _section('AST parse')
+    try:
+        ast.parse(src)
+        _ok('AST parse clean -- no syntax errors')
+    except SyntaxError as e:
+        _fail(f'SYNTAX ERROR line {e.lineno}: {e.msg}')
+        _result(1, filepath)
+        return False
+
+    # ── Confirm this really is an engine file ────────────────────────────────
+    _section('Module type')
+    if _is_engine_py(src):
+        _ok('No Flask routes, no render_template, no Flask() -- correctly audited as an engine')
+    else:
+        _fail('This file declares routes/templates -- it should go through the FLASK APP audit, '
+              'not the engine audit. Dispatch bug: check _is_engine_py().')
+        fails += 1
+
+    # ── Version control (Rule 13) ────────────────────────────────────────────
+    _section('Version header (Rule 13)')
+    if re.search(r'^#\s*SL-VERSION:', src, re.M):
+        _v = re.search(r'^#\s*SL-VERSION:\s*([0-9.]+)', src, re.M)
+        _ok(f'SL-VERSION header present (top version: {_v.group(1) if _v else "unparsed"})')
+        if 'RETAINS' in src:
+            _ok('RETAINS chain present in changelog')
+        else:
+            _fail('No RETAINS chain -- every version must state what it retains')
+            fails += 1
+    else:
+        _fail('No SL-VERSION header -- Rule 13 requires one on every file')
+        fails += 1
+
+    # ── Silent failure swallowing ────────────────────────────────────────────
+    # The 171.38 incident: vision_analyse()'s except block returned {} and the
+    # caller treated that as "no grounding needed", deleting every safety gate
+    # from the prompt. Silent excepts in an engine are how a safety gate
+    # disappears without anyone noticing.
+    _section('Silent failure swallowing')
+    _bare = len(re.findall(r'^\s*except\s*:', src, re.M))
+    _pass_only = len(re.findall(r'^\s*except[^\n:]*:\s*\n\s*pass\s*$', src, re.M))
+    if _bare:
+        _fail(f'{_bare} bare "except:" -- catches SystemExit/KeyboardInterrupt too; name the exception')
+        fails += 1
+    else:
+        _ok('No bare "except:" clauses')
+    if _pass_only:
+        _note(f'{_pass_only} "except ...: pass" block(s) -- confirm each is genuinely safe to ignore '
+              f'and cannot silently remove a safety gate (see 171.38 / 171.54)')
+    else:
+        _ok('No silently-passing except blocks')
+
+    # ── Secrets ──────────────────────────────────────────────────────────────
+    _section('Secrets')
+    _secret_pat = r'(sk-ant-[A-Za-z0-9\-_]{10,}|AKIA[0-9A-Z]{16}|["\']sk-[A-Za-z0-9]{20,}["\'])'
+    if re.search(_secret_pat, src):
+        _fail('HARDCODED SECRET -- a key literal is present in source. Remove before delivery.')
+        fails += 1
+    else:
+        _ok('No hardcoded API keys or AWS keys found')
+    if re.search(r'os\.environ(\.get)?\(', src):
+        _ok('Reads credentials from the environment')
+
+    # ── API call headroom (recurring 171.12 / 171.14 / 171.38 bug class) ─────
+    # Session 238 note on this check's own design: the first version of it
+    # FAILED on any max_tokens below 2000. That was wrong twice over -- it
+    # matched "max_tokens=1200" inside the 171.38 CHANGELOG COMMENT, and it
+    # flagged legitimately small helper calls (a 400-token classifier does not
+    # need 2000). A check that fails on correct code is the exact disease this
+    # version of sl_audit.py exists to cure, so it was narrowed before
+    # shipping: comments are stripped, every value is reported with its line
+    # for human review, and the only hard FAIL is the one real, specific,
+    # regression-prone case -- vision_analyse(), whose large multi-subject JSON
+    # response is what actually truncated (171.38) and whose gate output every
+    # safety prohibition depends on.
+    _section('API max_tokens headroom')
+    _code_lines = [(i + 1, l) for i, l in enumerate(lines)
+                   if not l.lstrip().startswith('#')]
+    _mt = []
+    for _ln, _l in _code_lines:
+        for _m in re.finditer(r'max_tokens["\']?\s*[:=]\s*(\d+)', _l):
+            _mt.append((_ln, int(_m.group(1))))
+    if not _mt:
+        _note('No max_tokens literal found in code -- nothing to check')
+    else:
+        _ok(f'{len(_mt)} max_tokens value(s) in code: '
+            + ', '.join(f'L{_ln}={_v}' for _ln, _v in _mt))
+        _note('Silent JSON truncation has happened three times here (171.12, 171.14, 171.38). '
+              'Any call that returns LARGE JSON needs >= 2000; small classifier calls do not.')
+        # Hard check: vision_analyse()'s own ceiling. This one call produces the
+        # species and gaze gates; if it truncates, build_scene_context() gets {}
+        # and every prohibition is deleted from the scoring prompt (see 171.54).
+        _vm = re.search(r'def\s+vision_analyse\b', src)
+        if _vm:
+            _after = src[_vm.end():]
+            _vt = re.search(r'max_tokens["\']?\s*[:=]\s*(\d+)', _after)
+            if _vt:
+                _vv = int(_vt.group(1))
+                if _vv < 2000:
+                    _fail(f'vision_analyse() max_tokens = {_vv}, below 2000 -- this is the exact '
+                          f'regression of 171.38. On truncation this call returns {{}}, which '
+                          f'deletes the species and gaze gates from the scoring prompt entirely.')
+                    fails += 1
+                else:
+                    _ok(f'vision_analyse() max_tokens = {_vv} (>= 2000, 171.38 fix intact)')
+            else:
+                _note('Could not locate vision_analyse() max_tokens -- verify by hand')
+
+    # ── Cross-file timing coupling (Session 238 incident) ────────────────────
+    _section('Cross-file timing coupling (Session 238)')
+    if '_SAFE_INTERNAL_CEILING' in src:
+        _m = re.search(r'_SAFE_INTERNAL_CEILING\s*=\s*([0-9.]+)', src)
+        _val = _m.group(1) if _m else '?'
+        if re.search(r'CHANGE BOTH|COUPLED', src):
+            _ok(f'_SAFE_INTERNAL_CEILING = {_val} and carries its coupling warning')
+        else:
+            _fail(f'_SAFE_INTERNAL_CEILING = {_val} with NO coupling warning -- this constant must '
+                  f'stay below app.py _auto_score_with_timeout(timeout_secs=). They were edited '
+                  f'independently in Session 237 and the corrective layer silently stopped running.')
+            fails += 1
+        _note(f'VERIFY BY HAND: is {_val}s still below app.py\'s current timeout_secs, with margin?')
+    else:
+        _note('No _SAFE_INTERNAL_CEILING in this file -- coupling check not applicable')
+
+    # ── Debug leftovers ──────────────────────────────────────────────────────
+    _section('Debug leftovers')
+    _dbg = re.findall(r'\b(breakpoint\(\)|pdb\.set_trace\(\))', src)
+    if _dbg:
+        _fail(f'Debugger left in source: {set(_dbg)}')
+        fails += 1
+    else:
+        _ok('No breakpoint()/pdb.set_trace() left in source')
+
+    # ── Manual reminders ─────────────────────────────────────────────────────
+    _section('Manual reminders')
+    _note('Rule 3/16: LOCAL CHECKS ARE NOT PROOF. Only a Railway console log from a real run counts.')
+    _note('Rule 2: Re-read the full change in context before deploying.')
+    _note('Rule 9: Await explicit founder approval before pushing to GitHub/Railway.')
+    _note('Prompt-text changes cannot be audited mechanically -- read the rendered card.')
+
+    _result(fails, filepath)
+    return fails == 0
+
 
 def audit_apppy(filepath):
     _banner()
@@ -2726,7 +2941,18 @@ if __name__ == '__main__':
             continue
         name = os.path.basename(filepath).lower()
         if filepath.endswith('.py'):
-            passed = audit_apppy(filepath)
+            # Session 238: route engine/library modules to the engine audit.
+            # Previously every .py went to audit_apppy(), so engine files
+            # failed 7 Flask-only checks on every run regardless of content.
+            try:
+                with open(filepath, 'r') as _f:
+                    _probe = _f.read()
+            except Exception:
+                _probe = ''
+            if _probe and _is_engine_py(_probe):
+                passed = audit_enginepy(filepath)
+            else:
+                passed = audit_apppy(filepath)
         elif any(x in name for x in ['email_', '_email', 'mail_', '_mail', 'notification_', 'trigger_']):
             passed = audit_email(filepath)
         elif filepath.endswith('.html'):
