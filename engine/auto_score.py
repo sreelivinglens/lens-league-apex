@@ -1,3 +1,75 @@
+# SL-VERSION: 171.62 (Session 238, 2026-10-06 -- THREE BUGS FROM THE FOUNDER'S OWN RAILWAY LOG, PLUS
+# THE "WHERE DOES THE EYE GO?" RELABEL'S ENGINE-SIDE HALF. Every one of these was visible in the log
+# the founder pasted for the 6 Oct rescore of image 143, and all three are mine, from 171.60/171.61.
+#
+# BUG 1 -- THE CLUTTER DETECTOR NEVER RAN. ONCE. The log says it outright:
+#   [auto_score][stock_phrase_check] skipped (non-fatal): cannot access local
+#   variable '_REPEAT_FIELDS' where it is not associated with a value
+# _REPEAT_FIELDS was defined at ~L8536 and read at ~L8436 inside the same function body -- a plain
+# use-before-assignment. The "chaos into geometry" ban the founder asked for in 171.60, the whole
+# point of which was to stop the engine complimenting a frame whose eye goes everywhere, was caught
+# by its own non-fatal except on every card since and logged as a SKIP rather than a failure. That
+# is the second time this session a broad `except` has hidden a dead check (cf. 171.57's
+# accent-blind master regex printing OK on real violations). FIX: the list is HOISTED to a single
+# definition above the first reader, not duplicated -- two copies would drift, and a detector
+# scanning a stale field list is the same silent-miss class of bug.
+#
+# BUG 2 -- THE ENGINE PRINTED MY OWN PROMPT HEADING ON A MEMBER'S CARD. The log:
+#   [auto_score][MASTER_REPEAT] "The ONE-OBJECT TEST" appears in multiple fields:
+#   visual_flow, dim_obs_disruption
+# Read that twice. The literal title of a 171.61 prompt block was written into two customer-facing
+# fields. This is the third instance of the same disease this session (the TEACH worked example in
+# 171.55, the five dim_obs register examples in 171.57): the model treats a shouted internal
+# heading as quotable vocabulary, and my field specs made it worse by ending with "See THE
+# ONE-OBJECT TEST above". FIXED IN BOTH LAYERS, because this session has watched four prose rules
+# fail where a detector held:
+#   (a) PROMPT: a new highest-priority NEVER NAME THE RULE block at the top of the composition
+#       section, banning every internal rule/test/gate/ladder name and every raw field key in output,
+#       with the contrast spelled out -- not "the one-object test shows the eye has nowhere to land"
+#       but "the eye is pulled to three places and settles on none".
+#   (b) CODE: new [INTERNAL_LEAK] detector over the same 17 narrative fields. Unlike MASTER_REPEAT,
+#       TEXT_REPEAT and PRINCIPLE_REPEAT this one does NOT merely log -- a flagged field is queued
+#       into the EXISTING corrective re-ask (_attempt_text_repeat_fix, now taking leak_fields /
+#       leak_terms) so it is rewritten before the card is built, at no extra API round-trip. The
+#       reason it may act where the others may not: a repeated phrase is a judgement call where a
+#       blind rewrite can lose meaning, whereas "the one-object test" has NO legitimate reading on a
+#       scorecard. The function's "may only improve or no-op" invariant is untouched: a rewrite that
+#       still carries the leak term is discarded and the original kept, same as the length and
+#       still-duplicated checks. The corrective block's outer gate is widened from `if
+#       _text_repeats:` to `if _text_repeats or _leak_fields:` -- otherwise a card that leaked but
+#       repeated nothing would have shipped the leak with only a log line nobody could act on in
+#       time.
+#
+# BUG 3 -- MASTER DETECTOR FALSE POSITIVES. Same log, same run:
+#   [auto_score][MASTER_REPEAT] "Sassoon Dock" appears in multiple fields: transferable_advice,
+#   dim_obs_dod
+# A dock is not a photographer. The detector takes any run of 2+ Title-Case tokens as a person's
+# name, so place names and ALL-CAPS headings both register as master-rule breaches. That is noise
+# in the one log the founder reads to decide whether the engine is behaving, and noise there costs
+# more than the check earns. FIX: the Mumbai dock names added to the existing skip set, plus a
+# general rule that a run containing an ALL-CAPS token of 2+ characters is never a person's name
+# (which is also what stopped "The ONE-OBJECT TEST" being reported as a master).
+#
+# RELABEL, ENGINE SIDE: no change was needed or made to the visual_flow KEY or to the three
+# prompt-side "where does the eye go" instructions (L2572, L2813, L7217) -- they were already
+# correct and already scoring. The founder's point was that the question never reached the
+# photographer, and that is a rendering fix: reportlab_card.py 237.4 (Save PDF),
+# image_detail.html (web) and app.py 182.105 (scorecard email) now all print "Where does the eye
+# go?" where they used to print "Visual flow".
+#
+# COUPLING STILL LIVE: _SAFE_INTERNAL_CEILING=165.0 must stay paired with app.py's
+# _auto_score_with_timeout(timeout_secs=180). Do not push one of those two files without the other.
+#
+# NOT YET CONFIRMED LIVE. WHAT TO LOOK FOR on the next rescore, in this order:
+#   (a) [auto_score][stock_phrase_check] OK or STOCK_PHRASE -- anything other than "skipped" proves
+#       bug 1 fixed and is the FIRST time that detector will ever have reported a real result;
+#   (b) [auto_score][internal_leak_check] OK, and NO "The ONE-OBJECT TEST" anywhere on the card;
+#   (c) no [MASTER_REPEAT] line naming a dock or an ALL-CAPS phrase;
+#   (d) the Save PDF and the web card both headed "Where does the eye go?";
+#   (e) tech_read and the dim_obs rows rendering as several spaced paragraphs, not one block.
+# STILL OPEN AND STILL UNGRANTED: the 8-field TEXT_REPEAT_FIX cap. The 6 Oct log shows
+# "SKIPPED -- 11 fields flagged, above the 8-field safety cap", which is the third card in a row
+# where the corrector refused wholesale and nothing was corrected. RETAINS 171.61.)
 # SL-VERSION: 171.61 (Session 238, 2026-10-06 -- VISUAL DISRUPTION REDEFINED AS THE ONE-OBJECT TEST,
 # plus luminance as its primary channel. Founder-directed, his model, his words, and it supersedes
 # the three-state framing 171.60 shipped twenty minutes earlier -- that version made the eye-path a
@@ -2820,6 +2892,30 @@ Ask this BEFORE scoring Visual Disruption or Wonder Factor, and answer it from t
   (1) WHERE DOES THE EYE LAND FIRST?
   (2) IS THAT THING RESOLVED? Sharp, or committed blur — not half of each.
   (3) DOES THE FRAME HOLD THE EYE, OR SCATTER IT?
+
+NEVER NAME THE RULE — ONLY ITS RESULT (SL-171.62, HIGHEST-PRIORITY OUTPUT RULE, read this before
+any field below). Every block in this prompt is an instruction to you. NONE of their names is
+photographer language, and the photographer must never learn that any of them exists.
+
+CONFIRMED FAILURE, 6 Oct 2026, on a live member card: the words "The ONE-OBJECT TEST" were printed
+into BOTH visual_flow and dim_obs_disruption. A paying photographer opened a scorecard and read the
+title of a scoring instruction. Nothing looks more like a machine talking to itself, on the one
+document whose entire job is to not look like that.
+
+So: NEVER write, quote, paraphrase, capitalise or allude to the name of any rule, test, gate,
+ladder, block, check, principle-field or internal field key in ANY output field. Banned in output
+regardless of casing or punctuation: "the one-object test", "the insight ladder", "function
+assignment", "the Ma question", "the three-source test", "the commitment test", "scoring gate",
+"level 3", "Sherpa tone", and every raw field key (visual_flow, tech_read, dim_obs_*, byline_1,
+byline_2, hard_truth, master_why). The phrase "see X above" belongs to this prompt and must never
+cross into a field's text.
+
+Apply the rule; describe only what you SEE because of it. Not "the one-object test shows the eye
+has nowhere to land" but "the eye is pulled to three places and settles on none". Not "applying the
+luminance channel" but "the eye goes to the one lit patch because the rest of the frame is dark".
+The photographer should feel read, not processed. A code-level detector now scans every narrative
+field for these strings and sends any field that carries one back to you for rewrite, so a breach
+costs the member latency as well as trust.
 
 THE ONE-OBJECT TEST — THIS IS WHAT VISUAL DISRUPTION ACTUALLY MEASURES (SL-171.61, founder's
 own model: "in a wedding group, dance - if the shot is a lot of people dancing - its just group
@@ -7263,7 +7359,7 @@ def _longest_common_run(words_a, words_b):
     return ' '.join(_best)
 
 
-def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn, max_wait_secs=45):
+def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, norm_words_fn, max_wait_secs=45, leak_fields=None, leak_terms=None):
     """
     SL-VERSION 171.41 (Session 237). Founder: three prompt-wording attempts at
     the cross-field repetition problem (171.36, 171.37, 171.40) were each
@@ -7317,6 +7413,19 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
             _owner_pairs.add((_owner, _f))
 
     _fields_to_rewrite = sorted({_f for _owner, _f in _owner_pairs})
+
+    # SL-171.62 — fields carrying an INTERNAL PROMPT-HEADING LEAK are added
+    # here, whether or not they also repeat another field. A leak ("The
+    # ONE-OBJECT TEST" printed in visual_flow and dim_obs_disruption on the
+    # 6 Oct card) has no legitimate reading on a scorecard, so unlike a
+    # repeated phrase there is no judgement call about whether rewriting is
+    # worth the risk. The 8-field cap, the per-field validation and the
+    # "may only improve or no-op" invariant below all still apply unchanged.
+    _leak_set = set(leak_fields or ())
+    _leak_terms = list(leak_terms or ())
+    if _leak_set:
+        _fields_to_rewrite = sorted(set(_fields_to_rewrite) | _leak_set)
+
     if not _fields_to_rewrite:
         _log.append('[auto_score][TEXT_REPEAT_FIX] nothing to rewrite (no field had a non-owner repeat)')
         return result, _log
@@ -7365,6 +7474,14 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         _top_phrases = sorted(_rewrite_reasons[_f], key=lambda pr: -len(pr[0]))[:2]
         if _top_phrases:
             _phrases = '; '.join(f'"{p}" (already covered by {owner})' for p, owner in _top_phrases)
+        elif _f in _leak_set:
+            # SL-171.62 — leak-only field: there is no duplicate phrase to
+            # quote, the problem is that the field is quoting the scoring
+            # prompt's own internal heading back at the photographer.
+            _phrases = ('(prints the name of an INTERNAL SCORING INSTRUCTION, e.g. "the one-object '
+                        'test" or a raw field key. Rewrite the observation in plain photographer '
+                        'language and NEVER name any internal rule, test, gate, ladder or field key '
+                        '— the reader must never see that a rule exists, only its result)')
         else:
             _phrases = '(restates another field — see full scorecard above for the overlap)'
         _lines.append(f'- {_f}: currently repeats: {_phrases}. FORMAT RULE: {_hint}')
@@ -7437,7 +7554,15 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
                     break
             if _still_has_phrase:
                 break
-        if _too_long or _still_has_phrase:
+        # SL-171.62 — same bar for leaks: if the rewrite still names an
+        # internal heading or field key, discard it and keep the original.
+        # Keeping the original is the lesser evil only because the detector's
+        # log line above is then the signal for a human look; it is NOT a pass.
+        _still_leaks = False
+        if _f in _leak_set and _leak_terms:
+            _new_flat = re.sub(r'\s+', ' ', _new_text).lower()
+            _still_leaks = any(_t in _new_flat for _t in _leak_terms)
+        if _too_long or _still_has_phrase or _still_leaks:
             _still_bad.append(_f)
             _kept.append(_f)
             continue
@@ -8331,10 +8456,27 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 'Your Wildlife', 'Your Street', 'Your Landscape', 'Your Wedding', 'Your People',
                 'Your Nature', 'Your Documentary', 'Your Creative', 'Your Drone', 'Your Fashion',
                 'League Photographers', 'Body Work', 'Next Shot', 'Next Body',
+                # SL-171.62 -- place names, not photographers. Confirmed on the
+                # 6 Oct log, which reported [MASTER_REPEAT] "Sassoon Dock"
+                # appears in multiple fields: transferable_advice, dim_obs_dod.
+                # A dock is not a master and that line is noise in a log the
+                # founder reads to decide whether the engine is behaving.
+                'Sassoon Dock', 'Sasson Dock', 'Sassoon Docks', 'Sasson Docks',
+                'Versova Beach', 'Mahim Bay',
             }
             if _n in _skip:
                 continue
             if len(_n.split()) < 2:
+                continue
+            # SL-171.62 -- an ALL-CAPS token is never part of a person's name.
+            # The same log reported [MASTER_REPEAT] "The ONE-OBJECT TEST"
+            # appears in multiple fields: visual_flow, dim_obs_disruption --
+            # the detector had matched the title of one of my own prompt blocks
+            # as a master photographer. Two separate faults in one line: the
+            # engine printing an internal heading into customer prose (caught
+            # by the internal-leak detector added below) and this detector
+            # treating it as a name. Title Case alone is not a person.
+            if any(_t.isupper() and len(_t) > 1 for _t in _n.split()):
                 continue
             if _n not in _name_fields:
                 _name_fields[_n] = []
@@ -8346,6 +8488,55 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             print(f'[auto_score][MASTER_REPEAT] "{_mn}" appears in multiple fields: {", ".join(_mfields)} — ONE MASTER PER SCORECARD rule violated')
     else:
         print('[auto_score][master_check] OK — no master name repeated across fields')
+
+    # ── Post-processing: internal prompt-heading leak (SL-171.62) ────────────
+    # On the 6 Oct rescore the engine wrote the literal words "The ONE-OBJECT
+    # TEST" into BOTH visual_flow and dim_obs_disruption -- the title of a
+    # prompt block in this file, printed on a card a paying photographer reads.
+    # Nothing looked more like a machine talking to itself, on the one card
+    # whose whole job is to not look like that.
+    #
+    # This is the same failure as the register-example leak fixed in 171.55 and
+    # the worked-example leak before it: the model treats a shouted internal
+    # heading as quotable vocabulary. The prompt-side ban is added in the same
+    # version (see the ONE-OBJECT TEST block), but this session has now watched
+    # four separate prose rules fail where a detector held, so the heading
+    # names are also matched here.
+    #
+    # Unlike the other detectors this one does NOT merely log. A heading leak
+    # is unambiguous -- these strings have no legitimate reading on a scorecard,
+    # unlike a repeated phrase, where a blind rewrite risks mangling meaning --
+    # so the flagged field is added to the corrective rewrite set and gets
+    # rewritten before the card is built.
+    _INTERNAL_LEAK_TERMS = [
+        'one-object test', 'one object test', 'the insight ladder', 'insight ladder',
+        'function assignment', 'the ma question', 'three-source test',
+        'commitment test', 'ground truth block', 'no verified grounding',
+        'scoring gate', 'level 3', 'level three observation',
+        'sherpa tone', 'apex ddi engine prompt', 'dim_obs', 'visual_flow',
+        'tech_read', 'byline_1', 'byline_2', 'hard_truth', 'master_why',
+    ]
+    _leak_fields = set()
+    try:
+        _leak_hits = {}
+        for _lf in _REPEAT_FIELDS:
+            _lt = _re_master.sub(r'\s+', ' ', str(result.get(_lf, '') or '')).lower()
+            if not _lt:
+                continue
+            for _term in _INTERNAL_LEAK_TERMS:
+                if _term in _lt:
+                    _leak_hits.setdefault(_term, []).append(_lf)
+                    _leak_fields.add(_lf)
+        if _leak_hits:
+            for _term, _lfs in _leak_hits.items():
+                print(f'[auto_score][INTERNAL_LEAK] "{_term}" printed in: {", ".join(_lfs)} '
+                      f'— this is the name of a PROMPT BLOCK or an internal field key, not '
+                      f'photographer language. Queued for corrective rewrite (SL-171.62).')
+        else:
+            print('[auto_score][internal_leak_check] OK — no internal prompt heading '
+                  'or field key printed in card prose')
+    except Exception as _le:
+        print(f'[auto_score][internal_leak_check] skipped (non-fatal): {_le}')
 
     # ── Post-processing: named-principle repeat detection (SL-171.58) ─────────
     # 171.57 widened principle naming from one field to four and stated "NO
@@ -8416,6 +8607,19 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                      if _prin_hits else 'no named principle on this card'))
     except Exception as _pe:
         print(f'[auto_score][principle_check] skipped (non-fatal): {_pe}')
+
+    # ── Shared field list for every cross-field detector (SL-171.62) ─────────
+    # Hoisted here from ~100 lines below, where it used to be defined. The
+    # stock-phrase detector immediately after this point reads it, so defining
+    # it later made that detector raise UnboundLocalError on every single card.
+    # One definition, read by the stock-phrase, internal-leak and text-repeat
+    # detectors alike.
+    _REPEAT_FIELDS = [
+        'impression', 'transferable_advice', 'mentor_next', 'mentor_moment',
+        'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
+        'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
+        'conclusion', 'hard_truth', 'master_why',
+    ]
 
     # ── Post-processing: stock-phrase detection (SL-171.60) ──────────────────
     # "turns chaos into geometry" and its variants appeared on EVERY version of
@@ -8533,12 +8737,19 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # duplicate and lets TEXT_REPEAT_FIX rewrite it; if the next card shows no
     # mentor_moment flag while the printed duplicate persists, the cause is in
     # the render path, not the engine, and that is itself the answer.
-    _REPEAT_FIELDS = [
-        'impression', 'transferable_advice', 'mentor_next', 'mentor_moment',
-        'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
-        'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
-        'conclusion', 'hard_truth', 'master_why',
-    ]
+    # SL-171.62 -- THE LIST ITSELF IS NOW DEFINED ABOVE, before the
+    # stock-phrase block, and is NOT redefined here. It used to be defined at
+    # this point and ALSO read ~100 lines earlier by the stock-phrase detector,
+    # which is a straight use-before-assignment inside one function body. The
+    # live log for the 6 Oct rescore says so in as many words:
+    #   [auto_score][stock_phrase_check] skipped (non-fatal): cannot access
+    #   local variable '_REPEAT_FIELDS' where it is not associated with a value
+    # So the "chaos into geometry" clutter detector the founder asked for ran
+    # ZERO times on every card since 171.60 shipped -- it was caught by its own
+    # non-fatal except and reported as a skip, not a failure. My bug, from the
+    # build that introduced the detector. Hoisted rather than duplicated: two
+    # copies of this list would drift, and a detector scanning a stale field
+    # list is the same class of silent-miss as the accent-blind master regex.
     _NGRAM_LEN = 6  # 6 consecutive words shared verbatim = genuine restatement, not coincidence
 
     def _text_repeat_norm_words(_t):
@@ -8579,8 +8790,15 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             _suffix = 'still duplicated after corrective pass' if _tag == 'TEXT_REPEAT_AFTER_FIX' else 'same observation restated, not reworded'
             print(f'[auto_score][{_tag}] "{_merged}" appears in: {", ".join(sorted(_fields))} — {_suffix}')
 
-    if _text_repeats:
-        _log_text_repeat_pairs(_text_repeats, result, 'TEXT_REPEAT')
+    # SL-171.62 — the corrective pass now also runs when the ONLY problem is an
+    # internal prompt-heading leak. Before this, the whole corrective block was
+    # gated on a cross-field text repeat, so a card whose prose quoted "The
+    # ONE-OBJECT TEST" but repeated nothing would have shipped the leak
+    # untouched with a detector line nobody could act on before the photographer
+    # read it.
+    if _text_repeats or _leak_fields:
+        if _text_repeats:
+            _log_text_repeat_pairs(_text_repeats, result, 'TEXT_REPEAT')
 
         # ── Corrective re-ask (SL-VERSION 171.41, time-budget-aware since 171.43) ──
         # Three prompt-wording attempts failed to hold (171.36, 171.37, 171.40
@@ -8634,6 +8852,10 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 result, _fix_log = _attempt_text_repeat_fix(
                     result, _text_repeats, _REPEAT_FIELDS, _NGRAM_LEN, _text_repeat_norm_words,
                     max_wait_secs=min(_remaining_budget, 45.0),
+                    # SL-171.62 — internal prompt-heading leaks are corrected on
+                    # the same call, so a leak costs no extra API round-trip.
+                    leak_fields=_leak_fields,
+                    leak_terms=_INTERNAL_LEAK_TERMS,
                 )
                 for _line in _fix_log:
                     print(_line)
@@ -8658,7 +8880,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         else:
             print('[auto_score][text_repeat_check_after_fix] OK — clean after corrective pass')
     else:
-        print('[auto_score][text_repeat_check] OK — no 6-word phrase repeated across narrative fields')
+        print('[auto_score][text_repeat_check] OK — no 6-word phrase repeated across narrative fields, '
+              'and no internal heading leak')
 
     print(f"[auto_score][timing] TOTAL auto_score: {_time.time() - _t_total_start:.2f}s")
 
