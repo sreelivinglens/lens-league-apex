@@ -1,3 +1,113 @@
+# SL-VERSION: 171.61 (Session 238, 2026-10-06 -- VISUAL DISRUPTION REDEFINED AS THE ONE-OBJECT TEST,
+# plus luminance as its primary channel. Founder-directed, his model, his words, and it supersedes
+# the three-state framing 171.60 shipped twenty minutes earlier -- that version made the eye-path a
+# ceiling but never said WHAT MAKES THE EYE GO THERE, which is the actual mechanism.
+#
+# THE MODEL, in the founder's own words: "in a wedding group, dance - if the shot is a lot of people
+# dancing - its just group energy - but if one person jumps out of the group- he becomes teh
+# disruption - and the eye goes tehre. the reason for Disruption is this - catches the eye
+# indirectly"; "lots of oranges and somewhere a red apple - the eye goes to red apple thus"; and the
+# correction that reshaped it -- "in the herd grouped - the group becomes the eye".
+# So Disruption is NOT "does something stand out". It is: DOES THE FRAME GIVE THE EYE ONE OBJECT?
+# Two valid routes to that object: (1) A BREAK IN A FIELD -- the apple among oranges, the airborne
+# dancer, the single flamingo turned to camera, which CATCHES THE EYE INDIRECTLY and need not be
+# large or central; (2) THE FIELD ITSELF AS ONE MASS -- the grouped herd, where the group becomes the
+# eye, nothing needs to break it because it is already one thing, held by a real Gestalt principle.
+# Route 2 scores on its own merits and CAN SCORE HIGH; my first reading had it as mid-band by
+# default and the founder corrected that directly.
+# THE FAILURE IS MANY OBJECTS, NONE WINNING -- scattered elephants, scattered flamingos, a street
+# frame with three things pulling at once. "when the eye is called to look at many places the energy
+# of teh photograph itself is lost." A CEILING, not a neutral note. And the distinction that matters:
+# SCATTERED IS MANY OBJECTS, A GROUPED MASS IS ONE OBJECT. Density was never the problem;
+# competition for attention is.
+# TWO CONDITIONS ON THE OBJECT, both needed for the upper bands. (A) RESOLVED -- sharp or fully
+# committed blur, not half of each; if the eye lands on the object and the object is unresolved the
+# frame LOSES on Disruption and Wonder, because attention is the whole currency. Sasson Dock is
+# exactly this: the egrets ARE the break, and they are not resolved enough to reward the look.
+# (B) PALPABLE CONTRAST, through any one channel -- and the founder named the strongest one:
+# LUMINANCE. "imagine dark areas and one shaft of light - the eye naturally goes to where the light
+# is - this is unconscious human behaviour", and it runs BOTH WAYS -- "in light - snow / over
+# exposed/ high key shots - one small dark spot is enough - the eye goes to teh dark spot... it is a
+# % of darkness in a large canvas of white. or a % of light in a dark canvas." Encoded as a
+# percentage relationship: the smaller and cleaner the anomalous area, the stronger the pull. Other
+# channels: colour, sharpness, motion, direction, isolation.
+# THE COROLLARY REVERSES A TECHNICAL-CORRECTNESS BIAS THIS ENGINE HAS BEEN CARRYING: DARKNESS IS A
+# TOOL, NOT A FAULT -- "shadows become important, or darkness is needed for light to shine." Deep
+# shadow and crushed blacks around a shaft of light are a DECISION and usually the reason the frame
+# works. The live Sasson Dock card PRAISED "exposure is balanced across the frame -- no clipping, no
+# crush" as an achievement on a flat-overcast frame that has no luminance anchor at all. Under this
+# model that even exposure IS THE WEAKNESS. tech_read's exposure check is updated so it can no
+# longer write intentional darkness up as a problem, and can no longer praise evenness as a virtue
+# in its own right. This is also exactly the direction the Bible and Product Direction documents
+# ask for -- less weight on technical correctness over time.
+# WIRED INTO THE NUMBERS, not just the prose: dim_obs_disruption, dim_obs_wonder,
+# disruption_reasoning, wonder_reasoning and visual_flow all now run the one-object test, and
+# visual_flow must DECLARE which route the frame took (break / field-as-mass / nothing) and which
+# channel carries the contrast. The commitment test and the clutter ban from 171.60 are retained
+# unchanged underneath it.
+# NO WEIGHT OR FORMULA IS CHANGED -- this constrains how the model assigns two dimension numbers via
+# the prompt, as every other scoring instruction in this file does.
+# NOT CONFIRMED LIVE. WHAT TO LOOK FOR: (a) visual_flow naming the route and the channel explicitly;
+# (b) Disruption LOWER on this cluttered frame with the one-object reason stated; (c) no praise for
+# "balanced exposure" on a flat frame; (d) [stock_phrase_check] OK. RETAINS 171.60.)
+# SL-VERSION: 171.60 (Session 238, 2026-10-06 -- "WHERE DOES THE EYE GO?" BECOMES A SCORING GATE.
+# Founder-directed, and this is his photographic IP, recorded in his own words: "which is one
+# important question which we should always be looking into - Where does the eye go? if it goes to
+# the birds - and then if its not sharp or mid blur, it actually loses out. So either get a very wavy
+# motion of pan shot of the docks or figure out if people and birds both are in ICM levels" and
+# "cluttered is something which keeps happening in street, a very busy background - and loses the eye
+# focus...when the eye is called to look at many places the energy of teh photograph itself is
+# lost...or else make it so busy that it becomes a Gestaldt cluster intself."
+#
+# THE STRUCTURAL PROBLEM THIS FIXES. The live card asserted the rails "turn a chaotic harbour into a
+# frame that can be read" and scored Visual Disruption 8.3 -- while visual_flow, LOWER ON THE SAME
+# PAGE, correctly reported that the top-left corner "is dead space and competes for attention without
+# adding information". Both statements were on one card and nothing reconciled them, because the
+# eye-path read was an OBSERVE sentence with NO AUTHORITY: it fed no score, no ceiling and no verdict.
+# The engine could see the eye wandering and still call the frame readable. The founder's own read of
+# that image was that it is cluttered and the eye goes everywhere. The most diagnostic question on
+# the card was the least load-bearing thing on it.
+# FIX 1 -- THE THREE-STATE EYE-PATH GATE, asked BEFORE Disruption and Wonder are scored: where does
+# the eye land first; is that thing RESOLVED (sharp, or committed blur, not half of each); does the
+# frame hold the eye or scatter it. Every frame is then named as one of three states in visual_flow:
+# STATE A resolved focus; STATE B deliberate TOTAL density that becomes a Gestalt cluster, where the
+# mass itself is the subject (a legitimate, sometimes excellent treatment -- the founder's "or else
+# make it so busy that it becomes a Gestalt cluster"); STATE C the eye called to many places, the
+# commonest Street failure, where the energy dissipates. STATE C IS NOW A CEILING, NOT A NEUTRAL
+# NOTE: it caps Disruption and Wonder out of the upper bands, because the one thing Disruption
+# measures -- stopping and holding the eye -- did not happen. Wired into dim_obs_disruption,
+# dim_obs_wonder, disruption_reasoning and wonder_reasoning so the finding reaches the numbers.
+# AND THE HEAVIEST RULE: if the eye lands on the subject and the subject is NOT resolved -- soft,
+# mid-blur, neither sharp nor committed to motion -- the frame LOSES on both dimensions. The
+# strongest element failing to hold the eye is worse than a weaker element holding it, because
+# attention is the whole currency.
+# FIX 2 -- THE COMMITMENT TEST, and it closes a hallucination class. The card wrote "the decision to
+# blur the egrets while keeping the workers sharp is deliberate and correct" -- INFERRING INTENT FROM
+# AN OUTCOME. Blurred subject plus sharp surroundings has two explanations, a committed pan/ICM or a
+# missed shutter speed, and the result alone cannot distinguish them. This is the same failure as
+# asserting a subject's gaze from their pose (171.53). Now: to call a treatment deliberate the engine
+# must NAME the visible evidence (consistent motion axis, agreeing directional streaking, coherent
+# blur gradient) or it may not use "deliberate"/"intentional"/"chosen" about it at all; without that
+# evidence it must say the treatment sits between two decisions and SCORE IT BELOW BOTH CLEAN
+# ALTERNATIVES -- a half-measure is the worst of both, not the best -- and then give the founder's two
+# honest routes: commit the whole frame to motion, or push every element to ICM.
+# FIX 3 -- "CLUTTERED" IS NOW SAYABLE, AND THE STOCK ESCAPE IS BANNED. "turns chaos into geometry"
+# and variants appeared on EVERY version of this card in one day. It had become a compliment that
+# hides a scattered frame, which is precisely what makes a professional distrust the whole scorecard.
+# Banned in prose AND detected in code ([STOCK_PHRASE]), because this session's repeated finding is
+# that prose bans do not hold on their own.
+# NOTE ON AQ: founder confirmed the 8.4 -> 7.5 cap was CORRECT on this image -- "technically there is
+# no strong emotion from this image - a problem with all street photography". The cap stands as
+# built; no change needed, and the Master -> Maverick move it caused is the honest number.
+# NOT BUILT, STILL THE BIGGEST REMAINING LEVER ON DUPLICATION: the 8-field TEXT_REPEAT_FIX safety cap.
+# The corrector has run on 2 of 5 cards today and cut duplicates ~two-thirds both times (9->3, 8->4);
+# on the 3 cards where it skipped, nothing was corrected and those are the cards that read badly. No
+# signal given yet.
+# NO WEIGHT OR FORMULA IS CHANGED -- this constrains how the model assigns two dimension numbers, via
+# the prompt, the same way every other scoring instruction in this file does.
+# NOT CONFIRMED LIVE. WHAT TO LOOK FOR: (a) visual_flow naming State A/B/C explicitly; (b) Disruption
+# and Wonder actually LOWER on this cluttered frame, with the eye-path reason stated; (c) no
+# "deliberate" claim without named visible evidence; (d) [stock_phrase_check] OK. RETAINS 171.59.)
 # SL-VERSION: 171.59 (Session 238, 2026-10-06 -- THE "WHAT YOU CONTROLLED" DUPLICATE, FOUND AND
 # FIXED, IN THIS FILE. Covered by the founder's earlier "go" on the Card-2 item, which I declined to
 # build in 171.58 because I could not prove the mechanism and would not change a live render path on
@@ -2700,6 +2810,114 @@ fields precisely so that the card's centre of gravity sits in front of the photo
 behind them. A card that is accurate about the past and silent about what comes next has
 failed its job even with zero repetition.
 
+WHERE DOES THE EYE GO? — THE FIRST QUESTION, AND A SCORING GATE (SL-171.60, founder-directed:
+"which is one important question which we should always be looking into - Where does the eye go?
+if it goes to the birds - and then if its not sharp or mid blur, it actually loses out"; and
+"when the eye is called to look at many places the energy of teh photograph itself is lost...
+or else make it so busy that it becomes a Gestaldt cluster intself.")
+
+Ask this BEFORE scoring Visual Disruption or Wonder Factor, and answer it from the pixels:
+  (1) WHERE DOES THE EYE LAND FIRST?
+  (2) IS THAT THING RESOLVED? Sharp, or committed blur — not half of each.
+  (3) DOES THE FRAME HOLD THE EYE, OR SCATTER IT?
+
+THE ONE-OBJECT TEST — THIS IS WHAT VISUAL DISRUPTION ACTUALLY MEASURES (SL-171.61, founder's
+own model: "in a wedding group, dance - if the shot is a lot of people dancing - its just group
+energy - but if one person jumps out of the group - he becomes teh disruption - and the eye
+goes tehre. the reason for Disruption is this - catches the eye indirectly"; and, correcting an
+earlier reading, "in the herd grouped - the group becomes the eye".)
+
+Disruption is NOT "does something stand out". It is: **DOES THE FRAME GIVE THE EYE ONE OBJECT?**
+That one object can arrive by either of two routes, and BOTH are valid:
+
+  ROUTE 1 — A BREAK IN A FIELD. There is a field (a pattern, mass, rhythm, repetition or colour
+  sea) and ONE element departs from it. The red apple among oranges. The one dancer airborne
+  above the crowd. The single flamingo turned to camera in the flock. The break does not need
+  to be large, central, or the nominal subject — it CATCHES THE EYE INDIRECTLY, found before
+  the viewer decides to look. That is the mechanism.
+
+  ROUTE 2 — THE FIELD ITSELF AS ONE MASS. A field coherent enough that the mass reads as a
+  single object. The herd grouped together: the group becomes the eye. Nothing needs to break
+  it, because it is already one thing. Held by a real Gestalt principle (similarity, proximity,
+  common fate). This scores on its own merits and can score HIGH — it is not a lesser case and
+  not an exemption.
+
+  FAILURE — MANY OBJECTS, NONE WINNING. Several elements compete and the eye is called to
+  several places. Elephants scattered. Flamingos scattered. A busy street frame where three
+  things pull at once. The founder's words: "when the eye is called to look at many places the
+  energy of teh photograph itself is lost." **THIS IS A CEILING, NOT A NEUTRAL OBSERVATION** —
+  Disruption and Wonder cannot sit in the upper bands however strong the individual elements
+  are, because the one thing Disruption measures did not happen. This is the commonest failure
+  in Street and in any crowded scene. Say it plainly: the frame is cluttered.
+
+  Note the distinction that matters: scattered is MANY objects; a grouped mass is ONE object.
+  Density is not the problem and never was. Competition for attention is the problem.
+
+THEN TWO CONDITIONS ON THAT OBJECT, both required for the upper bands:
+
+  CONDITION A — IS THE OBJECT RESOLVED? Sharp, or fully committed blur. NOT half of each. IF
+  THE EYE LANDS ON THE OBJECT AND THE OBJECT IS NOT RESOLVED — soft, mid-blur, neither sharp
+  nor committed to motion — THE FRAME LOSES on both Disruption and Wonder. The strongest
+  element failing to reward the eye for going there is worse than a weaker element holding it,
+  because attention is the whole currency. (Sasson Dock is exactly this case: the egrets ARE
+  the break — motion against a static working deck — and they are not resolved enough to
+  reward the look.)
+
+  CONDITION B — IS THE CONTRAST PALPABLE? The object must separate decisively from everything
+  else. The channels, any one of which can carry it:
+    · LUMINANCE — THE STRONGEST AND MOST RELIABLE CHANNEL (founder: "imagine dark areas and one
+      shaft of light - the eye naturally goes to where the light is - this is unconscious human
+      behaviour"). It is perception, not taste. And it works in BOTH directions: a small area of
+      light in a dark canvas, AND a small dark spot in a bright one — snow, high-key, an
+      over-exposed field — "one small dark spot is enough, the eye goes to the dark spot."
+      Think of it as a PERCENTAGE: a small percentage of light in a large dark canvas, or a
+      small percentage of dark in a large light canvas. The smaller and cleaner the anomalous
+      area, the stronger the pull.
+      THE COROLLARY, AND IT REVERSES A TECHNICAL-CORRECTNESS BIAS IN THIS ENGINE: DARKNESS IS A
+      TOOL, NOT A FAULT. Shadow is what allows light to read at all — "darkness is needed for
+      light to shine." Deep shadow, crushed blacks and large unlit areas around a shaft of
+      light are a DECISION and frequently the reason the frame works. Do NOT write them up as
+      an exposure problem, and do NOT praise "balanced exposure, nothing clipped, nothing
+      crushed" as a virtue in its own right — on a frame with no tonal separation, even
+      exposure across the whole canvas is the WEAKNESS, not the achievement. Flat overcast
+      light with everything legible gives the eye no luminance anchor at all. Score and say it
+      that way round.
+    · COLOUR — one hue against a field of another. The red apple among oranges.
+    · SHARPNESS — sharp against blur, or blur against sharp. One or the other, decisively.
+    · MOTION — one still figure in a moving crowd, or one moving element in stillness.
+    · DIRECTION — one element facing or travelling against the grain of the rest.
+    · ISOLATION — one figure with space around it where everything else is packed.
+  If the contrast is weak, the disruption collapses however good the idea was. A break that
+  the eye cannot find is not a break.
+
+UPPER BANDS REQUIRE: one object (by either route) + resolved + palpable contrast. All three.
+Mid-band: a field or an object that is real but whose contrast or resolution is partial.
+Low: many objects competing, or no object at all.
+
+COMMITMENT TEST — MIXED BLUR AND SHARPNESS (the same founder instruction, and a direct
+correction of a live card): a frame where the subject is blurred while the surroundings are
+sharp has TWO possible explanations — a committed pan or ICM, or a missed shutter speed. YOU
+CANNOT TELL WHICH FROM THE RESULT ALONE, AND YOU MUST NOT GUESS. On the 6 Oct 2026 Sasson Dock
+card the engine wrote "the decision to blur the egrets while keeping the workers sharp is
+deliberate and correct" — inferring intent from an outcome, which is the same failure as
+asserting a subject's gaze from their pose.
+  - To call a treatment deliberate you must NAME THE VISIBLE EVIDENCE: a consistent motion axis
+    across the frame, directional streaking that agrees between elements, a coherent blur
+    gradient. If you cannot name it, do not use the word "deliberate", "intentional" or
+    "chosen" about it at all.
+  - WITHOUT that evidence, say plainly that the treatment sits between two decisions, and SCORE
+    IT BELOW BOTH CLEAN ALTERNATIVES. A half-measure is not the best of both; it is the worst.
+  - Then give the two honest routes forward, which is Sherpa Tone doing real work: commit the
+    whole frame to motion (pan the scene so everything moves together), or push every element
+    to ICM so the frame becomes deliberate abstraction. Both are decisions. The middle is not.
+
+SAY "CLUTTERED" WHEN IT IS CLUTTERED. "Turns chaos into geometry", "turns clutter into
+geometry" and their variants have become this engine's stock escape from admitting a frame is
+busy — the phrase appeared on every version of one card in a single day while the founder's own
+read of that image was that the eye goes everywhere. A busy frame that does not reach State B
+is cluttered, and the card must be able to say so. A working professional disbelieves the whole
+scorecard the moment it flatters a frame they can see is scattered.
+
 THE INSIGHT LADDER — THE SINGLE MOST IMPORTANT RULE IN THIS PROMPT (SL-171.56):
 Every sentence on this card sits at one of four levels. The level, not the vocabulary, is what
 makes a card worth paying for.
@@ -2821,6 +3039,11 @@ explanation in the same sentence
 'resolves' (say: comes together / becomes clear)
 'sits in the frame' (say: is placed / appears)
 'the geometry is yours' (say: the composition is a decision only you would make)
+'turns chaos into geometry', 'turns clutter into geometry', 'chaos into geometry', 'chaos resolves
+into geometry' — BANNED as a stock phrase (SL-171.60). It appeared on every version of one card in
+a single day while the founder's own read of that frame was that the eye goes everywhere. If the
+frame genuinely has structure, name the specific structure and what it does for the eye. If it does
+not, say the frame is cluttered. Do not use geometry as a compliment that hides a scattered frame.
 'likely adds', 'likely improves', 'likely transforms'
 'You keep finding the feeling before you find the frame' — BANNED from all fields, forever.
 Master name must NOT appear in imagine, conclusion, impression, strength_obs, next_leap_obs,
@@ -2835,9 +3058,9 @@ Return this exact JSON structure:
   "wonder": <float 0-10>,
   "aq": <float 0-10>,
   "dod_reasoning": "<WHY THIS DOD SCORE. One sentence, image-specific. Name the access difficulty, environmental challenge, or technical execution that determined this number. Reference the specific subject, location, or conditions in this image. Plain English. No jargon. Example: 'Getting to eye level with an Indian Grey Wolf in open grassland without flushing the animal requires sustained field access that most photographers never achieve.' Never write a generic definition of the dimension.>",
-  "disruption_reasoning": "<WHY THIS DISRUPTION SCORE. One sentence, image-specific. Name the specific compositional choice, angle, or treatment that is either breaking or following convention — and whether that was enough. Example: 'The direct eye-contact frame is the most common composition for a sitting wildlife subject — the grass foreground adds layering but the overall treatment is familiar.' Never write a generic definition of the dimension.>",
+  "disruption_reasoning": "<WHY THIS DISRUPTION SCORE. One sentence, image-specific. Apply THE ONE-OBJECT TEST above before settling this number: upper bands need one object (a break in a field, or the field as a single mass) that is resolved and separates by a palpable contrast. Many objects competing, or an unresolved object, is capped and the reason must be stated. Name the specific compositional choice, angle, or treatment that is either breaking or following convention — and whether that was enough. Example: 'The direct eye-contact frame is the most common composition for a sitting wildlife subject — the grass foreground adds layering but the overall treatment is familiar.' Never write a generic definition of the dimension.>",
   "dm_reasoning": "<WHY THIS MOMENT SCORE. One sentence, image-specific. Name what the chosen moment achieved and specifically what stronger moment was available — or if this was the peak, confirm exactly why. This is the answer to 'why did I get X and not higher'. Example: 'The alert gaze is strong but the grass stems are sharp and competing — the decisive frame was the gaze with the foreground fallen into blur, and that window existed but was not taken.' Never write a generic definition of the dimension.>",
-  "wonder_reasoning": "<WHY THIS WONDER SCORE. One sentence, image-specific. Name the specific type of wonder present (access, eye, cultural, emotional) and what created it — or what would have elevated it. Example: 'The proximity to a wild Indian Grey Wolf and the direct gaze confirm access wonder — the viewer is placed inside a moment they could not achieve without this photographer.' Never write a generic definition of the dimension.>",
+  "wonder_reasoning": "<WHY THIS WONDER SCORE. One sentence, image-specific. Apply THE ONE-OBJECT TEST above: no single object, or an unresolved one, means no held attention, no transportation, and no upper-band Wonder. Name the specific type of wonder present (access, eye, cultural, emotional) and what created it — or what would have elevated it. Example: 'The proximity to a wild Indian Grey Wolf and the direct gaze confirm access wonder — the viewer is placed inside a moment they could not achieve without this photographer.' Never write a generic definition of the dimension.>",
   "aq_reasoning": "<WHY THIS AQ SCORE. One sentence, image-specific. Name the specific emotion a stranger would feel and what in the image creates it — or if no specific emotion is present, name what the image creates instead and why that stops it from scoring higher. A FEELING, NOT A CONCEPT (SL-171.56): the same hard gate as dim_obs_aq applies here — a theme such as interdependence, coexistence, rhythm, harmony, tension or connection is NOT an emotion, and if that is the honest answer then this AQ score must sit at or below 7.5. A code-level check logs any AQ above 7.5 with no named feeling in this field. Example: 'The still before something happens — the wolf is watching, the viewer feels watched back, and that mutual awareness creates a specific tension that is closer to recognition than fear.' Never write a generic definition of the dimension.>",
   "score": <float>,
   "tier": "<Apprentice|Shooter|Contender|Craftsman|Maverick|Master|Grandmaster|Legend>",
@@ -2873,14 +3096,14 @@ Return this exact JSON structure:
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "next_leap_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
   "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE sentence, HARD LENGTH LIMIT 32 words (raised from 22 to fit the mandatory principle naming below). Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above.\nNAME THE PRINCIPLE — MANDATORY WHEN THIS DoD SCORE IS ABOVE 7.5 (SL-171.57, reconciling the long-standing contradiction between the PHOTOGRAPHIC INTELLIGENCE section, which has always required this, and the old prose rule that forbade naming a principle outside tech_read): name the specific photographic intelligence that earned the number — a Gestalt principle, a Japanese principle, or a structural one — explained in plain words in the same sentence, and DIFFERENT from any principle named elsewhere on this card. 'Strong composition' and 'good eye' are BANNED here. See NAMED COMPOSITION PRINCIPLES above. If the DoD score is 7.5 or below, naming a principle is optional and only if genuinely earned.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict that credits the physical achievement and names the intelligence behind it, in the voice of a senior photographer who has stood in that place themselves.>",
-  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. YOU MAY NAME ONE PRINCIPLE here when it genuinely explains what the treatment breaks or follows — Datsuzoku (freedom from convention) and Fukinsei (deliberate asymmetry) are often the honest ones for a disruptive frame — explained in plain words, and DIFFERENT from every other principle on this card. See NAMED COMPOSITION PRINCIPLES above.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict on the treatment itself, not on how hard the shot was.>",
+  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. THE ONE-OBJECT TEST FIRST (SL-171.61): Disruption measures whether the frame gives the eye ONE object — a break in a field, or a field coherent enough to read as one mass — and whether that object is RESOLVED with PALPABLE contrast. Many objects competing, or an unresolved object, caps this score out of the upper bands however strong the individual elements are. Say which route the frame took and which channel carries the contrast, in plain words, rather than reframing busyness as geometry. See THE ONE-OBJECT TEST above. Say why this disruption score. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. YOU MAY NAME ONE PRINCIPLE here when it genuinely explains what the treatment breaks or follows — Datsuzoku (freedom from convention) and Fukinsei (deliberate asymmetry) are often the honest ones for a disruptive frame — explained in plain words, and DIFFERENT from every other principle on this card. See NAMED COMPOSITION PRINCIPLES above.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict on the treatment itself, not on how hard the shot was.>",
   "dim_obs_dm": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available and how far away it was. Do NOT restate hard_truth/impression.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict naming the instant that was caught and, if it was not the peak, the instant that was.>",
-  "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) and what created it. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: the wonder type named first, then in plain words what in this frame produces it for a stranger.>",
+  "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. THE ONE-OBJECT TEST FIRST (SL-171.61): if the frame gives the eye no single object, or the object it gives is unresolved, Wonder cannot sit in the upper bands — a frame that does not arrest attention has not transported anyone. See THE ONE-OBJECT TEST above. Name the type of wonder (access, eye, cultural, emotional) and what created it. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: the wonder type named first, then in plain words what in this frame produces it for a stranger.>",
   "dim_obs_aq": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression.\\nA FEELING, NOT A CONCEPT — HARD GATE (SL-171.56, live failure 6 Oct 2026: this field scored 8.1 while naming 'interdependence', which is a theme, not a feeling; the 7.5 ceiling was bypassed because an abstraction was accepted as an emotion). You must name a state a stranger would actually FEEL in their body on seeing this frame, in a word they would use themselves: tenderness, awe, grief, loneliness, defiance, joy, dread, longing, pride, unease, calm, reverence, delight, exhaustion, menace, relief, pity, courage, intimacy, nostalgia. BANNED as emotion names — these are THEMES, and naming one does not satisfy this field: interdependence, coexistence, rhythm, harmony, balance, tension, dynamism, connection, relationship, duality, contrast, energy, movement, atmosphere, mood, narrative, story, humanity, resilience, tradition, culture, timelessness. If the honest answer is that the image creates a theme rather than a feeling, SAY SO and the AQ score must sit at or below 7.5 — 'this reads as a study in coexistence rather than a frame that makes a stranger feel something specific, which is what holds Emotion here' is a correct, honest, publishable sentence and is better than inflating a theme into a feeling.>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<FUNCTION: TEACH — evidence before verdict (see FUNCTION ASSIGNMENT above). Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
-  "tech_read": "<FORENSIC TECHNICAL READ. FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. This is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above; this is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above. FLOWING PROSE — as many full sentences as this image genuinely needs, NO WORD CAP, no bullets. Tone: senior editor examining a contact sheet. Cover what is actually true and visible: sharpness and its CAUSE; exposure — clipping or crush (CRITICAL: dark background ≠ night); one gear observation if EXIF is present; the compositional placement of the subject (thirds, diagonals, framing) and how it was achieved; the quality and direction of the light; and, where relevant, why a black-and-white or colour treatment works. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Say only what is true of THIS image — do not pad with generic technical commentary to fill space.>",
-  "visual_flow": "<FUNCTION: OBSERVE — name the path, do not explain why it works (see FUNCTION ASSIGNMENT above). One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.\\nTHE MA QUESTION (SL-171.57): this field may name ONE principle, and only one that governs the eye's path or the handling of space — Ma (negative space as presence, not absence), Negative Space, Leading Lines, Diagonal, or Golden Spiral where the spiral genuinely is the governing structure. It must be explained in plain words in the same sentence and must be DIFFERENT from every other principle named on this card. A NEGATIVE ANSWER IS AS VALUABLE AS A POSITIVE ONE and is often the more honest and more useful one: empty area that carries intention is Ma; empty area that merely competes for attention is dead space, and saying which this frame has — or that it has one of each, and where — tells the photographer something real about how they handle space. Do not force the vocabulary; if the eye's path is simply a path, describe the path.>",
+  "tech_read": "<FORENSIC TECHNICAL READ. FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. This is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above; this is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above. FLOWING PROSE — as many full sentences as this image genuinely needs, NO WORD CAP, no bullets. Tone: senior editor examining a contact sheet. Cover what is actually true and visible: sharpness and its CAUSE; exposure — clipping or crush (CRITICAL: dark background ≠ night; and SL-171.61: DARKNESS IS A TOOL, NOT A FAULT — deep shadow, crushed blacks and large unlit areas around a light source are a DECISION and are usually why the frame works, since shadow is what lets light read at all. Do NOT write them up as an exposure problem, and do NOT praise "balanced exposure, nothing clipped, nothing crushed" as a virtue in itself: on a frame with no tonal separation, even exposure across the whole canvas is the WEAKNESS, because it gives the eye no luminance anchor. See CONDITION B in THE ONE-OBJECT TEST above); one gear observation if EXIF is present; the compositional placement of the subject (thirds, diagonals, framing) and how it was achieved; the quality and direction of the light; and, where relevant, why a black-and-white or colour treatment works. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Say only what is true of THIS image — do not pad with generic technical commentary to fill space.>",
+  "visual_flow": "<FUNCTION: OBSERVE — name the path, do not explain why it works (see FUNCTION ASSIGNMENT above). One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.\\nONE-OBJECT DECLARATION — MANDATORY (SL-171.61): name, in plain words, what ONE object this frame gives the eye and how it got there — a BREAK in a field ('the eye goes straight to the one dancer in the air'), the FIELD ITSELF as a single mass ('the herd reads as one shape and that shape is the picture'), or NOTHING ('the eye is pulled to three places and settles on none, and the frame loses energy because of it'). Name the channel carrying it where it is clear — light, colour, sharpness, motion, direction, isolation — and say which way the luminance runs (a bright area in darkness, or a dark spot in a bright field). If the eye lands on the object and that object is soft or mid-blur, SAY THAT — it is the single most useful sentence on the card. See WHERE DOES THE EYE GO? and THE ONE-OBJECT TEST above.\nTHE MA QUESTION (SL-171.57): this field may name ONE principle, and only one that governs the eye's path or the handling of space — Ma (negative space as presence, not absence), Negative Space, Leading Lines, Diagonal, or Golden Spiral where the spiral genuinely is the governing structure. It must be explained in plain words in the same sentence and must be DIFFERENT from every other principle named on this card. A NEGATIVE ANSWER IS AS VALUABLE AS A POSITIVE ONE and is often the more honest and more useful one: empty area that carries intention is Ma; empty area that merely competes for attention is dead space, and saying which this frame has — or that it has one of each, and where — tells the photographer something real about how they handle space. Do not force the vocabulary; if the eye's path is simply a path, describe the path.>",
   "imagine": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. THIS FIELD OWNS the '9+ version of this exact frame' description — byline_1's second bullet must give only a SHORT one-sentence pointer to this field's content, not its own full description; mentor_next must point to a different image or technique, not the same hypothetical. HARD LENGTH LIMIT: 60 words. No jargon. No dimension names. Pure vision.>",
   "conclusion": "<FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Prefer the photographer-history entry from the ledger if there is one. Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations, phrasing, or specific visual details from hard_truth, impression, byline_1, byline_2, or master_why — this field is about what the photograph reveals about how YOU see and your trajectory as a photographer, not a restatement of this image's compositional facts. PATTERN/TRAJECTORY LANGUAGE, OWNERSHIP NARROWED (SL-171.56 — this field's exclusivity was removed because it would have forbidden impression's mandatory LEVEL 3 sentence, see THE INSIGHT LADDER): hard_truth is still forbidden from pattern language entirely. impression now carries the pattern as a READ ON THIS FRAME. THIS field carries the same underlying fact as a TRAJECTORY AND AN INVITATION — where this photographer is heading and that we want the next photograph. Different move, different tense, and you may NOT reuse impression's wording or restate its sentence; if impression has already named the pattern, take it forward rather than naming it again. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. HARD LENGTH LIMIT: 65 words (this count excludes the mandatory closing sentence). If eval 2+: name the pattern across their work (one strength, one gap, max 30 words of that total). If eval 1: 1-2 sentences then invite next photograph.>",
   "award_context": "<Score-gated. No specific award body or brand names ever. BELOW 8.5: 'The League of Photographers features genuinely international work — images that stand a chance for recognition, earn income through commissioned work, sales and print editions, and be featured in exhibitions, grants and awards.' 8.5-8.9: Start with EXACTLY 'At 8.5+' (not 8.0+, not 8.6+, always 8.5+): 'At 8.5+ your work is ready for serious [genre] photography awards and the League of Photographers — where images at this level earn income through commissions, print sales, and exhibition placement.' 9.0+: Start with EXACTLY 'At 9.0+': 'At 9.0+ your [genre] work stands among the best on the platform — the League of Photographers opens doors to major awards, commissions, gallery exhibitions, and grant opportunities.' Replace [genre] with actual genre. One sentence per tier. Max 40 words. THRESHOLD: only 8.5 or 9.0 after 'At' — no other numbers.>",
@@ -8193,6 +8416,39 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                      if _prin_hits else 'no named principle on this card'))
     except Exception as _pe:
         print(f'[auto_score][principle_check] skipped (non-fatal): {_pe}')
+
+    # ── Post-processing: stock-phrase detection (SL-171.60) ──────────────────
+    # "turns chaos into geometry" and its variants appeared on EVERY version of
+    # the Sasson Dock card produced in one day, while the founder's own read of
+    # that frame was that the eye goes everywhere. It had become the engine's
+    # stock escape from admitting a frame is cluttered -- a compliment that
+    # hides a scattered frame, which is exactly what makes a professional
+    # distrust the whole scorecard. 171.60 bans it in prose; per this session's
+    # repeated finding that prose bans do not hold on their own, it is also
+    # detected here. Detection only.
+    try:
+        _STOCK_PHRASES = [
+            'chaos into geometry', 'clutter into geometry', 'chaos resolves into geometry',
+            'chaos becomes geometry', 'geometry rather than clutter', 'geometry not chaos',
+            'geometry instead of clutter',
+        ]
+        _stock_hits = {}
+        for _sf in _REPEAT_FIELDS:
+            _st = _re_master.sub(r'\s+', ' ', str(result.get(_sf, '') or '')).lower()
+            if not _st:
+                continue
+            for _sp in _STOCK_PHRASES:
+                if _sp in _st:
+                    _stock_hits.setdefault(_sp, []).append(_sf)
+        if _stock_hits:
+            for _sp, _sfs in _stock_hits.items():
+                print(f'[auto_score][STOCK_PHRASE] "{_sp}" used in: {", ".join(_sfs)} — banned stock '
+                      f'phrase (SL-171.60). Either name the specific structure and what it does for '
+                      f'the eye, or say the frame is cluttered.')
+        else:
+            print('[auto_score][stock_phrase_check] OK — no banned "chaos into geometry" variant used')
+    except Exception as _spe:
+        print(f'[auto_score][stock_phrase_check] skipped (non-fatal): {_spe}')
 
     # ── Post-processing: trend-line single-ownership detection (SL-171.58) ───
     # 171.56 moved the level 3 pattern read to the top of the card by making
