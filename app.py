@@ -1,3 +1,42 @@
+# SL-VERSION: 182.107 (Session 238, 2026-10-07 -- HAIKU FREE-TIER GROUNDING: ONE REAL CODE BUG
+# FIXED, THREE UNGATED FAILURE CLASSES DOCUMENTED. Founder brought two live 6 Oct Haiku /try
+# scorecards: "Mumbai fresh veggies" (the_livinglens, 7.85) and "Sasoon Dock Mumbai" (krish, 7.31).
+#
+# BUG FIXED HERE -- THE CHILD GATE COULD SILENTLY SWITCH ITSELF OFF. 182.102 added the
+# child-presence ban to stop a counted adult being relabelled a minor. It was written NESTED inside
+# `if _v_humans:`, the people-count block. So on any evaluation where the pre-call returned no
+# human_count -- an empty string, a dropped key, a JSON shape change, a low-confidence read -- the
+# entire child ban was skipped, and nothing in the log said so. 182.102's own changelog states that
+# the two gates answer different questions ("a count gate constrains HOW MANY people; it does not
+# constrain WHO they are"), which is precisely why neither should ever have been able to disable the
+# other. Now dedented to sibling level, guarded only by `if _vision:`, and the ban text no longer
+# refers to "every person counted above" (false when the count gate did not fire). The safe default
+# is the BAN: child language is allowed ONLY on an explicit child_present=true, never on a missing
+# field. Whether this nesting is what produced the 6 Oct card cannot be settled from the PDF alone
+# -- the [haiku_vision] log line for that evaluation prints human_count= and child_present= and
+# answers it in one line. NOT GUESSED AT HERE; the fix is correct either way.
+#
+# WHAT THE TWO CARDS SHOW, none of which this version fixes:
+#   (1) THE CHILD IS LOAD-BEARING, NOT A DETAIL. "the child's gaze" appears six times on the
+#       livinglens card and the whole card is built on it: the takeaway, the Decisive Moment score
+#       of 7.3, the Next Leap, and every line of "What To Do Next" ("wait for the child's eyes to
+#       lift fully -- that is the frame"). With no child, the single action item is unusable and the
+#       dimension score has no basis. The same card also names "the standing woman's shoulder", so
+#       the engine wrote a woman AND a child from four adults.
+#   (2) THE CARD CONTRADICTS ITSELF ON ITS OWN SECOND PAGE. The history block prints Evaluation 1 of
+#       the same scene as "the mural's painted figure and the living WOMAN below" while page 1 calls
+#       her a child. A photographer reading both paragraphs sees the engine disagree with itself in
+#       one document. Cheap to detect -- the card already has both strings in hand at render time.
+#   (3) SPECIES ERROR, NO GATE. The krish card calls the Sassoon Dock birds "the seagull" five
+#       times. The Sonnet engine's own vision pass on this same dock returns white egrets, and is so
+#       conservative it downgrades "Little Egret" to Unknown for thin evidence. Haiku has no species
+#       gate at all.
+#   (4) WRONG-DOMAIN MASTER AND WRONG-DOMAIN ADVICE. _pick_master_haiku() chose Tim Laman, a
+#       wildlife photographer, for a STREET-genre photograph, and the advice that follows is wildlife
+#       advice -- "position at the distance the bird will tolerate... move closer still". On a
+#       working dock, to a street photographer. The selector takes genre as an argument; the bird
+#       subject_group evidently wins over it.
+# NOT YET CONFIRMED LIVE. RETAINS 182.106.)
 # SL-VERSION: 182.106 (Session 238, 2026-10-06 -- IMPORT PATH FIX, one line, found from the founder's
 # marked-up screenshot. 182.105's sl_paras filter imported the reflow helper as a bare top-level
 # `from reportlab_card import sl_reflow`. Production keeps that module in the engine package and
@@ -44945,6 +44984,18 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             # does not try to distinguish "child" used correctly vs incorrectly)
             # because the failure observed was not borderline -- it was confident,
             # repeated, and wrong on both test images.
+            pass
+        # SL-182.107 — DEDENTED OUT OF `if _v_humans:`. This gate was nested
+        # inside the people-count block, so whenever the pre-call returned no
+        # human_count — an empty field, a dropped key, a JSON shape change, a
+        # low-confidence read — the child ban was skipped ENTIRELY and nothing
+        # was logged to say so. The two gates answer different questions (HOW
+        # MANY people vs WHO they are) and 182.102's own changelog says exactly
+        # that, so one must never have been able to switch the other off. It now
+        # sits at sibling level and fires on every evaluation that has vision
+        # data at all. The safe default is the BAN: child language is permitted
+        # only on an explicit child_present=true, never on a missing field.
+        if _vision:
             if _v_child is True:
                 _vs_lines.append(
                     'CHILD PRESENT: yes — one of the people counted above is a child. '
@@ -44952,8 +45003,9 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 )
             else:
                 _vs_lines.append(
-                    'CHILD PRESENT: no — every person counted above is an adult, confirmed by '
-                    'the pre-call vision analysis. Do NOT use the words "child", "kid", "boy", '
+                    'CHILD PRESENT: no — no child was confirmed in this frame by the pre-call '
+                    'vision analysis, so treat every person in it as an adult. Do NOT use the '
+                    'words "child", "kid", "boy", '
                     'or "girl", and do NOT describe any person as young, small, or a minor, '
                     'anywhere in the output (impression, tech_read, visual_flow, imagine, edit_tips, '
                     'dim_obs_*, byline fields, etc.) — even if one person appears seated, crouching, '
