@@ -1,3 +1,109 @@
+# SL-VERSION: 171.54 (Session 238, 2026-10-06 -- DUPLICATION: ROOT CAUSE FOUND AND ARCHITECTURE
+# REPLACED, plus the cross-file ceiling desync that hid every previous result. Founder signal given
+# ("GO") after the diagnosis below was presented and he reframed the goal: "I WOULD PREFER FORWARD
+# THINKING - ALWAYS AT EVOLUTION OF THE PHOTOGRAPHER... THIS IS ALWAYS SHERPA TONE - NOT SAAS, NOT
+# PUSHING JARGON. SO IF THE BEAUTY IS HELD AND COAXED AND INSIGHTS RE BROUGHT OUT FROM ANALYSIS THAT
+# IS WHAT MAKES THE SCORECARD BETTER." Dedupe alone was therefore NOT the goal and is not what this
+# version does.
+#
+# ROOT CAUSE OF DUPLICATION (arithmetic, not wording -- this is why 171.36's global rule, 171.37's
+# field ownership, and 171.52's insight log all failed in turn): the insight_log rule specified 4 to 6
+# ledger entries, then ordered ELEVEN fields (hard_truth, impression, transferable_advice, byline_1,
+# tech_read, conclusion, dim_obs_dod/disruption/dm/wonder/aq) to each "Spend ONE unused entry ... and
+# never return to a spent one". 11 fields drawing one-each from a pool of 4-6 guarantees that 5 to 7
+# fields reach their turn with no unused entry available. The rule's own fallback ("the later field
+# should say less") directly contradicted those same fields' MANDATORY content requirements (byline_1:
+# "2 to 3 full paragraphs, NO WORD CAP"; transferable_advice: three mandated paragraphs). Given two
+# mandatory instructions that cannot both be satisfied, the model satisfied the field-content mandate
+# and recycled a spent entry. That is also why 171.52 measured WORSE than its predecessor (10 pairs
+# vs 6): enumerating the salient facts up front NARROWED the pool while the draw count stayed at 11.
+# SECOND, INDEPENDENT DEFECT IN THE SAME RULE: it required each field to use an entry "that NO EARLIER
+# field in this exact order has already used" and then listed an order (hard_truth -> impression ->
+# tech_read -> transferable_advice -> byline_1 -> byline_2 -> conclusion -> dim_obs) that is NOT the
+# order the model emits. Actual JSON schema order is hard_truth -> byline_1 -> transferable_advice ->
+# impression -> dim_obs x5 -> tech_read -> conclusion. Four positions differ. A model generating
+# autoregressively can only know what it has already written, so the bookkeeping it was told to
+# perform referred to a sequence it could not observe.
+#
+# FIX -- FUNCTION ASSIGNMENT REPLACES FACT RATIONING. insight_log is retained but redefined as a
+# SHARED OBSERVATION LEDGER: any field may draw any entry, nothing is ever spent. What may not repeat
+# is the MOVE, not the fact -- because the strongest thing about a photograph often deserves more than
+# one mention, and banning the fact is what was starving the card. Every narrative field now has
+# exactly ONE function and may only make that function's move:
+#   OBSERVE (hard_truth, impression, visual_flow, strength_obs, next_leap_obs) -- name what is
+#     visibly there; no "because", no mechanism, no advice.
+#   TEACH (transferable_advice, tech_read, master_why, all five dim_obs_*) -- explain the mechanism,
+#     with the VISIBLE EVIDENCE FIRST AND THE VERDICT SECOND, in that order. This ordering is aimed
+#     directly at the professional audience the founder named, who assume the engine is bluffing:
+#     the evidence placed before the conclusion is what disproves that, and the same claim with the
+#     evidence removed reads as a guess.
+#   PROJECT (byline_1, byline_2, mentor_next, imagine, conclusion) -- point forward only. A fact may
+#     be named in a few words as the bridge departed from; the content must be the departure. A
+#     sentence that only describes what already happened is invalid in these fields.
+# Two fields making the SAME move on the SAME fact is now the single named failure. One fact OBSERVEd
+# in hard_truth and TEACHed in dim_obs_disruption is CORRECT and no longer suppressed. The self-check
+# is stated in TRUE GENERATION ORDER so the model checks against what it has actually written.
+# FORWARD MOTION IS NOW STRUCTURAL, NOT TONAL: five fields are PROJECT fields by definition, so the
+# card's centre of gravity sits in front of the photographer -- the founder's "evolution of the
+# photographer" requirement enforced by architecture rather than by per-field reminders that the
+# field-content mandates were overriding.
+# FIELD OWNERSHIP RULE (171.37) is retained and explicitly reconciled as the allocation of the TEACH
+# move on the three most-repeated facts -- one mechanism, not two competing ones.
+#
+# ALSO FIXED, the two concrete prompt contradictions found but never signed off in Session 237:
+#   (1) byline_1 was told to describe the 9+ version "IN FULL, in place... not a generic pointer
+#       elsewhere" while imagine was simultaneously told it OWNS that content and byline_1 must give
+#       "only a SHORT one-sentence pointer". Both instructions were live. Resolved in imagine's
+#       favour (it is the dedicated field): byline_1 paragraph 2 is now one pointing sentence.
+#   (2) tech_read's content list included "where the eye enters the frame and how it travels", which
+#       is visual_flow's entire sole purpose, with nothing telling tech_read to avoid it. Removed
+#       from tech_read; visual_flow keeps it.
+# Both matched duplicate pairs actually seen in live logs.
+#
+# COMPANION CHANGE, SAME SIGNAL -- THE DESYNC THAT INVALIDATED EVERY PREVIOUS MEASUREMENT:
+# _SAFE_INTERNAL_CEILING (~L7560) was still 110.0, sized against the ORIGINAL 120s outer ceiling in
+# app.py's _auto_score_with_timeout(). app.py 182.103 raised that outer ceiling to 240s in the same
+# session without raising this one, so TEXT_REPEAT_FIX kept measuring against 110s and SKIPPED on
+# every complex image regardless. THAT is why all three logged duplicate counts (6/7/10) are raw,
+# uncorrected first passes -- the corrective layer has never actually run in any observed test, and
+# no previous result was ever a measurement of the corrected card. Now 165.0, 15s under app.py
+# 182.104's new 180s ceiling (founder: "3 MIN MAX" -- 240s was sized for the image, not the member).
+# THE TWO CEILINGS ARE COUPLED; change both in one commit or the corrector silently stops running.
+# KNOWN AND ACCEPTED LIMIT, stated to the founder before the signal: on the slowest observed image
+# (137s end-to-end) only ~28s remains, above the 15s floor but tight; on a genuinely slower image the
+# corrector will still skip. Accepted deliberately -- under function assignment the corrector is a
+# safety net, not the fix, and spending a member's fourth minute running a net over an architecture
+# that should not be producing duplicates is the wrong trade. The skip still logs loudly.
+#
+# THIRD FIX, SAME SIGNAL -- THE GAZE/SPECIES HALLUCINATION MECHANISM, FOUND AND CLOSED. The founder
+# asked whether the gates fire and get ignored downstream. They do not. The real mechanism is worse
+# and simpler: build_scene_context() returned an EMPTY STRING whenever vision_analyse() returned {},
+# which DELETES THE ENTIRE GROUND TRUTH BLOCK from the scoring prompt -- every species prohibition and
+# every gaze prohibition 171.53 added goes with it. The model then scored with no gate of any kind and
+# nothing contradicting an invented direct gaze or an invented species fact. THE GATES FAILED OPEN.
+# This is not a rare edge case: {} is the documented outcome of the max_tokens truncation failures in
+# 171.38 (twice on the same image) and of any error or timeout on that call, and vision_analyse()'s
+# own except block swallows the error and returns {} silently. It explains lessons-doc 10.4 (a direct
+# gaze asserted in four fields, including as the stated justification for a 7.5/10 Decisive Moment
+# score, on a subject the founder confirms was not looking at the camera) and 10.3 (Little Egret
+# natural-history stated as fact after the gate had downgraded the ID to Unknown) with one cause.
+# FIX: the empty-vision path now FAILS CLOSED -- it emits an explicit NO VERIFIED GROUNDING block that
+# bans, outright rather than hedged, the four claim classes that cannot be made without a verification
+# pass: gaze/eye-contact, species natural-history facts, subject counts (covering the invented "child"
+# and third-person cases app.py 182.101/182.102 patched from the Haiku side), and blur attribution.
+# A new [build_scene_context] NO-GROUNDING FALLBACK ENGAGED console line makes this state visible in
+# Railway instead of silent. Deliberate trade: an ungrounded card is now thinner and says less, which
+# is recoverable; a confident false claim about a real person is not.
+#
+# NO SCORING FORMULA, WEIGHT, DIMENSION NUMBER, OR TIER BAND IS TOUCHED. Prompt architecture, one
+# timing constant, two contradiction fixes, and one fail-closed guard only.
+# NOT YET DEPLOYED / NOT CONFIRMED LIVE -- per Rules 3/16 this is unproven until a Railway console log
+# from a real rescore shows it. WHAT TO LOOK FOR, in this order: (a) completion inside 180s with no
+# second attempt; (b) a [TEXT_REPEAT_FIX] line that is NOT "SKIPPED" -- the first time this layer will
+# have run at all; (c) the [TEXT_REPEAT] / [TEXT_REPEAT_AFTER_FIX] pair counts, which are the real
+# before/after duplication numbers; (d) read the rendered card for forward motion in the five PROJECT
+# fields and evidence-before-verdict in the TEACH fields, which the logs cannot measure.
+# RETAINS 171.53.)
 # SL-VERSION: 171.53 (Session 237, 2026-10-06 -- 171.52 LIVE-TESTED, DID NOT FIX DUPLICATION (3
 # separate calls: 6/7/10 duplicate pairs, TEXT_REPEAT_FIX skipped every time on time budget -- see
 # HANDOFF_SESSION237_PART2.md Part A.1). This version does NOT touch duplication -- that is still
@@ -1984,7 +2090,9 @@ DIM OBS — ONE SENTENCE PER DIMENSION:
 These five fields are usually where repetition starts, because all five sound like they should
 discuss the same big compositional fact. They should not — each of the five must point at a
 genuinely different, image-specific detail, not five angles on the same one fact.
-FIELD OWNERSHIP RULE — READ BEFORE WRITING ANY DIM OBS: each fact about the image has exactly
+FIELD OWNERSHIP RULE — READ BEFORE WRITING ANY DIM OBS. This rule and FUNCTION ASSIGNMENT above
+are one mechanism, not two: FUNCTION ASSIGNMENT says which MOVE each field may make, and this rule
+allocates the TEACH move on the three facts that repeat most often. Each fact has exactly
 ONE field that is allowed to explain WHY it matters. Other fields may refer to the fact in passing
 (a few words, no re-explanation) but must not re-argue it. The three facts that repeat most often:
   - HOW the shot was physically achieved (angle, access, gear, vantage point, equipment needed,
@@ -2256,17 +2364,68 @@ not describe them. Every observation should imply or state where it leads — wh
 try, or build on next — not just what happened in this frame. A sentence that only describes
 and points nowhere is unfinished; add the direction or cut it.
 
-INSIGHT LOG — THE ANTI-REPETITION MECHANISM (read this, it replaces guessing field by field):
-Before writing any prose field, privately work out the 4 to 6 genuinely distinct, concrete
-things worth saying about THIS photograph — each one must pass the Three-Source Test above.
-Record them tersely in the "insight_log" field (3-8 words each, it is a working list, not
-prose, the photographer never reads it directly). Then, as you write hard_truth, impression,
-tech_read, transferable_advice, byline_1, byline_2, conclusion, and each dim_obs_* field: each
-one must draw on exactly ONE entry from that list that NO EARLIER field in this exact order
-has already used. Once an entry is spent, it is spent — a later field may not return to it
-in different words. If you run out of genuinely distinct entries before you run out of
-fields, the later field should say less, not recycle an earlier one. This is the actual fix
-for restating the same observation across the card — not a word-count limit, a content rule.
+FUNCTION ASSIGNMENT — THE ANTI-REPETITION MECHANISM (read this; it REPLACES the old
+"spend one insight_log entry per field" ration, which could not work and made repetition
+worse — 11 fields were each ordered to consume one unused entry from a list of only 4 to 6,
+so 5 to 7 fields reached their turn with nothing left and recycled an earlier one because
+their own content requirements were mandatory. Do not reinstate that ration.)
+
+THE OBSERVATION LEDGER (the "insight_log" field):
+Before writing any prose, privately work out the 4 to 6 genuinely distinct, concrete things
+that are true of THIS photograph — each must pass the Three-Source Test above. Record them
+tersely in "insight_log" (3-8 words each, a working list, not prose; the photographer never
+reads it). This is now a SHARED EVIDENCE POOL, not a ration. Any field may draw on any entry.
+Entries are never "spent" or used up.
+
+WHAT MUST NOT REPEAT IS THE MOVE, NOT THE FACT:
+The strongest thing about a photograph often deserves more than one mention. Banning the fact
+starves the card. So: a single fact MAY appear in several fields — but only if each field does
+something DIFFERENT with it. Every narrative field has exactly ONE function, and may only make
+that function's move:
+
+  OBSERVE — name what is visibly there. No explanation of why it works, no advice, no
+  forward-looking sentence. If you write "because", you have left your function.
+  OBSERVE fields: hard_truth, impression, visual_flow, strength_obs, next_leap_obs.
+
+  TEACH — explain the mechanism, so the photographer could repeat it deliberately. MANDATORY
+  ORDER WITHIN THE FIELD: the visible evidence FIRST, the conclusion SECOND, in that sequence.
+  A working professional reading this card assumes the engine is guessing; the evidence
+  sentence placed before the verdict is what disproves that, and the same claim with the
+  evidence removed reads as a bluff. Example of the required shape: "The egrets carry the blur
+  while the deck and the fishermen stay sharp — that is a panned exposure held through the
+  movement, not a missed focus." Evidence, then verdict.
+  TEACH fields: transferable_advice, tech_read, master_why, and all five dim_obs_* fields.
+
+  PROJECT — point forward only. What this frame makes possible next: what to try, what to
+  carry into the next shoot, where this eye is heading. A PROJECT field may name a fact from
+  the ledger in a few words as the bridge it departs from, but its content must be the
+  departure, not the fact. A sentence in a PROJECT field that only describes what already
+  happened is invalid — add the direction or cut the sentence.
+  PROJECT fields: byline_1, byline_2, mentor_next, imagine, conclusion.
+
+THE ONE FAILURE THIS RULE EXISTS TO PREVENT: two fields making the SAME move on the SAME
+fact. "You shot from directly overhead" in hard_truth (OBSERVE — naming it) and "that overhead
+vantage is why the rails read as diagonals rather than clutter" in dim_obs_disruption (TEACH —
+explaining the mechanism) is CORRECT: one fact, two different moves, nothing redundant. The
+same explanation of why the overhead angle is hard appearing in BOTH dim_obs_dod and
+transferable_advice is the failure — two TEACH fields making one move twice.
+
+SELF-CHECK, IN THE ORDER YOU ACTUALLY WRITE (this matters — check against what you have
+already written, not against a list in some other order). You emit the narrative fields in
+this sequence: hard_truth -> mentor_moment -> mentor_next -> byline_1 -> byline_2 ->
+transferable_advice -> impression -> strength_obs -> next_leap_obs -> dim_obs_dod ->
+dim_obs_disruption -> dim_obs_dm -> dim_obs_wonder -> dim_obs_aq -> master_why -> tech_read ->
+visual_flow -> imagine -> conclusion.
+Before writing each field, ask: (1) what is my function here — OBSERVE, TEACH, or PROJECT?
+(2) has any field I have ALREADY written made this same move on this same fact? If yes,
+either make a different move on it, or use a different entry from the ledger. Never write
+the same move twice, and never pad a field to length by re-making a move already made.
+
+FORWARD MOTION IS A REQUIREMENT, NOT A TONE: the purpose of this scorecard is the evolution
+of the photographer, not a description of one frame. Five of the fields above are PROJECT
+fields precisely so that the card's centre of gravity sits in front of the photographer, not
+behind them. A card that is accurate about the past and silent about what comes next has
+failed its job even with zero repetition.
 
 NAMED COMPOSITION PRINCIPLES — USE REAL VOCABULARY, EARNED, ONCE, EXPLAINED:
 You may name a real composition or design principle — Rule of Thirds, Golden Ratio / Golden
@@ -2322,12 +2481,12 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "insight_log": "<WORKING LIST, NOT PROSE — see INSIGHT LOG rule above. 4 to 6 short tags (3-8 words each), comma-separated, each one a distinct, concrete, specific thing true of THIS photograph, THIS photographer's history, or a real comparison to a named master/principle. Example: 'overhead vantage - physical access, yellow rails as diagonal line, egret wing-blur vs sharp workers, coexistence theme - shared economy, flat overcast light, portfolio pattern - timing early by a half-beat'. Every prose field below must spend exactly one UNUSED entry from this list and never return to a spent one.>",
-  "hard_truth": "<SCORECARD OPENING LINE. Spend ONE unused entry from insight_log — see INSIGHT LOG rule above. HARD LENGTH LIMIT: 35 words. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters. OWNERSHIP REMINDER: react emotionally in one or two short sentences — do NOT re-describe the compositional facts, the angle, or the technique (dim_obs_dod/dim_obs_disruption own those); do NOT restate what impression or conclusion will say. FORBIDDEN HERE — PATTERN/TRAJECTORY LANGUAGE: do not write sentences of the shape "you keep finding X" / "you keep doing X" / "this is what you do" — any observation about a recurring habit, pattern, or trajectory across the photographer's work belongs to conclusion ONLY. hard_truth reacts to THIS one frame in the moment; it does not comment on a pattern.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
+  "insight_log": "<THE OBSERVATION LEDGER. WORKING LIST, NOT PROSE — see FUNCTION ASSIGNMENT rule above. 4 to 6 short tags (3-8 words each), comma-separated, each one a distinct, concrete, specific thing true of THIS photograph, THIS photographer's history, or a real comparison to a named master/principle. Example: 'overhead vantage - physical access, yellow rails as diagonal line, egret wing-blur vs sharp workers, coexistence theme - shared economy, flat overcast light, portfolio pattern - timing early by a half-beat'. This is a SHARED EVIDENCE POOL, not a ration: any field may draw on any entry, and entries are never spent or used up. What must never repeat across fields is the MOVE made on a fact (OBSERVE / TEACH / PROJECT), not the fact itself — see FUNCTION ASSIGNMENT above.>",
+  "hard_truth": "<SCORECARD OPENING LINE. FUNCTION: OBSERVE — name what is visibly there; no 'because', no mechanism, no advice, no forward-looking sentence (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. HARD LENGTH LIMIT: 35 words. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters. OWNERSHIP REMINDER: react emotionally in one or two short sentences — do NOT re-describe the compositional facts, the angle, or the technique (dim_obs_dod/dim_obs_disruption own those); do NOT restate what impression or conclusion will say. FORBIDDEN HERE — PATTERN/TRAJECTORY LANGUAGE: do not write sentences of the shape "you keep finding X" / "you keep doing X" / "this is what you do" — any observation about a recurring habit, pattern, or trajectory across the photographer's work belongs to conclusion ONLY. hard_truth reacts to THIS one frame in the moment; it does not comment on a pattern.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
-  "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max, HARD LENGTH LIMIT: 30 words. No positional corrections. Do not reuse phrasing, sentence structure, or the same hypothetical detail that imagine uses — if imagine already describes the 9+ version of this exact frame, mentor_next must point to a DIFFERENT next image or technique, not restate the same hypothetical.>",
-  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. Spend ONE unused entry from insight_log for paragraph 1 — see INSIGHT LOG rule above (paragraph 2's 9+ description and paragraph 3's master habit are exempt, they are forward-looking, not a restatement of an existing fact). PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through it in full sentences — not fragments. Paragraph 1: what this score level means for this photographer, in plain English. If Wonder score is 7.5+, this paragraph must include the phrase 'made us feel' and name the specific emotion. Paragraph 2: describe the 9+ version of this photograph IN FULL, in place — what is missing, what to crop or remove, what the frame would need to cross that line. Be specific and visual, not a generic pointer elsewhere. Paragraph 3: the one habit that gets there. **Bold master name**, linked, with a real sentence on their practice — not a name-drop. This master must be DIFFERENT from whichever master is named in transferable_advice; a master name must never repeat across the scorecard. Mention the trend if portfolio_context has data.>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. This field is forward-looking advice, not a restatement of an existing insight_log entry — it may reference one lightly as a bridge, but its content is the exercise itself, which is new. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 1 to 2 full paragraphs, no bullets, NO WORD CAP. LOCATION INDEPENDENCE: never send photographer back to shoot location — draw the principle from this image, apply it near user_city or any future opportunity. Describe a concrete, gear-specific exercise in full sentences, then close with a warm, brief philosophy line. FORBIDDEN TOPIC for the philosophy line: timing, patience, or 'waiting for the moment/instant' (mentor_next and dim_obs_dm already own that) — use discipline, consistency, location-independence, or craft instead. DO NOT write a multi-frame body-of-work sequence here — the body_of_work field owns that content entirely (founder reviewed a live PDF where this field and body_of_work told the same story twice and asked to cut the duplication; that content boundary still stands even though the FORMAT here has gone back to prose).>",
+  "mentor_next": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). ONE creative direction — possibility, never correction. Two sentences max, HARD LENGTH LIMIT: 30 words. No positional corrections. Do not reuse phrasing, sentence structure, or the same hypothetical detail that imagine uses — if imagine already describes the 9+ version of this exact frame, mentor_next must point to a DIFFERENT next image or technique, not restate the same hypothetical.>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Every paragraph here must point forward — paragraph 1 included. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through it in full sentences — not fragments. Paragraph 1: what this score level means for this photographer, in plain English. If Wonder score is 7.5+, this paragraph must include the phrase 'made us feel' and name the specific emotion. Paragraph 2: ONE short sentence pointing at the gap — what the frame would need to cross into 9+. The FULL description of that 9+ frame is owned by the "imagine" field and must NOT be written out here (SL-171.54: byline_1 and imagine previously carried directly contradictory instructions, each told it owned this content in full; imagine owns it, byline_1 points). Paragraph 3: the one habit that gets there. **Bold master name**, linked, with a real sentence on their practice — not a name-drop. This master must be DIFFERENT from whichever master is named in transferable_advice; a master name must never repeat across the scorecard. Mention the trend if portfolio_context has data.>",
+  "byline_2": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). CARD 4 — YOUR ASSIGNMENT TOMORROW. This field is forward-looking advice, not a restatement of an existing insight_log entry — it may reference one lightly as a bridge, but its content is the exercise itself, which is new. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 1 to 2 full paragraphs, no bullets, NO WORD CAP. LOCATION INDEPENDENCE: never send photographer back to shoot location — draw the principle from this image, apply it near user_city or any future opportunity. Describe a concrete, gear-specific exercise in full sentences, then close with a warm, brief philosophy line. FORBIDDEN TOPIC for the philosophy line: timing, patience, or 'waiting for the moment/instant' (mentor_next and dim_obs_dm already own that) — use discipline, consistency, location-independence, or craft instead. DO NOT write a multi-frame body-of-work sequence here — the body_of_work field owns that content entirely (founder reviewed a live PDF where this field and body_of_work told the same story twice and asked to cut the duplication; that content boundary still stands even though the FORMAT here has gone back to prose).>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -2337,29 +2496,29 @@ Return this exact JSON structure:
   "edit_base": "<BASE EDITS. INTEGRITY RULE: score >= 8.0 — do NOT undo choices that earned the score. BULLET FORMAT — one edit per bullet. No score numbers. No 'Adds X to Y'. State what the edit does and WHY it helps the image. Plain English. Two or three bullets max.\n\n▪ [What to do — why it helps the image.]\n\n▪ [Second edit — why it helps.]\n\n▪ [Third if needed.]>",
   "edit_creative": "<CREATIVE EDITS. ONE bullet. One transformation that changes the emotional register of the image. What would it become? Why would that be interesting? No score promises.\n\n▪ [The transformation — what it does to the image's feeling.]>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If scoring pattern strongly suggests different genre would score higher. Otherwise null. Same format as before.>",
-  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. Spend ONE unused entry from insight_log — see INSIGHT LOG rule above. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through what worked, in full sentences. Paragraph 1: the specific decision most photographers at this scene would not have made — applaud it, explain why it mattered. Paragraph 2: **Bold master name** — a real connection to their practice, not a name-drop; say specifically what they do and how this image does the same thing. Paragraph 3: why this image has a story — name the relationship, tension, or truth visible in it, and why that makes it more than a technically good frame. OWNERSHIP REMINDER: name the decision — do not re-explain why it was hard to achieve (dim_obs_dod owns that) or why the colours/visuals work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE.>",
+  "transferable_advice": "<CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through what worked, in full sentences. Paragraph 1: the specific decision most photographers at this scene would not have made — applaud it, explain why it mattered. Paragraph 2: **Bold master name** — a real connection to their practice, not a name-drop; say specifically what they do and how this image does the same thing. Paragraph 3: why this image has a story — name the relationship, tension, or truth visible in it, and why that makes it more than a technically good frame. OWNERSHIP REMINDER: name the decision — do not re-explain why it was hard to achieve (dim_obs_dod owns that) or why the colours/visuals work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE.>",
   "calibration_line": "<PERCENTILE AND CONTEXT. One or two sentences. Plain English. 'This places you in the top [X]% of [genre] images evaluated on Shutter League.' Then: 'Your [plain English weakest dimension description] score of [X] is [above/below] the [genre] average of [Y] — [one plain English sentence on what that means and what to work on].' Use plain English for dimension names: 'how striking the image is to a stranger' not 'Visual Disruption'. 'how well you captured the right moment' not 'DM score'.>",
   "mentor_location_1": "<LOCATION ADVISORY 1. Sherpa voice — warm, like a friend who knows the area. CRITICAL: This must NEVER be the same location where this image was shot. If the image was shot in Bharatpur, do NOT recommend Bharatpur. If the image was shot in Varanasi, do NOT recommend Varanasi. The advisory must be somewhere the photographer can go near their user_city — a new place, a new opportunity. Include: what is active NOW this season, best time of day, what the frame worth making looks like. NEVER mention travel time, drive time, walking time, or any distance in minutes or hours — you do not have the user's GPS or real-time location and any time estimate would be inaccurate and misleading. Use 'nearby' or 'close by' at most. Never write '[Location] is X minutes from you' or 'X hour drive'. VARIETY: do not repeat a location shown in a recent session. Rotate across urban, peri-urban, and wildlife options (see rules). HARD LENGTH LIMIT: 2 sentences maximum. If no seasonal_context provided, return null.>",
   "mentor_location_2": "<LOCATION ADVISORY 2. Different location from mentor_location_1. The upcoming window only — one sentence maximum. Null if only one location is relevant.>",
   "mentor_location_3": "<Always return null. Third location advisory removed to reduce response length.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
   "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>",
-  "impression": "<SCORECARD OPENING PARAGRAPH. Spend ONE unused entry from insight_log — see INSIGHT LOG rule above. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. NEVER repeat the specific wording or detail already used in hard_truth — hard_truth is the applause line, impression is the proof-of-attention paragraph; they must not restate the same observation in different words. OWNERSHIP REMINDER: react to what you see — do not explain WHY the angle was hard (dim_obs_dod owns that) or WHY the colours work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE. HARD LENGTH LIMIT: 45 words. Plain English. No jargon.>",
+  "impression": "<SCORECARD OPENING PARAGRAPH. FUNCTION: OBSERVE — name what is visibly there; no 'because', no mechanism, no advice, no forward-looking sentence (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. NEVER repeat the specific wording or detail already used in hard_truth — hard_truth is the applause line, impression is the proof-of-attention paragraph; they must not restate the same observation in different words. OWNERSHIP REMINDER: react to what you see — do not explain WHY the angle was hard (dim_obs_dod owns that) or WHY the colours work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE. HARD LENGTH LIMIT: 45 words. Plain English. No jargon.>",
   "strength_name": "<Plain-English name of the strongest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
-  "strength_obs": "<One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
+  "strength_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
-  "next_leap_obs": "<One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
-  "dim_obs_dod": "<Spend ONE unused entry from insight_log. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score in one clause only. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the terse 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'You climbed above the chaos for this one — access most photographers never find.'>",
-  "dim_obs_disruption": "<Spend ONE unused entry from insight_log. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score in one clause only. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'A working dock turns into geometry under you. That's a rare way to see chaos.'>",
-  "dim_obs_dm": "<Spend ONE unused entry from insight_log. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available. Do NOT restate hard_truth/impression. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'The wings were still opening when you pressed the shutter — full extension was a half-beat away.'>",
-  "dim_obs_wonder": "<Spend ONE unused entry from insight_log. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) in one clause. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'Access Wonder — you're standing somewhere most people never get to stand.'>",
-  "dim_obs_aq": "<Spend ONE unused entry from insight_log. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'The rhythm here is real. A stranger would feel it too.'>",
+  "next_leap_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
+  "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score in one clause only. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the terse 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'You climbed above the chaos for this one — access most photographers never find.'>",
+  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score in one clause only. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'A working dock turns into geometry under you. That's a rare way to see chaos.'>",
+  "dim_obs_dm": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available. Do NOT restate hard_truth/impression. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'The wings were still opening when you pressed the shutter — full extension was a half-beat away.'>",
+  "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) in one clause. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'Access Wonder — you're standing somewhere most people never get to stand.'>",
+  "dim_obs_aq": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'The rhythm here is real. A stranger would feel it too.'>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
-  "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
-  "tech_read": "<FORENSIC TECHNICAL READ. Spend ONE unused entry from insight_log as the spine of this field — see INSIGHT LOG rule above; this is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above. FLOWING PROSE — as many full sentences as this image genuinely needs, NO WORD CAP, no bullets. Tone: senior editor examining a contact sheet. Cover what is actually true and visible: sharpness and its CAUSE; exposure — clipping or crush (CRITICAL: dark background ≠ night); one gear observation if EXIF is present; the compositional placement of the subject (thirds, diagonals, framing) and how it was achieved; where the eye enters the frame and how it travels; the quality and direction of the light; and, where relevant, why a black-and-white or colour treatment works. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Say only what is true of THIS image — do not pad with generic technical commentary to fill space.>",
-  "visual_flow": "<One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
-  "imagine": "<One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. THIS FIELD OWNS the '9+ version of this exact frame' description — byline_1's second bullet must give only a SHORT one-sentence pointer to this field's content, not its own full description; mentor_next must point to a different image or technique, not the same hypothetical. HARD LENGTH LIMIT: 60 words. No jargon. No dimension names. Pure vision.>",
-  "conclusion": "<Spend ONE unused entry from insight_log, preferably the photographer-history one if insight_log has one — see INSIGHT LOG rule above. Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations, phrasing, or specific visual details from hard_truth, impression, byline_1, byline_2, or master_why — this field is about what the photograph reveals about how YOU see and your trajectory as a photographer, not a restatement of this image's compositional facts. THIS FIELD OWNS pattern/trajectory language ("you keep finding X", "this is what you do") exclusively — hard_truth is forbidden from using it, so do not expect or echo a trajectory line from hard_truth; write your own, once, here. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. HARD LENGTH LIMIT: 65 words (this count excludes the mandatory closing sentence). If eval 2+: name the pattern across their work (one strength, one gap, max 30 words of that total). If eval 1: 1-2 sentences then invite next photograph.>",
+  "master_why": "<FUNCTION: TEACH — evidence before verdict (see FUNCTION ASSIGNMENT above). Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
+  "tech_read": "<FORENSIC TECHNICAL READ. FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. This is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above; this is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above. FLOWING PROSE — as many full sentences as this image genuinely needs, NO WORD CAP, no bullets. Tone: senior editor examining a contact sheet. Cover what is actually true and visible: sharpness and its CAUSE; exposure — clipping or crush (CRITICAL: dark background ≠ night); one gear observation if EXIF is present; the compositional placement of the subject (thirds, diagonals, framing) and how it was achieved; the quality and direction of the light; and, where relevant, why a black-and-white or colour treatment works. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Say only what is true of THIS image — do not pad with generic technical commentary to fill space.>",
+  "visual_flow": "<FUNCTION: OBSERVE — name the path, do not explain why it works (see FUNCTION ASSIGNMENT above). One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
+  "imagine": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. THIS FIELD OWNS the '9+ version of this exact frame' description — byline_1's second bullet must give only a SHORT one-sentence pointer to this field's content, not its own full description; mentor_next must point to a different image or technique, not the same hypothetical. HARD LENGTH LIMIT: 60 words. No jargon. No dimension names. Pure vision.>",
+  "conclusion": "<FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Prefer the photographer-history entry from the ledger if there is one. Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations, phrasing, or specific visual details from hard_truth, impression, byline_1, byline_2, or master_why — this field is about what the photograph reveals about how YOU see and your trajectory as a photographer, not a restatement of this image's compositional facts. THIS FIELD OWNS pattern/trajectory language ("you keep finding X", "this is what you do") exclusively — hard_truth is forbidden from using it, so do not expect or echo a trajectory line from hard_truth; write your own, once, here. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. HARD LENGTH LIMIT: 65 words (this count excludes the mandatory closing sentence). If eval 2+: name the pattern across their work (one strength, one gap, max 30 words of that total). If eval 1: 1-2 sentences then invite next photograph.>",
   "award_context": "<Score-gated. No specific award body or brand names ever. BELOW 8.5: 'The League of Photographers features genuinely international work — images that stand a chance for recognition, earn income through commissioned work, sales and print editions, and be featured in exhibitions, grants and awards.' 8.5-8.9: Start with EXACTLY 'At 8.5+' (not 8.0+, not 8.6+, always 8.5+): 'At 8.5+ your work is ready for serious [genre] photography awards and the League of Photographers — where images at this level earn income through commissions, print sales, and exhibition placement.' 9.0+: Start with EXACTLY 'At 9.0+': 'At 9.0+ your [genre] work stands among the best on the platform — the League of Photographers opens doors to major awards, commissions, gallery exhibitions, and grant opportunities.' Replace [genre] with actual genre. One sentence per tier. Max 40 words. THRESHOLD: only 8.5 or 9.0 after 'At' — no other numbers.>",
   "species_note": "<Wildlife and Nature only. Blank string for all other genres. CONSERVATIVE: blank if silhouette, backlit, uncertain, or guessing. ONLY populate when species is clearly identifiable from visible physical features AND you are confident enough to stake platform credibility on it AND the ecological fact is verifiable. If confident: species name + one verified ecological fact. Max 40 words. SILHOUETTE RULE: if blank because of silhouette, do NOT name species clarity as a gap anywhere else on the scorecard.>",
   "ns": "<Is there a story? Three verdicts only: 'yes', 'not_sure', or 'no'. DEFAULT = 'not_sure'. THE WRITE-THE-SENTENCE METHOD: Before deciding, write one sentence: 'A [subject] is [verb] [consequence].' If you can write that sentence with a verb AND a consequence that carries meaning without a caption: consider YES. If you can only describe what you see: NOT SURE or NO. If nothing is happening: NO. FULL-FRAME SCAN: scan the entire frame — story may not be in the primary subject. CALIBRATION: YES (>75%): maternity shadow=91%, Nihang horseman=88%, monks walking=75%. NOT_SURE (50-75%): child+blossoms=65%, Kathak feet=65%, woman in white sari=57%. NO (<50%): mountain landscape=40%, swallow landing=44%, studio portrait=34%. AQ/NS INDEPENDENCE: beautiful ≠ story, powerful ≠ story. WILDLIFE: behaviour/disruption=story; subject only=NO. DEFAULT IS NOT_SURE. Do NOT default to yes.>",
@@ -5326,10 +5485,52 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
     """
     Converts the vision_analyse() result into a ground-truth block
     injected into the scoring prompt. The scorer cannot contradict this.
-    Returns empty string if vision dict is empty (fallback path).
+
+    SL-171.54 — THE GATES USED TO FAIL OPEN. THIS IS THE ACTUAL MECHANISM
+    BEHIND THE GAZE AND SPECIES HALLUCINATIONS (lessons doc 10.3 / 10.4), and
+    it is NOT the "gate fires and a downstream field ignores it" shape that was
+    assumed. When vision_analyse() returns {} this function previously returned
+    an EMPTY STRING, which deletes the entire GROUND TRUTH block from the
+    scoring prompt — including every prohibition 171.53 added. The model then
+    scored with NO species gate, NO gaze gate, and no scene grounding at all,
+    and was free to invent a direct gaze or a species natural-history fact with
+    nothing contradicting it. vision_analyse() returning {} is not a rare edge
+    case: it is the documented outcome of the max_tokens truncation failures in
+    171.38 ("Unterminated string", twice on the same image) and of any API
+    error or timeout on that call, and its own except block swallows the error
+    and returns {} silently.
+    So the empty-vision path now FAILS CLOSED: instead of no block, it emits an
+    explicit NO VERIFIED GROUNDING block that bans exactly the claims that
+    cannot be made without vision — gaze, species facts, subject count, and
+    blur attribution. An ungrounded card that says less is recoverable; an
+    ungrounded card that confidently states a stranger's gaze is the failure
+    the founder flagged as highest severity.
     """
     if not vision:
-        return ""
+        print("[build_scene_context] NO-GROUNDING FALLBACK ENGAGED — vision_analyse returned no "
+              "usable data; gaze/species/count/blur claims are now banned in the scoring prompt. "
+              "This card will be deliberately thinner. Investigate the [vision_analyse] Failed "
+              "line above.")
+        return (
+            "NO VERIFIED GROUNDING AVAILABLE FOR THIS IMAGE — READ THIS AS A HARD CONSTRAINT:\n"
+            "The independent visual verification pass did not return usable data for this\n"
+            "photograph. Nothing about this frame has been independently confirmed. You are\n"
+            "therefore working from the image alone, with no second reader, and the following\n"
+            "claims are BANNED OUTRIGHT in every field — not hedged, not softened, omitted:\n"
+            "- Any claim about where a human subject is looking. Do NOT write 'direct gaze',\n"
+            "  'eye contact', 'looked up at you', 'met your eye', 'registered your presence',\n"
+            "  or any phrase implying the subject is or is not looking at the camera.\n"
+            "- Any species-specific natural-history fact (diet, behaviour, range, feeding or\n"
+            "  nesting habits) stated as settled fact. Use a generic term for the subject.\n"
+            "- Any confident count of subjects, or any reference to a subject you cannot\n"
+            "  plainly see. Do not invent a second person, a child, or an animal.\n"
+            "- Any claim about WHICH element carries motion blur or sharpness unless it is\n"
+            "  unmistakable in the image. If unsure, do not attribute blur at all.\n"
+            "Write about what is unambiguously visible — light, colour, structure, placement,\n"
+            "and the photographer's evident decisions. A shorter, fully defensible card is the\n"
+            "required outcome here. A confident claim that turns out to be wrong about a real\n"
+            "person or a real animal is the single worst failure this scorecard can produce."
+        )
 
     subjects = vision.get("subjects", [])
     subject_lines = []
@@ -7524,12 +7725,26 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         # headroom before this fix even started), and this fix's own latency
         # (13-21s observed) is what pushed attempt 2 over as well. This code
         # must never be the reason a request we don't control the ceiling on
-        # fails: compute what is actually left of a safe internal budget
-        # (target 110s, leaving 10s under the external 120s ceiling for
-        # thread/logging overhead) and either skip the fix outright when
-        # there isn't enough of it left for a worthwhile attempt, or hand the
-        # fix only as much time as is actually safe to spend.
-        _SAFE_INTERNAL_CEILING = 110.0
+        # fails: compute what is actually left of a safe internal budget and
+        # either skip the fix outright when there isn't enough of it left for
+        # a worthwhile attempt, or hand the fix only as much time as is
+        # actually safe to spend.
+        #
+        # SL-171.54 — THIS NUMBER IS COUPLED TO app.py's OUTER CEILING. It was
+        # 110.0, sized against the ORIGINAL 120s ceiling in
+        # _auto_score_with_timeout(). When app.py 182.103 raised that ceiling
+        # to 240s, this number was not raised with it (two fixes, same session,
+        # neither aware of the other), so this budget check kept measuring
+        # against 110s and SKIPPED the fix on every complex image anyway. That
+        # is the reason every duplicate count on record (6/7/10 pairs) is a
+        # raw, uncorrected first pass — the corrective layer below has never
+        # actually run in any observed live test. Now set to 165.0, which sits
+        # 15s under app.py 182.104's 180s ceiling (founder decision: 3 min is
+        # the most a member will wait) leaving that margin for thread
+        # teardown and logging overhead.
+        # IF EITHER CEILING CHANGES AGAIN, CHANGE BOTH IN THE SAME COMMIT.
+        # app.py: _auto_score_with_timeout(timeout_secs=...) ~L9293.
+        _SAFE_INTERNAL_CEILING = 165.0
         _MIN_WORTHWHILE_SECS = 15.0
         _t_fix_start = _time.time()
         _elapsed_before_fix = _t_fix_start - _t_total_start
@@ -7537,7 +7752,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         if _remaining_budget < _MIN_WORTHWHILE_SECS:
             print(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED — only {_remaining_budget:.1f}s left of the {_SAFE_INTERNAL_CEILING:.0f}s safe '
                   f'internal budget ({_elapsed_before_fix:.1f}s already spent on vision+scoring) — not enough headroom for a worthwhile '
-                  f'attempt without risking the external 120s timeout. Leaving the TEXT_REPEAT log above as the signal.')
+                  f'attempt without risking the external 180s timeout. Leaving the TEXT_REPEAT log above as the signal.')
         else:
             try:
                 result, _fix_log = _attempt_text_repeat_fix(
