@@ -1,3 +1,45 @@
+# SL-VERSION: 171.48 (Session 237, 2026-10-06 -- two founder decisions from reviewing a dimension-
+# observations mockup built off the live Egrets of Sasson Dock PDF: (1) NAMING FIX -- "Authentic
+# Quality" (the dim_obs_aq display label) was found to conflict with the canonical public definition
+# at shutterleague.com/science, which calls that same dimension "Emotion" / "The Emotion It Creates"
+# and uses no "AQ"/"Aesthetic"/"Affective"/"Authentic Quality" wording anywhere. SOURCE_REGISTER_S235.md
+# had already flagged this as an unresolved, CONTRADICTED naming conflict (section B1) across the
+# founder's own documents -- founder resolved it here: display label is now "Emotion (AQ)" everywhere,
+# keyed off the science page. Updated dim_obs_aq's own prompt instruction to tell the model to write
+# "Emotion", never "AQ" or "Authentic Quality", if it names the dimension. The INTERNAL field key
+# (dim_obs_aq / 'aq') and the internal scoring-rubric terminology (AQ / Affective Quotient, used
+# throughout the engine's own reasoning instructions for calibration/weighting) are UNCHANGED -- this
+# is a display-label fix only, not a scoring or schema change. Companion edits in app.py (3 spots:
+# _DIM_NAMES dict, a strength_name prompt example list, and a PDF dimension-table column label) and
+# reportlab_card.py (the "Dimension observations" section's own label list) make the same relabel
+# everywhere it was found to be hardcoded as "Authentic Quality". "Wonder Factor" vs. the science
+# page's "The WOW Factor" is the same category of mismatch, flagged but NOT changed here pending its
+# own founder decision. (2) CONTENT FIX ("Option 1" of two mockups shown) -- founder felt the 5
+# dim_obs_* fields read "bottish and cheap", restating the same scene hard_truth/impression/tech_read
+# already cover. Rewrote all 5 field instructions: dropped the cap 40->22 words, require second-person
+# Sherpa-voice register (not a report fragment), and added explicit "do not restate hard_truth/
+# impression/tech_read" reminders per field, with a worked example in each instruction showing the
+# intended terse-but-warm register. Mirrored in the TEXT_REPEAT_FIELD_HINTS corrective-rewrite dict.
+# NOT YET CONFIRMED LIVE -- needs a rescore to verify the shorter dim_obs_* text and the "Emotion (AQ)"
+# label both render correctly in the PDF and on image_detail.html. RETAINS 171.47.)
+# SL-VERSION: 171.47 (Session 237, 2026-10-06 -- 171.46 CONFIRMED LIVE: founder rescored the Egrets of
+# Sasson Dock image on staging, got a clean completed PDF on attempt 1 (no retry needed), and sent the
+# real app-service console log: TOTAL auto_score 103.40s (was 121.56s / ~126s on 171.45's two failed
+# attempts, both over the 120s ceiling) -- output tokens down to 2,983 (was 3,455 / 3,971). No JSON
+# parse failure, no "SCENE ANALYSIS" preamble -- the FINAL OUTPUT RULE held. Badge incremented
+# 359->360 correctly (only increments on success). Founder marked up the resulting PDF by hand: the
+# byline_2 "YOUR NEXT BODY OF WORK SEQUENCE" bullet (a 3-frame editorial story) and the separate
+# body_of_work field (a 4-frame editorial story) were independently generating the same kind of
+# content for the same image -- founder's instruction: "Same stuff retain the latter which is clean" --
+# keep body_of_work, cut the sequence out of byline_2. DELETED that bullet from byline_2's schema
+# (byline_2 is now 2 bullets -- exercise + philosophy line -- not 3), dropped its word cap 110->60,
+# and updated the TEXT_REPEAT_FIELD_HINTS entry to match. NOT YET RE-CONFIRMED LIVE -- this specific
+# edit needs its own rescore to verify byline_2 renders correctly as 2 bullets and nothing downstream
+# (reportlab_card.py / app.py's byline_2_body handling) assumed a 3-bullet structure.
+# REMAINING, LOWER PRIORITY: the same console log still named 5 TEXT_REPEAT duplicate phrases across
+# hard_truth/impression/transferable_advice/dim_obs_disruption/byline_2/mentor_next -- smaller than
+# before and the call now finishes comfortably under 120s regardless, so left as-is pending founder
+# direction on whether to chase this further. RETAINS 171.46.)
 # SL-VERSION: 171.46 (Session 237, 2026-10-06 -- live staging rescore of the Egrets of Sasson Dock
 # image on 171.45 FAILED both attempts (120s hard ceiling -- founder: "i cant go beyond 120 sec", a
 # real customer (Carmen, UK) is evaluating the platform on this right now). Attempt 1: 121.56s total,
@@ -2080,7 +2122,7 @@ Return this exact JSON structure:
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max, HARD LENGTH LIMIT: 30 words. No positional corrections. Do not reuse phrasing, sentence structure, or the same hypothetical detail that imagine uses — if imagine already describes the 9+ version of this exact frame, mentor_next must point to a DIFFERENT next image or technique, not restate the same hypothetical.>",
   "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs. HARD LENGTH LIMIT: 90 words total across all three bullets.\n\n▪ [What this score level means for this photographer in plain English — one sentence. If Wonder score is 7.5+, this bullet must include the phrase 'made us feel' and name the specific emotion. Example: 'A score at this level means the image made us feel something — the tenderness here is real and a stranger would name it immediately.']\n\n▪ [ONE short sentence pointing at what 9+ would take — NOT a full visual description. The 'imagine' field owns the full 9+ description; do not duplicate it here. Example: 'A 9+ version of this exists — see what it could look like below.']\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
-  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 3 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity. HARD LENGTH LIMIT: 110 words total across all three bullets.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ YOUR NEXT BODY OF WORK SEQUENCE: [THREE-FRAME EDITORIAL STORY. Think like a photo editor. NOT the same subject shot 3 ways — 3 DIFFERENT images that together tell one story. Name the story. Write it like a story editor pitching to a photographer: \"The story is [X]. Frame 1: [scene — what the reader sees first]. Frame 2: [the human moment that gives it meaning]. Frame 3: [the frame that stays with you after you close the book].\"]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
+  "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 2 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity. HARD LENGTH LIMIT: 60 words total across both bullets. DO NOT write a multi-frame body-of-work sequence here — the body_of_work field owns that content entirely (founder reviewed a live PDF where this bullet and body_of_work told the same story twice and asked to cut this one, keep that one).\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable and species_id is confirmed, else null>",
@@ -2102,11 +2144,11 @@ Return this exact JSON structure:
   "strength_obs": "<One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "next_leap_obs": "<One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
-  "dim_obs_dod": "<One sentence, max 40 words. Why this specific DOD score. Name the physical difficulty, access, or technical challenge — or what was missing. Image-specific. No generic dimension definition. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above.>",
-  "dim_obs_disruption": "<One sentence, max 40 words. Why this disruption score. Name the specific compositional choice or treatment — what it broke from convention, or why it followed it. Image-specific. THIS FIELD OWNS the compositional-treatment explanation — do not just restate dim_obs_dod's access/difficulty point in different words.>",
-  "dim_obs_dm": "<One sentence, max 40 words. Why this moment score. Was this the peak of the act? If not, name exactly what stronger moment was available and what the photographer would have needed to wait for. Image-specific.>",
-  "dim_obs_wonder": "<One sentence, max 40 words. Why this wonder score. Name the type (access, eye, cultural, emotional) and what created it — or what would have elevated it. Image-specific. THIS FIELD OWNS the colour/visual-impact explanation — see FIELD OWNERSHIP RULE above.>",
-  "dim_obs_aq": "<One sentence, max 40 words. Why this AQ score. Name the specific emotion a stranger would feel and what in the image creates it. If no specific emotion, name what the image creates instead and why that caps it. Image-specific.>",
+  "dim_obs_dod": "<ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score in one clause only. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the terse 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above. Register example: 'You climbed above the chaos for this one — access most photographers never find.'>",
+  "dim_obs_disruption": "<ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score in one clause only. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. Register example: 'A working dock turns into geometry under you. That's a rare way to see chaos.'>",
+  "dim_obs_dm": "<ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available. Do NOT restate hard_truth/impression. Register example: 'The wings were still opening when you pressed the shutter — full extension was a half-beat away.'>",
+  "dim_obs_wonder": "<ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) in one clause. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only. Register example: 'Access Wonder — you're standing somewhere most people never get to stand.'>",
+  "dim_obs_aq": "<ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression. Register example: 'The rhythm here is real. A stranger would feel it too.'>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
   "tech_read": "<One paragraph, max 60 words (max 80 words if an over-processing coaching note is required below). Forensic: (1) sharpness — name CAUSE; (2) exposure — clipping or crush; CRITICAL: dark background ≠ night; (3) one gear observation if EXIF present. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Tone: senior editor examining a contact sheet.>",
@@ -6099,12 +6141,12 @@ _TEXT_REPEAT_FIELD_HINTS = {
     'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, each line starting with the character ▪ then a space, a blank line between bullets. Max 90 words total.",
     'mentor_next': 'ONE creative direction. Max two sentences, max 30 words. A possibility, never a correction. Do not reuse the same hypothetical detail as imagine — point to a different next image or technique.',
     'byline_1': "CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets. Max 90 words total. Second bullet: ONE short sentence pointing at the 9+ possibility — imagine owns the full description, do not duplicate it here.",
-    'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Bullet format (▪), blank line between bullets. Includes a gear-specific exercise, a 3-frame body-of-work sequence, and a philosophy line. Max 110 words total.',
-    'dim_obs_dod': 'One sentence, max 40 words. Sherpa voice. Names the access/difficulty fact for this image.',
-    'dim_obs_disruption': 'One sentence, max 40 words. Sherpa voice. Names the compositional-treatment fact for this image.',
-    'dim_obs_dm': 'One sentence, max 40 words. Sherpa voice. States whether this was the peak moment, or what stronger moment was missed.',
-    'dim_obs_wonder': 'One sentence, max 40 words. Sherpa voice. Names the colour/visual-impact fact for this image.',
-    'dim_obs_aq': 'One sentence, max 40 words. Sherpa voice. Names the specific emotion a stranger would feel.',
+    'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. 2 bullets (▪), blank line between. A gear-specific exercise and a philosophy line only — do NOT write a body-of-work sequence here, the body_of_work field owns that. Max 60 words total.',
+    'dim_obs_dod': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person, terse verdict not a re-described scene. Names the access/difficulty fact in one clause. Do not restate hard_truth/impression/tech_read.',
+    'dim_obs_disruption': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person, terse verdict not a re-described scene. Names the compositional-treatment fact in one clause. Do not restate hard_truth/impression/tech_read or dim_obs_dod.',
+    'dim_obs_dm': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person. States whether this was the peak moment, or what stronger moment was missed, in one clause. Do not restate hard_truth/impression.',
+    'dim_obs_wonder': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person. Names the colour/visual-impact fact in one clause. Do not restate hard_truth/impression/tech_read.',
+    'dim_obs_aq': "ONE short sentence, max 22 words. Warm Sherpa voice, second person. This is the Emotion dimension (never write 'AQ' or 'Authentic Quality'). Names the specific emotion a stranger would feel. Do not restate hard_truth/impression.",
     'tech_read': 'One paragraph, max 60 words (80 if an over-processing coaching note is included). Forensic: sharpness cause, exposure (clipping/crush), one gear note only if EXIF present.',
     'visual_flow': 'One sentence, max 40 words. Where the eye enters, how it travels, where it rests or what dead space exists.',
     'imagine': 'One paragraph, max 60 words. Second person, present tense. Possibility language only ("imagine if", "there is a version of this image where"). No master name. No location advice. THIS FIELD OWNS the full 9+ description — byline_1 and mentor_next must not duplicate it.',
