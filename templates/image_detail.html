@@ -994,7 +994,14 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         {% set _ns_text = '#166534' if _ns_raw == 'yes' else ('#92400e' if _ns_raw in ('not_sure','notsure','maybe','unsure') else '#64748b') %}
         <div style="display:grid;grid-template-columns:120px 1fr;gap:0 18px;padding:16px 0 16px 12px;border-bottom:0.5px solid var(--sc-border);align-items:start;border-left:3px solid {{ _ns_border }};background:{{ _ns_bg }};margin-top:4px">
           <div style="display:flex;flex-direction:column;align-items:flex-start;padding-top:2px">
-            <span style="font-size:14px;font-weight:700;color:{{ _ns_text }};line-height:1.2;text-align:left">{{ _ns_label }}</span>
+            {# SL-238: line-height 1.2 -> 1.5 to clear the sl_audit [70yr] readability gate.
+               PRE-EXISTING from Session 222, not introduced by this session's changes. This span
+               holds a single word ("Yes" / "No" / "Not sure"), so line-height affects only the line
+               box height, not legibility -- the gate cannot tell a one-word badge from body prose.
+               Changing the file was still the right call over loosening the gate. Expected visual
+               effect: this badge's box ~4px taller. NEEDS A MOBILE AND iPad LOOK at the "Does the
+               image have a story?" row after deploy. #}
+            <span style="font-size:14px;font-weight:700;color:{{ _ns_text }};line-height:1.5;text-align:left">{{ _ns_label }}</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;padding-left:5px">
             <div style="display:flex;align-items:center;gap:6px">
@@ -1131,7 +1138,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
         <a href="{{ _master_search_url }}" target="_blank" rel="noopener noreferrer"
            style="color:var(--sc-dark);text-decoration:none;border-bottom:2px solid var(--sc-gold)">{{ _master_name_s }}</a>
       </div>
-      {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | safe }}</div>{% endif %}
+      {% if _master_why_s %}<div class="sc-master-why">{{ _master_why_s | sl_paras | safe }}</div>{% endif %}
     </div>
     {% endif %}
 
@@ -1140,11 +1147,16 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     <div style="background:#F8F4EE;border-radius:12px;padding:20px 22px;margin-bottom:10px">
       {% if _tech_read_s %}
       <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Technical read</div>
-      <div style="font-size:16px;color:var(--sc-text);line-height:1.80;{% if _visual_flow_s %}margin-bottom:20px{% endif %}">{{ _tech_read_s | safe }}</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80;{% if _visual_flow_s %}margin-bottom:20px{% endif %}">{{ _tech_read_s | sl_paras | safe }}</div>
       {% endif %}
+      {# SL-238: "Visual flow" relabelled "Where does the eye go?" — founder-directed.
+         The engine has always scored on this question (auto_score.py L2813) but the
+         phrase appeared nowhere a photographer could see it. Label only; the
+         visual_flow data key is unchanged. Not uppercased like the sibling labels —
+         a question reads as a question in sentence case, and shouting it loses it. #}
       {% if _visual_flow_s %}
-      <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(26,39,68,0.45);margin-bottom:8px">Visual flow</div>
-      <div style="font-size:16px;color:var(--sc-text);line-height:1.80">{{ _visual_flow_s | safe }}</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:rgba(26,39,68,0.55);margin-bottom:8px">Where does the eye go?</div>
+      <div style="font-size:16px;color:var(--sc-text);line-height:1.80">{{ _visual_flow_s | sl_paras | safe }}</div>
       {% endif %}
     </div>
     {% endif %}
@@ -1153,7 +1165,7 @@ body.page-scorecard { font-family:'Avenir Next',system-ui,sans-serif }
     {% if _imagine_s %}
     <div class="sc-imagine-card">
       <div class="sc-imagine-label">Imagine</div>
-      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | safe }}</div>
+      <div class="sc-imagine-body sc-render-text">{{ _imagine_s | sl_paras | safe }}</div>
     </div>
     {% endif %}
 
