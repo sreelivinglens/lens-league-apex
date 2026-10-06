@@ -1,3 +1,30 @@
+# SL-VERSION: 171.59 (Session 238, 2026-10-06 -- THE "WHAT YOU CONTROLLED" DUPLICATE, FOUND AND
+# FIXED, IN THIS FILE. Covered by the founder's earlier "go" on the Card-2 item, which I declined to
+# build in 171.58 because I could not prove the mechanism and would not change a live render path on
+# a guess. 171.58's detector-widening produced the proof in one run.
+#
+# PROOF, not inference: both sections were extracted from the live 6 Oct 2026 PDF and compared --
+# "WHAT YOU CONTROLLED" and "Technical read" are byte-identical, 1,151 characters each. It is
+# tech_read, printed twice on one card.
+# CAUSE, and it is in THIS file, not app.py as I previously told the founder: build_audit_data's
+# legacy "rows" tuple (~L7987). Session 237 removed the dead mentor_technical field and repointed
+# the legacy "Technical" row at tech_read so app.py's Card-2 fallback "still had content". app.py
+# reads that row into _tech_val and sets Card 2 = _tech_val (~L13094 / ~L14021), while the card's own
+# Technical read section renders tech_read directly. One field, two headings. My 171.58 note reasoned
+# that 'Technical' was the DoD short label and that 'rows' was only written on the admin form path --
+# both true elsewhere in app.py, and both irrelevant, because THIS file writes the row that path
+# actually consumes. I was looking in the wrong file for a line I had already shipped.
+# This also explains the principle triple-count on the 171.57 card: "Rule of Thirds" appeared three
+# times because tech_read's single mention was rendered twice plus dim_obs_dod's once.
+# FIX: the legacy row is now empty, so Card 2 falls through to app.py's next fallback
+# (mentor_moment) instead of reprinting tech_read. Card 1 is unaffected -- _c1 takes
+# transferable_advice first and only falls back to this row if that is empty, which it never is.
+# KNOWN CONSEQUENCE, STATED BEFORE IT IS SEEN: mentor_moment is specified as ONE sentence, so "What
+# You Controlled" becomes a short card. A short true card beats the same 1,151 characters twice, but
+# the real answer is to give that card a field of its own. NOT built -- that is a product decision.
+# NO PROMPT RULE COULD EVER HAVE FIXED THIS, which is worth recording: three sessions of duplication
+# work, and one of the two most visible duplicates on every card was a data-plumbing line.
+# RETAINS 171.58.)
 # SL-VERSION: 171.58 (Session 238, 2026-10-06 -- CROSS-FIELD RULES MOVED FROM PROSE INTO CODE, plus
 # the AQ cap now actually enforcing. Founder signal "go".
 #
@@ -8793,12 +8820,30 @@ def build_audit_data(result, image_obj):
             ("AQ",         result.get("aq", 0)),
         ],
         "rows": [
-            # Session 237 scorecard-reduction pass: mentor_technical was removed
-            # from the generation schema (confirmed dead — no live template ever
-            # read it). This legacy "Technical" row now falls back to tech_read,
-            # the field that is actually displayed, so the old Card-2 fallback
-            # path in app.py (public_card/download_card_pdf) still has content.
-            ("Technical",  result.get("tech_read", "")),
+            # SL-171.59 — THIS LINE WAS THE "What You Controlled" DUPLICATE.
+            # Session 237 removed the dead mentor_technical field and pointed
+            # this legacy "Technical" row at tech_read so app.py's Card-2
+            # fallback "still had content". Consequence, measured on the live
+            # 6 Oct 2026 card: app.py reads this row into _tech_val and sets
+            # Card 2 ("What You Controlled") = _tech_val (~L13094 / ~L14021),
+            # while the scorecard's own "Technical read" section renders
+            # tech_read directly — so the SAME 1,151 characters printed twice
+            # on one card, byte-identical, verified by extracting both sections
+            # from the PDF and comparing them. It also double-counted every
+            # named principle in that text, which is why "Rule of Thirds"
+            # showed three times on an earlier card.
+            # No prompt rule could ever have fixed this: one field, two
+            # headings, decided here in the audit dict.
+            # Now empty, so Card 2 falls through to mentor_moment (app.py's own
+            # next fallback) instead of reprinting tech_read. Card 1 is
+            # unaffected (_c1 takes transferable_advice first and only falls
+            # back to this row when that is empty, which it never is).
+            # KNOWN CONSEQUENCE, FLAGGED TO FOUNDER: Card 2 becomes
+            # mentor_moment, which is specified as ONE sentence, so that card
+            # gets much shorter. A short, true card beats the same paragraph
+            # twice, but the real answer is to give "What You Controlled" a
+            # field of its own — a decision for the founder, not built here.
+            ("Technical",  ""),
             ("Moment",     result.get("mentor_moment", "")),
             ("Next",       result.get("mentor_next", "")),
         ],
