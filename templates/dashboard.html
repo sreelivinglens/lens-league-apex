@@ -1,4 +1,10 @@
 {% extends "base.html" %}
+{# SL-VERSION: 178.5 (Session 237, 2026-10-06 -- label-consistency fix: this template's
+_dim_field/_dim_field_mob dicts (trend panel, "How you're developing") used their own
+plain-English dimension names that didn't match the canonical set app.py's _DIM_NAMES
+dict already settled on (Session 237): Depth of Difficulty / Visual Disruption / Decisive
+Moment / Wonder Factor / Emotion (AQ). Companion edit to app.py 182.100 (top score band
+and trend-sparkline label fix, same root cause). NOT YET CONFIRMED LIVE. RETAINS 178.4.) #}
 {# SL-VERSION: 178.4 (Session 205 — 2026-09-01 — Audit fixes: 12px→13px, Jinja in script fixed, KYC copy. RETAINS 178.3:, 2026-08-31 — 1) toggleSpan duplicate IDs fixed (grm-a/grm-b per branch). 2) location_data_json injected (was hardcoded {}). 3) Dropdown JS added (dlocCountryChange/State/City — were called but never defined). 4) Change location arrow toggles ↓/↑. 5) Weather unavailable hidden. RETAINS 178.2: Session 182, 2026-08-14 — MOBILE "MORE" DRAWER restyled as a compact popup anchored right, matching production. NOTE FOR WHOEVER IS NEXT: the dashboard carries its OWN More drawer (#slMoreDrawer, .mob-more-*) which is SEPARATE from the one in base.html (#slBottomMoreMenu). base's has 8 items starting "Explore"; this one has 9 starting "Recent Work". Two different More menus on the same site — base 180.9 fixed base's and had no effect here, which is why the drawer still filled the screen. This was left:0;right:0;translateY(110%) — a full-bleed sheet from the bottom bar upward. Now right:8px, 208px min-width, rounded, gold hairline border, above the bar. THE GREEN #0F2A22 IS UNCHANGED — founder's instruction; only geometry moved. Grab handle hidden (it signals a draggable full-width sheet). Overlay kept for outside-tap close but made transparent, as production shows no dim. max-height 58dvh so the last item clears the bar and home indicator; items keep a 44px tap target. CSS only — no markup, no JS, no Jinja changed. slMoreOpen/slMoreClose verified working. RETAINS 178.1 (Session 178, 2026-08-11 — touch-action:manipulation on .bn-tab, .mob-quick-btn, .mob-upload-btn, .mob-more-item, .rm — eliminates iOS 300ms tap delay; fixes icon hard-press and More drawer responsiveness) #}
 {% block title %}Dashboard — Shutter League{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
@@ -579,7 +585,11 @@ body.page-dashboard #backToTop         { display:none !important }
 
         {% else %}
         {# Template fallback — until mentor_advice_json is populated by next evaluation #}
-        {% set _dim_field = {'dod':'How Difficult It Was','disruption':'Visual Disruption','dm':'The Moment Chosen','wonder':'WOW Factor','aq':'The Emotion It Creates'} %}
+        {# SL-VERSION 178.5 (Session 237, 2026-10-06) -- label-consistency fix: aligned
+           to the Session 237 canonical dimension-name set (app.py _DIM_NAMES / the
+           "Dimension Observations" labels on the scorecard PDF), replacing this
+           block's own separate plain-English paraphrase. RETAINS 178.4. #}
+        {% set _dim_field = {'dod':'Depth of Difficulty','disruption':'Visual Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Emotion (AQ)'} %}
         {% set _dim_action = {'dod':'Choose harder scenes. Move closer. Change your angle until the shot costs you something.','disruption':'Before pressing the shutter — ask: what breaks the expected geometry here? Find it. Shoot that.','dm':'Wait longer than feels comfortable. The frame worth making is usually one second after you\'d have shot.','wonder':'Look for the thing that doesn\'t belong. The unexpected detail is almost always there.','aq':'Ask what feeling this image creates. If you can\'t name it, the viewer won\'t feel it either.'} %}
         {% set _dim_detail = {'dod':'The photographers who evaluate highest in Difficulty are those who put themselves in physically or socially demanding positions — closer, lower, inside the action, at the edge of the crowd. Your next shoot: find one moment that made you slightly uncomfortable to photograph. That discomfort is what lifts the evaluation.','disruption':'The unexpected angle is almost always available — most photographers just do not look for it. Before every frame: walk past the obvious position. Stand lower, higher, behind a foreground element, or wait for an element to move into the geometry. The disruption is there.','dm':'The decisive moment is rarely where you first think it is. The approach, the gesture before the peak, the face one second after the action — these are the frames that carry emotional weight. Stay on the subject longer than feels necessary.','wonder':'The WOW Factor comes from surprise — the detail that does not belong, the relationship between two elements the viewer did not expect. Train yourself to ask: what in this frame will stop someone mid-scroll?','aq':'Aesthetic Quality is the invisible dimension — it measures whether the image creates a specific emotional response. Before uploading your next image, ask: what does this make someone feel? If the answer is nothing specific, look for the frame that creates a named feeling.'} %}
         <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">{{ _dim_field.get(progress_data.weakest, progress_data.weakest|title) }}</div>
@@ -1458,7 +1468,9 @@ body.page-dashboard #backToTop         { display:none !important }
 
       {# Work on this dimension #}
       {% if progress_data and progress_data.weakest %}
-      {% set _dim_field_mob = {'dod':'How Difficult It Was','disruption':'Visual Disruption','dm':'The Moment Chosen','wonder':'WOW Factor','aq':'The Emotion It Creates'} %}
+      {# SL-VERSION 178.5 (Session 237, 2026-10-06) -- same label-consistency fix as
+         the desktop _dim_field block above. RETAINS 178.4. #}
+      {% set _dim_field_mob = {'dod':'Depth of Difficulty','disruption':'Visual Disruption','dm':'Decisive Moment','wonder':'Wonder Factor','aq':'Emotion (AQ)'} %}
       {% set _dim_action_mob = {
         'dod': 'Choose harder scenes. Move closer. Change your angle until the shot costs you something.',
         'disruption': 'Ask: what breaks the expected geometry here? Find it. Shoot that.',
