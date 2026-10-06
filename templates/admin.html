@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.7 (Session 237, 2026-10-06 — Founder: rescoring on the admin image grid gave no feedback — "i do not know if its being done or not." The Sonnet "Rescore" button (image-grid tile, Sonnet tab) was a plain form POST causing a full-page redirect with zero in-page progress; the Session-211 progress-bar markup already sat in every tile but was only ever wired to the Haiku button. Fixed with NO backend change — both routes already supported this: /admin/image/<id>/force-rescore already returns JSON instead of redirecting when sent the X-Requested-With header, and /score-status/<id> already works for any image an admin can view (not Haiku-only like /try/status/<id>). New sonnetRescore() JS function mirrors haikuRescore()'s progress-bar + polling pattern, posts via fetch, polls every 4s, updates score/tier on the tile in place. Added a shared _rescoreSecTicker() helper used by BOTH haikuRescore() and the new sonnetRescore() — a live "Scoring… Ns" counter that ticks every second and is stopped the instant the job ends (success, error, or timeout), plus a green "✓ Done · Ns" on completion for both. Haiku's own polling/bar logic is otherwise unchanged. RETAINS admin-3.6.) #}
 {# SL-VERSION: admin-3.6 (Session 236, 2026-10-04 — Founder request: no way to export the member list, and no single place showing Haiku/Sonnet/UAT members together. Added: (1) a new "Users" item at the top of the Members sidebar group, linking to the existing /admin/users page, with a badge showing the combined paid+UAT+Haiku count. (2) A "CSV" download link in each of the three existing member panel headers (Paid subscribers, UAT & Learning, Haiku members) — each links to the new /admin/users/export.csv?type=... route (app.py v182.97) and downloads that one segment as a spreadsheet file with ID, Name, Email, Type, Plan, Joined, Scored images, Best evaluation, Last scored. The links use event.stopPropagation() so clicking "CSV" does not also collapse/expand the panel underneath it. No existing table, button or route was removed or renamed. RETAINS admin-3.5.) #}
 {# SL-VERSION: admin-3.5 (Session 235, 2026-10-04 — Links and note only: Curation (Bulk Special Run, /admin/curation) added to the sidebar (Images group), the mobile menu and Quick actions; the grey bulk-upload note now points to it. No other change. RETAINS admin-3.4.) #}
 {# SL-VERSION: admin-3.4 (Session 235, 2026-10-03 — Links only: new Checks hub (/admin/checks) added to the sidebar (Open Call group), the mobile menu and Quick actions; Score audit link added. No other change. RETAINS admin-3.3.) #}
@@ -953,7 +954,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
                   {% if admin_engine == 'haiku' %}
                   <button class="ta rescore-btn" type="button" onclick="haikuRescore({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Rescore</button>
                   {% else %}
-                  <form method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:inline" onsubmit="return confirm('Force rescore image #{{ img.id }}?')"><button class="ta rescore-btn" type="submit">Rescore</button></form>
+                  <button class="ta rescore-btn" type="button" onclick="sonnetRescore({{ img.id }}, '{{ (recent_users.get(img.user_id, 'Image ' ~ img.id))|replace("'","\\'")|e }}', this)">Rescore</button>
                   {% endif %}
                 {% endif %}
                 {% if admin_engine == 'sonnet' %}
@@ -2067,6 +2068,18 @@ function reinstateUser(userId, userName){
     });
 }
 
+// ── RESCORE PROGRESS — shared seconds-ticker helper (S237) ───────────────────
+// Starts a 1s interval that writes 'Scoring… Ns' into the label while a
+// rescore is in flight. Returns the interval id so the caller can clearInterval
+// it the moment the job ends (success, error, or timeout) — the elapsed count
+// always stops the instant we stop waiting, never free-runs after that.
+function _rescoreSecTicker(scoringLabel, startTime) {
+  if (scoringLabel) scoringLabel.textContent = 'Scoring… 0s';
+  return setInterval(function() {
+    if (scoringLabel) scoringLabel.textContent = 'Scoring… ' + Math.floor((Date.now() - startTime) / 1000) + 's';
+  }, 1000);
+}
+
 // ── HAIKU RESCORE ────────────────────────────────────────────────────────────
 function haikuRescore(imageId, userName, btn) {
   if(!confirm('Rescore ' + userName + ' with the current Haiku prompt?')) return;
@@ -2081,11 +2094,14 @@ function haikuRescore(imageId, userName, btn) {
 
   // Show progress bar and label on tile
   if (progressWrap) progressWrap.style.display = 'block';
-  if (scoringLabel) scoringLabel.style.display = 'block';
+  if (scoringLabel) { scoringLabel.style.display = 'block'; scoringLabel.style.color = '#C8A84B'; }
 
   btn.disabled = true;
   btn.textContent = '…';
   btn.style.opacity = '0.6';
+
+  var jobStart = Date.now();
+  var secTimer = _rescoreSecTicker(scoringLabel, jobStart);
 
   // Animate bar from 0 to 85% while scoring runs
   var barPct = 0;
@@ -2099,6 +2115,7 @@ function haikuRescore(imageId, userName, btn) {
     .then(function(d){
       if (!d.ok) {
         clearInterval(barTimer);
+        clearInterval(secTimer);
         if (progressWrap) progressWrap.style.display = 'none';
         if (scoringLabel) scoringLabel.style.display = 'none';
         btn.textContent = 'Rescore';
@@ -2116,6 +2133,7 @@ function haikuRescore(imageId, userName, btn) {
       function pollStatus() {
         if (Date.now() - pollStart > pollLimit) {
           clearInterval(barTimer);
+          clearInterval(secTimer);
           if (progressWrap) progressWrap.style.display = 'none';
           if (scoringLabel) scoringLabel.style.display = 'none';
           btn.textContent = 'Rescore';
@@ -2128,16 +2146,18 @@ function haikuRescore(imageId, userName, btn) {
           .then(function(r){ return r.json(); })
           .then(function(s){
             if (s.status === 'scored' && s.score) {
-              // Complete — fill bar to 100%
+              // Complete — fill bar to 100%, stop both timers at the instant we know
               clearInterval(barTimer);
+              clearInterval(secTimer);
+              var elapsedSec = Math.floor((Date.now() - jobStart) / 1000);
               if (progressBar) progressBar.style.width = '100%';
-              if (scoringLabel) { scoringLabel.textContent = '✓ Done'; scoringLabel.style.color = '#4ade80'; }
+              if (scoringLabel) { scoringLabel.textContent = '✓ Done · ' + elapsedSec + 's'; scoringLabel.style.color = '#4ade80'; }
 
               // Update score + tier on tile in place
               if (scoreEl) scoreEl.textContent = s.score.toFixed(2);
               if (tierEl)  { tierEl.textContent = s.tier || ''; tierEl.style.color = '#C8A84B'; }
 
-              showFlash(userName + ': ' + s.score.toFixed(2) + ' — ' + (s.tier || ''), 'success');
+              showFlash(userName + ': ' + s.score.toFixed(2) + ' — ' + (s.tier || '') + ' (' + elapsedSec + 's)', 'success');
 
               // Reset tile after 3s
               setTimeout(function(){
@@ -2159,11 +2179,140 @@ function haikuRescore(imageId, userName, btn) {
     })
     .catch(function(){
       clearInterval(barTimer);
+      clearInterval(secTimer);
       if (progressWrap) progressWrap.style.display = 'none';
       if (scoringLabel) scoringLabel.style.display = 'none';
       btn.textContent = 'Rescore';
       btn.disabled = false;
       btn.style.opacity = '1';
+      showFlash('Network error.', 'error');
+    });
+}
+
+// ── SONNET RESCORE (S237 — previously a plain form POST with zero in-page
+// feedback; a full-page redirect was the only sign anything happened, and on
+// the admin image grid it gave no sign at all. Now mirrors haikuRescore()'s
+// progress bar + elapsed-seconds + poll pattern. No backend change needed:
+// /admin/image/<id>/force-rescore already returns JSON instead of redirecting
+// when called with the X-Requested-With header (built, just never used from
+// here before), and /score-status/<id> already works for any image the
+// current user owns or that an admin is viewing — not Haiku-only like
+// /try/status/<id>. Rule 26 (force-rescore must never touch a Haiku image)
+// is still enforced server-side; if this button is ever wired to a Haiku
+// image by mistake, the route itself refuses and returns the same JSON error
+// shape handled below, not a destructive rescore. ─────────────────────────────
+function sonnetRescore(imageId, userName, btn) {
+  if(!confirm('Force rescore image for ' + userName + '?')) return;
+
+  var tile = btn.closest('.img-tile') || document.querySelector('[data-image-id="' + imageId + '"]');
+  var progressWrap = tile ? tile.querySelector('.tile-progress') : null;
+  var progressBar  = tile ? tile.querySelector('.tile-progress-bar') : null;
+  var scoringLabel = tile ? tile.querySelector('.tile-scoring-label') : null;
+  var scoreEl      = tile ? tile.querySelector('.tile-score') : null;
+  var tierEl       = tile ? tile.querySelector('.tile-tier') : null;
+
+  if (progressWrap) progressWrap.style.display = 'block';
+  if (scoringLabel) { scoringLabel.style.display = 'block'; scoringLabel.style.color = '#C8A84B'; }
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  btn.style.opacity = '0.6';
+
+  var jobStart = Date.now();
+  var secTimer = _rescoreSecTicker(scoringLabel, jobStart);
+
+  // Animate bar from 0 to 85% while scoring runs. Sonnet's own main scoring
+  // call can run close to a minute or more (see auto_score timing notes),
+  // so this climbs slower than Haiku's bar to avoid sitting at 85% for long.
+  var barPct = 0;
+  var barTimer = setInterval(function() {
+    barPct = Math.min(barPct + (Math.random() * 3 + 1.5), 85);
+    if (progressBar) progressBar.style.width = barPct + '%';
+  }, 1500);
+
+  function stopTimers() {
+    clearInterval(barTimer);
+    clearInterval(secTimer);
+  }
+
+  function resetTile() {
+    stopTimers();
+    if (progressWrap) progressWrap.style.display = 'none';
+    if (scoringLabel) scoringLabel.style.display = 'none';
+    btn.textContent = 'Rescore';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+
+  fetch('/admin/image/' + imageId + '/force-rescore', {
+    method: 'POST',
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.status === 'error') {
+        resetTile();
+        showFlash(d.message || 'Failed.', 'error');
+        return;
+      }
+
+      showFlash('Rescoring ' + userName + '…', 'success');
+
+      var pollStart = Date.now();
+      // Server allows up to two ~120s attempts (one retry) — give the client
+      // poll a longer ceiling than Haiku's so a legitimate second attempt
+      // isn't mistaken for a hang.
+      var pollLimit = 260000;
+
+      function pollStatus() {
+        if (Date.now() - pollStart > pollLimit) {
+          resetTile();
+          showFlash('Timeout — reload to check.', 'error');
+          return;
+        }
+        fetch('/score-status/' + imageId)
+          .then(function(r){ return r.json(); })
+          .then(function(s){
+            if (s.status === 'processing') {
+              setTimeout(pollStatus, 4000);
+              return;
+            }
+            if (s.status === 'error') {
+              resetTile();
+              showFlash(s.message || 'Scoring failed.', 'error');
+              return;
+            }
+            // Any other status ('ok', 'needs_review', 'flagged') means the
+            // background job is done — show the result.
+            stopTimers();
+            var elapsedSec = Math.floor((Date.now() - jobStart) / 1000);
+            if (progressBar) progressBar.style.width = '100%';
+            if (scoringLabel) { scoringLabel.textContent = '✓ Done · ' + elapsedSec + 's'; scoringLabel.style.color = '#4ade80'; }
+
+            if (s.score != null && scoreEl) scoreEl.textContent = parseFloat(s.score).toFixed(2);
+            if (s.tier && tierEl) { tierEl.textContent = s.tier; tierEl.style.color = '#C8A84B'; }
+
+            var resultMsg = (s.score != null)
+              ? (userName + ': ' + parseFloat(s.score).toFixed(2) + ' — ' + (s.tier || '') + ' (' + elapsedSec + 's)')
+              : (userName + ': rescore finished (' + elapsedSec + 's)' + (s.message ? ' — ' + s.message : ''));
+            showFlash(resultMsg, s.status === 'ok' ? 'success' : 'info');
+
+            setTimeout(function(){
+              if (progressWrap) progressWrap.style.display = 'none';
+              if (scoringLabel) { scoringLabel.style.display = 'none'; scoringLabel.textContent = 'Scoring…'; scoringLabel.style.color = '#C8A84B'; }
+              if (progressBar) progressBar.style.width = '0%';
+              btn.textContent = 'Rescore';
+              btn.disabled = false;
+              btn.style.opacity = '1';
+            }, 3000);
+          })
+          .catch(function(){ setTimeout(pollStatus, 4000); });
+      }
+
+      setTimeout(pollStatus, 4000);
+    })
+    .catch(function(){
+      resetTile();
       showFlash('Network error.', 'error');
     });
 }
