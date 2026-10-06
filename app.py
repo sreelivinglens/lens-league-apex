@@ -1,3 +1,23 @@
+# SL-VERSION: 182.98 (Session 237, 2026-10-06 -- FIX: the "Calibrated · N images"
+# scorecard badge (public_card, image_detail, download_card_pdf) previously read
+# Image.query.filter_by(status='scored').count() -- a live count that undercounts
+# (confirmed undercounting at 46 against a true figure of 359) and was NOT what
+# the founder asked for ("the 312 -change that to dynamic state from here on" was
+# meant as a persistent, ever-incrementing counter, not a live re-count). Replaced
+# with a true persistent counter: new site_settings key 'sonnet_calibrated_count',
+# one-time-seeded to 359 (312 Sonnet-scored + 47 Open Call, founder's own figure),
+# read via new _read_sonnet_calibrated_count() and incremented by new
+# _increment_sonnet_calibrated_count() -- called once, inside
+# _auto_score_with_timeout()'s success path only, so every completed Sonnet
+# auto_score() run (including rescores) adds one, and a timed-out/failed attempt
+# never does. This also retires the two unversioned "SL-237.1"/"SL-237.2" inline
+# comments left in this file from an earlier pass -- their work is folded into
+# this entry. card_public.html does not render this badge at all (confirmed by
+# inspection) -- calibrated_count is still passed to it, harmlessly unused, in
+# case that changes later. NOT YET LIVE-TESTED -- needs one successful (non-
+# timeout) rescore on staging, confirming: (1) no exception from either new
+# function in the Railway console, (2) the number shown goes to 360 (not 359,
+# not a re-count), on both the webpage and the downloaded PDF. RETAINS 182.97.)
 # SL-VERSION: 182.97 (Session 236, 2026-10-04 -- NEW FEATURE (staging only, not yet pushed): founder reported there was no way to export the member list, and no single admin page listing Haiku, Sonnet and UAT members together with email/ID. Added: (1) two small helper functions, _sl_prelaunch_uat_ids() (finds the pre-launch "Sonnet free trial" cohort -- accounts created before HAIKU_LAUNCH_DATE that scored real, non-/try images and never got a real paid or UAT plan -- and treats them as UAT/Learning rather than Haiku, matching how the existing UAT admin panel already explains this group) and _sl_classify_user_type(user, prelaunch_ids) (gives one consistent label -- "Sonnet (paid)", "UAT / Learning", or "Haiku (free tier)" -- reusable anywhere a user needs a type). (2) The existing but orphaned /admin/users route (admin_users(), renders admin_users.html) now also tags every user object with a .user_type attribute using the new classifier, wrapped in try/except so a classification failure cannot break the page -- the route's existing behavior and template are otherwise untouched. (3) A brand new route, /admin/users/export.csv (admin_users_export_csv()), which streams a CSV download of the member list -- all members by default, or just one segment via ?type=sonnet / ?type=uat / ?type=haiku -- with columns ID, Name, Email, Type, Plan, Track, City, Joined, Active, Scored images, Best evaluation, Last scored. Nothing in the paying/UAT/Haiku member panels' existing queries, the scoring pipeline, or any other route was touched. Needs a staging test: open /admin/users and confirm it still loads with no error; then click each new "CSV" download link added in admin.html (Paid subscribers, UAT & Learning, Haiku members panels) and confirm each downloaded file opens in Excel/Sheets with the right columns and only that segment's rows, and that the row counts roughly match each panel's on-screen badge count. RETAINS 182.96.)
 # SL-VERSION: 182.96 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed, Open Call narrative prompt only): same species-misnaming gap as 182.95, fixed in the second place it exists. _CJ_HAIKU_EXTRA (the Open Call narrative prompt, ~line 20249) had a SPECIES NAMING instruction that pushed the model to always name a species confidently when possible, but it had no caution against naming it WRONG and no requirement to stay consistent across impression / score_read / strength / next_leap. Fix: added one paragraph directly after the existing SPECIES NAMING rule -- same substance as the 182.95 fix for /try -- naming the egret/heron-vs-seagull mistake specifically, requiring the same subject name be used everywhere it is mentioned, and telling the model to fall back to a generic term when not confident rather than guess. Nothing else in this prompt, the six-dimension arithmetic, or any other route touched. Needs a staging test: rerun or rescore an Open Call entry with an easily-confused bird/animal subject and check the written fields stay consistent. RETAINS 182.95.)
 # SL-VERSION: 182.95 (Session 236, 2026-10-04 -- FIX (staging only, not yet pushed, free-tier /try prompt only): founder reported a Haiku /try evaluation calling egrets "seagull" throughout the written commentary (impression, next_leap, the Visual Disruption and Affective Quotient reasons) even though species_note itself was correctly left blank. Root cause: the "CONSERVATIVE IDENTIFICATION ONLY" discipline in the Haiku scoring prompt (_try_run_haiku, the big prompt string ~line 43743) was scoped to the species_note field alone -- every other free-text field (impression, dim_obs_*, next_leap_obs, etc.) had no instruction to stay consistent with that identification, so the model was free to casually name the subject something else, and did. Fix: added one new instruction block, "SUBJECT NAME CONSISTENCY", directly after the existing species_note rules, telling the model to (a) use the exact same subject name everywhere in its response that it uses in species_note, (b) never introduce a different specific name in passing, with egret/heron-vs-seagull given as the named example since that is the exact mistake seen, and (c) fall back to a generic term ("the bird", "the wading bird") in every field when it is not confident, rather than guessing a specific name anywhere. Nothing else in the prompt, the scoring arithmetic, or any other route touched. This is prompt wording only -- it changes what the model is told, not any number. Needs a staging test: run a fresh /try upload on a similar subject (egrets, herons, or any easily-confused bird) and confirm the written text no longer misnames it. The existing seagull-labelled evaluation already stored (image 142) is not corrected by this -- its text was written before this change; it would need a rescore to pick up new wording, and a rescore is a separate decision. RETAINS 182.94.)
@@ -2271,6 +2291,22 @@ def _run_startup_tasks():
             except Exception as _ss_mig:
                 db.session.rollback()
                 print(f'site_settings migration warning: {_ss_mig}')
+
+            # SL-182.98 — one-time seed for the persistent "Calibrated · N images"
+            # badge counter. Baseline is the founder's own count: 312 Sonnet-scored
+            # images + 47 Open Call images = 359 (not a live query — see
+            # _read_sonnet_calibrated_count()/_increment_sonnet_calibrated_count()).
+            # ON CONFLICT DO NOTHING — never resets an already-incremented value.
+            try:
+                db.session.execute(db.text(
+                    "INSERT INTO site_settings (key, value) VALUES "
+                    "('sonnet_calibrated_count', '359') ON CONFLICT (key) DO NOTHING"
+                ))
+                db.session.commit()
+                print('sonnet_calibrated_count seed OK.')
+            except Exception as _cal_seed:
+                db.session.rollback()
+                print(f'sonnet_calibrated_count seed warning: {_cal_seed}')
 
             # waitlist_international — Session 190
             try:
@@ -9142,6 +9178,41 @@ def _get_quota_status(user):
         }
 
 
+def _read_sonnet_calibrated_count():
+    """Reads the persistent 'Calibrated · N images' counter from site_settings.
+    SL-182.98. Baseline 359 (312 Sonnet-scored + 47 Open Call, founder's own
+    count, Session 237). Falls back to 359 if the row is missing or unreadable
+    — never breaks a page/PDF render. This is NOT a live Image.query count;
+    see _increment_sonnet_calibrated_count() for how it moves."""
+    try:
+        _row = db.session.execute(db.text(
+            "SELECT value FROM site_settings WHERE key = 'sonnet_calibrated_count'"
+        )).fetchone()
+        if _row and _row[0] is not None:
+            return int(_row[0])
+    except Exception as _rce:
+        app.logger.warning(f'[_read_sonnet_calibrated_count] {_rce}')
+    return 359
+
+
+def _increment_sonnet_calibrated_count():
+    """Atomically increments the persistent 'Calibrated · N images' counter.
+    SL-182.98. Called once per completed Sonnet auto_score() run (including
+    rescores) — see _auto_score_with_timeout()'s success path, the one choke
+    point all member-scoring callers go through. Never called on a timed-out
+    or failed attempt. A failure here must never break scoring, so it is
+    wrapped and only logged."""
+    try:
+        db.session.execute(db.text(
+            "UPDATE site_settings SET value = (COALESCE(value, '359')::int + 1)::text, "
+            "updated_at = NOW() WHERE key = 'sonnet_calibrated_count'"
+        ))
+        db.session.commit()
+    except Exception as _ice:
+        db.session.rollback()
+        app.logger.warning(f'[_increment_sonnet_calibrated_count] {_ice}')
+
+
 def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
     """
     Wraps auto_score() with a hard timeout and one automatic retry.
@@ -9173,7 +9244,15 @@ def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
         with _cf.ThreadPoolExecutor(max_workers=1) as _ex:
             _fut = _ex.submit(_run)
             try:
-                return _fut.result(timeout=timeout_secs)
+                _result = _fut.result(timeout=timeout_secs)
+                # SL-182.98 — counts this completed Sonnet run toward the
+                # persistent "Calibrated · N images" badge. Success path only;
+                # a timed-out attempt never reaches here.
+                try:
+                    _increment_sonnet_calibrated_count()
+                except Exception as _cie:
+                    app.logger.warning(f'[auto_score_timeout] calibrated_count increment: {_cie}')
+                return _result
             except _cf.TimeoutError:
                 _fut.cancel()
                 if attempt == 1:
@@ -12951,18 +13030,13 @@ def public_card(token):
         if _dval is not None:
             _dim_breakdown.append({'score': _dval, 'l1': _dl1, 'l2': _dl2})
 
-    # ── SL-237.2 (Session 237) — "Calibrated · N images" made live, same
-    # query as image_detail()/download_card_pdf(). Passed defensively even
-    # though I have not seen card_public.html's source this session (not
-    # among the files available to me) — if that template also hardcodes
-    # "312" the variable is here ready to use; if it doesn't reference the
-    # badge at all, this is an unused, harmless context var. Flagging this
-    # gap in the handoff rather than guessing at that template's content.
-    _calibrated_count = 312
-    try:
-        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
-    except Exception as _cce:
-        app.logger.warning(f'[public_card] calibrated_count: {_cce}')
+    # ── SL-182.98 (Session 237, corrected) — "Calibrated · N images" now
+    # reads the persistent counter (359 baseline, +1 per completed Sonnet
+    # run), not a live Image.query count — the live-count approach here
+    # previously undercounted and has been replaced. card_public.html does
+    # not currently render this badge at all (confirmed by inspection this
+    # session) — passed through anyway so it's ready if that ever changes.
+    _calibrated_count = _read_sonnet_calibrated_count()
 
     return render_template(
         'card_public.html',
@@ -13310,16 +13384,12 @@ def image_detail(image_id):
         db.session.rollback()
         app.logger.warning(f'[image_detail] drawer gate: {_dge}')
 
-    # ── SL-237.2 (Session 237) — "Calibrated · N images" trust badge, made
-    # live (was hardcoded "312" in image_detail.html, confirmed stale).
-    # Same count the admin dashboard uses for "scored" (~L23281) — one
-    # definition of "calibrated" reused everywhere, not reinvented here.
-    _calibrated_count = 312
-    try:
-        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
-    except Exception as _cce:
-        db.session.rollback()
-        app.logger.warning(f'[image_detail] calibrated_count: {_cce}')
+    # ── SL-182.98 (Session 237, corrected) — "Calibrated · N images" trust
+    # badge. Was hardcoded "312" in image_detail.html (confirmed stale), then
+    # briefly wired to a live Image.query count (undercounted). Now reads the
+    # persistent counter: 359 baseline + 1 per completed Sonnet auto_score()
+    # run, including rescores. See _read_sonnet_calibrated_count().
+    _calibrated_count = _read_sonnet_calibrated_count()
 
     # ── Pending peer eval check — show nudge only when user has work waiting ──
     _has_pending_eval = False
@@ -13929,21 +13999,13 @@ def download_card_pdf(image_id):
     except Exception as _pce:
         app.logger.warning(f'[download_card_pdf] percentile: {_pce}')
 
-    # ── SL-237.2 (Session 237) — "Calibrated · N images" trust badge, made
-    # live. Founder: "the 312 -change that to dynamic state from here on."
-    # Was a hardcoded string in both this PDF and image_detail.html,
-    # confirmed stale (frozen at 312 while the standing rules doc already
-    # lists 354 scored images) — it never updated on its own. Same count
-    # query the admin dashboard already uses for "scored" (Image.query.
-    # filter_by(status='scored').count(), app.py ~L23281) so this reads the
-    # same number an admin would see, not a new/different definition of
-    # "calibrated". Wrapped in try/except with the old 312 as a last-resort
-    # fallback — a failed count must never break PDF generation.
-    _calibrated_count = 312
-    try:
-        _calibrated_count = Image.query.filter_by(status='scored').count() or 312
-    except Exception as _cce:
-        app.logger.warning(f'[download_card_pdf] calibrated_count: {_cce}')
+    # ── SL-182.98 (Session 237, corrected) — "Calibrated · N images" trust
+    # badge. Founder: "the 312 -change that to dynamic state from here on."
+    # Was hardcoded, then briefly wired to a live Image.query count
+    # (undercounted — not what the founder asked for). Now reads the
+    # persistent counter: 359 baseline + 1 per completed Sonnet auto_score()
+    # run, including rescores. See _read_sonnet_calibrated_count().
+    _calibrated_count = _read_sonnet_calibrated_count()
 
     # ── SL-237.1 — Photography Awards progress line. Same 8.5 / 9.0 tiers
     # and "to go" wording as the launchpad card in image_detail.html.
