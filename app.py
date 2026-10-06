@@ -1,3 +1,20 @@
+# SL-VERSION: 182.101 (Session 237, 2026-10-06 -- FREE-TIER SAFETY FIX, founder-flagged as
+# urgent: the Haiku /try evaluation fabricated a second person ("the vendor and child") on a
+# single-person Street photograph -- not a misread detail, a hallucinated subject, on the free
+# tier shown to prospective subscribers. Root cause: _try_vision_analyse()'s pre-call
+# (_HAIKU_VISION_PROMPT) only ever identified ONE "primary subject" with no count and no
+# ceiling, so the main scoring call (_TRY_HAIKU_PROMPT) was free to add people on its own with
+# nothing grounding it. Same class of bug as the Sonnet-side gaze-hallucination fix (auto_score.py
+# 171.53, this session) -- a narrative field with no upstream verified fact to constrain it.
+# Fix: (1) _HAIKU_VISION_PROMPT gets a new Q8 + JSON field "human_count" (0/1/2/3+), with the
+# system prompt (_HAIKU_VISION_SYSTEM) explicitly told to count conservatively -- a person must
+# be actually visible, never assumed from context (a market stall, a doorway) to imply someone
+# off-frame. (2) The VERIFIED SUBJECT ground-truth block injected into the main scoring call now
+# states human_count as a hard ceiling, not a minimum, and explicitly bans adding any person,
+# child, vendor, or bystander beyond that count even when the scene makes one plausible. (3) The
+# human_count=0 case explicitly bans naming any person/figure/face at all.
+# NOT YET CONFIRMED LIVE -- needs a push + a real /try evaluation on a single-person image +
+# Railway log showing the new "human_count=" field, per Rules 3/16. RETAINS 182.100.)
 # SL-VERSION: 182.100 (Session 237, 2026-10-06 -- label-consistency fix, founder-flagged:
 # the Sonnet member scorecard PDF showed THREE different label sets for the same five
 # dimensions on one document -- the top score band, the "Dimension Observations" section
@@ -43246,6 +43263,9 @@ _HAIKU_VISION_SYSTEM = (
     "You are a visual analyst. Describe exactly what you see in the photograph. "
     "Do NOT score, evaluate, or give feedback. Do NOT infer — only describe what is "
     "clearly visible. If something is ambiguous, say so. "
+    "Count people conservatively: a person must be actually visible (body or face in "
+    "frame) to be counted — never count a person you assume must be nearby, off-frame, "
+    "or implied by the scene (a market stall, a vehicle with a driver, a doorway). "
     "Respond ONLY with valid JSON. No preamble, no markdown fences. "
     "Never use a literal double-quote inside a string value — use single quotes instead."
 )
@@ -43263,7 +43283,11 @@ _HAIKU_VISION_PROMPT = (
     "5. Is the primary subject rendered as a silhouette — shape only, no surface detail visible? yes/no\n"
     "6. What is the lighting? (backlit/frontlit/sidelit/overcast/low_light_dark_background)\n"
     "7. How confident are you in the subject identification? (high/medium/low)\n"
-    "   low = silhouette, heavily processed, very small/distant subject\n\n"
+    "   low = silhouette, heavily processed, very small/distant subject\n"
+    "8. HUMAN COUNT — count ONLY people whose body or face is actually, clearly visible in "
+    "the frame. Do not count implied, out-of-frame, or assumed people. If subject_group is not "
+    "H and no people are visible anywhere in the frame, answer 0.\n"
+    "   How many distinct people are clearly visible? (0/1/2/3+)\n\n"
     "Return this exact JSON:\n"
     "{\n"
     "  \"subject_type\": \"<common name of primary subject>\",\n"
@@ -43272,7 +43296,8 @@ _HAIKU_VISION_PROMPT = (
     "  \"behaviour\": \"<specific behaviour name>\",\n"
     "  \"is_silhouette\": <true|false>,\n"
     "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
-    "  \"confidence\": \"<high|medium|low>\"\n"
+    "  \"confidence\": \"<high|medium|low>\",\n"
+    "  \"human_count\": \"<0|1|2|3+>\"\n"
     "}"
 )
 
@@ -43336,7 +43361,8 @@ def _try_vision_analyse(img_b64):
             f'subject={result.get("subject_type","?")} '
             f'behaviour={result.get("behaviour","?")} '
             f'silhouette={result.get("is_silhouette","?")} '
-            f'confidence={result.get("confidence","?")}'
+            f'confidence={result.get("confidence","?")} '
+            f'human_count={result.get("human_count","?")}'
         )
         return result
     except _json.JSONDecodeError as _je:
@@ -44673,6 +44699,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     _v_behaviour= _vision.get('behaviour', '')
     _v_sil      = _vision.get('is_silhouette', False)
     _v_conf     = _vision.get('confidence', '')        # high/medium/low
+    _v_humans   = str(_vision.get('human_count', '')).strip()  # 0/1/2/3+
 
     # Build VERIFIED SUBJECT block — injected into prompt as ground truth
     # Species_note gate: only fire when confidence is high and not silhouette
@@ -44687,6 +44714,37 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
             _vs_lines.append(f'Behaviour: {_v_behaviour}')
         if _v_env:
             _vs_lines.append(f'Environment: {_v_env}')
+        # SL-VERSION 182.100 (Session 237, 2026-10-06) — PEOPLE COUNT GATE.
+        # Founder-reported live bug: on a single-person Street image, the
+        # scoring call invented a second person ("the vendor and child")
+        # that is not in the photograph — a fabricated subject, not a
+        # misread one, and more severe than a misidentified detail because
+        # the whole narrative (impression, tech_read, visual_flow, imagine,
+        # edit_tips) was built around a person who does not exist. Root
+        # cause: the pre-call only ever named ONE "primary subject" with no
+        # count or cap, so nothing stopped the scoring call from adding
+        # more people on its own. Fix: the pre-call now returns human_count
+        # (Q8 above), and that count is injected here as a hard ceiling —
+        # explicit enough that "1" cannot be read as "at least 1."
+        if _v_humans:
+            if _v_humans == '0':
+                _vs_lines.append(
+                    'PEOPLE COUNT: 0 people are visible in this frame. Do NOT describe, '
+                    'name, or refer to any person, figure, vendor, child, or face anywhere '
+                    'in the output — there is no one in this photograph.'
+                )
+            elif _v_humans in ('1', '2', '3+'):
+                _vs_lines.append(
+                    f'PEOPLE COUNT: exactly {_v_humans} {"person is" if _v_humans == "1" else "people are"} '
+                    f'visible in this frame — this is a hard ceiling, not a minimum. Every field '
+                    f'(impression, tech_read, visual_flow, imagine, edit_tips, dim_obs_*, etc.) must '
+                    f'describe only the {_v_humans} confirmed above. Do NOT add a second person, a '
+                    f'child, a companion, a vendor, a bystander, or any other figure that is not one '
+                    f'of the {_v_humans} confirmed here — even if the scene (a market, a doorway, a '
+                    f'crowd setting) makes an additional person plausible. If you are not certain '
+                    f'whether a figure is a separate person or part of the background, treat it as '
+                    f'background, not a person.'
+                )
         if _v_sil:
             _vs_lines.append(
                 'IS SILHOUETTE: yes — subject rendered as shape only. '
