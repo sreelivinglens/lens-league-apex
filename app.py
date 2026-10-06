@@ -1,3 +1,21 @@
+# SL-VERSION: 182.102 (Session 237, 2026-10-06 -- FREE-TIER SAFETY FIX, PART 2, founder-flagged
+# as urgent after live re-test on TWO separate real images: 182.101's people-count gate was not
+# enough. Both test photos genuinely contain two real adults (a street vendor + a customer); the
+# count ceiling correctly stopped a THIRD person being invented, but did nothing to stop one of
+# the two real, counted adults being mislabelled "a child" throughout the narrative (impression,
+# tech_read, visual_flow, imagine, edit_tips all repeated it) -- founder confirmed directly from
+# the source images that no child is present in either. A count gate constrains HOW MANY people;
+# it does not constrain WHO they are. Fix: _HAIKU_VISION_PROMPT gets a new Q9 + JSON field
+# "child_present" (yes/no), defined conservatively in both the question and the system prompt
+# (_HAIKU_VISION_SYSTEM) -- a seated, crouching, or smaller/more-distant adult is explicitly NOT
+# a child; only unambiguous minor face/body proportions count. The VERIFIED SUBJECT block now
+# hard-bans the words "child"/"kid"/"boy"/"girl" and any young/minor framing anywhere in the
+# output unless child_present was explicitly true -- deliberately blunt, matching how confident
+# and repeated the observed failure was, not a soft suggestion. Same evidence-gate pattern as the
+# Sonnet-side species/gaze gates (auto_score.py 171.53) and this file's own 182.101 people-count
+# gate. NOT YET CONFIRMED LIVE -- needs a push + a fresh /try evaluation on an image with two
+# adults + Railway log showing "child_present=" + the founder reading the resulting card and
+# confirming no minor-referring word appears, per Rules 3/16. RETAINS 182.101.)
 # SL-VERSION: 182.101 (Session 237, 2026-10-06 -- FREE-TIER SAFETY FIX, founder-flagged as
 # urgent: the Haiku /try evaluation fabricated a second person ("the vendor and child") on a
 # single-person Street photograph -- not a misread detail, a hallucinated subject, on the free
@@ -43266,6 +43284,10 @@ _HAIKU_VISION_SYSTEM = (
     "Count people conservatively: a person must be actually visible (body or face in "
     "frame) to be counted — never count a person you assume must be nearby, off-frame, "
     "or implied by the scene (a market stall, a vehicle with a driver, a doorway). "
+    "Never call an adult a child because they are seated, crouching, smaller in the frame "
+    "due to distance or angle, or positioned lower than another person — those are framing "
+    "facts, not age facts. Only call someone a child if their face and body proportions are "
+    "themselves unambiguously those of a minor. "
     "Respond ONLY with valid JSON. No preamble, no markdown fences. "
     "Never use a literal double-quote inside a string value — use single quotes instead."
 )
@@ -43287,7 +43309,12 @@ _HAIKU_VISION_PROMPT = (
     "8. HUMAN COUNT — count ONLY people whose body or face is actually, clearly visible in "
     "the frame. Do not count implied, out-of-frame, or assumed people. If subject_group is not "
     "H and no people are visible anywhere in the frame, answer 0.\n"
-    "   How many distinct people are clearly visible? (0/1/2/3+)\n\n"
+    "   How many distinct people are clearly visible? (0/1/2/3+)\n"
+    "9. CHILD PRESENT — is any one of the people counted above UNAMBIGUOUSLY a child "
+    "(a minor — by face shape, body proportions, or height relative to any adults present), "
+    "not just an adult who happens to be smaller, seated, crouching, or farther from the "
+    "camera? A seated or distant adult is NOT a child. If you are not certain, answer no.\n"
+    "   Is a child clearly present? (yes/no)\n\n"
     "Return this exact JSON:\n"
     "{\n"
     "  \"subject_type\": \"<common name of primary subject>\",\n"
@@ -43297,7 +43324,8 @@ _HAIKU_VISION_PROMPT = (
     "  \"is_silhouette\": <true|false>,\n"
     "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
     "  \"confidence\": \"<high|medium|low>\",\n"
-    "  \"human_count\": \"<0|1|2|3+>\"\n"
+    "  \"human_count\": \"<0|1|2|3+>\",\n"
+    "  \"child_present\": <true|false>\n"
     "}"
 )
 
@@ -43362,7 +43390,8 @@ def _try_vision_analyse(img_b64):
             f'behaviour={result.get("behaviour","?")} '
             f'silhouette={result.get("is_silhouette","?")} '
             f'confidence={result.get("confidence","?")} '
-            f'human_count={result.get("human_count","?")}'
+            f'human_count={result.get("human_count","?")} '
+            f'child_present={result.get("child_present","?")}'
         )
         return result
     except _json.JSONDecodeError as _je:
@@ -44700,6 +44729,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     _v_sil      = _vision.get('is_silhouette', False)
     _v_conf     = _vision.get('confidence', '')        # high/medium/low
     _v_humans   = str(_vision.get('human_count', '')).strip()  # 0/1/2/3+
+    _v_child    = _vision.get('child_present', False)  # true/false
 
     # Build VERIFIED SUBJECT block — injected into prompt as ground truth
     # Species_note gate: only fire when confidence is high and not silhouette
@@ -44744,6 +44774,38 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                     f'crowd setting) makes an additional person plausible. If you are not certain '
                     f'whether a figure is a separate person or part of the background, treat it as '
                     f'background, not a person.'
+                )
+            # SL-VERSION 182.102 (Session 237, 2026-10-06) — CHILD-PRESENCE GATE.
+            # The people-count gate (182.101, above) capped how MANY people could be
+            # named, but on live re-test (two separate real photos, each genuinely
+            # containing an adult vendor + an adult customer — confirmed by the
+            # founder directly viewing both source images) the scoring call still
+            # labelled one of those real, counted adults "a child" throughout the
+            # narrative. A count ceiling does nothing to stop a real person from
+            # being mislabelled by age -- it only stops an extra person from being
+            # invented. This is a second, separate gate on WHO the counted people
+            # are, same evidence-gate pattern as the Sonnet gaze/species gates:
+            # child_present (Q9) is asserted by the pre-call, and the scoring call
+            # is hard-banned from using any minor-referring word unless it was
+            # explicitly confirmed. Deliberately blunt (bans the words outright,
+            # does not try to distinguish "child" used correctly vs incorrectly)
+            # because the failure observed was not borderline -- it was confident,
+            # repeated, and wrong on both test images.
+            if _v_child is True:
+                _vs_lines.append(
+                    'CHILD PRESENT: yes — one of the people counted above is a child. '
+                    'You may refer to them as a child.'
+                )
+            else:
+                _vs_lines.append(
+                    'CHILD PRESENT: no — every person counted above is an adult, confirmed by '
+                    'the pre-call vision analysis. Do NOT use the words "child", "kid", "boy", '
+                    'or "girl", and do NOT describe any person as young, small, or a minor, '
+                    'anywhere in the output (impression, tech_read, visual_flow, imagine, edit_tips, '
+                    'dim_obs_*, byline fields, etc.) — even if one person appears seated, crouching, '
+                    'smaller in the frame, or positioned lower than another. A seated or distant '
+                    'adult is still an adult. If you need to refer to this person, use "the other '
+                    'person", "the customer", "the second figure", or a similar adult-neutral term.'
                 )
         if _v_sil:
             _vs_lines.append(
