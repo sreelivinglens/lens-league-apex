@@ -1,3 +1,15 @@
+# SL-VERSION: 182.106 (Session 238, 2026-10-06 -- IMPORT PATH FIX, one line, found from the founder's
+# marked-up screenshot. 182.105's sl_paras filter imported the reflow helper as a bare top-level
+# `from reportlab_card import sl_reflow`. Production keeps that module in the engine package and
+# every other call site in THIS FILE already imports it as `from engine.reportlab_card import
+# build_scorecard_pdf` (~L14375). So the bare import raised ModuleNotFoundError, the filter's own
+# except caught it, logged a warning and returned the text unsplit. The symptom was exactly what the
+# founder photographed and marked "Needs Paras here": the Save PDF reflowed correctly into three
+# spaced paragraphs -- because reportlab_card calls sl_reflow from inside its own package and was
+# never affected -- while the web card still rendered tech_read as one solid block. I wrote that
+# import from the FILENAME I had been handed instead of checking how this file already imports the
+# module, which was one grep away. Now tries the engine path first and keeps the bare path as a
+# fallback. Nothing else changed. RETAINS 182.105.)
 # SL-VERSION: 182.105 (Session 238, 2026-10-06 -- "WHERE DOES THE EYE GO?" REACHES THE PHOTOGRAPHER,
 # AND LONG PROSE STOPS CLUMPING ON THE WEB CARD. Two founder-directed changes, both verified against
 # the real Egrets of Sasson Dock web page exported to PDF.
@@ -856,11 +868,27 @@ def sl_paras(text):
     if not text:
         return text
     from markupsafe import Markup as _Markup_p
+    # SL-182.106 -- IMPORT PATH FIX. 182.105 imported this as a bare top-level
+    # `from reportlab_card import ...`. The module actually lives in the engine
+    # package and every other call site in this file imports it as
+    # `from engine.reportlab_card import build_scorecard_pdf` (~L14375). So the
+    # bare import raised ModuleNotFoundError, this filter's own except caught
+    # it, logged the warning and passed the text through untouched -- which is
+    # precisely the symptom the founder photographed: the Save PDF reflowed
+    # correctly (reportlab_card calls sl_reflow internally, inside its own
+    # package, so it was never affected) while the web card still showed
+    # tech_read as one solid block. I wrote the import from the FILENAME I had
+    # been handed rather than checking how this file already imports that
+    # module, one grep away. Engine path first, bare path kept as a fallback so
+    # this cannot break if the layout ever changes.
     try:
-        from reportlab_card import sl_reflow as _sl_reflow
-    except Exception as _e_p:
-        app.logger.warning(f'[sl_paras] reflow unavailable, text passed through: {_e_p}')
-        return _Markup_p(str(text))
+        from engine.reportlab_card import sl_reflow as _sl_reflow
+    except Exception:
+        try:
+            from reportlab_card import sl_reflow as _sl_reflow
+        except Exception as _e_p:
+            app.logger.warning(f'[sl_paras] reflow unavailable, text passed through unsplit: {_e_p}')
+            return _Markup_p(str(text))
     _blocks = [b.strip() for b in _sl_reflow(str(text)).split('\n') if b.strip()]
     if len(_blocks) < 2:
         return _Markup_p(str(text))
