@@ -1,5 +1,16 @@
 """
 Shutter League — Reportlab Scorecard PDF
+SL-VERSION: 237.3 (Session 237, 2026-10-06 — founder flagged paragraph breaks in the flowing-prose
+sections ("The Photographer's Advice", "What You Controlled", "What To Watch Next", "Keep This In
+Mind") were not visually legible — they rendered as one dense block. This file's paragraph splitter
+(_paras(), below) was already correct — it has always honoured a literal newline as a paragraph
+break, each one becoming its own Paragraph flowable. The bug was two things, NOT this renderer: (1)
+the model was not reliably inserting a paragraph break at all (fixed in auto_score.py's prompt, see
+that file's own changelog), and (2) even when a break WAS present, the gap between paragraphs was
+only 5pt — visually too tight to register as a real break rather than normal line spacing. Fix here:
+the 'body' and 'body_indent' styles' space_after raised 5pt -> 11pt. This does not change anything
+else about the layout, font, or colour — only the vertical gap between paragraphs in these four
+sections. RETAINS 237.2.)
 SL-VERSION: 237.2 (Session 237, 2026-10-06 — naming fix only: "Dimension observations" section's
 dim_obs_aq row was labelled "Authentic Quality", which conflicted with the canonical public
 definition at shutterleague.com/science ("Emotion" / "The Emotion It Creates") — a contradiction
@@ -584,8 +595,16 @@ def build_scorecard_pdf(data: dict) -> bytes:
         'meta':       _sty('meta',   size=8,  leading=11, colour=DARK2,       bold=False, space_after=2),
         'credit':     _sty('credit', size=9,  leading=12, colour=GOLD_DK,     bold=True,  space_after=2),
         'sec_label':  _sty('slbl',   size=8,  leading=10, colour=MUTED,       bold=True,  space_after=4, space_before=10),
-        'body':       _sty('body',   size=11, leading=17, colour=DARK,        bold=False, space_after=5),
-        'body_indent':_sty('bindi',  size=11, leading=17, colour=DARK,        bold=False, space_after=5, left_indent=8*mm),
+        # S237.3: space_after raised 5->11 for 'body' -- these are the flowing-prose
+        # sections (The Photographer's Advice / What You Controlled / What To Watch Next
+        # / Keep This In Mind) and founder flagged paragraph breaks were not visually
+        # legible. The renderer always honoured \n as a paragraph break (_paras() in
+        # this file splits on it correctly) -- the gap between paragraphs was just too
+        # tight at 5pt to read as a clear break. This does not fix paragraphs the model
+        # fails to insert at all (that is a generation-side fix, done in auto_score.py),
+        # only makes a real break visibly obvious once the model does insert one.
+        'body':       _sty('body',   size=11, leading=17, colour=DARK,        bold=False, space_after=11),
+        'body_indent':_sty('bindi',  size=11, leading=17, colour=DARK,        bold=False, space_after=11, left_indent=8*mm),
         'body_it':    _sty('bodyi',  size=11, leading=17, colour=DARK2,       bold=False, space_after=5),
         'opening':    _sty('open',   size=13, leading=20, colour=DARK,        bold=True,  space_after=8),
         'impression': _sty('impr',   size=12, leading=18, colour=DARK,        bold=False, space_after=6),
