@@ -1,3 +1,31 @@
+# SL-VERSION: 171.46 (Session 237, 2026-10-06 -- live staging rescore of the Egrets of Sasson Dock
+# image on 171.45 FAILED both attempts (120s hard ceiling -- founder: "i cant go beyond 120 sec", a
+# real customer (Carmen, UK) is evaluating the platform on this right now). Attempt 1: 121.56s total,
+# 1.56s over. Attempt 2: ~126s total AND the model additionally wrote a multi-paragraph "SCENE
+# ANALYSIS -- MANDATORY FIRST STEP" prose preamble before the JSON, which (a) wasted real output
+# tokens and (b) broke the JSON parser outright (json.loads fails at "line 1 column 1" on prose --
+# neither existing repair pass, which both assume the string IS json, could recover from that).
+# Founder ruled out raising the timeout ceiling, so this is three targeted output-reduction/
+# hardening fixes, no architecture change: (1) Added a FINAL OUTPUT RULE as the LAST text the model
+# reads before generating (appended after every other injected block in auto_score(), and the
+# equivalent in RECALIBRATE_PROMPT) -- "the first character you output must be {" -- to stop the
+# preamble at the source. (2) Added a new repair pass 0 (_strip_preamble_and_trailer) ahead of the
+# two existing repair passes -- keeps only the span from the first '{' to the last '}' in the raw
+# response, so a stray preamble no longer causes a hard parse failure; no-op on already-clean JSON,
+# confirmed via a standalone .format() check. (3) The TEXT_REPEAT log on this same run named SEVEN
+# duplicate phrases across hard_truth/impression/conclusion/imagine/mentor_next/byline_1/dim_obs_aq
+# -- fields that were NOT touched in 171.45 (that pass only removed the three confirmed-dead
+# fields). These are the real remaining driver of the ~3,500-4,000 output tokens. Tightened: hard_truth
+# (new 35-word cap + explicit don't-restate-dim_obs/impression/conclusion note, previously uncapped),
+# impression (60->45 words), conclusion (90->65 words, explicit don't-restate-hard_truth/impression/
+# byline note), imagine (80->60 words, now explicitly OWNS the full "9+ version" description),
+# mentor_next (new 30-word cap, told not to reuse imagine's hypothetical), byline_1's second bullet
+# (was a full 9+ description duplicating imagine almost field-for-field -- now a one-sentence pointer
+# that defers to imagine). Mirrored in both JSON schemas and the TEXT_REPEAT_FIELD_HINTS corrective-
+# rewrite dict. STILL NOT CONFIRMED LIVE -- founder to rescore and send the Railway console output;
+# if main-call time is still landing near 120s after this, the honest next lever is splitting the
+# single ~17,000-token-prompt call into two smaller calls, flagged previously, not done here. RETAINS
+# 171.45.)
 # SL-VERSION: 171.45 (Session 237, 2026-10-06 -- founder approved all three scorecard-reduction items
 # ("do 1, 2, 3") after reviewing the side-by-side duplicate-content analysis. (1) DELETED what_stood_out
 # and background_check from BOTH JSON output schemas (main scoring call ~line 2042 and the
@@ -2048,10 +2076,10 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<SCORECARD OPENING LINE. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
+  "hard_truth": "<SCORECARD OPENING LINE. HARD LENGTH LIMIT: 35 words. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters. OWNERSHIP REMINDER: react emotionally in one or two short sentences — do NOT re-describe the compositional facts, the angle, or the technique (dim_obs_dod/dim_obs_disruption own those); do NOT restate what impression or conclusion will say.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
-  "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max. No positional corrections.>",
-  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs. HARD LENGTH LIMIT: 90 words total across all three bullets.\n\n▪ [What this score level means for this photographer in plain English — one sentence. If Wonder score is 7.5+, this bullet must include the phrase 'made us feel' and name the specific emotion. Example: 'A score at this level means the image made us feel something — the tenderness here is real and a stranger would name it immediately.']\n\n▪ [What 9+ looks like for this specific image — concrete visual description, two sentences max.]\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
+  "mentor_next": "<ONE creative direction — possibility, never correction. Two sentences max, HARD LENGTH LIMIT: 30 words. No positional corrections. Do not reuse phrasing, sentence structure, or the same hypothetical detail that imagine uses — if imagine already describes the 9+ version of this exact frame, mentor_next must point to a DIFFERENT next image or technique, not restate the same hypothetical.>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. BULLET FORMAT — 3 bullets. Blank line between bullets. No dense paragraphs. HARD LENGTH LIMIT: 90 words total across all three bullets.\n\n▪ [What this score level means for this photographer in plain English — one sentence. If Wonder score is 7.5+, this bullet must include the phrase 'made us feel' and name the specific emotion. Example: 'A score at this level means the image made us feel something — the tenderness here is real and a stranger would name it immediately.']\n\n▪ [ONE short sentence pointing at what 9+ would take — NOT a full visual description. The 'imagine' field owns the full 9+ description; do not duplicate it here. Example: 'A 9+ version of this exists — see what it could look like below.']\n\n▪ [The one habit that gets there. **Bold master name** linked. One sentence on trend if portfolio_context has data.]>",
   "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. BULLET FORMAT — 3 bullets. LOCATION INDEPENDENCE: never send photographer back to shoot location. Draw the principle, apply near user_city or any future opportunity. HARD LENGTH LIMIT: 110 words total across all three bullets.\n\n▪ [The exercise — draws the principle from this image, applies it to a type of location or light condition near user_city. Gear-specific. One sentence.]\n\n▪ YOUR NEXT BODY OF WORK SEQUENCE: [THREE-FRAME EDITORIAL STORY. Think like a photo editor. NOT the same subject shot 3 ways — 3 DIFFERENT images that together tell one story. Name the story. Write it like a story editor pitching to a photographer: \"The story is [X]. Frame 1: [scene — what the reader sees first]. Frame 2: [the human moment that gives it meaning]. Frame 3: [the frame that stays with you after you close the book].\"]\n\n▪ [Philosophy line from rotation pool — one sentence, warm, brief.]>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
@@ -2069,7 +2097,7 @@ Return this exact JSON structure:
   "mentor_location_3": "<Always return null. Third location advisory removed to reduce response length.>",
   "emoji_rating": "<ONE LINE. Emotional verdict. Scale 1-5 of single most precise emoji, two spaces, tier in caps. Score-to-count: <5.0=1, 5.0-6.9=2, 7.0-7.9=3, 8.0-8.9=4, 9.0+=5. Pick emoji that names what the image IS, not what it contains. Examples: '👁️👁️👁️👁️  MASTER' / '🌿🌿🌿  CRAFTSMAN' / '⚡⚡⚡⚡⚡  GRANDMASTER'.>",
   "days_since_language": "<ONE sentence. Genre-specific. Tied to location_1 subject if available. Never 'your camera is waiting'. Wildlife: reference the specific animal or seasonal window. Street: reference the light window. Landscape: reference the seasonal moment. People/Wedding: warm personal line.>",
-  "impression": "<SCORECARD OPENING PARAGRAPH. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. OWNERSHIP REMINDER: react to what you see — do not explain WHY the angle was hard (dim_obs_dod owns that) or WHY the colours work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE. Max 60 words. Plain English. No jargon.>",
+  "impression": "<SCORECARD OPENING PARAGRAPH. 2-3 sentences. Warm, Sherpa tone — senior photographer speaking to someone they respect. Prove the engine saw THIS specific image — name a specific visible element, gesture, light quality, or moment. SCORE GATE: 4-6 = warm and joyful. 7-8 = peer applause. 9+ = rare-frame recognition. NEVER open with 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention dimensions by name, score numbers, what is missing, or what to do next. NEVER repeat what will appear in conclusion or master_why. NEVER repeat the specific wording or detail already used in hard_truth — hard_truth is the applause line, impression is the proof-of-attention paragraph; they must not restate the same observation in different words. OWNERSHIP REMINDER: react to what you see — do not explain WHY the angle was hard (dim_obs_dod owns that) or WHY the colours work (dim_obs_wonder owns that). See FIELD OWNERSHIP RULE. HARD LENGTH LIMIT: 45 words. Plain English. No jargon.>",
   "strength_name": "<Plain-English name of the strongest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "strength_obs": "<One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
@@ -2083,8 +2111,8 @@ Return this exact JSON structure:
   "master_why": "<Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
   "tech_read": "<One paragraph, max 60 words (max 80 words if an over-processing coaching note is required below). Forensic: (1) sharpness — name CAUSE; (2) exposure — clipping or crush; CRITICAL: dark background ≠ night; (3) one gear observation if EXIF present. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Tone: senior editor examining a contact sheet.>",
   "visual_flow": "<One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
-  "imagine": "<One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. Max 80 words. No jargon. No dimension names. Pure vision.>",
-  "conclusion": "<Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations from impression, byline_1, byline_2, or master_why. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. Max 90 words. If eval 2+: name the pattern across their work (one strength, one gap, max 50 words). If eval 1: 2-3 sentences then invite next photograph.>",
+  "imagine": "<One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. THIS FIELD OWNS the '9+ version of this exact frame' description — byline_1's second bullet must give only a SHORT one-sentence pointer to this field's content, not its own full description; mentor_next must point to a different image or technique, not the same hypothetical. HARD LENGTH LIMIT: 60 words. No jargon. No dimension names. Pure vision.>",
+  "conclusion": "<Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations, phrasing, or specific visual details from hard_truth, impression, byline_1, byline_2, or master_why — this field is about what the photograph reveals about how YOU see and your trajectory as a photographer, not a restatement of this image's compositional facts. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. HARD LENGTH LIMIT: 65 words (this count excludes the mandatory closing sentence). If eval 2+: name the pattern across their work (one strength, one gap, max 30 words of that total). If eval 1: 1-2 sentences then invite next photograph.>",
   "award_context": "<Score-gated. No specific award body or brand names ever. BELOW 8.5: 'The League of Photographers features genuinely international work — images that stand a chance for recognition, earn income through commissioned work, sales and print editions, and be featured in exhibitions, grants and awards.' 8.5-8.9: Start with EXACTLY 'At 8.5+' (not 8.0+, not 8.6+, always 8.5+): 'At 8.5+ your work is ready for serious [genre] photography awards and the League of Photographers — where images at this level earn income through commissions, print sales, and exhibition placement.' 9.0+: Start with EXACTLY 'At 9.0+': 'At 9.0+ your [genre] work stands among the best on the platform — the League of Photographers opens doors to major awards, commissions, gallery exhibitions, and grant opportunities.' Replace [genre] with actual genre. One sentence per tier. Max 40 words. THRESHOLD: only 8.5 or 9.0 after 'At' — no other numbers.>",
   "species_note": "<Wildlife and Nature only. Blank string for all other genres. CONSERVATIVE: blank if silhouette, backlit, uncertain, or guessing. ONLY populate when species is clearly identifiable from visible physical features AND you are confident enough to stake platform credibility on it AND the ecological fact is verifiable. If confident: species name + one verified ecological fact. Max 40 words. SILHOUETTE RULE: if blank because of silhouette, do NOT name species clarity as a gap anywhere else on the scorecard.>",
   "ns": "<Is there a story? Three verdicts only: 'yes', 'not_sure', or 'no'. DEFAULT = 'not_sure'. THE WRITE-THE-SENTENCE METHOD: Before deciding, write one sentence: 'A [subject] is [verb] [consequence].' If you can write that sentence with a verb AND a consequence that carries meaning without a caption: consider YES. If you can only describe what you see: NOT SURE or NO. If nothing is happening: NO. FULL-FRAME SCAN: scan the entire frame — story may not be in the primary subject. CALIBRATION: YES (>75%): maternity shadow=91%, Nihang horseman=88%, monks walking=75%. NOT_SURE (50-75%): child+blossoms=65%, Kathak feet=65%, woman in white sari=57%. NO (<50%): mountain landscape=40%, swallow landing=44%, studio portrait=34%. AQ/NS INDEPENDENCE: beautiful ≠ story, powerful ≠ story. WILDLIFE: behaviour/disruption=story; subject only=NO. DEFAULT IS NOT_SURE. Do NOT default to yes.>",
@@ -6067,10 +6095,10 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
 # the full SCORE_PROMPT is 7000+ lines and this call does not re-send it; it
 # sends just enough of each flagged field's rules to keep the rewrite legal.
 _TEXT_REPEAT_FIELD_HINTS = {
-    'impression': 'SCORECARD OPENING PARAGRAPH. 2-3 sentences, max 60 words. Warm Sherpa tone. Never open with "This image", "The photograph", "You saw", "Your composition". Never mention dimension names, scores, or what is missing.',
+    'impression': 'SCORECARD OPENING PARAGRAPH. 2-3 sentences, max 45 words. Warm Sherpa tone. Never open with "This image", "The photograph", "You saw", "Your composition". Never mention dimension names, scores, or what is missing. Do not restate hard_truth\'s specific wording.',
     'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. 3 bullets, each line starting with the character ▪ then a space, a blank line between bullets. Max 90 words total.",
-    'mentor_next': 'ONE creative direction. Max two sentences. A possibility, never a correction.',
-    'byline_1': 'CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets. Max 90 words total.',
+    'mentor_next': 'ONE creative direction. Max two sentences, max 30 words. A possibility, never a correction. Do not reuse the same hypothetical detail as imagine — point to a different next image or technique.',
+    'byline_1': "CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets (▪), blank line between bullets. Max 90 words total. Second bullet: ONE short sentence pointing at the 9+ possibility — imagine owns the full description, do not duplicate it here.",
     'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Bullet format (▪), blank line between bullets. Includes a gear-specific exercise, a 3-frame body-of-work sequence, and a philosophy line. Max 110 words total.',
     'dim_obs_dod': 'One sentence, max 40 words. Sherpa voice. Names the access/difficulty fact for this image.',
     'dim_obs_disruption': 'One sentence, max 40 words. Sherpa voice. Names the compositional-treatment fact for this image.',
@@ -6079,9 +6107,9 @@ _TEXT_REPEAT_FIELD_HINTS = {
     'dim_obs_aq': 'One sentence, max 40 words. Sherpa voice. Names the specific emotion a stranger would feel.',
     'tech_read': 'One paragraph, max 60 words (80 if an over-processing coaching note is included). Forensic: sharpness cause, exposure (clipping/crush), one gear note only if EXIF present.',
     'visual_flow': 'One sentence, max 40 words. Where the eye enters, how it travels, where it rests or what dead space exists.',
-    'imagine': 'One paragraph, max 80 words. Second person, present tense. Possibility language only ("imagine if", "there is a version of this image where"). No master name. No location advice.',
-    'conclusion': 'Max 90 words. Warm second-person platform voice. Must still end with the exact sentence: "The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed."',
-    'hard_truth': 'SCORECARD OPENING LINE. One or two short sentences. Warm, specific, score-appropriate applause.',
+    'imagine': 'One paragraph, max 60 words. Second person, present tense. Possibility language only ("imagine if", "there is a version of this image where"). No master name. No location advice. THIS FIELD OWNS the full 9+ description — byline_1 and mentor_next must not duplicate it.',
+    'conclusion': 'Max 65 words (plus the mandatory closing sentence). Warm second-person platform voice. Do not repeat phrasing or visual detail from hard_truth, impression, or byline_1/byline_2. Must still end with the exact sentence: "The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed."',
+    'hard_truth': 'SCORECARD OPENING LINE. One or two short sentences, max 35 words. Warm, specific, score-appropriate applause. Do not re-describe compositional/access facts — dim_obs_dod/disruption own those; do not restate what impression or conclusion will say.',
 }
 
 
@@ -6761,6 +6789,27 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         prompt = prompt + _delta_block + _mono_block
         print(f"[auto_score] re-edit protocol injected: previous_score={previous_score:.2f}, version={_edit_version}, loop_break={_is_loop_break}, mono={_is_mono_variant}")
 
+    # ── Session 237 (171.46): hard stop against preamble text before the JSON ──
+    # Live failure confirmed on a staging rescore: the model opened its response
+    # with a multi-paragraph "# SCENE ANALYSIS — MANDATORY FIRST STEP" scratchpad
+    # BEFORE the JSON object, even though a "respond ONLY with JSON" instruction
+    # already exists earlier in the prompt. Two costs: (1) that preamble is pure
+    # wasted output-token generation, directly adding to the 120s external
+    # timeout risk; (2) json.loads() fails immediately at "line 1 column 1" on
+    # prose, which is a harder failure than any of the repair passes below were
+    # built to recover from. This is deliberately the LAST thing the model reads
+    # before generating (appended after every other injected block, right before
+    # the API call is built) since the final instruction in the prompt carries
+    # the most weight against drift over a ~17,000-token system prompt.
+    prompt = prompt + (
+        "\n\nFINAL OUTPUT RULE — ABSOLUTE, OVERRIDES EVERYTHING ELSE ABOVE:\n"
+        "Your response must begin with the character { as the very first character — "
+        "nothing before it. Do NOT write a heading, a scene analysis, a scratchpad, "
+        "a restatement of the scene, markdown fences, or any commentary before the "
+        "JSON object. Do not explain your reasoning outside the JSON fields that ask "
+        "for it. The first character you output must be {.\n"
+    )
+
     payload = {
         "model":       MODEL,
         "max_tokens":  5000,  # Session 215: 5000 balances completeness vs speed.
@@ -6926,36 +6975,64 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         fixed_value = re.sub(r'(?<!\\)"', r'\\"', value)
         return f'{prefix}"{fixed_value}"{suffix}'
 
+    def _strip_preamble_and_trailer(t):
+        """
+        Repair helper (Session 237 / 171.46): the model occasionally writes
+        prose BEFORE the JSON object despite the FINAL OUTPUT RULE added to
+        the prompt — a "SCENE ANALYSIS" scratchpad heading was observed live
+        on staging. json.loads() fails immediately at "line 1 column 1" on
+        that preamble, before it ever reaches the real JSON, and neither
+        repair pass below (both of which operate on a string that is already
+        assumed to be JSON) can recover from that. Keep only the span from
+        the first '{' to the last '}' in the raw text. No-op on text that is
+        already clean JSON (first '{' is index 0, last '}' is the final
+        character), so this is safe to apply unconditionally as the first
+        repair attempt.
+        """
+        _start = t.find('{')
+        _end = t.rfind('}')
+        if _start == -1 or _end == -1 or _end <= _start:
+            return t
+        return t[_start:_end + 1]
+
     try:
         result = json.loads(text)
     except json.JSONDecodeError as e1:
-        # Repair pass 1 — merge literal-newline-split string values, then retry.
-        text_merged = _merge_multiline_strings(text)
+        # Repair pass 0 — strip any prose preamble/trailer surrounding the
+        # JSON object (e.g. a stray scene-analysis scratchpad before the {),
+        # then retry before attempting the finer-grained per-line repairs.
+        text = _strip_preamble_and_trailer(text)
         try:
-            result = json.loads(text_merged)
-            print(f"[auto_score] JSON repaired (multi-line string merged) after parse error: {e1}")
+            result = json.loads(text)
+            print(f"[auto_score] JSON repaired (preamble/trailer stripped to outer braces) after parse error: {e1}")
         except json.JSONDecodeError:
-            # Repair pass 2 — escape embedded unescaped quotes line-by-line
-            # (operating on the merged text, so both fixes can combine).
-            repaired = "\n".join(_repair_line(l) for l in text_merged.split("\n"))
+            # Repair pass 1 — merge literal-newline-split string values, then retry.
+            text_merged = _merge_multiline_strings(text)
             try:
-                result = json.loads(repaired)
-                print(f"[auto_score] JSON repaired (quotes escaped) after parse error: {e1}")
-            except json.JSONDecodeError as e2:
-                # Log full text (not just first 500 chars) so the actual malformed
-                # line can be diagnosed — previous truncated previews didn't show
-                # the failure point itself.
-                _lines = text.split("\n")
-                _line_no = getattr(e1, 'lineno', None)
-                _context = ""
-                if _line_no:
-                    _start = max(0, _line_no - 3)
-                    _end = min(len(_lines), _line_no + 2)
-                    _context = "\n".join(f"{i+1}: {_lines[i]}" for i in range(_start, _end))
-                print(f"[auto_score] JSON repair FAILED. Original error: {e1}. Merge+repair error: {e2}")
-                print(f"[auto_score] Lines around failure point (line {_line_no}):\n{_context}")
-                print(f"[auto_score] Full response text:\n{text}")
-                raise ValueError(f"Failed to parse API response: {e1}\nResponse: {text[:500]}")
+                result = json.loads(text_merged)
+                print(f"[auto_score] JSON repaired (multi-line string merged) after parse error: {e1}")
+            except json.JSONDecodeError:
+                # Repair pass 2 — escape embedded unescaped quotes line-by-line
+                # (operating on the merged text, so both fixes can combine).
+                repaired = "\n".join(_repair_line(l) for l in text_merged.split("\n"))
+                try:
+                    result = json.loads(repaired)
+                    print(f"[auto_score] JSON repaired (quotes escaped) after parse error: {e1}")
+                except json.JSONDecodeError as e2:
+                    # Log full text (not just first 500 chars) so the actual malformed
+                    # line can be diagnosed — previous truncated previews didn't show
+                    # the failure point itself.
+                    _lines = text.split("\n")
+                    _line_no = getattr(e1, 'lineno', None)
+                    _context = ""
+                    if _line_no:
+                        _start = max(0, _line_no - 3)
+                        _end = min(len(_lines), _line_no + 2)
+                        _context = "\n".join(f"{i+1}: {_lines[i]}" for i in range(_start, _end))
+                    print(f"[auto_score] JSON repair FAILED. Original error: {e1}. Merge+repair error: {e2}")
+                    print(f"[auto_score] Lines around failure point (line {_line_no}):\n{_context}")
+                    print(f"[auto_score] Full response text:\n{text}")
+                    raise ValueError(f"Failed to parse API response: {e1}\nResponse: {text[:500]}")
 
     # Attach routing metadata so build_audit_data and callers can access it
     result['_wikipedia_url']             = _research.get('wikipedia_url', '')
@@ -7266,9 +7343,9 @@ disruption/dm/wonder/aq/score/tier/soul_bonus/judge_referral/composition_techniq
   "dm_reasoning": "<one sentence, image-specific, consistent with the locked DM score>",
   "wonder_reasoning": "<one sentence, image-specific, consistent with the locked Wonder score>",
   "aq_reasoning": "<one sentence, image-specific, consistent with the locked AQ score>",
-  "hard_truth": "<scorecard opening line — see SCORE-RANGE OPENING REGISTER above. One or two short sentences.>",
+  "hard_truth": "<scorecard opening line — see SCORE-RANGE OPENING REGISTER above. One or two short sentences. Max 35 words.>",
   "mentor_moment": "<ONE sentence on whether this was the right moment, consistent with locked DM score.>",
-  "mentor_next": "<ONE creative direction. Two sentences max.>",
+  "mentor_next": "<ONE creative direction. Two sentences max. Max 30 words.>",
   "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. 3 bullets, blank line between. Max 90 words total.>",
   "byline_2": "<CARD 4 — YOUR ASSIGNMENT TOMORROW. 2 bullets, blank line between. Max 110 words total.>",
   "badges_g": ["<specific strength>", "<specific strength>", "<specific strength>"],
@@ -7279,6 +7356,11 @@ disruption/dm/wonder/aq/score/tier/soul_bonus/judge_referral/composition_techniq
   "calibration_line": "<one or two sentences, percentile/context framing consistent with locked_score and locked_tier>",
   "emoji_rating": "<emoji count matching locked_score (per the normal scale) + tier in caps>"
 }}
+
+FINAL OUTPUT RULE — ABSOLUTE: Your response must begin with the character {{ as the very
+first character — nothing before it. Do NOT write a heading, a scene analysis, a
+scratchpad, or any commentary before the JSON object. The first character you output
+must be {{.
 """
 
 
