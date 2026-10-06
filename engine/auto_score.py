@@ -1,3 +1,37 @@
+# SL-VERSION: 171.63 (Session 238, 2026-10-06 -- MY OWN 171.62 REGRESSION, CAUGHT BY THE FOUNDER ON
+# THE FIRST DEPLOY OF THE FIX. 171.62 fixed a use-before-assignment that had kept the stock-phrase
+# clutter detector dead since 171.60, by hoisting _REPEAT_FIELDS above it -- and in the SAME build
+# anchored the new internal-leak detector ABOVE that hoist, recreating the identical fault one block
+# earlier. The 17:17 Railway log shows both halves on one screen:
+#     [auto_score][stock_phrase_check] OK -- no banned "chaos into geometry" variant used
+#     [auto_score][internal_leak_check] skipped (non-fatal): cannot access local variable
+#     '_REPEAT_FIELDS' where it is not associated with a value
+# One detector repaired and one newly broken, by me, in the same version. The founder found it; I
+# had declared the class of bug closed in the 171.62 header while shipping another instance of it.
+#
+# FIX -- THE BUG CLASS, NOT THE INSTANCE. Moving the assignment again would only move the trap.
+# _REPEAT_FIELDS is a constant read by four detectors spread over ~250 lines of one function; it had
+# no business being a local binding whose correctness depends on source order. It is now a MODULE
+# CONSTANT (L7316, above auto_score() at L7604) with NO assignment anywhere inside the function --
+# which is the part that matters, because a single assignment anywhere in a function body makes the
+# name local for the ENTIRE body and reinstates the trap. Verified by AST walk, not by reading:
+# zero in-function Store nodes for the name, constant defined before the function. Detector order is
+# now irrelevant and cannot break this again.
+#
+# WHAT THE SAME LOG CONFIRMS IS WORKING, from the founder's deploy of 171.62:
+#   * [stock_phrase_check] OK -- the FIRST real result that detector has ever produced, and it
+#     passed: no "chaos into geometry" on a frame whose eye genuinely scatters;
+#   * [master_check] OK -- no dock, no ALL-CAPS heading reported as a photographer (bug 3 fixed);
+#   * [AQ_GATE] OK, aq=8.1 with a named emotion ("tension"), theme words noted but not blocking;
+#   * [PRINCIPLE_FIELD] correctly caught "Proximity" named in dim_obs_aq, which is not a permitted
+#     principle field -- a real, correct, first-time detection.
+#   * NO "The ONE-OBJECT TEST" anywhere in the card text, despite the leak DETECTOR being dead this
+#     run -- so the 171.62 prompt-side NEVER NAME THE RULE block held on its own. The detector is
+#     the belt; this run shows the braces working.
+#
+# STILL BROKEN, UNCHANGED, AND NOW ON ITS FOURTH CARD: TEXT_REPEAT_FIX SKIPPED -- 13 fields flagged,
+# above the 8-field safety cap. 24 duplicate groups went to the photographer uncorrected. The cap
+# change is specified and still awaiting the founder's word. RETAINS 171.62.)
 # SL-VERSION: 171.62 (Session 238, 2026-10-06 -- THREE BUGS FROM THE FOUNDER'S OWN RAILWAY LOG, PLUS
 # THE "WHERE DOES THE EYE GO?" RELABEL'S ENGINE-SIDE HALF. Every one of these was visible in the log
 # the founder pasted for the 6 Oct rescore of image 143, and all three are mine, from 171.60/171.61.
@@ -7298,6 +7332,28 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
 # below (_attempt_text_repeat_fix). Kept short and self-contained on purpose —
 # the full SCORE_PROMPT is 7000+ lines and this call does not re-send it; it
 # sends just enough of each flagged field's rules to keep the rewrite legal.
+# ── Narrative fields scanned by every cross-field detector (SL-171.63) ───────
+# MODULE-LEVEL ON PURPOSE, AFTER TWO BUGS OF THE SAME SHAPE IN ONE DAY.
+# This list was a local inside auto_score(), read by four detectors spread over
+# ~250 lines. 171.60 placed the stock-phrase detector above the assignment and
+# it raised UnboundLocalError on every card for two versions, reported as a
+# harmless "skipped". 171.62 fixed that by hoisting the assignment -- and in the
+# same build anchored the new internal-leak detector above the hoist, breaking
+# it identically, caught on the founder's very first deploy of the fix.
+#
+# A constant that four readers share has no business being a local binding whose
+# correctness depends on source order. As a module constant there is no order to
+# get wrong, and no assignment inside the function body -- which matters,
+# because a single assignment anywhere in a function makes the name local for
+# the ENTIRE body and brings the whole trap back. If a future version needs a
+# different field set, build a new list under a new name; do not reassign this.
+_REPEAT_FIELDS = [
+    'impression', 'transferable_advice', 'mentor_next', 'mentor_moment',
+    'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
+    'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
+    'conclusion', 'hard_truth', 'master_why',
+]
+
 _TEXT_REPEAT_FIELD_HINTS = {
     'impression': 'SCORECARD OPENING PARAGRAPH. 2-3 sentences, max 45 words. Warm Sherpa tone. Never open with "This image", "The photograph", "You saw", "Your composition". Never mention dimension names, scores, or what is missing. Do not restate hard_truth\'s specific wording.',
     'transferable_advice': "CARD 1 — WHAT YOU DID THAT OTHERS DIDN'T. Flowing prose, 2-3 paragraphs, no bullets, no word cap: the specific decision, a master-practice paragraph, a story paragraph.",
@@ -8489,6 +8545,25 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     else:
         print('[auto_score][master_check] OK — no master name repeated across fields')
 
+    # ── Shared field list for every cross-field detector (SL-171.63) ─────────
+    # NOW A MODULE CONSTANT (_REPEAT_FIELDS, defined near the top of this file).
+    # There is no longer any ordering requirement at all. It is read,
+    # in source order, by: internal-leak (immediately below), stock-phrase, and
+    # the text-repeat detector and its corrective pass further down.
+    #
+    # 171.62 hoisted this out of the text-repeat section to fix exactly that
+    # fault for the stock-phrase detector -- and then anchored the new
+    # internal-leak detector ABOVE the hoist, reintroducing the identical
+    # use-before-assignment one block earlier. The founder's 6 Oct 17:17 log
+    # caught it on the very first deploy:
+    #   [auto_score][stock_phrase_check] OK -- no banned variant used
+    #   [auto_score][internal_leak_check] skipped (non-fatal): cannot access
+    #   local variable '_REPEAT_FIELDS' where it is not associated with a value
+    # One detector fixed, one newly broken, in the same build, by me. The reason
+    # it was survivable rather than silent is that the leak check prints its own
+    # skip line -- but a skip line is not a pass, and nothing in this file
+    # distinguishes the two at a glance. The ordering requirement is therefore
+    # stated here as a rule rather than left implicit in line numbers.
     # ── Post-processing: internal prompt-heading leak (SL-171.62) ────────────
     # On the 6 Oct rescore the engine wrote the literal words "The ONE-OBJECT
     # TEST" into BOTH visual_flow and dim_obs_disruption -- the title of a
@@ -8607,19 +8682,6 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                      if _prin_hits else 'no named principle on this card'))
     except Exception as _pe:
         print(f'[auto_score][principle_check] skipped (non-fatal): {_pe}')
-
-    # ── Shared field list for every cross-field detector (SL-171.62) ─────────
-    # Hoisted here from ~100 lines below, where it used to be defined. The
-    # stock-phrase detector immediately after this point reads it, so defining
-    # it later made that detector raise UnboundLocalError on every single card.
-    # One definition, read by the stock-phrase, internal-leak and text-repeat
-    # detectors alike.
-    _REPEAT_FIELDS = [
-        'impression', 'transferable_advice', 'mentor_next', 'mentor_moment',
-        'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
-        'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
-        'conclusion', 'hard_truth', 'master_why',
-    ]
 
     # ── Post-processing: stock-phrase detection (SL-171.60) ──────────────────
     # "turns chaos into geometry" and its variants appeared on EVERY version of
