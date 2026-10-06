@@ -1,3 +1,23 @@
+# SL-VERSION: 182.104 (Session 238, 2026-10-06 -- MEMBER-WAIT CEILING + CROSS-FILE CEILING ALIGNMENT,
+# founder decision: "KEEPING AT 240SEC MEANS 4 MIN - NO ONE WILL WAIT TILL THEN - 2 MIN THEY CAN WAIT
+# -AND SOME MORE HERE AND THERE - 3 MIN MAX". 182.103 sized its ceiling to make a slow image survive
+# (240s) without accounting for the person watching the spinner. Lowered _auto_score_with_timeout()'s
+# default timeout_secs 240 -> 180 (3 min hard max). The 137s worst observed end-to-end still fits with
+# ~43s of headroom; the 120s checkpoint log line is unchanged and still fires as a "still running"
+# marker. SECOND, SEPARATE DEFECT FIXED IN THE SAME CHANGE (found this session, never previously
+# diagnosed): this file's outer ceiling and engine/auto_score.py's INTERNAL safe budget
+# (_SAFE_INTERNAL_CEILING, ~L7532) were edited in the same session by different fixes and did not know
+# about each other. auto_score.py still hardcoded 110.0 -- sized against the OLD 120s ceiling -- so
+# TEXT_REPEAT_FIX, the corrective re-ask that removes duplicate passages from what the photographer
+# actually reads, computed its remaining budget against 110s and SKIPPED on every complex image
+# regardless of the 240s raise. That is why every duplicate count on record (6/7/10 pairs) is a raw,
+# uncorrected first pass: the corrective layer has never run in any observed test. auto_score.py
+# raised 110.0 -> 165.0 in the companion edit (SL-VERSION 171.54) to sit 15s under this file's new
+# 180s ceiling. THESE TWO NUMBERS ARE NOW COUPLED -- if either ceiling is ever changed again, change
+# both in the same commit or the corrective layer silently stops running. Noted in both files.
+# NOT YET CONFIRMED LIVE -- needs a push + a rescore of a genuinely complex image (many subjects)
+# + Railway log showing (a) completion inside 180s with no second attempt and (b) a TEXT_REPEAT_FIX
+# line that is NOT "SKIPPED", per Rules 3/16. RETAINS 182.103.)
 # SL-VERSION: 182.103 (Session 237, 2026-10-06 -- SONNET TIMEOUT FIX, founder-flagged as urgent
 # after a live rescore of a 14-subject image (Egrets of Sasson Dock) failed outright: vision_analyse
 # alone took 38.41s (normal ~13s, this image had far more to look at), leaving no room for a ~99s
@@ -9290,7 +9310,7 @@ def _increment_sonnet_calibrated_count():
         app.logger.warning(f'[_increment_sonnet_calibrated_count] {_ice}')
 
 
-def _auto_score_with_timeout(timeout_secs=240, retry_wait=10, **kwargs):
+def _auto_score_with_timeout(timeout_secs=180, retry_wait=10, **kwargs):
     """
     Wraps auto_score() with a hard timeout.
 
@@ -9308,13 +9328,14 @@ def _auto_score_with_timeout(timeout_secs=240, retry_wait=10, **kwargs):
     second, genuinely new attempt -- a second real, billed API call for the same
     photo, on top of the wasted first one. Net effect on a slow image: two paid
     attempts, both thrown away, 250+ seconds, nothing saved.
-    Fix: ONE real attempt, in one thread, given one ceiling raised to cover a
-    genuinely complex image's real end-to-end time (240s, vs. the ~137s seen
-    here, vs. the main call's own documented ~150s target alone). A checkpoint
+    Fix: ONE real attempt, in one thread, given one ceiling sized to cover a
+    genuinely complex image's real end-to-end time (the ~137s seen here) while
+    still respecting the member watching the spinner. A checkpoint
     log line still fires at the old 120s mark so a slow-but-still-working call
     stays visible in the console -- it now means "still going," not "about to be
     thrown away." No second thread, no discarded result, no duplicate API cost.
-    shutdown(wait=False) on the way out so a genuinely stuck call (past 240s)
+    shutdown(wait=False) on the way out so a genuinely stuck call (past the
+    ceiling)
     does not hang whoever is waiting on this function -- it just means that one
     attempt's result is lost, same as before, but nothing is ever run twice.
     RETAINS the original 120s/retry design's intent (bound the wait, surface a
