@@ -13,6 +13,19 @@ Usage:
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
+SL-VERSION: 1.2 (Session 238, 06 Oct 2026 -- VERSION-HEADER CHECK NO LONGER FAILS A COMPLIANT FILE.
+  The Rule 13 check required the header to be a '#' comment at column 0. reportlab_card.py declares
+  its version inside the module docstring, with a full RETAINS chain going back to 214.1, and was
+  hard-failed as "No SL-VERSION header" -- the file was right and the gate was wrong. This file
+  declares its own version the same way, so the check could never have passed its own source. Now
+  accepts either form. This is the second false failure found in this gate in one session (1.1 fixed
+  a max_tokens literal matched inside a changelog comment); both were caught by running the gate on
+  real files before trusting it, and both are the same lesson -- a noisy gate gets routed around.
+  KNOWN AND NOT FIXED HERE: running this file against ITSELF dispatches to the Flask/template audit
+  (its own check strings contain 'render_template(' etc. as data) and reports ~18 meaningless
+  failures. The content-based _is_engine_py() sniff cannot distinguish a Flask app from an auditor
+  that quotes Flask patterns. Harmless -- nobody audits the auditor to decide a deploy -- and
+  flagged rather than silently worked around. RETAINS 1.1.)
 SL-VERSION: 1.1 (Session 238, 06 Oct 2026 -- ENGINE-FILE DISPATCH FIX, founder signal given.
   THE BUG: the entry point sent EVERY .py file to audit_apppy(), the Flask-app audit. So
   engine/auto_score.py was tested for render_template('dashboard.html'), render_template(
@@ -1321,8 +1334,17 @@ def audit_enginepy(filepath):
 
     # ── Version control (Rule 13) ────────────────────────────────────────────
     _section('Version header (Rule 13)')
-    if re.search(r'^#\s*SL-VERSION:', src, re.M):
-        _v = re.search(r'^#\s*SL-VERSION:\s*([0-9.]+)', src, re.M)
+    # SL-AUDIT 1.2 -- accept a version header inside the module DOCSTRING, not
+    # only as a '#' comment. reportlab_card.py has carried a correct, complete
+    # Rule 13 changelog with a RETAINS chain since 214.1, inside its module
+    # docstring, and this check hard-failed it with "No SL-VERSION header" --
+    # a false failure on a compliant file. THIS FILE ITSELF declares its
+    # version the same way (L16), so the check could not pass its own source.
+    # Same disease as the 1.1 max_tokens false positive: a gate that cannot
+    # pass correct work is a gate people learn to route around, which is
+    # exactly how SL_STANDARDS_AND_LESSONS_S237.md section 4.8 puts it.
+    if re.search(r'^\s*#?\s*SL-VERSION:', src, re.M):
+        _v = re.search(r'^\s*#?\s*SL-VERSION:\s*([0-9.]+)', src, re.M)
         _ok(f'SL-VERSION header present (top version: {_v.group(1) if _v else "unparsed"})')
         if 'RETAINS' in src:
             _ok('RETAINS chain present in changelog')
