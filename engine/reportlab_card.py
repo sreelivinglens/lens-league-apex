@@ -1,5 +1,12 @@
 """
 Shutter League — Reportlab Scorecard PDF
+SL-VERSION: 237.2 (Session 237, 2026-10-06 — naming fix only: "Dimension observations" section's
+dim_obs_aq row was labelled "Authentic Quality", which conflicted with the canonical public
+definition at shutterleague.com/science ("Emotion" / "The Emotion It Creates") — a contradiction
+SOURCE_REGISTER_S235.md had already flagged as unresolved. Founder decision: relabel to
+"Emotion (AQ)". Internal dict key (dim_obs_aq) unchanged — display label only. Companion edits in
+app.py (182.99) and auto_score.py (171.48) make the same relabel elsewhere it was hardcoded.
+NOT YET CONFIRMED LIVE. RETAINS 237.1.)
 SL-VERSION: 237.1 (Session 237, 2026-10-05 — founder-reported: "Save Card" PDF was
 missing roughly half of what the web evaluation page shows, and not matching its
 "quality". Root cause was NOT this file — build_scorecard_pdf() already accepted and
@@ -826,12 +833,23 @@ def build_scorecard_pdf(data: dict) -> bytes:
         story.append(HR())
 
     # Dimension observations
+    # Session 237: 'Authentic Quality' relabelled to 'Emotion (AQ)' per founder
+    # decision, reconciling against the canonical public definition at
+    # shutterleague.com/science (dimension 5 = "Emotion" / "The Emotion It
+    # Creates" — no "Aesthetic"/"Affective"/"Authentic Quality" anywhere on
+    # that page). This was a real, live inconsistency: the PDF said "Authentic
+    # Quality" while the public science page says "Emotion" for the same
+    # number. Internal field key (dim_obs_aq / 'aq') is UNCHANGED — only this
+    # display label moved, so nothing downstream that reads the 'aq' key
+    # breaks. 'Wonder Factor' (science page calls it "The WOW Factor") is a
+    # same-category mismatch, flagged separately, NOT changed here pending
+    # its own founder decision.
     dim_obs_map = [
         ('dim_obs_dod', 'Depth of Difficulty'),
         ('dim_obs_vd',  'Visual Disruption'),
         ('dim_obs_dm',  'Decisive Moment'),
         ('dim_obs_wf',  'Wonder Factor'),
-        ('dim_obs_aq',  'Authentic Quality'),
+        ('dim_obs_aq',  'Emotion (AQ)'),
     ]
     has_dim_obs = any(_clean(data.get(k,'')) for k, _ in dim_obs_map)
     if has_dim_obs:
