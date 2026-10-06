@@ -1,3 +1,78 @@
+# SL-VERSION: 171.58 (Session 238, 2026-10-06 -- CROSS-FIELD RULES MOVED FROM PROSE INTO CODE, plus
+# the AQ cap now actually enforcing. Founder signal "go".
+#
+# THE PATTERN THIS VERSION IS BUILT ON, and it is the main lesson of the session: EVERY cross-field
+# constraint written in PROSE today has failed on the first card it faced, and EVERY one written in
+# CODE has worked on every card. Failed in prose: the insight-log ration (11 fields, 4-6 entries),
+# the global repetition rule (171.36), the field-ownership rule (171.37), "no principle named twice"
+# (171.57, broken on its first card), "byline_1 must not restate the trend" (171.57, broken on its
+# first card), and the AQ feeling/theme blacklist (171.56, broken three times). Worked in code, every
+# run: MASTER_REPEAT, TEXT_REPEAT, AQ_GATE detection, the species and gaze gates. At this prompt
+# length with ~20 narrative fields the model cannot hold cross-field bookkeeping -- the same finding
+# as the insight-log arithmetic, arriving from the opposite direction. STOP WRITING PROSE RULES FOR
+# CROSS-FIELD CONSTRAINTS. Write a detector.
+#
+# FIX 1 -- AQ GATE NOW ENFORCES, AND MOVED SO IT CAN. Three consecutive live failures: aq=8.1 naming
+# "interdependence"/"coexistence", then "coexistence"/"rhythm", then "rhythm". On the third card the
+# model picked a blacklisted word and then ARGUED WITH THE RULE IN ITS OWN OUTPUT -- "Rhythm ... a
+# visual pulse that is felt in the body rather than read as a concept" -- borrowing this prompt's own
+# wording ("felt in the body", "concept") to justify the override. That is a read-and-overridden
+# instruction, not a missed one. Two changes: (a) the gate CAPS aq to 7.5 when no named feeling is
+# present, instead of only logging; (b) it MOVED to run BEFORE _apply_code_score(), because 171.56's
+# version sat in post-processing AFTER the composite was calculated, so a cap there would have
+# printed a corrected number while the published score and tier still used the uncapped aq. The cap
+# now reaches the composite, the tier and the card. Kill switch env SL_AQ_CAP=0 restores detect-only,
+# matching the SL_CODE_SCORE=0 pattern. THIS CHANGES PUBLISHED NUMBERS -- founder approved
+# explicitly after the third failure. result['_aq_uncapped'] preserves the original for audit.
+# FIX 2 -- [PRINCIPLE_REPEAT] / [PRINCIPLE_FIELD] DETECTOR, modelled on master_check. 171.57 widened
+# principle naming to four fields and stated "no principle twice per scorecard" as a prompt
+# self-check with no detector -- violated immediately: "Rule of Thirds" appeared in BOTH dim_obs_dod
+# and tech_read with the SAME anchor ("the primary egret in the upper-left intersection") in each.
+# Now scanned in code across 15 fields for all 23 principles, flagging both a principle named twice
+# AND a principle named in a field not permitted to name one. Whitespace is collapsed before matching
+# because the failing card wrapped "Rule of\nThirds" across a line and a naive search found only one
+# of the two occurrences -- verified against the real card text.
+# FIX 3 -- [TREND_REPEAT] DETECTOR. 171.56 put the level 3 pattern read at the top of the card by
+# giving it to impression, which created a new duplication vector: the cross-genre trend sentence
+# appeared in impression + byline_1 on the first card, and impression + byline_1 + conclusion on the
+# second, SURVIVING the corrective re-ask both times. 171.57's prose bar on byline_1 did not hold.
+# Now detected in code across 14 fields: impression OWNS the trend numbers, anything else repeating
+# them is logged by name. Pattern verified to catch the real three-field case and to NOT false-positive
+# on tech_read's EXIF numbers ("1/125s, f/8, ISO 100").
+# FIX 4 -- mentor_moment AND master_why ADDED TO THE REPEAT DETECTOR. mentor_moment was the one
+# narrative field never covered, and it matters: the PDF's "What You Controlled" card resolves to it
+# on at least one path (app.py ~L14021, _c2 = _mom_val), and an identical 11-line paragraph has been
+# observed printed under BOTH "What You Controlled" and "Technical read" on real cards. If that is
+# mentor_moment duplicating tech_read, no detector could ever have seen it. Now it can, and
+# TEXT_REPEAT_FIX can rewrite it.
+# ALL FOUR DETECTORS ARE DETECTION-ONLY except the AQ cap. Rewriting customer-facing prose
+# automatically risks mangling grammar on a live paying product -- the standing reasoning since
+# 171.39. TEXT_REPEAT_FIX remains the one corrective path, and it now sees two more fields.
+#
+# NOT FIXED, AND I WILL NOT GUESS AT IT: the printed "What You Controlled" / "Technical read"
+# duplicate. I previously told the founder this was app.py's Card 2 at ~L13094 (_c2 = _tech_val).
+# Reading further, _tech_val resolves from the 'rows' tuple where 'Technical' is the SHORT LABEL FOR
+# THE DoD DIMENSION (app.py ~L4820, ~L8037), and 'rows' is only populated on the admin manual-entry
+# path (~L13897, request.form), not by build_audit_data -- so on an auto-scored image _tech_val is
+# empty and _c2 falls through to mentor_moment, which is specified as ONE sentence and cannot be the
+# 11-line paragraph observed. My stated diagnosis was therefore wrong, or at least unproven, and the
+# Session 237 handoff explicitly records that static reading has already been exhausted twice on this
+# class of question. Changing a live PDF render path on a guess could blank a section of a paying
+# member's scorecard. WHAT WOULD SETTLE IT: the _audit_json for image 143 (does mentor_moment hold
+# the same text as tech_read?), or the next card after this version -- a [TEXT_REPEAT] line naming
+# mentor_moment proves the engine side; its absence while the printed duplicate persists proves the
+# render side. Either way the next run answers it without anyone debugging by hand.
+# NO WEIGHT, DIMENSION FORMULA OR TIER BAND IS CHANGED. The AQ cap changes an INPUT to the existing
+# formula, deliberately and with approval; the formula itself is untouched.
+# ALSO WORTH A HUMAN LOOK, FROM THIS RUN'S LOG, NOT DIAGNOSED: code_score logged
+# "model=8.17 -> code=7.87 tier=Maverick" and the card published 8.02 Master. Something adds 0.15 and
+# crosses a tier boundary after the code score (NS/soul bonus is the likely and legitimate cause),
+# but on a card that carries standing it is worth confirming rather than assuming. Separately,
+# "[dashboard] mentor_advice_json for user 18 is not the dashboard shape - card skipped" appeared --
+# a dashboard card silently not rendering, outside this file.
+# NOT CONFIRMED LIVE. WHAT TO LOOK FOR: (a) [AQ_GATE] CAPPED with the composite reflecting it;
+# (b) [principle_check] OK or a [PRINCIPLE_REPEAT] naming the fields; (c) [trend_check] OK -- trend
+# numbers once, in impression; (d) whether mentor_moment shows up in [TEXT_REPEAT]. RETAINS 171.57.)
 # SL-VERSION: 171.57 (Session 238, 2026-10-06 -- COMPOSITION VOCABULARY RECONCILED + THREE REPAIRS.
 # Founder signal "go". He read the first 171.56 card and identified the remaining gap himself: "one
 # thing which is clearly missing are all the aspects of composition, gestaldt rules of photography,
@@ -7826,6 +7901,85 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
     result['_effective_genre']           = effective_genre_for_weights
 
+    # ── AQ EMOTION GATE — NOW ENFORCING, AND IT MUST RUN BEFORE THE SCORE ──
+    # SL-171.58. Founder signal given to make this bind after THREE consecutive
+    # live failures (6 Oct 2026: aq=8.1 naming "interdependence"/"coexistence",
+    # then "coexistence"/"rhythm", then "rhythm").
+    #
+    # WHY PROSE COULD NOT DO THIS. 171.56 added a feeling whitelist and a theme
+    # blacklist to dim_obs_aq and aq_reasoning. On the third card the model
+    # picked a blacklisted word and then ARGUED WITH THE RULE IN ITS OWN
+    # OUTPUT -- "Rhythm ... a visual pulse that is felt in the body rather than
+    # read as a concept" -- borrowing this prompt's own wording ("felt in the
+    # body", "concept") to justify the override. That is not a missed
+    # instruction; it is a read-and-overridden one. Enforcement has to be code.
+    #
+    # WHY IT MOVED. 171.56's check sat in post-processing, AFTER
+    # _apply_code_score(), so capping there would have printed a corrected
+    # number while the published composite still used the uncapped aq. It now
+    # runs BEFORE the score is calculated, so the cap actually reaches the
+    # composite, the tier and the card.
+    #
+    # The documented rule (app.py ~31475, and the founder's own "Why Five
+    # Dimensions") is that AQ cannot exceed 7.5 without a NAMED emotion a
+    # stranger would recognise. A theme is not an emotion.
+    # Kill switch: env SL_AQ_CAP=0 restores the old detect-only behaviour,
+    # matching the SL_CODE_SCORE=0 pattern.
+    try:
+        _AQ_FEELINGS = {
+            'tenderness','tender','awe','grief','grieving','loneliness','lonely','defiance',
+            'defiant','joy','joyful','dread','longing','pride','proud','unease','uneasy','calm',
+            'reverence','reverent','delight','exhaustion','exhausted','menace','menacing',
+            'relief','pity','courage','courageous','intimacy','intimate','nostalgia',
+            'nostalgic','fear','afraid','anger','angry','sorrow','melancholy','wonder','hope',
+            'hopeful','love','warmth','serenity','serene','anxiety','anxious','shame','triumph',
+            'yearning','compassion','gentleness','stillness','peace','tension',
+        }
+        _AQ_THEMES = {
+            'interdependence','coexistence','rhythm','harmony','balance','dynamism',
+            'connection','relationship','duality','contrast','energy','movement','atmosphere',
+            'mood','narrative','story','humanity','resilience','tradition','culture',
+            'timelessness','pulse','geometry','structure',
+        }
+        _aq_raw = result.get('aq')
+        _aq_val = float(_aq_raw) if _aq_raw is not None else 0.0
+        _aq_text = ' '.join(
+            str(result.get(_k, '') or '') for _k in ('dim_obs_aq', 'aq_reasoning')
+        ).lower()
+        _aq_words = set(re.findall(r"[a-z\-]+", _aq_text))
+        _aq_named  = sorted(_aq_words & _AQ_FEELINGS)
+        _aq_themed = sorted(_aq_words & _AQ_THEMES)
+        _aq_enforce = os.environ.get('SL_AQ_CAP', '1') != '0'
+        _AQ_CEILING = 7.5
+
+        if _aq_val > _AQ_CEILING and not _aq_named:
+            if _aq_enforce:
+                result['_aq_uncapped'] = _aq_val
+                result['_aq_capped']   = True
+                result['aq'] = _AQ_CEILING
+                print(f'[auto_score][AQ_GATE] CAPPED {_aq_val} -> {_AQ_CEILING} — no named emotion in '
+                      f'dim_obs_aq/aq_reasoning. '
+                      f'{"Theme word(s) found instead: " + ", ".join(_aq_themed) + ". " if _aq_themed else ""}'
+                      f'AQ cannot exceed {_AQ_CEILING} without a specific named feeling a stranger would '
+                      f'recognise. This runs BEFORE the composite, so the published score and tier '
+                      f'reflect the cap. Set SL_AQ_CAP=0 to disable.')
+            else:
+                print(f'[auto_score][AQ_GATE] FAIL (not enforced, SL_AQ_CAP=0) — aq={_aq_val} above '
+                      f'{_AQ_CEILING} with no named emotion. '
+                      f'{"Themes instead: " + ", ".join(_aq_themed) + "." if _aq_themed else ""}')
+        elif _aq_val > _AQ_CEILING:
+            print(f'[auto_score][AQ_GATE] OK — aq={_aq_val} with named emotion(s): {", ".join(_aq_named)}')
+        else:
+            print(f'[auto_score][AQ_GATE] OK — aq={_aq_val} at or below {_AQ_CEILING}, no named emotion required'
+                  + (f' (named anyway: {", ".join(_aq_named)})' if _aq_named else ''))
+
+        if _aq_themed and _aq_named:
+            print(f'[auto_score][AQ_GATE] note — theme word(s) present alongside the named emotion: '
+                  f'{", ".join(_aq_themed)}. Allowed, but the feeling must be the subject of the '
+                  f'sentence, not the theme.')
+    except Exception as _aqe:
+        print(f'[auto_score][AQ_GATE] check skipped (non-fatal, score untouched): {_aqe}')
+
     # ── Session 235 (171.35): score calculated IN CODE ─────────────────────
     # The model supplies the five dimension numbers; the code applies the
     # weights and the rules (Humanity, Soul, Plateau, Iconic Wall, Excellence).
@@ -7943,54 +8097,126 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     else:
         print('[auto_score][master_check] OK — no master name repeated across fields')
 
-    # ── Post-processing: AQ emotion-vs-theme gate (SL-171.56) ─────────────────
-    # Founder-flagged, 6 Oct 2026, from a live card: Emotion (AQ) scored 8.1
-    # while naming "interdependence" — a theme, not a feeling. The documented
-    # rule is that AQ cannot exceed 7.5 without a NAMED emotion a stranger
-    # would recognise, and the prompt-side gate was satisfied by an
-    # abstraction. This is DETECTION ONLY and deliberately does NOT change the
-    # score: capping a live paying member's AQ in code moves published numbers
-    # and needs its own explicit founder sign-off (same reasoning as the
-    # detection-only decision for TEXT_REPEAT in 171.39). It makes the failure
-    # visible in Railway so it can be judged rather than passing silently.
+    # ── Post-processing: named-principle repeat detection (SL-171.58) ─────────
+    # 171.57 widened principle naming from one field to four and stated "NO
+    # PRINCIPLE MAY BE NAMED TWICE ON ONE SCORECARD" as a prompt self-check.
+    # It was violated on the very first card it produced: "Rule of Thirds"
+    # appeared in BOTH dim_obs_dod and tech_read, with the same anchor ("the
+    # primary egret in the upper-left intersection") in each. Writing that rule
+    # in prose, with no detector, was a mistake made in a session that had
+    # already watched three cross-field prose rules fail -- so it is now code,
+    # modelled on master_check directly above.
+    # Detection only: rewriting a principle out of customer-facing prose
+    # automatically risks mangling the sentence, same reasoning as MASTER_REPEAT
+    # and TEXT_REPEAT. TEXT_REPEAT_FIX's corrective re-ask already gets a second
+    # chance at these when the phrasing overlaps.
     try:
-        _FEELINGS = {
-            'tenderness','tender','awe','grief','grieving','loneliness','lonely','defiance',
-            'defiant','joy','joyful','dread','longing','pride','proud','unease','uneasy','calm',
-            'reverence','reverent','delight','exhaustion','exhausted','menace','menacing',
-            'relief','pity','courage','courageous','intimacy','intimate','nostalgia',
-            'nostalgic','fear','afraid','anger','angry','sorrow','melancholy','wonder','hope',
-            'hopeful','love','warmth','tension-free','serenity','serene','anxiety','anxious',
-            'shame','triumph','yearning','compassion','gentleness','stillness','peace',
+        _PRINCIPLES = [
+            'Rule of Thirds', 'Golden Spiral', 'Golden Ratio', 'Leading Lines',
+            'Frame-in-Frame', 'Frame within Frame', 'Negative Space', 'Symmetry',
+            'Figure/Ground', 'Figure-Ground', 'Common Fate', 'Proximity', 'Closure',
+            'Similarity', 'Scale/Proportion',
+            'Ma', 'Kanso', 'Wabi-sabi', 'Mono no aware', 'Yugen', 'Seijaku',
+            'Fukinsei', 'Datsuzoku',
+        ]
+        # Only the four fields 171.57 permits a principle in, plus the dim_obs
+        # fields that are NOT permitted one -- naming it there is also a breach
+        # worth surfacing.
+        _PRINCIPLE_FIELDS = [
+            'tech_read', 'dim_obs_dod', 'dim_obs_disruption', 'visual_flow',
+            'dim_obs_dm', 'dim_obs_wonder', 'dim_obs_aq',
+            'impression', 'hard_truth', 'transferable_advice',
+            'byline_1', 'byline_2', 'conclusion', 'imagine', 'master_why',
+        ]
+        _ALLOWED_PRINCIPLE_FIELDS = {
+            'tech_read', 'dim_obs_dod', 'dim_obs_disruption', 'visual_flow',
         }
-        _THEMES = {
-            'interdependence','coexistence','rhythm','harmony','balance','dynamism',
-            'connection','relationship','duality','contrast','energy','movement','atmosphere',
-            'mood','narrative','story','humanity','resilience','tradition','culture',
-            'timelessness',
+        _prin_hits = {}
+        for _pf in _PRINCIPLE_FIELDS:
+            _pt = str(result.get(_pf, '') or '')
+            if not _pt:
+                continue
+            # Collapse whitespace so a principle split across a line break still
+            # matches -- the PDF text of the failing card wrapped "Rule of\nThirds"
+            # and a naive search missed one of the two occurrences entirely.
+            _pt_flat = _re_master.sub(r'\s+', ' ', _pt)
+            for _pn in _PRINCIPLES:
+                # 'Ma' needs word boundaries or it matches inside ordinary words.
+                if _re_master.search(r'\b' + _re_master.escape(_pn) + r'\b', _pt_flat, _re_master.I):
+                    _prin_hits.setdefault(_pn, []).append(_pf)
+        _prin_repeats = {_p: _f for _p, _f in _prin_hits.items() if len(_f) >= 2}
+        _prin_wrongfield = {
+            _p: [_f for _f in _fs if _f not in _ALLOWED_PRINCIPLE_FIELDS]
+            for _p, _fs in _prin_hits.items()
         }
-        _aq_val = float(result.get('aq') or 0)
-        _aq_text = ' '.join(str(result.get(_k, '') or '') for _k in ('dim_obs_aq', 'aq_reasoning')).lower()
-        _aq_words = set(re.findall(r"[a-z\-]+", _aq_text))
-        _named = sorted(_aq_words & _FEELINGS)
-        _themed = sorted(_aq_words & _THEMES)
-        if _aq_val > 7.5 and not _named:
-            print(f'[auto_score][AQ_GATE] FAIL — aq={_aq_val} is above the 7.5 ceiling but NO named '
-                  f'emotion was found in dim_obs_aq/aq_reasoning. '
-                  f'{"Theme words present instead: " + ", ".join(_themed) + ". " if _themed else ""}'
-                  f'Per the documented rule AQ cannot exceed 7.5 without a specific named feeling. '
-                  f'Score NOT changed in code — this needs a human look.')
-        elif _aq_val > 7.5:
-            print(f'[auto_score][AQ_GATE] OK — aq={_aq_val} with named emotion(s): {", ".join(_named)}')
+        _prin_wrongfield = {_p: _fs for _p, _fs in _prin_wrongfield.items() if _fs}
+        if _prin_repeats:
+            for _pn, _pfs in _prin_repeats.items():
+                print(f'[auto_score][PRINCIPLE_REPEAT] "{_pn}" named in {len(_pfs)} fields: '
+                      f'{", ".join(_pfs)} — ONE PRINCIPLE ONCE PER SCORECARD rule violated')
+        if _prin_wrongfield:
+            for _pn, _pfs in _prin_wrongfield.items():
+                print(f'[auto_score][PRINCIPLE_FIELD] "{_pn}" named in a field not permitted to name a '
+                      f'principle: {", ".join(_pfs)} — permitted fields are tech_read, dim_obs_dod, '
+                      f'dim_obs_disruption, visual_flow')
+        if not _prin_repeats and not _prin_wrongfield:
+            print('[auto_score][principle_check] OK — '
+                  + (f'{len(_prin_hits)} principle(s) named, each once and in a permitted field: '
+                     + ", ".join(f"{_p} ({_f[0]})" for _p, _f in _prin_hits.items())
+                     if _prin_hits else 'no named principle on this card'))
+    except Exception as _pe:
+        print(f'[auto_score][principle_check] skipped (non-fatal): {_pe}')
+
+    # ── Post-processing: trend-line single-ownership detection (SL-171.58) ───
+    # 171.56 moved the level 3 pattern read to the top of the card by making
+    # impression carry it. That created a NEW duplication vector: the
+    # cross-genre trend sentence ("Your Creative work evaluates at 8.10 on
+    # average, your Street at 8.74...") appeared in impression AND byline_1 on
+    # the first card, and on the next one in impression, byline_1 AND
+    # conclusion -- surviving the corrective re-ask in both runs. 171.57 tried
+    # to fix it by telling byline_1 in prose to release the numbers. That
+    # failed too. So: code.
+    # impression OWNS the trend numbers. Any other field repeating them is a
+    # violation and is logged by name. Detection only, for the same reason as
+    # the detectors above.
+    try:
+        _TREND_FIELDS = [
+            'impression', 'byline_1', 'byline_2', 'conclusion', 'hard_truth',
+            'transferable_advice', 'mentor_next', 'imagine', 'tech_read',
+            'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm', 'dim_obs_wonder',
+            'dim_obs_aq',
+        ]
+        # The signature of the trend sentence: a genre word next to a decimal
+        # average, or the explicit "evaluates at N.NN" construction the
+        # cross-genre instruction in _build_portfolio_context produces.
+        _TREND_PAT = _re_master.compile(
+            r'(evaluates?\s+at\s+\d\.\d\d)'
+            r'|((?:Wildlife|Nature|Street|Portrait|Landscape|Creative|Wedding|People|'
+            r'Documentary|Drone|Fashion|Mobile)\s+(?:work|images?)\s+(?:is|are|evaluates?)'
+            r'[^.]{0,40}\d\.\d\d)',
+            _re_master.I)
+        _trend_fields_hit = []
+        for _tf in _TREND_FIELDS:
+            _tt = _re_master.sub(r'\s+', ' ', str(result.get(_tf, '') or ''))
+            if _tt and _TREND_PAT.search(_tt):
+                _trend_fields_hit.append(_tf)
+        if len(_trend_fields_hit) > 1:
+            _others = [_f for _f in _trend_fields_hit if _f != 'impression']
+            print(f'[auto_score][TREND_REPEAT] the cross-genre trend numbers appear in '
+                  f'{len(_trend_fields_hit)} fields: {", ".join(_trend_fields_hit)} — impression OWNS '
+                  f'this sentence; {", ".join(_others)} should take the trend FORWARD without '
+                  f'repeating the averages or the genre comparison')
+        elif _trend_fields_hit == ['impression']:
+            print('[auto_score][trend_check] OK — trend numbers appear once, in impression (the owning field)')
+        elif _trend_fields_hit:
+            print(f'[auto_score][TREND_REPEAT] trend numbers appear ONLY in {_trend_fields_hit[0]}, not in '
+                  f'impression — impression is the owning field and should carry the level 3 read at the '
+                  f'top of the card')
         else:
-            print(f'[auto_score][AQ_GATE] OK — aq={_aq_val} at or below 7.5, no named emotion required'
-                  + (f' (named anyway: {", ".join(_named)})' if _named else ''))
-        if _themed and _named:
-            print(f'[auto_score][AQ_GATE] note — theme word(s) also present alongside the named '
-                  f'emotion: {", ".join(_themed)}. Acceptable, but the feeling must be the subject '
-                  f'of the sentence, not the theme.')
-    except Exception as _aqe:
-        print(f'[auto_score][AQ_GATE] check skipped (non-fatal): {_aqe}')
+            print('[auto_score][trend_check] OK — no trend numbers present '
+                  '(expected when portfolio_context is empty, e.g. evaluation 1)')
+    except Exception as _te:
+        print(f'[auto_score][trend_check] skipped (non-fatal): {_te}')
 
     # ── Post-processing: cross-field text repetition detection (Session 237) ──
     # Two prompt-based attempts at this (171.36's global CROSS-FIELD REPETITION
@@ -8014,11 +8240,21 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # flagged fields) is worth the added latency/cost. Not built here — that
     # is a bigger change with its own cost/risk tradeoff and needs its own
     # sign-off, not bundled into this detector.
+    # SL-171.58 — 'mentor_moment' and 'master_why' added. mentor_moment was the
+    # one narrative field the detector never covered, which matters because the
+    # PDF's "What You Controlled" card resolves to it on some paths
+    # (app.py ~L14021, _c2 = _mom_val) and an identical 11-line paragraph has
+    # been observed printed under both "What You Controlled" and "Technical
+    # read" on real cards. If that is mentor_moment duplicating tech_read, no
+    # detector has ever been able to see it. Adding it here both surfaces the
+    # duplicate and lets TEXT_REPEAT_FIX rewrite it; if the next card shows no
+    # mentor_moment flag while the printed duplicate persists, the cause is in
+    # the render path, not the engine, and that is itself the answer.
     _REPEAT_FIELDS = [
-        'impression', 'transferable_advice', 'mentor_next',
+        'impression', 'transferable_advice', 'mentor_next', 'mentor_moment',
         'byline_1', 'byline_2', 'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
         'dim_obs_wonder', 'dim_obs_aq', 'tech_read', 'visual_flow', 'imagine',
-        'conclusion', 'hard_truth',
+        'conclusion', 'hard_truth', 'master_why',
     ]
     _NGRAM_LEN = 6  # 6 consecutive words shared verbatim = genuine restatement, not coincidence
 
