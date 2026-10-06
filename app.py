@@ -1,3 +1,14 @@
+# SL-VERSION: 182.99 (Session 237, 2026-10-06 -- naming fix only, no logic change: the 'aq' dimension's
+# display label "Authentic Quality" conflicted with the canonical public definition at
+# shutterleague.com/science ("Emotion" / "The Emotion It Creates") -- a contradiction
+# SOURCE_REGISTER_S235.md had already flagged as unresolved (section B1). Founder decided: relabel to
+# "Emotion (AQ)" everywhere. Three spots fixed here: _DIM_NAMES dict (~line 42870, feeds portfolio-
+# history commentary), the strength_name/next_leap_name example list inside a Haiku /try prompt string
+# (~line 44015, now says 'Emotion' not 'Authentic Quality'), and the five-dimension PDF table's column
+# label (~line 47095). Internal dict keys ('aq') and the engine's own internal scoring-rubric
+# terminology are untouched -- display text only. Companion edit in auto_score.py (171.48) and
+# reportlab_card.py make the same relabel in the main scorecard schema and PDF. NOT YET CONFIRMED LIVE.
+# RETAINS 182.98.)
 # SL-VERSION: 182.98 (Session 237, 2026-10-06 -- FIX: the "Calibrated · N images"
 # scorecard badge (public_card, image_detail, download_card_pdf) previously read
 # Image.query.filter_by(status='scored').count() -- a live count that undercounts
@@ -42864,12 +42875,16 @@ def _get_haiku_history_context(user_id, exclude_image_id=None):
     - Opening sentence names actual photographs by title — "The flamingo pan, the
       flower frame" — so the user feels remembered, not processed.
     """
+    # Session 237: 'aq' relabelled 'Authentic Quality' -> 'Emotion (AQ)' per
+    # founder decision, matching the canonical public definition at
+    # shutterleague.com/science (dimension 5 = "Emotion"). Internal dict key
+    # 'aq' unchanged -- only the display string moved.
     _DIM_NAMES = {
         'dod': 'Depth of Difficulty',
         'vd':  'Visual Disruption',
         'dm':  'Decisive Moment',
         'wf':  'Wonder Factor',
-        'aq':  'Authentic Quality',
+        'aq':  'Emotion (AQ)',
     }
     # Plain English — what each dimension means without jargon
     _DIM_PLAIN = {
@@ -44019,7 +44034,7 @@ _TRY_HAIKU_PROMPT = (
 "STRENGTH AND NEXT LEAP:\n"
     "strength_name: The plain-English name of the strongest dimension "
     "(e.g. 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', "
-    "'Depth of Difficulty', 'Authentic Quality').\n"
+    "'Depth of Difficulty', 'Emotion').\n"
     "strength_obs: One sentence (max 35 words) explaining specifically what "
     "is working in this dimension for THIS photograph. Concrete. No jargon.\n"
     "next_leap_name: The plain-English name of the weakest dimension.\n"
@@ -47089,12 +47104,14 @@ def try_result_download(image_id):
         _story.append(Spacer(1, 10))
 
         # Five dimensions
+        # Session 237: 'Authentic Quality' -> 'Emotion (AQ)', matching the
+        # reportlab_card.py relabel (see that file for the full rationale).
         _dim_data = [
             ('Depth of Difficulty',  _dod),
             ('Visual Disruption',    _vd),
             ('Decisive Moment',      _dm),
             ('Wonder Factor',        _wf),
-            ('Authentic Quality',    _aq),
+            ('Emotion (AQ)',         _aq),
         ]
         _col_w = (_W - 2*_M) / len(_dim_data)
         _dim_labels = [[Paragraph(f'<b>{n}</b>', _sty('dl', size=7, leading=9, colour=_C_WHITE, bold=True, align=TA_CENTER))
