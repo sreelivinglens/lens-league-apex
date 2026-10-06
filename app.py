@@ -1,3 +1,18 @@
+# SL-VERSION: 182.103 (Session 237, 2026-10-06 -- SONNET TIMEOUT FIX, founder-flagged as urgent
+# after a live rescore of a 14-subject image (Egrets of Sasson Dock) failed outright: vision_analyse
+# alone took 38.41s (normal ~13s, this image had far more to look at), leaving no room for a ~99s
+# main scoring call inside the old 120s ceiling -- 137s total vs. a 120s budget, never going to
+# finish. The old retry logic made it worse: on timeout it called future.cancel(), which cannot
+# stop a thread already blocked on a live network call, then waited for that same thread to finish
+# anyway before discarding its result and starting a SECOND real, billed API call for the same
+# photo. A slow image could cost two full paid attempts and ~250+ seconds, with nothing ever saved.
+# Fixed in _auto_score_with_timeout() (~L9278): one real attempt now gets one ceiling raised to
+# 240s (covers the 137s seen here with real headroom), with a checkpoint log at the old 120s mark
+# so a slow-but-working call stays visible without starting a duplicate. No more wasted API calls,
+# no more silently-discarded good results. Full reasoning in that function's own docstring.
+# NOT YET CONFIRMED LIVE -- needs a push + a rescore of a genuinely complex image (many subjects)
+# + Railway log showing it complete past the old 120s mark without a second attempt, per Rules 3/16.
+# RETAINS 182.102.)
 # SL-VERSION: 182.102 (Session 237, 2026-10-06 -- FREE-TIER SAFETY FIX, PART 2, founder-flagged
 # as urgent after live re-test on TWO separate real images: 182.101's people-count gate was not
 # enough. Both test photos genuinely contain two real adults (a street vendor + a customer); the
@@ -9275,65 +9290,82 @@ def _increment_sonnet_calibrated_count():
         app.logger.warning(f'[_increment_sonnet_calibrated_count] {_ice}')
 
 
-def _auto_score_with_timeout(timeout_secs=120, retry_wait=10, **kwargs):
+def _auto_score_with_timeout(timeout_secs=240, retry_wait=10, **kwargs):
     """
-    Wraps auto_score() with a hard timeout and one automatic retry.
+    Wraps auto_score() with a hard timeout.
 
-    Why: The main Claude API scoring call averages 60-78s and has no timeout
-    guard. Without this, a slow or hung API call keeps the background thread
-    alive indefinitely — the image stays 'processing' forever and the user
-    never sees a result or an error.
-
-    Behaviour:
-      1. Run auto_score(**kwargs) in a ThreadPoolExecutor with timeout_secs ceiling.
-      2. If it completes in time, return the result normally.
-      3. If it times out on the first attempt, wait retry_wait seconds and try once more.
-      4. If the retry also times out, raise TimeoutError so the caller can set
-         img.status = 'error' and log a [auto_score_timeout] entry.
+    SL-VERSION 182.103 (Session 237, 2026-10-06 -- TIMEOUT FIX, founder-flagged as
+    urgent: live rescore of a 14-subject image (Egrets of Sasson Dock) failed
+    outright -- vision_analyse alone took 38.41s (normal is ~13s; this image had
+    far more to look at), leaving the ~99s main scoring call no room inside the
+    old 120s ceiling. 137s total vs. a 120s budget -- it was never going to finish,
+    on either attempt. The old code's "retry" made this worse, not better: on
+    timeout it called attempt 1's future.cancel(), which cannot actually stop a
+    thread already blocked on a live network call (Python can't interrupt running
+    code that way) -- then exiting the `with` block waits for that same thread to
+    actually finish anyway (ThreadPoolExecutor's shutdown(wait=True) default), and
+    ONLY THEN discarded that real, possibly-successful result and started a
+    second, genuinely new attempt -- a second real, billed API call for the same
+    photo, on top of the wasted first one. Net effect on a slow image: two paid
+    attempts, both thrown away, 250+ seconds, nothing saved.
+    Fix: ONE real attempt, in one thread, given one ceiling raised to cover a
+    genuinely complex image's real end-to-end time (240s, vs. the ~137s seen
+    here, vs. the main call's own documented ~150s target alone). A checkpoint
+    log line still fires at the old 120s mark so a slow-but-still-working call
+    stays visible in the console -- it now means "still going," not "about to be
+    thrown away." No second thread, no discarded result, no duplicate API cost.
+    shutdown(wait=False) on the way out so a genuinely stuck call (past 240s)
+    does not hang whoever is waiting on this function -- it just means that one
+    attempt's result is lost, same as before, but nothing is ever run twice.
+    RETAINS the original 120s/retry design's intent (bound the wait, surface a
+    clear error) without its two costly side effects.
 
     Called from: _score_in_background (upload), _force_rescore_in_background,
                  _retry_score_in_background, and the upload_edit scoring path.
-
-    Option B (prompt trimming) will be applied here after the 26 July event.
+    None of the four call sites pass timeout_secs explicitly, so this single
+    change covers all of them.
     """
     import concurrent.futures as _cf
+    import time as _time
     from engine.auto_score import auto_score as _auto_score
 
     def _run():
         return _auto_score(**kwargs)
 
-    for attempt in (1, 2):
-        with _cf.ThreadPoolExecutor(max_workers=1) as _ex:
-            _fut = _ex.submit(_run)
+    _checkpoint_secs = 120  # old ceiling -- now just a "still running" log marker
+    _ex  = _cf.ThreadPoolExecutor(max_workers=1)
+    _fut = _ex.submit(_run)
+    try:
+        try:
+            _result = _fut.result(timeout=_checkpoint_secs)
+        except _cf.TimeoutError:
+            app.logger.warning(  # S156: use app.logger not current_app.logger — no app context in thread
+                f'[auto_score_timeout] still running past {_checkpoint_secs}s — '
+                f'waiting up to {timeout_secs}s total before giving up (same '
+                f'attempt, not a new one — no duplicate API call). '
+                f'image_path={kwargs.get("image_path", "?")} genre={kwargs.get("genre", "?")}'
+            )
             try:
-                _result = _fut.result(timeout=timeout_secs)
-                # SL-182.98 — counts this completed Sonnet run toward the
-                # persistent "Calibrated · N images" badge. Success path only;
-                # a timed-out attempt never reaches here.
-                try:
-                    _increment_sonnet_calibrated_count()
-                except Exception as _cie:
-                    app.logger.warning(f'[auto_score_timeout] calibrated_count increment: {_cie}')
-                return _result
+                _result = _fut.result(timeout=max(1, timeout_secs - _checkpoint_secs))
             except _cf.TimeoutError:
-                _fut.cancel()
-                if attempt == 1:
-                    import time as _time
-                    app.logger.warning(  # S156: use app.logger not current_app.logger — no app context in thread
-                        f'[auto_score_timeout] attempt 1 exceeded {timeout_secs}s — '
-                        f'waiting {retry_wait}s then retrying. '
-                        f'image_path={kwargs.get("image_path", "?")} genre={kwargs.get("genre", "?")}'
-                    )
-                    _time.sleep(retry_wait)
-                else:
-                    app.logger.error(  # S156: use app.logger not current_app.logger — no app context in thread
-                        f'[auto_score_timeout] attempt 2 also exceeded {timeout_secs}s — '
-                        f'giving up. image_path={kwargs.get("image_path", "?")} '
-                        f'genre={kwargs.get("genre", "?")}'
-                    )
-                    raise TimeoutError(
-                        f'auto_score did not complete within {timeout_secs}s on either attempt'
-                    )
+                app.logger.error(  # S156: use app.logger not current_app.logger — no app context in thread
+                    f'[auto_score_timeout] exceeded {timeout_secs}s total — giving up. '
+                    f'image_path={kwargs.get("image_path", "?")} genre={kwargs.get("genre", "?")}'
+                )
+                raise TimeoutError(
+                    f'auto_score did not complete within {timeout_secs}s'
+                )
+    finally:
+        _ex.shutdown(wait=False)
+
+    # SL-182.98 — counts this completed Sonnet run toward the persistent
+    # "Calibrated · N images" badge. Success path only; a timed-out attempt
+    # never reaches here.
+    try:
+        _increment_sonnet_calibrated_count()
+    except Exception as _cie:
+        app.logger.warning(f'[auto_score_timeout] calibrated_count increment: {_cie}')
+    return _result
 
 
 @app.route('/upload/preflight', methods=['POST'])
