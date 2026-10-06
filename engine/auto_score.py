@@ -1,3 +1,74 @@
+# SL-VERSION: 171.57 (Session 238, 2026-10-06 -- COMPOSITION VOCABULARY RECONCILED + THREE REPAIRS.
+# Founder signal "go". He read the first 171.56 card and identified the remaining gap himself: "one
+# thing which is clearly missing are all the aspects of composition, gestaldt rules of photography,
+# japanes ma and other aspects, golden spiral if applicable...peter evans principles - it will be a
+# good idea to bring these in. They add meat to the observation as well as inferences and insights."
+#
+# WHY IT WAS MISSING -- NOT ABSENCE, A CONTRADICTION BETWEEN TWO BLOCKS OF THIS SAME PROMPT:
+# the PHOTOGRAPHIC INTELLIGENCE section (~L950) already defines EIGHT Japanese principles with their
+# kanji and worked explanations (Ma, Kanso, Wabi-sabi, Mono no aware, Yugen, Seijaku, Fukinsei,
+# Datsuzoku) plus five Gestalt principles, and has ALWAYS instructed that when DoD scores above 7.5
+# the specific principle MUST be named -- "do not say 'strong composition'". Then ~1,600 lines later
+# the NAMED COMPOSITION PRINCIPLES rule told the writing fields they may name a principle ONLY ONCE
+# per card and ONLY in tech_read -- and dim_obs_dod, the field that scores the very dimension those
+# principles exist to justify, was a 22-word line not allowed to name one at all. The engine held the
+# entire vocabulary and was forbidden from using it where it mattered. Live proof on the 6 Oct card:
+# DoD 7.8 with "you found the elevated position where the harbour reads as geometry, not chaos" --
+# true, no principle named, in direct breach of the instruction above.
+# FIX: the restricting rule is replaced. A principle may now be named in FOUR fields -- tech_read,
+# dim_obs_dod (MANDATORY above 7.5), dim_obs_disruption, visual_flow -- at most ONE each, and NO
+# PRINCIPLE TWICE ON ONE CARD, self-checked like master names. The full vocabulary is listed by name
+# pointing back to the existing definitions rather than redefining them. All three original
+# conditions stay binding: EARNED (Golden Spiral only when the spiral really governs the structure,
+# never as flattery), EXPLAINED in plain words in the same sentence for a 70-year-old reader, and --
+# the new one -- DIAGNOSTIC, via the composition source's own reframe: do not ask which rules the
+# photograph followed, ask what it reveals about how THIS photographer sees. Focal point = instinct,
+# exclusion = judgement, negative space = the Ma question. A NEGATIVE ANSWER IS EXPLICITLY AS
+# VALUABLE AS A POSITIVE ONE, which is the honest read on this very card: the birds have room (Ma)
+# while the top-left water is emptiness without intention (dead space), and the difference between
+# those two is a level 3 observation about how this photographer handles space. visual_flow carries
+# that question. "If no principle genuinely applies, name none" is retained -- accuracy, not
+# coverage. The ISOLATION RULE is untouched: principles still score DoD only and never lift DM, VD,
+# WF or AQ. This governs prose, not numbers.
+#
+# REPAIR 1 -- FOUR LEAKING REGISTER EXAMPLES DELETED (the standing recommendation from 171.55,
+# now signed off). dim_obs_dod/disruption/dm/wonder each carried a sample sentence with an explicit
+# "copying this sentence is a failure" guard, and three of the five appeared VERBATIM on the live
+# card anyway, one of them as the #1 logged duplicate pair. They were written about this exact image
+# in Session 237, which is why they read as perfect observations and got recited. The register is now
+# DESCRIBED, not demonstrated -- there is no sentence left to copy. (dim_obs_aq's went in 171.56.)
+# REPAIR 2 -- MY OWN REGRESSION FROM 171.56: putting the trend read at the top of the card in
+# impression without telling byline_1 to release it produced a new duplicate on the very first card
+# ("your creative work evaluates at 8.10 on average, your Street..." logged in impression AND
+# byline_1). byline_1 is now explicitly barred from repeating the averages, the genre comparison or
+# impression's wording; it may only take the trend FORWARD. Second omission of mine today, named.
+# REPAIR 3 -- THE MASTER-REPEAT DETECTOR HAS BEEN BLIND SINCE THE DAY IT WAS WRITTEN. Its pattern
+# was r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b'. In a Python 3 str regex [a-z] is literally a-z and does
+# NOT match an accented letter, so "Sebastião Salgado" produced NO MATCH AT ALL and "Henri
+# Cartier-Bresson" was silently truncated to "Henri Cartier". Live proof, same card: Salgado was
+# named in BOTH transferable_advice AND byline_1 while master_name was Raghu Rai -- a straight breach
+# of ONE MASTER PER SCORECARD -- and the console printed "master_check OK -- no master name repeated
+# across fields". Every OK this detector has ever printed about an accented master was false.
+# Replaced with unicode-aware token scanning (maximal runs of 2+ Title-Case tokens, hyphens and
+# apostrophes kept intact) because a single greedy unicode regex swallows the following lower-case
+# words and loses the name with them -- verified against the real failing text, Cartier-Bresson,
+# Kertész, Moholy-Nagy and Brassaï. _MASTER_FIELDS also widened from 5 fields to 16: the prompt bans
+# master names in impression, conclusion, imagine, visual_flow, tech_read and every dim_obs_*, and
+# none of those were being scanned. Detection only, nothing rewritten.
+#
+# STILL OPEN, STILL NEEDING SIGNAL: the AQ prompt-side gate did NOT bind on the 171.56 card (aq=8.1
+# naming "coexistence" and "rhythm", both on the new blacklist) -- the [AQ_GATE] detector caught it
+# correctly but a prose blacklist loses to the model's own read, so enforcing it means CAPPING IN
+# CODE, which moves a published number and needs its own word. app.py's Card 2 still renders
+# tech_read a second time under "What You Controlled" (~L13094, _c2 = _tech_val) -- the most visible
+# duplicate on the card, untouchable from this file. The 8-field TEXT_REPEAT_FIX cap. Measurable crop
+# percentages.
+# NO SCORING FORMULA, WEIGHT, DIMENSION NUMBER OR TIER BAND IS CHANGED.
+# NOT CONFIRMED LIVE. WHAT TO LOOK FOR: (a) a named, plain-English-explained principle in dim_obs_dod
+# whenever DoD is above 7.5; (b) no principle appearing twice on the card; (c) the Ma-vs-dead-space
+# distinction in visual_flow; (d) a [MASTER_REPEAT] line if a master is still repeating -- an "OK"
+# from this version is the first trustworthy one; (e) the trend numbers appearing ONCE, in impression
+# only. RETAINS 171.56.)
 # SL-VERSION: 171.56 (Session 238, 2026-10-06 -- THE INSIGHT LADDER. Founder signal "go" after he
 # read the first 171.54/171.55 card and said the thing that matters most in this session: "IT STILL
 # DOESNT FEEL SHERPA TONE - AS OF NOW IT FEELS ANY ENGINE CAN READ THAT, WHERE IS THE INSIGHT LEVEL
@@ -2571,19 +2642,66 @@ sat fifth, under a mid-card heading, behind four paragraphs of pure description 
 thing the photographer read was indistinguishable from a free tool's output. Spread the level 3
 material. Different fields tie to different parts of the history.
 
-NAMED COMPOSITION PRINCIPLES — USE REAL VOCABULARY, EARNED, ONCE, EXPLAINED:
-You may name a real composition or design principle — Rule of Thirds, Golden Ratio / Golden
-Spiral, Leading Lines, Diagonal, Symmetry, Frame-in-Frame, Negative Space, a Gestalt principle
-(proximity, closure, common fate, figure-ground), or a Japanese aesthetic principle (Ma —
-negative space as a subject in itself, Fukinsei — intentional asymmetry, Kanso — simplicity)
-— but ONLY when it genuinely is the dominant structural fact of THIS specific frame, ONLY
-ONCE across the whole scorecard (in tech_read), and ONLY with its meaning stated in the same
-sentence in plain words, so a 70-year-old member who never studied photography still
-understands it immediately. 'This follows the Rule of Thirds — the egret sits exactly where
-your eye expects a subject to rest' is earned. Naming a principle with no plain-English
-anchor, or naming one that does not actually apply to this frame, is jargon and is banned.
-Do not force a named principle into every card — if none genuinely applies, say nothing about
-named theory at all; a true observation in plain words beats a forced technical label.
+NAMED COMPOSITION PRINCIPLES — REAL VOCABULARY, EARNED, EXPLAINED, AND USED DIAGNOSTICALLY
+(SL-171.57 — this rule previously confined every named principle to ONE mention in tech_read.
+That was written to stop jargon decoration and it over-corrected: it emptied the card of the
+one vocabulary that explains WHY a frame works, and it directly contradicted the
+PHOTOGRAPHIC INTELLIGENCE section far above, which identifies eight Japanese principles and
+five Gestalt principles and instructs that when DoD scores above 7.5 the specific principle
+MUST be named rather than writing "strong composition". The engine held the whole vocabulary
+and was forbidden from using it where it mattered. Reconciled here.)
+
+THE AVAILABLE VOCABULARY — all of it is already defined in the PHOTOGRAPHIC INTELLIGENCE
+section above; use those definitions, do not invent new ones:
+  Western/structural — Rule of Thirds, Golden Ratio / Golden Spiral, Leading Lines, Diagonal,
+  Symmetry, Frame-in-Frame, Negative Space, Scale/Proportion.
+  Gestalt — proximity, closure, common fate, similarity, figure/ground.
+  Japanese — Ma (negative space as presence, not absence), Kanso (reduction to the essential),
+  Wabi-sabi (beauty in imperfection and impermanence), Mono no aware (the pathos of
+  transience), Yugen (profound beauty felt but not fully explainable), Seijaku (active
+  stillness as the subject), Fukinsei (deliberate asymmetry as intention), Datsuzoku (freedom
+  from convention).
+
+WHERE A PRINCIPLE MAY NOW BE NAMED — four fields, at most ONE principle each:
+  tech_read — the dominant structural fact of the frame.
+  dim_obs_dod — MANDATORY when the DoD score is above 7.5: name the specific photographic
+  intelligence that earned that number. "Strong composition" is banned there.
+  dim_obs_disruption — the principle that explains what the treatment breaks or follows.
+  visual_flow — only a principle that governs the eye's path or the handling of space.
+NO PRINCIPLE MAY BE NAMED TWICE ON ONE SCORECARD. If Ma belongs in visual_flow, tech_read must
+reach for a different one or none. Self-check before returning your JSON, exactly as you do
+for master names.
+
+THE THREE CONDITIONS, ALL STILL BINDING:
+1. EARNED — it must genuinely be true of THIS frame. A principle that does not actually apply
+   is a lie, and a working professional spots it instantly. Golden Spiral especially: name it
+   only when the spiral really is the governing structure, never as flattery.
+2. EXPLAINED IN PLAIN WORDS, IN THE SAME SENTENCE, so a 70-year-old member who never studied
+   photography understands it immediately. "This follows the Rule of Thirds — the egret sits
+   exactly where your eye expects a subject to rest" is earned. A bare label is jargon.
+3. DIAGNOSTIC, NOT DECORATIVE — this is the condition that makes a principle worth naming at
+   all. See below.
+
+USE THE PRINCIPLE TO REACH LEVEL 3 (see THE INSIGHT LADDER above). The reframe, from the
+composition source this platform is built on: do NOT ask "which rules did this photograph
+follow?" — ask "what does this photograph tell me about how THIS photographer sees?" A named
+principle is evidence about their eye, not proof that the engine knows terminology.
+  FOCAL POINT — what did they notice first? Diagnostic of instinct.
+  EXCLUSION — what did they deliberately leave out? Diagnostic of judgement.
+  NEGATIVE SPACE — can they recognise that nothing can be part of the picture? This is the Ma
+  question, and A NEGATIVE ANSWER IS AS VALUABLE AS A POSITIVE ONE. "You gave the birds room
+  to exist — that is Ma, space as presence — but the empty water in the top-left corner is
+  emptiness without intention, and the difference between those two is the next thing to own"
+  is a level 3 observation about how this photographer handles space. Say that, when it is
+  true, rather than withholding the vocabulary or forcing a compliment.
+
+IF NO PRINCIPLE GENUINELY APPLIES, NAME NONE. A true observation in plain words beats a forced
+technical label, and a forced label on a card read by a professional costs more credibility
+than it buys. The requirement is accuracy, not coverage.
+
+SCORING IS UNAFFECTED: the ISOLATION RULE in the PHOTOGRAPHIC INTELLIGENCE section still
+stands in full — identifying Ma, Kanso, Yugen, Gestalt Closure or any other principle scores
+DoD only and NEVER lifts DM, VD, WF or AQ. This rule governs prose, not numbers.
 
 ADDITIONAL BANNED PHRASES FOR ALL NEW FIELDS (note: 'leading line' and similar composition
 terms are allowed under NAMED COMPOSITION PRINCIPLES above when earned, explained, and used
@@ -2629,7 +2747,7 @@ Return this exact JSON structure:
   "hard_truth": "<SCORECARD OPENING LINE. FUNCTION: OBSERVE — name what is visibly there; no 'because', no mechanism, no advice, no forward-looking sentence (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. HARD LENGTH LIMIT: 35 words. This is the first thing the photographer reads. Applaud first — open with a specific adjective that names what they achieved, then build the sentence. SCORE GATE: Score 4-6: warm, specific, joyful — 'What a moment to catch.' / 'Lovely instinct — you stopped for this.' Score 7-8: peer applause — 'Beautifully read.' / 'Sharp instinct here, and it paid off.' Score 9+: rare-frame recognition — 'Brilliantly timed.' / 'Exceptional patience — and the frame earned it.' NEVER start with: 'This image', 'The photograph', 'You saw', 'Your composition'. NEVER mention the 9+ gap, score ceiling, what is missing, or what the image failed to do. This field contains ONLY what worked and why it matters. OWNERSHIP REMINDER: react emotionally in one or two short sentences — do NOT re-describe the compositional facts, the angle, or the technique (dim_obs_dod/dim_obs_disruption own those); do NOT restate what impression or conclusion will say. FORBIDDEN HERE — PATTERN/TRAJECTORY LANGUAGE: do not write sentences of the shape "you keep finding X" / "you keep doing X" / "this is what you do" — any observation about a recurring habit, pattern, or trajectory across the photographer's work belongs to impression and conclusion ONLY (SL-171.56 — impression reads the pattern on this frame, conclusion takes it forward; hard_truth does neither). hard_truth reacts to THIS one frame in the moment; it does not comment on a pattern.\nEMOTION NAMING RULE: If the image carries a strong, nameable emotional response — love, tenderness, awe, courage, joy, wonder, reverence — name that emotion explicitly in the opening line. Members want to know the engine felt what they were trying to create. Examples: 'The tenderness here is immediate — a stranger would feel it.' / 'This is courage, documented.' / 'The love in this frame needs no caption.' When the Wonder score is 7.5+, the hard_truth MUST name the emotion the image produces.\nSTORY RECOGNITION RULE: If the image contains a clear narrative arc (two subjects in relationship, a figure within a cultural world, a human gesture that implies before and after), acknowledge the story in the hard_truth. Examples: 'You caught a story here, not just a moment.' / 'There is a whole world in this frame.' / 'Brotherhood, devotion, and the weight of a life lived in red — all in one corridor.'\nFAMOUS LOCATION: if location is heavily photographed, acknowledge it warmly and give the one-step guidance. SPECIES (wildlife/nature): ONLY name species if species_id is confirmed. FORMAT: one sentence, or two short sentences with a line break between them. Plain English. No jargon.>",
   "mentor_moment": "<ONE sentence. Was this the right moment? For high scores: confirm it and say exactly why. For lower scores: name the specific moment that would have been stronger. Return null if not relevant.>",
   "mentor_next": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). ONE creative direction — possibility, never correction. Two sentences max, HARD LENGTH LIMIT: 30 words. No positional corrections. Do not reuse phrasing, sentence structure, or the same hypothetical detail that imagine uses — if imagine already describes the 9+ version of this exact frame, mentor_next must point to a DIFFERENT next image or technique, not restate the same hypothetical.>",
-  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Every paragraph here must point forward — paragraph 1 included. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through it in full sentences — not fragments. Paragraph 1: what this score level means for this photographer, in plain English. If Wonder score is 7.5+, this paragraph must include the phrase 'made us feel' and name the specific emotion. Paragraph 2: ONE short sentence pointing at the gap — what the frame would need to cross into 9+. The FULL description of that 9+ frame is owned by the "imagine" field and must NOT be written out here (SL-171.54: byline_1 and imagine previously carried directly contradictory instructions, each told it owned this content in full; imagine owns it, byline_1 points). Paragraph 3: the one habit that gets there. **Bold master name**, linked, with a real sentence on their practice — not a name-drop. This master must be DIFFERENT from whichever master is named in transferable_advice; a master name must never repeat across the scorecard. Mention the trend if portfolio_context has data.>",
+  "byline_1": "<CARD 3 — WHAT YOUR EVALUATION MEANS. FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Every paragraph here must point forward — paragraph 1 included. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 2 to 3 full paragraphs, no bullets, NO WORD CAP. Warm, Sherpa voice, senior photographer talking a peer through it in full sentences — not fragments. Paragraph 1: what this score level means for this photographer, in plain English. If Wonder score is 7.5+, this paragraph must include the phrase 'made us feel' and name the specific emotion. Paragraph 2: ONE short sentence pointing at the gap — what the frame would need to cross into 9+. The FULL description of that 9+ frame is owned by the "imagine" field and must NOT be written out here (SL-171.54: byline_1 and imagine previously carried directly contradictory instructions, each told it owned this content in full; imagine owns it, byline_1 points). Paragraph 3: the one habit that gets there. **Bold master name**, linked, with a real sentence on their practice — not a name-drop. This master must be DIFFERENT from whichever master is named in transferable_advice AND from master_name; a master name must never repeat anywhere across the scorecard. SELF-CHECK THIS BEFORE RETURNING — on the 6 Oct 2026 live card Sebastião Salgado was named in BOTH transferable_advice and this field while master_name was Raghu Rai, and the code detector missed it (it was blind to the accent in his name; now fixed), so this rule is yours to hold, not the checker's.\\nDO NOT RESTATE impression's TREND SENTENCE (SL-171.57 — this exact duplicate appeared on the first 171.56 card: 'your Creative work evaluates at 8.10 on average, your Street...' was logged in BOTH impression and this field). impression now owns the trend AS A READ ON THIS FRAME, with the numbers. This field may take the trend FORWARD — what it means for the next photograph, what habit closes it — but must NOT repeat the averages, the genre comparison, or impression's wording. Different move on the same fact, per FUNCTION ASSIGNMENT.>",
   "byline_2": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). CARD 4 — YOUR ASSIGNMENT TOMORROW. This field is forward-looking advice, not a restatement of an existing insight_log entry — it may reference one lightly as a bridge, but its content is the exercise itself, which is new. PARAGRAPH FORMAT IS MANDATORY: separate each paragraph with a literal blank line (two newline characters) in your JSON string value — never run paragraphs together as one block of text, even if every sentence is excellent. A reader must see clear, visible breaks between paragraphs, not a wall of text. FLOWING PROSE — 1 to 2 full paragraphs, no bullets, NO WORD CAP. LOCATION INDEPENDENCE: never send photographer back to shoot location — draw the principle from this image, apply it near user_city or any future opportunity. Describe a concrete, gear-specific exercise in full sentences, then close with a warm, brief philosophy line. FORBIDDEN TOPIC for the philosophy line: timing, patience, or 'waiting for the moment/instant' (mentor_next and dim_obs_dm already own that) — use discipline, consistency, location-independence, or craft instead. DO NOT write a multi-frame body-of-work sequence here — the body_of_work field owns that content entirely (founder reviewed a live PDF where this field and body_of_work told the same story twice and asked to cut the duplication; that content boundary still stands even though the FORMAT here has gone back to prose).>",
   "badges_g": ["<specific strength — plain English, no jargon>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap — plain English, actionable>", "<specific gap>", "<specific gap>"],
@@ -2652,15 +2770,15 @@ Return this exact JSON structure:
   "strength_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "next_leap_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
-  "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score in one clause only. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the terse 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'You climbed above the chaos for this one — access most photographers never find.'>",
-  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score in one clause only. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'A working dock turns into geometry under you. That's a rare way to see chaos.'>",
-  "dim_obs_dm": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available. Do NOT restate hard_truth/impression. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'The wings were still opening when you pressed the shutter — full extension was a half-beat away.'>",
-  "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) in one clause. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only. Register example (TONE ONLY — invent your own words for THIS image; copying this sentence, or lifting any distinctive phrase from it, is a failure): 'Access Wonder — you're standing somewhere most people never get to stand.'>",
+  "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE sentence, HARD LENGTH LIMIT 32 words (raised from 22 to fit the mandatory principle naming below). Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above.\nNAME THE PRINCIPLE — MANDATORY WHEN THIS DoD SCORE IS ABOVE 7.5 (SL-171.57, reconciling the long-standing contradiction between the PHOTOGRAPHIC INTELLIGENCE section, which has always required this, and the old prose rule that forbade naming a principle outside tech_read): name the specific photographic intelligence that earned the number — a Gestalt principle, a Japanese principle, or a structural one — explained in plain words in the same sentence, and DIFFERENT from any principle named elsewhere on this card. 'Strong composition' and 'good eye' are BANNED here. See NAMED COMPOSITION PRINCIPLES above. If the DoD score is 7.5 or below, naming a principle is optional and only if genuinely earned.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict that credits the physical achievement and names the intelligence behind it, in the voice of a senior photographer who has stood in that place themselves.>",
+  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this disruption score. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. YOU MAY NAME ONE PRINCIPLE here when it genuinely explains what the treatment breaks or follows — Datsuzoku (freedom from convention) and Fukinsei (deliberate asymmetry) are often the honest ones for a disruptive frame — explained in plain words, and DIFFERENT from every other principle on this card. See NAMED COMPOSITION PRINCIPLES above.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict on the treatment itself, not on how hard the shot was.>",
+  "dim_obs_dm": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available and how far away it was. Do NOT restate hard_truth/impression.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict naming the instant that was caught and, if it was not the peak, the instant that was.>",
+  "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Name the type of wonder (access, eye, cultural, emotional) and what created it. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: the wonder type named first, then in plain words what in this frame produces it for a stranger.>",
   "dim_obs_aq": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression.\\nA FEELING, NOT A CONCEPT — HARD GATE (SL-171.56, live failure 6 Oct 2026: this field scored 8.1 while naming 'interdependence', which is a theme, not a feeling; the 7.5 ceiling was bypassed because an abstraction was accepted as an emotion). You must name a state a stranger would actually FEEL in their body on seeing this frame, in a word they would use themselves: tenderness, awe, grief, loneliness, defiance, joy, dread, longing, pride, unease, calm, reverence, delight, exhaustion, menace, relief, pity, courage, intimacy, nostalgia. BANNED as emotion names — these are THEMES, and naming one does not satisfy this field: interdependence, coexistence, rhythm, harmony, balance, tension, dynamism, connection, relationship, duality, contrast, energy, movement, atmosphere, mood, narrative, story, humanity, resilience, tradition, culture, timelessness. If the honest answer is that the image creates a theme rather than a feeling, SAY SO and the AQ score must sit at or below 7.5 — 'this reads as a study in coexistence rather than a frame that makes a stranger feel something specific, which is what holds Emotion here' is a correct, honest, publishable sentence and is better than inflating a theme into a feeling.>",
   "master_name": "<Exactly one photographer name from the masters pool. Match on SUBJECT and BEHAVIOUR first — not visual style or fame. This name must NOT appear anywhere else in the scorecard. Run the self-check before responding.>",
   "master_why": "<FUNCTION: TEACH — evidence before verdict (see FUNCTION ASSIGNMENT above). Max 25 words. One sentence only. Format: '[Master] [specific physical action in similar situation]. You [what photographer has not done].' No career summaries. No 'is known for.' 25 words hard limit — cut words before extending.>",
   "tech_read": "<FORENSIC TECHNICAL READ. FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. This is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above; this is also the ONLY field allowed to name a composition principle, per NAMED COMPOSITION PRINCIPLES above. FLOWING PROSE — as many full sentences as this image genuinely needs, NO WORD CAP, no bullets. Tone: senior editor examining a contact sheet. Cover what is actually true and visible: sharpness and its CAUSE; exposure — clipping or crush (CRITICAL: dark background ≠ night); one gear observation if EXIF is present; the compositional placement of the subject (thirds, diagonals, framing) and how it was achieved; the quality and direction of the light; and, where relevant, why a black-and-white or colour treatment works. ORIENTATION: if portrait orientation + content reads as rotated horizontal scene, add: 'This frame is in portrait orientation — if deliberate, scored as such; if accidental, re-upload corrected version.' Say only what is true of THIS image — do not pad with generic technical commentary to fill space.>",
-  "visual_flow": "<FUNCTION: OBSERVE — name the path, do not explain why it works (see FUNCTION ASSIGNMENT above). One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.>",
+  "visual_flow": "<FUNCTION: OBSERVE — name the path, do not explain why it works (see FUNCTION ASSIGNMENT above). One sentence only, max 40 words. Where does the viewer's eye enter, how does it travel, where does it rest? Name the specific entry element and exit or rest point. If dead space exists (foreground, edge, sky adding no information), name it in the same sentence.\\nTHE MA QUESTION (SL-171.57): this field may name ONE principle, and only one that governs the eye's path or the handling of space — Ma (negative space as presence, not absence), Negative Space, Leading Lines, Diagonal, or Golden Spiral where the spiral genuinely is the governing structure. It must be explained in plain words in the same sentence and must be DIFFERENT from every other principle named on this card. A NEGATIVE ANSWER IS AS VALUABLE AS A POSITIVE ONE and is often the more honest and more useful one: empty area that carries intention is Ma; empty area that merely competes for attention is dead space, and saying which this frame has — or that it has one of each, and where — tells the photographer something real about how they handle space. Do not force the vocabulary; if the eye's path is simply a path, describe the path.>",
   "imagine": "<FUNCTION: PROJECT (see FUNCTION ASSIGNMENT above). One paragraph. Second person. Present tense. Paint the 9+ version of this photograph — same subject, same behaviour, but describe the frame where everything aligns: colour, light, proximity, posture, background. POSSIBILITY LANGUAGE ONLY: 'imagine if', 'there is a version of this image where', 'if this moment comes again'. BANNED: 'go back', 'return to', 'revisit'. Master name must NOT appear here. No location advice. THIS FIELD OWNS the '9+ version of this exact frame' description — byline_1's second bullet must give only a SHORT one-sentence pointer to this field's content, not its own full description; mentor_next must point to a different image or technique, not the same hypothetical. HARD LENGTH LIMIT: 60 words. No jargon. No dimension names. Pure vision.>",
   "conclusion": "<FUNCTION: PROJECT — point forward; a fact may be named in a few words only as the bridge you depart from, and the content must be the departure (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. Prefer the photographer-history entry from the ledger if there is one. Platform voice — warm, direct, second person YOU always. NEVER 'this photographer'. DO NOT repeat observations, phrasing, or specific visual details from hard_truth, impression, byline_1, byline_2, or master_why — this field is about what the photograph reveals about how YOU see and your trajectory as a photographer, not a restatement of this image's compositional facts. PATTERN/TRAJECTORY LANGUAGE, OWNERSHIP NARROWED (SL-171.56 — this field's exclusivity was removed because it would have forbidden impression's mandatory LEVEL 3 sentence, see THE INSIGHT LADDER): hard_truth is still forbidden from pattern language entirely. impression now carries the pattern as a READ ON THIS FRAME. THIS field carries the same underlying fact as a TRAJECTORY AND AN INVITATION — where this photographer is heading and that we want the next photograph. Different move, different tense, and you may NOT reuse impression's wording or restate its sentence; if impression has already named the pattern, take it forward rather than naming it again. Say one thing: what this photograph reveals about how YOU see, and that we want to see more. TIER GATE: If tier is Master, Grandmaster, or Legend (score 8.0+), add: 'An image at this level belongs in the League of Photographers — where it earns a world standing calibrated against every photographer on the platform.' If below 8.0, do NOT mention the League here. Always close with this exact sentence: 'The standard we are measuring against was built from hundreds of blind calibrations — not preference, not taste — what makes an image hold attention, create feeling, and outlast the five seconds it gets on a feed.' No upgrading. No pricing. HARD LENGTH LIMIT: 65 words (this count excludes the mandatory closing sentence). If eval 2+: name the pattern across their work (one strength, one gap, max 30 words of that total). If eval 1: 1-2 sentences then invite next photograph.>",
   "award_context": "<Score-gated. No specific award body or brand names ever. BELOW 8.5: 'The League of Photographers features genuinely international work — images that stand a chance for recognition, earn income through commissioned work, sales and print editions, and be featured in exhibitions, grants and awards.' 8.5-8.9: Start with EXACTLY 'At 8.5+' (not 8.0+, not 8.6+, always 8.5+): 'At 8.5+ your work is ready for serious [genre] photography awards and the League of Photographers — where images at this level earn income through commissions, print sales, and exhibition placement.' 9.0+: Start with EXACTLY 'At 9.0+': 'At 9.0+ your [genre] work stands among the best on the platform — the League of Photographers opens doors to major awards, commissions, gallery exhibitions, and grant opportunities.' Replace [genre] with actual genre. One sentence per tier. Max 40 words. THRESHOLD: only 8.5 or 9.0 after 'At' — no other numbers.>",
@@ -7732,9 +7850,19 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # mentor_technical were removed from the generation schema entirely (confirmed
     # dead fields — never read by any live template) so they no longer need an
     # entry here.
+    # SL-171.57 — widened. The prompt bans master names in impression,
+    # conclusion, imagine, visual_flow, tech_read and every dim_obs_*, and
+    # requires master_why's name to be unique across the card, but the
+    # detector only ever scanned five fields, so a breach in any of the others
+    # was invisible on top of the accent blindness fixed below. Detection only;
+    # nothing is rewritten.
     _MASTER_FIELDS = [
         'transferable_advice', 'byline_1',
         'mentor_next', 'byline_2', 'hard_truth',
+        'master_why', 'impression', 'conclusion', 'imagine',
+        'tech_read', 'visual_flow',
+        'dim_obs_dod', 'dim_obs_disruption', 'dim_obs_dm',
+        'dim_obs_wonder', 'dim_obs_aq',
     ]
     # Extract candidate master names: words of 3+ chars starting with uppercase,
     # appearing in the masters pool block, or any word that appears in 2+ fields
@@ -7749,9 +7877,45 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         if not _ftext:
             continue
         # Match proper names: two or more capitalised words (e.g. Andre Kertesz)
-        _names_in_field = set(
-            _re_master.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', _ftext)
+        #
+        # SL-171.57 — ACCENT BLINDNESS FIXED. The old pattern was
+        # r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b'. In Python 3 str regex, [a-z]
+        # is literally a-z and does NOT match an accented letter, so
+        # "Sebastião Salgado" produced NO match at all and "Henri
+        # Cartier-Bresson" was silently truncated to "Henri Cartier". This
+        # detector has therefore been reporting "OK -- no master name repeated"
+        # on real violations for its entire life. Confirmed on the 6 Oct 2026
+        # live Sasson Dock card: Salgado was named in BOTH transferable_advice
+        # and byline_1 while master_name was Raghu Rai -- a straight breach of
+        # the ONE MASTER PER SCORECARD rule -- and the log said OK.
+        # [^\W\d_] is "any unicode letter", so accents, diacritics and
+        # non-Latin scripts all match; the hyphen class keeps double-barrelled
+        # surnames (Cartier-Bresson, Moholy-Nagy) intact as one name.
+        # Done by token scanning rather than one regex: a single unicode-letter
+        # regex is greedy across following lower-case words ("Sebastião Salgado
+        # worked fishing communities" matches as one run), and filtering that
+        # run afterwards discards the real name with it. Tokenise, then take
+        # every maximal run of 2+ consecutive Title-Case word tokens. str
+        # methods are unicode-aware, so accents need no special handling.
+        _tokens = _re_master.findall(
+            r"[^\W\d_][^\W\d_\-‐-―’']*"
+            r"(?:[-‐-―’'][^\W\d_]+)*|\S",
+            _ftext
         )
+        _names_in_field = set()
+        _run = []
+        for _tok in _tokens + ['\u0000']:          # sentinel flushes the last run
+            _is_name_tok = (
+                len(_tok) > 1
+                and _tok[:1].isupper()
+                and all(_c.isalpha() or _c in "-‐‑‒–—―’'" for _c in _tok)
+            )
+            if _is_name_tok:
+                _run.append(_tok)
+            else:
+                if len(_run) >= 2:
+                    _names_in_field.add(' '.join(_run))
+                _run = []
         for _n in _names_in_field:
             # Filter: skip common non-name phrases (Street, Mobile League, etc.)
             _skip = {
