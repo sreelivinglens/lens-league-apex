@@ -1,3 +1,34 @@
+# SL-VERSION: 171.64 (Session 238, 2026-10-06 -- ONE FALSE POSITIVE, FIXED STRUCTURALLY. The 19:05
+# rescore is the best card this engine has produced and the log is clean except for one line:
+#     [auto_score][MASTER_REPEAT] "In Street" appears in multiple fields: hard_truth, impression
+# That is from "In Street you wait for the peak" -- a sentence-initial capital followed by a GENRE
+# name. The detector takes any two Title-Case tokens as a person. The existing skip set already held
+# 'Your Street', 'Your Creative' and eight more, which is a list of symptoms, not a fix; "In Street"
+# is simply the variant nobody had written down yet, and the next one would have been "At Sassoon"
+# or "From Wildlife". FIXED AT THE CAUSE: strip a leading function word from the candidate run, then
+# reject it if any surviving token is a genre or platform noun. Verified by running the real detector
+# logic over eight strings taken from actual cards before writing it into this file -- "In Street",
+# "Your Creative work", "THE ONE-OBJECT TEST" and "Sassoon Dock" all correctly rejected, while
+# "Raghu Rai", "Sebastiao Salgado", "Henri Cartier-Bresson" and "The work of Alex Webb" are all still
+# caught. Eight of eight.
+#
+# WHAT THE 19:05 LOG PROVES, and it is the most important result of this session:
+#   * THE CORRECTIVE PASS RAN AND WORKED. 8 fields rewritten (conclusion, dim_obs_dm, dim_obs_dod,
+#     hard_truth, imagine, master_why, mentor_moment, visual_flow) in 12.15s. 12 duplicate groups
+#     before, ONE after. That is a ~92% cut, and the single survivor is a four-word fragment.
+#   * It ran because only 8 fields were flagged -- exactly AT the cap, not above it. The cap did not
+#     help here; it simply did not fire. On the 11- and 13-field cards it fired and corrected nothing.
+#   * [internal_leak_check] OK -- the detector is alive for the first time (171.63 fix confirmed).
+#   * [stock_phrase_check] OK, [principle_check] OK (Common Fate, one field, permitted).
+#   * [AQ_GATE] CAPPED 8.1 -> 7.5 on "geometry, pulse, rhythm" with no named feeling, moving the card
+#     8.02 Master -> 7.86 Maverick. The founder has already confirmed this direction is correct for
+#     this frame. The gate is doing the job it was built for.
+#   * TOTAL 120.74s including the corrective call -- comfortably inside the 180s member ceiling.
+#   * The Save PDF carries "Where does the eye go?" and reflowed paragraphs (confirmed by extracting
+#     the delivered PDF, not assumed).
+# STILL NOT VERIFIED BY ANYONE: the WEB card's paragraphs, which need app.py 182.106 deployed and a
+# human look -- the 182.105 import bug means a passing log proves nothing there.
+# STILL OPEN: the 8-field cap. RETAINS 171.63.)
 # SL-VERSION: 171.63 (Session 238, 2026-10-06 -- MY OWN 171.62 REGRESSION, CAUGHT BY THE FOUNDER ON
 # THE FIRST DEPLOY OF THE FIX. 171.62 fixed a use-before-assignment that had kept the stock-phrase
 # clutter detector dead since 171.60, by hoisting _REPEAT_FIELDS above it -- and in the SAME build
@@ -8523,6 +8554,35 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             if _n in _skip:
                 continue
             if len(_n.split()) < 2:
+                continue
+            # SL-171.64 -- a sentence-initial function word plus a genre or
+            # platform noun is not a photographer. The 6 Oct 19:05 log reported
+            #   [MASTER_REPEAT] "In Street" appears in multiple fields:
+            #   hard_truth, impression
+            # from the sentence "In Street you wait for the peak" -- the capital
+            # is the start of a sentence and "Street" is a GENRE, not a surname.
+            # The existing skip set already held 'Your Street', 'Your Creative'
+            # and the rest, which is a list of symptoms; the cause is that any
+            # two Title-Case tokens are taken as a name. Fixed structurally:
+            # drop a leading function word, then reject the run if any surviving
+            # token is a genre or platform noun. A real name survives both tests
+            # ("Raghu Rai", "Sebastiao Salgado", "Henri Cartier-Bresson"), and
+            # the sentence-position false positive cannot recur for any genre.
+            _LEAD_FN = {'In', 'The', 'A', 'An', 'This', 'That', 'These', 'Those',
+                        'Your', 'My', 'Our', 'Their', 'His', 'Her', 'Its',
+                        'At', 'On', 'By', 'For', 'With', 'From', 'And', 'But',
+                        'If', 'When', 'Where', 'What', 'Both', 'Each', 'Every'}
+            _NOT_A_SURNAME = {'Street', 'Creative', 'Wildlife', 'Landscape',
+                              'Portrait', 'Wedding', 'People', 'Nature', 'Drone',
+                              'Documentary', 'Fashion', 'Mobile', 'Conceptual',
+                              'League', 'League.', 'Shutter', 'Timing', 'Emotion',
+                              'Disruption', 'Difficulty', 'Wonder', 'Moment'}
+            _parts = _n.split()
+            while _parts and _parts[0] in _LEAD_FN:
+                _parts = _parts[1:]
+            if len(_parts) < 2:
+                continue
+            if any(_t.strip('.,;:') in _NOT_A_SURNAME for _t in _parts):
                 continue
             # SL-171.62 -- an ALL-CAPS token is never part of a person's name.
             # The same log reported [MASTER_REPEAT] "The ONE-OBJECT TEST"
