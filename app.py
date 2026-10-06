@@ -1,3 +1,31 @@
+# SL-VERSION: 182.105 (Session 238, 2026-10-06 -- "WHERE DOES THE EYE GO?" REACHES THE PHOTOGRAPHER,
+# AND LONG PROSE STOPS CLUMPING ON THE WEB CARD. Two founder-directed changes, both verified against
+# the real Egrets of Sasson Dock web page exported to PDF.
+#   (1) RELABEL, THIRD OF THREE SURFACES. Founder: "where does the eye go? havent you put this out as
+#       a question - photographers naturally will get attracted to this statement - check". The check
+#       came first and the finding is the point: the phrase existed three times in auto_score.py
+#       (L2813 scoring gate, L2572 and L7217 field specs) and all three are prompt-side instructions
+#       to the model. It appeared ZERO times in anything a photographer sees. The engine asked the
+#       question, scored on it, then printed the answer under the heading "Visual flow". Changed here
+#       in the scorecard email builder (~L36491); reportlab_card.py 237.4 changes the Save PDF and
+#       image_detail.html changes the web page, so one question now appears on all three at once.
+#       Relabelling one surface alone would have been worse than leaving it. The visual_flow data key
+#       is UNCHANGED everywhere, so nothing that reads it breaks.
+#   (2) NEW sl_paras TEMPLATE FILTER (~L802). Founder: "see how the paras are being used - should not
+#       be clumped - give lines spaced. begin in new lines". image_detail.html rendered tech_read,
+#       master_why and imagine as one raw string in a single <div> and split nothing, so the live
+#       card's 150-word tech_read was one solid wall. The sentence-splitting logic is NOT duplicated
+#       here -- it is imported from reportlab_card.sl_reflow() so the web page, the Save PDF and the
+#       email break paragraphs in identical places. Pure whitespace at sentence boundaries: no word
+#       is added, removed, reordered or reworded. Returns Markup unescaped on purpose, matching the
+#       existing `| safe` call sites, because the audit text may carry <b> from the engine.
+#   COUPLING UNCHANGED AND STILL LIVE: _auto_score_with_timeout(timeout_secs=180) must stay paired
+#   with auto_score.py's _SAFE_INTERNAL_CEILING=165. Do not push one of those two files without the
+#   other. app.py 182.105 additionally requires reportlab_card.py 237.4 -- sl_paras imports
+#   sl_reflow from it, and on an older reportlab_card the filter logs a warning and passes the text
+#   through unchanged rather than erroring, but the web card then still clumps.
+# NOT YET CONFIRMED LIVE -- needs the founder's push, Railway output, and a real Save-PDF download
+# plus a look at the web card. RETAINS 182.104.)
 # SL-VERSION: 182.104 (Session 238, 2026-10-06 -- MEMBER-WAIT CEILING + CROSS-FILE CEILING ALIGNMENT,
 # founder decision: "KEEPING AT 240SEC MEANS 4 MIN - NO ONE WILL WAIT TILL THEN - 2 MIN THEY CAN WAIT
 # -AND SOME MORE HERE AND THERE - 3 MIN MAX". 182.103 sized its ceiling to make a slow image survive
@@ -798,6 +826,48 @@ def linkify_search(text):
                 f'text-decoration-color:rgba(0,0,0,0.4); text-underline-offset:2px;">{_escape(term)}</a>.')
     result = _re_ls.sub(r'Search:\s*([^.]+)\.', _repl, escaped)
     return _Markup(result)
+
+# ---------------------------------------------------------------------------
+# SL-182.105 — sl_paras: paragraph breaks for long scorecard prose on the WEB
+# scorecard, matching the Save-PDF output exactly.
+#
+# Founder, 6 Oct 2026: "see how the paras are being used - should not be clumped
+# - give lines spaced. begin in new lines so that readability is easier and
+# cleaner." Checked before writing this: image_detail.html dropped tech_read,
+# master_why and imagine into a single <div> as one raw string and split
+# NOTHING (L1143/1134/1161), so on the live Egrets of Sasson Dock card the
+# 150-word tech_read rendered as one solid wall of text. The Save PDF at least
+# split on a literal newline -- but the engine emits no newline in those fields
+# at all, so both surfaces clumped, for different reasons.
+#
+# The sentence-boundary logic is NOT duplicated here. It lives in
+# reportlab_card.sl_reflow() and is imported, so the web page, the Save PDF and
+# the scorecard email break paragraphs in exactly the same places. app.py
+# already imports reportlab_card, so this direction of import is the only one
+# that is not circular.
+#
+# Returns Markup WITHOUT escaping, deliberately: every call site already used
+# `| safe` and the audit text may legitimately carry <b> from the engine's
+# markdown conversion. Escaping here would be a behaviour change beyond the one
+# the founder asked for, and would strip that bold on every existing card.
+# ---------------------------------------------------------------------------
+@app.template_filter('sl_paras')
+def sl_paras(text):
+    if not text:
+        return text
+    from markupsafe import Markup as _Markup_p
+    try:
+        from reportlab_card import sl_reflow as _sl_reflow
+    except Exception as _e_p:
+        app.logger.warning(f'[sl_paras] reflow unavailable, text passed through: {_e_p}')
+        return _Markup_p(str(text))
+    _blocks = [b.strip() for b in _sl_reflow(str(text)).split('\n') if b.strip()]
+    if len(_blocks) < 2:
+        return _Markup_p(str(text))
+    return _Markup_p(''.join(
+        f'<p style="margin:0 0 0.85em 0">{b}</p>' for b in _blocks
+    ))
+
 
 @app.template_filter('sentence_truncate')
 def sentence_truncate(text, max_length=160, hard_limit=230):
@@ -36446,7 +36516,10 @@ def _send_scorecard_email(img, user, preview=False):
         _dims_t = [{'short': _dim_short[n], 'val': f'{v:.1f}', 'weakest': (n == _weakest_name)}
                    for n, v in _dim_scores.items()]
         _reads = []
-        for _lab, _k in (('Technical read', 'tech_read'), ('Visual flow', 'visual_flow'), ('Imagine', 'imagine')):
+        # SL-182.105 — 'Visual flow' -> 'Where does the eye go?' (founder-directed).
+        # Third and last of the three surfaces; reportlab_card.py (237.4) and
+        # image_detail.html carry the same relabel. Data key unchanged.
+        for _lab, _k in (('Technical read', 'tech_read'), ('Where does the eye go?', 'visual_flow'), ('Imagine', 'imagine')):
             _it = _em_paras(_a.get(_k))
             if _it:
                 _reads.append({'label': _lab, 'lines': _it})
