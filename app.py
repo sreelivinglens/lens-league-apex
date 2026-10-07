@@ -1,3 +1,49 @@
+# SL-VERSION: 182.121 (Session 238, 2026-10-07 -- SIX DEFECTS THE FIRST-EVER ADVISORY EXPOSED.
+#   Founder signal given ("fix all 1-6"). 182.120 unblocked generation; the first report this
+#   platform has ever produced (staging, user 10, 12 images, 22:40 IST) was then READ, and it
+#   showed six things no one could see while the feature was dead. Pairs with
+#   templates/evolving_eye.html 176.14 -- PUSH BOTH TOGETHER, four of the six span both files.
+#   1. KYC. The advisory said "Platform rank", "images scoring 8.5+", "not scoring photographs",
+#      "a grader tells you the score". Banned words, in copy that is also EMAILED to the member.
+#      Template copy fixed; and a KYC VOCABULARY rule is now first in the prompt's non-negotiable
+#      list, because the model writes the prose and was never told. The data block still says
+#      "score" (it is the column name) so the rule says explicitly: do not echo that word back.
+#   2. TWO NAMES, ONE DOCUMENT. Header said "Krishnan", prose said "Sri". The template printed
+#      current_user -- the person LOOKING at the report. Fixed in the template; app.py's _name
+#      was always right. Same family as Contest Judge's Photographer=Unknown (Addendum S3).
+#   3. PLATFORM STANDING RENDERED BLANK -- "of 2" with no number. app.py wrote
+#      advisory['platform_rank']; the template read advisory['platform_standing']. A silent key
+#      mismatch. Both keys are written now.
+#   4. THIRD LABEL SET, live in customer copy: "Timing", "the WOW Factor", "Apex DDI". Fixed in
+#      the template. ALSO fixed at the source: _dim_by_genre's keys are printed verbatim into the
+#      prompt, and two were wrong -- "Aesthetic Quality" (settled: "Emotion (AQ)", S237) and
+#      "Visual Display" (settled: "Wonder Factor", Standards S2). The engine was being briefed in
+#      retired vocabulary, which is why it spoke it.
+#   5. THE TRAJECTORY CLAIM WAS ARITHMETICALLY EMPTY. Windows were [:10] and [-10:] whatever the
+#      portfolio size. At 12 images those share EIGHT images, so "first ten vs last ten" compared
+#      two frames against two -- and the advisory called a 0.11 difference "a quiet but meaningful
+#      climb". Windows are now disjoint by construction (at most half the portfolio each) and
+#      _trend_reliable tells the prompt to refuse to name a direction below 20 images. Unchanged
+#      above 20. The Evolving Eye is the #1 moat; a trend line that is noise undermines exactly
+#      the thing no competitor can copy.
+#   6. CONTEST RULES WERE PROSE AND WERE IGNORED. The prompt already said "NEVER list a contest
+#      with a vague deadline" and "NEVER list BPOTY -- closed Dec 2025". The first advisory broke
+#      BOTH: three "check their website" deadlines, one of them Bird Photographer of the Year.
+#      The model was not disobeying -- the JSON schema itself permitted "open year-round", and the
+#      live search returns nothing specific. Now a CODE GATE drops any contest whose deadline does
+#      not name a real month or a 4-digit year, and any banned contest, and logs what it dropped.
+#      Same lesson as 171.54: a rule the model cannot satisfy is not a rule.
+#   NOT FIXED, named so it is not mistaken for done: (a) the advisory call is still
+#   max_tokens=4000 with a bare json.loads and no stop_reason check -- the 171.38 truncation mode
+#   is live and Mahesh's 77 images are the likely place it bites; (b) a failed advisory STILL
+#   writes one WARNING and shows "No report yet", which is what hid this for so long; (c) Generate
+#   and send-email remain one path, so no report can be built for inspection without mailing the
+#   member; (d) the email in this file builds its own HTML -- a second copy of the same content
+#   that will drift from the template.
+#   PRODUCTION IS UNTOUCHED BY ALL OF THIS. main @ 74da15c still carries the 182.120 bug.
+#   UNPROVEN until a Railway log shows a regenerated advisory and the rendered card is read again.
+#   RETAINS 182.120 and everything below.
+#
 # SL-VERSION: 182.120 (Session 238, 2026-10-07 -- THE EVOLVING EYE HAS NEVER ONCE RUN.
 #   Founder signal given. _generate_evolving_eye()'s soul-profile block reads _genres,
 #   _genre_count, _first10 and _last10 TWELVE LINES BEFORE they are assigned. Python binds a
@@ -7908,9 +7954,29 @@ def _generate_evolving_eye(user_id, milestone):
                         _genres[r.genre].append(float(r.score))
 
                 # ── Trajectory ────────────────────────────────────────────
-                # SL-182.120: also moved up — _score_direction below reads these.
-                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
-                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+                # SL-182.120: moved up — _score_direction below reads these.
+                # SL-182.121: the windows used to be [:10] and [-10:] regardless of
+                # how many images existed. Below 20 images those OVERLAP: at 12
+                # images they share 8 of 10, so "your first ten vs your last ten"
+                # was really two images against two, and the advisory called an
+                # 0.11 difference "a quiet but meaningful climb". The windows are
+                # now disjoint by construction — each is at most half the portfolio —
+                # and _trend_reliable tells the prompt when the sample is too thin
+                # to characterise a direction at all. Arithmetic unchanged above 20.
+                _tw = max(1, min(10, len(_all_scores) // 2))
+                _first_w = _all_scores[:_tw]
+                _last_w  = _all_scores[-_tw:]
+                _first10 = round(sum(_first_w) / len(_first_w), 2)
+                _last10  = round(sum(_last_w) / len(_last_w), 2)
+                _trend_reliable = len(_all_scores) >= 20
+                _trend_window_note = (
+                    f"Trajectory windows: first {_tw} images ({_first10}) vs last {_tw} ({_last10}). "
+                    + ("These windows do not overlap and the sample is large enough to describe a direction."
+                       if _trend_reliable else
+                       f"ONLY {len(_all_scores)} IMAGES — this is a small sample. Do NOT call this a climb, "
+                       f"a fall, improvement or decline, and do NOT describe it as meaningful. Say plainly "
+                       f"that it is too early to read a direction and that the next milestone will show one.")
+                )
 
                 # ── Soul profile — read the person behind the images ──────
                 # SL-177 (P32): Built from genre commitment, score trajectory,
@@ -7940,11 +8006,19 @@ def _generate_evolving_eye(user_id, milestone):
                 _dim_by_genre = {}
                 for g in _genres:
                     _gi = [r for r in _images if r.genre == g]
+                    # SL-182.121: these keys are not internal — they are printed
+                    # verbatim into the Sonnet prompt, so they are the vocabulary the
+                    # advisory speaks back to the photographer. Two were wrong:
+                    # "Aesthetic Quality" (settled as "Emotion (AQ)", Session 237,
+                    # Source Register B1) and "Visual Display" (settled as "Wonder
+                    # Factor", Standards §2). "Disruption" is spelled in full to match
+                    # the other four. If the customer-facing dimension names ever
+                    # change, this dict changes with them.
                     _dim_by_genre[g] = {
-                        'Aesthetic Quality': round(sum(float(r.aq_score) for r in _gi if r.aq_score) / max(1, sum(1 for r in _gi if r.aq_score)), 2),
+                        'Emotion (AQ)':      round(sum(float(r.aq_score) for r in _gi if r.aq_score) / max(1, sum(1 for r in _gi if r.aq_score)), 2),
                         'Decisive Moment':   round(sum(float(r.dm_score) for r in _gi if r.dm_score) / max(1, sum(1 for r in _gi if r.dm_score)), 2),
-                        'Disruption':        round(sum(float(r.disruption_score) for r in _gi if r.disruption_score) / max(1, sum(1 for r in _gi if r.disruption_score)), 2),
-                        'Visual Display':    round(sum(float(r.wonder_score) for r in _gi if r.wonder_score) / max(1, sum(1 for r in _gi if r.wonder_score)), 2),
+                        'Visual Disruption': round(sum(float(r.disruption_score) for r in _gi if r.disruption_score) / max(1, sum(1 for r in _gi if r.disruption_score)), 2),
+                        'Wonder Factor':     round(sum(float(r.wonder_score) for r in _gi if r.wonder_score) / max(1, sum(1 for r in _gi if r.wonder_score)), 2),
                         'Depth of Difficulty': round(sum(float(r.dod_score) for r in _gi if r.dod_score) / max(1, sum(1 for r in _gi if r.dod_score)), 2),
                     }
 
@@ -8009,6 +8083,24 @@ They are all trying to leave their legacy in this world. Your advisory must
 honour that. Speak to them from that place — not to their technique, but to them.
 
 RULES (non-negotiable):
+- KYC VOCABULARY — this is a compliance requirement, not a style preference.
+  Never write "score", "scored", "scoring", "rank", "ranked", "ranking",
+  "grade" or "graded" anywhere in your output. Say "evaluation", "evaluated",
+  "evaluates at", "standing", "average". Write "her work evaluates at 8.4",
+  never "she scored 8.4". This applies to every field including contest "why"
+  text. The numbers above are given to you using the word "score" because that
+  is the database column name — do not echo that word back to the photographer.
+- DIMENSION WORDING. The data below labels the five dimensions with their
+  internal names so you know what they measure. When you WRITE to the
+  photographer, use the plain-language question form instead — this is the
+  KYC-approved wording and sl_audit enforces it on every page:
+    Depth of Difficulty  -> "how hard this was to make"
+    Decisive Moment      -> "whether the timing was right"
+    Visual Disruption    -> "whether it breaks the pattern"
+    Wonder Factor        -> "whether it made you feel something"
+    Emotion (AQ)         -> "the emotion it leaves"
+  Never write the labels "Decisive Moment", "Wonder Factor", "the WOW Factor",
+  "Timing", "Visual Display", "Aesthetic Quality" or "Apex DDI" in your output.
 - Never reference other photographers on the platform by name
 - Never use dimension codes: AQ, DM, DOD, WF — use full human names only
 - Never write "Shutter League" as "SL" — always full name
@@ -8065,7 +8157,7 @@ PHOTOGRAPHER DATA:
 - Overall average: {_avg}
 - Best image: {_best}
 - Contest ready (8.5+): {"YES — lead with contests" if _has_contest_score else f"NOT YET — gap is {_gap_to_contest} points"}
-{f"- First 10 avg: {_first10} | Last 10 avg: {_last10}" if not _is_early_eye else ""}
+{f"- TRAJECTORY: {_trend_window_note}" if not _is_early_eye else ""}
 {f"- Platform ranking: {_platform_rank} of {_platform_total} photographers" if not _is_early_eye else ""}
 
 GENRE BREAKDOWN:
@@ -8112,7 +8204,7 @@ Output as JSON with these keys:
   "genres": [{{"name": "...", "avg": ..., "count": ..., "insight": "...", "key_line": "..."}}],
   "one_thing": "...",
   "why_sl": "..." (only at milestone 10, else null),
-  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "specific month/date or open year-round"}}],
+  "contests": [{{"name": "...", "url": "...", "why": "...", "free": true/false, "deadline": "a specific month and year, or a specific date — NEVER 'check their website', NEVER 'typically opens', NEVER 'current cycle'"}}],
   "bow_title": "...",
   "bow_story": "...",
   "bow_frames": ["...", "...", "...", "..."],
@@ -8180,11 +8272,74 @@ LIVE CONTEST DATA (searched today — use these, prioritise over any other knowl
                 _raw = _re.sub(r'```\s*$', '', _raw.strip())
 
                 _advisory = _j.loads(_raw)
+
+                # ── Contest gate — SL-182.121 ─────────────────────────────
+                # The prompt already said "NEVER list a contest with a vague
+                # deadline" and "NEVER list BPOTY — closed Dec 2025". The first
+                # advisory ever generated broke BOTH: three contests with
+                # "check their website" deadlines, one of them Bird Photographer
+                # of the Year. The prose rule could not be honoured because the
+                # live search returns nothing specific, and the JSON schema itself
+                # permitted "open year-round" — so the model obeyed the schema.
+                # Same lesson as the duplication work: a rule the model cannot
+                # satisfy gets ignored, so this is enforced in code, not language.
+                # A contest is dropped unless its deadline names a real month or a
+                # 4-digit year. Dropping is correct: no recommendation is better
+                # than one the photographer cannot act on.
+                _VAGUE = ('check ', 'typically', 'current cycle', 'their website',
+                          'year-round', 'year round', 'tbc', 'tba', 'varies',
+                          'annually', 'rolling', 'ongoing')
+                _MONTHS = ('january', 'february', 'march', 'april', 'may', 'june',
+                           'july', 'august', 'september', 'october', 'november',
+                           'december')
+                _BANNED_CONTESTS = ('bird photographer of the year', 'bpoty')
+
+                def _contest_is_actionable(_c):
+                    _dl = str((_c or {}).get('deadline', '') or '').strip().lower()
+                    _nm = str((_c or {}).get('name', '') or '').strip().lower()
+                    if not _dl or not _nm:
+                        return False
+                    if any(_b in _nm for _b in _BANNED_CONTESTS):
+                        return False
+                    if any(_v in _dl for _v in _VAGUE):
+                        return False
+                    _has_month = any(_m in _dl for _m in _MONTHS)
+                    _has_year = bool(_re.search(r'\b20\d{2}\b', _dl))
+                    return _has_month or _has_year
+
+                _contests_in = _advisory.get('contests') or []
+                if _contests_in:
+                    _kept = [_c for _c in _contests_in if _contest_is_actionable(_c)]
+                    _dropped = len(_contests_in) - len(_kept)
+                    _advisory['contests'] = _kept
+                    if _dropped:
+                        app.logger.warning(
+                            f'[evolving_eye] contest gate dropped {_dropped} of '
+                            f'{len(_contests_in)} for user {user_id} '
+                            f'(vague deadline or banned contest): '
+                            + '; '.join(
+                                f"{(_c or {}).get('name','?')} -> {(_c or {}).get('deadline','?')}"
+                                for _c in _contests_in if not _contest_is_actionable(_c)
+                            )
+                        )
+                    else:
+                        app.logger.info(
+                            f'[evolving_eye] contest gate OK — all {len(_kept)} '
+                            f'actionable for user {user_id}'
+                        )
+
                 _advisory['milestone'] = milestone
                 _advisory['generated_at'] = str(db.session.execute(db.text('SELECT NOW()')).scalar())
                 _advisory['total_images'] = _total
                 _advisory['avg_score'] = _avg
                 _advisory['platform_rank'] = _platform_rank
+                # SL-182.121: the template reads 'platform_standing' and app.py only
+                # ever wrote 'platform_rank', so the number rendered blank — every
+                # report showed "of N" with nothing before it. Both keys are written
+                # now: platform_standing is what the template uses (and matches the
+                # KYC substitution rank → standing), platform_rank is kept so older
+                # stored advisories and anything else reading it do not break.
+                _advisory['platform_standing'] = _platform_rank
                 _advisory['platform_total'] = _platform_total
 
                 # ── Store in DB ───────────────────────────────────────────
