@@ -1,3 +1,35 @@
+# SL-VERSION: 182.120 (Session 238, 2026-10-07 -- THE EVOLVING EYE HAS NEVER ONCE RUN.
+#   Founder signal given. _generate_evolving_eye()'s soul-profile block reads _genres,
+#   _genre_count, _first10 and _last10 TWELVE LINES BEFORE they are assigned. Python binds a
+#   name as function-local the moment it is assigned anywhere in that function, so the earlier
+#   read does not fall back to a global or to None -- it raises UnboundLocalError. Nothing in
+#   that block is conditional, so it fired for EVERY photographer, Early Eye and Full alike,
+#   on every admin trigger and on every milestone upload. 100% failure. The advisory the
+#   investor document ranks as the #1 moat has produced nothing, for anyone, ever.
+#   DIAGNOSED FROM A LIVE LOG LINE, not from reading: "[evolving_eye] failed for user 10:
+#   cannot access local variable '_genres' where it is not associated with a value"
+#   (07 Oct 12:37:21 UTC, auto-triggered by that user's upload -- not by an admin).
+#   FIX: the genre build and the trajectory pair are moved ABOVE the soul profile. No logic,
+#   no query, no prompt, no model and no threshold is touched -- only statement order.
+#   WHY IT STAYED INVISIBLE, and this is the real lesson: the exception is swallowed into a
+#   WARNING and the function returns having written nothing, so the admin panel reads
+#   "No report yet" -- which looks like NOT GENERATED YET, not like FAILED. Nine
+#   photographers sat in that queue, Mahesh at 77 images among them, and the system's own
+#   report on itself was "9 pending". Same family as the gate that failed open in 171.54: the
+#   software did something wrong and told no one. The silent-failure half is NOT fixed here.
+#   PRODUCTION CARRIES THE SAME BUG -- main @ 74da15c, same two lines, same order (L6855
+#   reads, L6867 assigns). This is not a staging regression. Flag it at merge.
+#   STILL OPEN, deliberately out of scope, no signal sought: (a) the advisory call is
+#   max_tokens=4000 with a bare json.loads and no stop_reason check -- the 171.38 truncation
+#   failure mode is live here and will bite on large portfolios once this fix lets the call
+#   through; (b) _dim_by_genre labels the Wonder dimension "Visual Display" and AQ "Aesthetic
+#   Quality", both contradicting the settled naming (Wonder Factor; "Emotion (AQ)", Session
+#   237, Source Register B1) -- and these strings go straight into the Sonnet prompt;
+#   (c) Generate and send-email are one uninterrupted path, so an admin cannot build a report
+#   for inspection without mailing the member.
+#   UNPROVEN until a Railway log shows "[evolving_eye] generated for user N at milestone M".
+#   RETAINS 182.119 and everything below.
+#
 # SL-VERSION: 182.119 (Session 238, 2026-10-07 -- MIGRATION CAN NO LONGER HANG A DEPLOY.
 #   Founder signal given. A staging deploy sat at "Running pre-deploy command" for 36 minutes
 #   and never failed or recovered. Cause: 99 ALTER TABLE statements, each needing ACCESS
@@ -7859,6 +7891,27 @@ def _generate_evolving_eye(user_id, milestone):
                             f"[{r.genre} {r.score}] \"{r.asset_name.strip()}\""
                         )
 
+                # ── Genre breakdown ───────────────────────────────────────
+                # SL-182.120: MOVED UP from below the soul profile. The soul
+                # profile reads _genres, _genre_count, _first10 and _last10 —
+                # all of which used to be built AFTER it. Python binds a name
+                # as local to the whole function the moment it is assigned
+                # anywhere in it, so reading _genres above its assignment did
+                # not fall back to anything: it raised UnboundLocalError and
+                # killed every advisory, for every photographer, 100% of the
+                # time. ORDER IS LOAD-BEARING HERE — these four names must be
+                # built before the soul profile block that consumes them.
+                from collections import defaultdict
+                _genres = defaultdict(list)
+                for r in _images:
+                    if r.genre:
+                        _genres[r.genre].append(float(r.score))
+
+                # ── Trajectory ────────────────────────────────────────────
+                # SL-182.120: also moved up — _score_direction below reads these.
+                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
+                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+
                 # ── Soul profile — read the person behind the images ──────
                 # SL-177 (P32): Built from genre commitment, score trajectory,
                 # title language, and upload behaviour. Passed as preamble
@@ -7873,13 +7926,9 @@ def _generate_evolving_eye(user_id, milestone):
                     else 'descriptive'
                 )
 
-                # ── Genre breakdown ───────────────────────────────────────
-                from collections import defaultdict
-                _genres = defaultdict(list)
-                for r in _images:
-                    if r.genre:
-                        _genres[r.genre].append(float(r.score))
-
+                # ── Genre lines ───────────────────────────────────────────
+                # SL-182.120: _genres itself is now built above, before the
+                # soul profile. Do not move it back down.
                 _genre_lines = []
                 for g, scores in sorted(_genres.items(), key=lambda x: -len(x[1])):
                     _genre_lines.append(
@@ -7899,9 +7948,8 @@ def _generate_evolving_eye(user_id, milestone):
                         'Depth of Difficulty': round(sum(float(r.dod_score) for r in _gi if r.dod_score) / max(1, sum(1 for r in _gi if r.dod_score)), 2),
                     }
 
-                # ── Trajectory ────────────────────────────────────────────
-                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
-                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+                # ── Trajectory ──── SL-182.120: computed above, before the
+                # soul profile block that reads it. Do not move it back down.
 
                 # ── Last 10 audit texts ───────────────────────────────────
                 _recent_audits = _images[-10:]
