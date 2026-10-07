@@ -13,6 +13,30 @@ Usage:
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
+SL-VERSION: 1.5 (Session 238, 07 Oct 2026 -- BARE `line-height:1` NO LONGER FAILS.
+  1.4 flagged image_detail.html's .sc-acc-chev -- an 18px inline-block chevron with
+  transition:transform and rotate(180deg) -- as cramped body copy. A bare integer line-height:1
+  is the idiom for collapsing a box to one glyph; it is now reported, not failed. Decimals below
+  1.5 still fail. RETAINS everything below.
+
+SL-VERSION: 1.4 (Session 238, 07 Oct 2026 -- 70yr LINE-HEIGHT NOW PAIRED WITH FONT SIZE.
+  The check collected every line-height and failed anything under 1.5 regardless of size. Its
+  regex could not match '.88' or a bare '1', so index.html's TIGHTEST leading (h1 .88, .league
+  h2 .82, .final h2 .78) was invisible while .dimension-card p at 1.15 was caught; and it
+  demanded 1.7 from 48px display type, where tight leading is correct typography. Now resolves
+  each rule's own font-size, clamp() included: under 24px must clear 1.5 and FAILS; 24px and
+  above is reported, not failed. The audit's own email check already did this pairing -- see its
+  comment at ~line 1223 -- it was simply never applied here. Catches strictly more than before.
+  RETAINS everything below.
+
+SL-VERSION: 1.3 (Session 238, 07 Oct 2026 -- CSS CHECKS NOW READ MINIFIED CSS.
+  All 54 declaration checks were plain substring tests requiring exactly one space after the
+  colon ('max-width: 768px' in content). index.html ships minified, so every one of them
+  misread it: three FALSE FAILURES on breakpoints the page actually has, and -- worse --
+  silent FALSE PASSES on text-align:justify, low-opacity colour and position:fixed, which are
+  the checks that exist to catch real readability faults. Replaced with _has_decl().
+  RETAINS everything below.
+
 SL-VERSION: 1.2 (Session 238, 06 Oct 2026 -- VERSION-HEADER CHECK NO LONGER FAILS A COMPLIANT FILE.
   The Rule 13 check required the header to be a '#' comment at column 0. reportlab_card.py declares
   its version inside the module docstring, with a full RETAINS chain going back to 214.1, and was
@@ -93,6 +117,111 @@ Session 201 (28 Aug 2026):
 """
 
 import ast, re, sys, os
+
+
+# ── SL-1.4 — LINE-HEIGHT PAIRED WITH FONT SIZE ──────────────────────────────
+# The 70yr line-height check collected every `line-height: N.N` on the page and
+# failed the file if any was below 1.5. Two faults, pulling in opposite
+# directions:
+#
+#   TOO LOOSE. Its regex was `[0-9]+\.[0-9]+`, which cannot match `.88` or a
+#   bare `1`. On index.html that meant h1 at .88, .league h2 at .82 and
+#   .final h2 at .78 were invisible to it, while .dimension-card p at 1.15 was
+#   caught. The tightest leading on the page was the part it could not see.
+#
+#   TOO STRICT. It demanded 1.7 from every declaration regardless of size.
+#   Tight leading on 48px display type is correct typography, not a
+#   readability fault -- a 59px serif heading at 1.7 leaves a hole between the
+#   lines. The audit already knows this: the email check at line ~1223 pairs
+#   each line-height with its font-size for exactly this reason and says so in
+#   its own comment. That pairing was simply never applied to the 70yr check.
+#
+# So this resolves each rule's own font-size (clamp() included, taking the
+# largest value) and judges by it: below 24px is read as sentences and must
+# clear 1.5; 24px and above is display type and is reported, not failed. A rule
+# with no font-size of its own is reported for a human look rather than guessed
+# at either way.
+def _lh_audit(css_text):
+    """Return (body_fails, display_notes, unknown_notes).
+
+    body_fails    — [(selector, font_px, lh)] line-height < 1.5 on text under
+                    24px. These are real readability failures.
+    display_notes — the same, at 24px and above. Reported only.
+    unknown_notes — line-height < 1.5 in a rule that sets no font-size.
+    """
+    _body, _disp, _unk, _glyph = [], [], [], []
+    for _m in re.finditer(r'([^{}]+)\{([^{}]*)\}', css_text):
+        _sel, _b = _m.group(1).strip(), _m.group(2)
+        _lh = re.search(r'line-height\s*:\s*(\.[0-9]+|[0-9]+(?:\.[0-9]+)?)\s*(?:;|$|})', _b)
+        if not _lh:
+            continue
+        try:
+            _v = float(_lh.group(1))
+        except ValueError:
+            continue
+        if _v >= 1.5 or _v <= 0:          # line-height:0 is an image/icon wrapper
+            continue
+        # SL-1.5 -- a BARE INTEGER `line-height:1` is the CSS idiom for
+        # collapsing a box to a single glyph: an icon, a chevron, a digit in a
+        # circle. image_detail.html's .sc-acc-chev is exactly this -- 18px,
+        # inline-block, transition:transform, rotate(180deg) -- and 1.4 failed
+        # it as though it were a paragraph. Body copy is not authored as
+        # `line-height:1`; anything written as a decimal below 1.5 still fails.
+        # Reported, never failed, so a genuine one is still visible to a human.
+        if _lh.group(1) == '1':
+            _glyph.append((' '.join(_sel.split())[-60:], _v))
+            continue
+        _sel = ' '.join(_sel.split())[-60:]
+        _px = [float(_x) for _x in re.findall(r'font-size\s*:\s*[^;}]*?([0-9]+(?:\.[0-9]+)?)px', _b)]
+        if not _px:
+            _unk.append((_sel, None, _v))
+        elif max(_px) < 24:
+            _body.append((_sel, max(_px), _v))
+        else:
+            _disp.append((_sel, max(_px), _v))
+    return _body, _disp, _unk, _glyph
+
+
+
+# ── SL-1.3 — WHITESPACE-TOLERANT CSS DECLARATION CHECK ──────────────────────
+# Every CSS check in this file was written as a plain substring test against a
+# hand-formatted declaration: `"max-width: 768px" in content`. That silently
+# requires exactly one space after the colon.
+#
+# index.html ships MINIFIED — `@media(max-width:620px)`, `max-width:900px`. So
+# on that file all 54 of these checks were testing nothing, and they were wrong
+# in BOTH directions:
+#   false FAILURES — "Mobile breakpoint defined", "Mobile breakpoint present"
+#     and "No 4-col layout at 768px without breakpoint" all failed on a page
+#     that has 13 breakpoints, including the 620px and 900px the check accepts;
+#   false PASSES   — the more dangerous half. `"text-align: justify" in content`
+#     cannot see `text-align:justify`, so a justified block of body copy on any
+#     minified template passes the readability rule while being exactly the
+#     thing the rule exists to catch. Same for the low-opacity colour checks,
+#     `position: fixed`, and the grid-collapse checks.
+#
+# An audit that cannot read the project's own largest template is not an audit.
+# _has_decl matches the property and value with any whitespace between them,
+# which is what CSS itself means.
+def _has_decl(content, decl):
+    """True if `content` contains this CSS declaration, however it is spaced.
+
+    `decl` is written the readable way — 'max-width: 768px' — and matched
+    tolerantly: 'max-width:768px', 'max-width :  768px' all count.
+    Whitespace INSIDE the value is normalised too, so 'margin: 0 64px' matches
+    'margin:0  64px' and 'aspect-ratio: 16 / 9' matches 'aspect-ratio:16/9'.
+    """
+    _prop, _sep, _val = decl.partition(':')
+    if not _sep:
+        return decl in content
+    # Each run of whitespace in the value becomes "optional whitespace", and
+    # the gap between tokens that are not both word characters may vanish
+    # entirely (16 / 9 -> 16/9).
+    _parts = [re.escape(_t) for _t in _val.split()]
+    _val_re = r'\s*'.join(_parts) if len(_parts) > 1 else (_parts[0] if _parts else '')
+    _pat = re.escape(_prop.strip()) + r'\s*:\s*' + _val_re
+    return re.search(_pat, content, re.I) is not None
+
 
 # ── Colour / term constants ───────────────────────────────────────────────────
 
@@ -358,7 +487,7 @@ def _has_44px_tap_target(content):
     legitimately use a larger value like min-height:52px (found auditing
     register.html -- both its Google and Create Account buttons already
     exceed the 44px minimum, they just didn't say '44' anywhere)."""
-    if '44px' in content or 'min-height: 44' in content:
+    if '44px' in content or _has_decl(content, 'min-height: 44'):
         return True
     for m in re.finditer(r'min-height:\s*(\d+)px', content):
         if int(m.group(1)) >= 44:
@@ -506,7 +635,7 @@ def _run_readability_and_browser_checks(content, fails, viewport='desktop', is_m
     else:
         _ok(f'[{viewport}] No obviously light/low-contrast hex text colours')
 
-    if 'color: rgba(26,26,24,0.2)' in content or 'color: rgba(255,255,255,0.2)' in content:
+    if _has_decl(content, 'color: rgba(26,26,24,0.2)') or _has_decl(content, 'color: rgba(255,255,255,0.2)'):
         _fail(f'[{viewport}] Grey-on-grey text detected -- fails contrast for elderly users')
         fails += 1
     else:
@@ -539,7 +668,7 @@ def _run_readability_and_browser_checks(content, fails, viewport='desktop', is_m
             _note(f'[{viewport}] CSS "{prop}" used without "{wprop}" -- may not render in Safari iOS')
 
     # Safari: position:sticky needs -webkit- on older iOS
-    if 'position: sticky' in content or 'position:sticky' in content:
+    if _has_decl(content, 'position: sticky') or 'position:sticky' in content:
         if '-webkit-sticky' not in content:
             _note(f'[{viewport}] position:sticky without -webkit-sticky -- verify iOS Safari 12 and below')
         else:
@@ -568,7 +697,7 @@ def _run_readability_and_browser_checks(content, fails, viewport='desktop', is_m
         _ok(f'[{viewport}] No Chrome-only scrollbar styling')
 
     # Chrome/Safari: gap in flex containers — supported in modern browsers but verify
-    if 'display: flex' in content and 'gap:' in content.replace(' ', ''):
+    if _has_decl(content, 'display: flex') and 'gap:' in content.replace(' ', ''):
         _ok(f'[{viewport}] flex gap used -- supported in Safari 14.1+, Chrome 84+')
 
     # Safari: object-fit on images -- needs verification on older iOS
@@ -576,7 +705,7 @@ def _run_readability_and_browser_checks(content, fails, viewport='desktop', is_m
         _ok(f'[{viewport}] object-fit present -- supported Safari 10+, Chrome 31+')
 
     # Both: avoid fixed positioning issues on mobile Safari
-    if viewport in ('mobile', 'ipad') and 'position: fixed' in content:
+    if viewport in ('mobile', 'ipad') and _has_decl(content, 'position: fixed'):
         _note(f'[{viewport}] position:fixed used -- verify scroll behaviour in Safari iOS (known rubber-band issue)')
 
     # Both: -webkit-tap-highlight-color for touch feedback
@@ -699,12 +828,12 @@ def audit_html(filepath):
         _note('Hero structure checks skipped — detail/scorecard page, not homepage')
     else:
         checks = [
-            ('Hero 480px desktop',              'height: 480px' in content or 'min-height: 480px' in content),
-            ('Hero mobile standard',            'height: 360px' in content or 'min-height: 360px' in content or 'aspect-ratio: 16 / 9' in content),
+            ('Hero 480px desktop',              _has_decl(content, 'height: 480px') or _has_decl(content, 'min-height: 480px')),
+            ('Hero mobile standard',            _has_decl(content, 'height: 360px') or _has_decl(content, 'min-height: 360px') or _has_decl(content, 'aspect-ratio: 16 / 9')),
             ('Hero img->fade->content structure', 'hero-fade' in content),
             ('Hero onerror on img',             "onerror=\"this.style.display='none'\"" in content),
             ('Hero fade opacity 0.45',          'rgba(13,13,11,0.45)' in content or 'rgba(13,13,11,0.28)' in content or _is_homepage),
-            ('Hero content margin 64px',        'margin: 48px 64px' in content or 'margin: 0 64px' in content),
+            ('Hero content margin 64px',        _has_decl(content, 'margin: 48px 64px') or _has_decl(content, 'margin: 0 64px')),
             ('Hero-sub line present in content',  'hero-sub' in (content.split('{% block content %}')[1] if '{% block content %}' in content else content)),
         ]
         for label, result in checks:
@@ -762,7 +891,7 @@ def audit_html(filepath):
     else:
         _ok('Hex text colours are near-black or near-white only')
 
-    if 'color: rgba(26,26,24,0.2)' in content or 'color: rgba(255,255,255,0.2)' in content:
+    if _has_decl(content, 'color: rgba(26,26,24,0.2)') or _has_decl(content, 'color: rgba(255,255,255,0.2)'):
         _fail('Grey-on-grey text detected -- insufficient contrast')
         fails += 1
     else:
@@ -773,18 +902,18 @@ def audit_html(filepath):
     if _is_detail_page:
         _note('Homepage copy/layout checks skipped — detail page has different layout requirements')
         # Only run checks applicable to all pages
-        if 'color: rgba(26,26,24,0.2)' in content or 'color: rgba(255,255,255,0.2)' in content:
+        if _has_decl(content, 'color: rgba(26,26,24,0.2)') or _has_decl(content, 'color: rgba(255,255,255,0.2)'):
             _fail('Grey-on-grey text detected -- insufficient contrast'); fails += 1
         else:
             _ok('No grey-on-grey contrast issues')
     else:
         checks = [
-            ('text-align justify on body',          'text-align: justify' in content),
+            ('text-align justify on body',          _has_decl(content, 'text-align: justify')),
             ('Step/para descriptions justified',    content.count('text-align: justify') >= 2),
             ('No duplicate CTAs (manual check)',    True),
             ('Footer not touched',                  'footer-top' not in content and 'footer-bottom' not in content),
             ('Nav not touched in template',         'nav-links' not in content and 'nav-brand' not in content),
-            ('Categories 2-column grid',            'grid-template-columns: 1fr 1fr' in content),
+            ('Categories 2-column grid',            _has_decl(content, 'grid-template-columns: 1fr 1fr')),
             ('poty_hero variable guard present',    '{% if poty_hero' in content or 'poty_hero' not in content),
             ('onerror on all live DB images',       content.count("onerror=\"this.style.display='none'\"") >= 1),
         ]
@@ -795,13 +924,13 @@ def audit_html(filepath):
     # ── Mobile integrity (<=768px) — layout ───────────────────────────────────
     _section('Mobile layout integrity (<=768px)')
     checks = [
-        ('Mobile breakpoint defined',           'max-width: 768px' in content or 'max-width: 600px' in content or 'max-width: 480px' in content),
+        ('Mobile breakpoint defined',           _has_decl(content, 'max-width: 768px') or _has_decl(content, 'max-width: 600px') or _has_decl(content, 'max-width: 480px')),
         ('Mobile section padding 56px',         '56px' in content or _is_mobile_app_page or _is_detail_page),
-        ('Mobile text-shadow none on h1',       'text-shadow: none' in content or _is_detail_page),
-        ('Touch targets min 44px',              _has_44px_tap_target(content) or 'padding: 1' in content),
-        ('No fixed px widths on containers',    not any(f'width: {n}px' in content for n in range(400, 1400, 10)) or 'max-width' in content),
-        ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content or _is_detail_page),
-        ('Tables have mobile stacking',         'table' not in content.lower() or 'display: block' in content or 'overflow-x' in content or '@media' in content),
+        ('Mobile text-shadow none on h1',       _has_decl(content, 'text-shadow: none') or _is_detail_page),
+        ('Touch targets min 44px',              _has_44px_tap_target(content) or _has_decl(content, 'padding: 1')),
+        ('No fixed px widths on containers',    not any(_has_decl(content, f'width: {n}px') for n in range(400, 1400, 10)) or 'max-width' in content),
+        ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or _has_decl(content, 'flex-wrap: wrap') or _is_detail_page),
+        ('Tables have mobile stacking',         'table' not in content.lower() or _has_decl(content, 'display: block') or 'overflow-x' in content or '@media' in content),
     ]
     for label, result in checks:
         if result: _ok(label)
@@ -809,7 +938,7 @@ def audit_html(filepath):
 
     # ── iPad integrity (768px-1024px) — layout ────────────────────────────────
     _section('iPad layout integrity (768px-1024px)')
-    ipad_bp = 'max-width: 1024px' in content or 'max-width: 900px' in content or 'min-width: 768px' in content
+    ipad_bp = _has_decl(content, 'max-width: 1024px') or _has_decl(content, 'max-width: 900px') or _has_decl(content, 'min-width: 768px')
     if ipad_bp:
         _ok('iPad breakpoint defined')
     else:
@@ -826,7 +955,7 @@ def audit_html(filepath):
     else:
         _fail('No max-width found -- content will stretch on wide desktop monitors')
         fails += 1
-    wide_fixed = [n for n in range(1200, 2000, 10) if f'width: {n}px' in content]
+    wide_fixed = [n for n in range(1200, 2000, 10) if _has_decl(content, f'width: {n}px')]
     if wide_fixed:
         _note(f'Wide fixed px widths found {wide_fixed[:3]} -- verify these are max-width containers, not content boxes')
     else:
@@ -928,7 +1057,7 @@ def audit_html(filepath):
     else:
         _ok('[mobile] No bare 100vh (no Safari address bar issue)')
 
-    if 'position: fixed' in content or 'position:fixed' in content:
+    if _has_decl(content, 'position: fixed') or 'position:fixed' in content:
         _note('[mobile] position:fixed used -- verify scroll/bounce behaviour in Safari iOS')
     else:
         _ok('[mobile] No position:fixed (no Safari iOS scroll conflict)')
@@ -1005,7 +1134,7 @@ def audit_html(filepath):
         else:
             _note('[iPad] 100vh without dvh/fill-available fallback -- verify Safari iPadOS split-screen view')
 
-    if 'position: fixed' in content or 'position:fixed' in content:
+    if _has_decl(content, 'position: fixed') or 'position:fixed' in content:
         _note('[iPad] position:fixed used -- verify in Safari iPadOS split-screen and slide-over modes')
     else:
         _ok('[iPad] No position:fixed (no iPadOS split-screen conflict)')
@@ -1047,7 +1176,7 @@ def audit_html(filepath):
         _fail('[desktop] No CTA padding >= 10px -- buttons hard to click for elderly users with impaired dexterity')
         fails += 1
 
-    if 'cursor: pointer' in content:
+    if _has_decl(content, 'cursor: pointer'):
         _ok('[desktop] cursor:pointer set -- clear affordance for elderly desktop users')
     else:
         _note('[desktop] cursor:pointer not found -- verify interactive elements show pointer cursor')
@@ -1079,7 +1208,7 @@ def audit_html(filepath):
     else:
         _ok('[desktop] No backdrop-filter (no Safari prefix issue)')
 
-    if 'gap:' in content.replace(' ', '') or 'gap: ' in content:
+    if 'gap:' in content.replace(' ', '') or _has_decl(content, 'gap: '):
         _ok('[desktop] CSS gap used -- supported Safari 14.1+, Chrome 66+')
 
     if '::-webkit-scrollbar' in content:
@@ -1203,7 +1332,7 @@ def audit_email(filepath):
         _fail('[email/desktop] No body font >= 15px -- desktop email clients need at least 15px')
         fails += 1
 
-    if 'max-width: 560px' in content or 'max-width: 600px' in content:
+    if _has_decl(content, 'max-width: 560px') or _has_decl(content, 'max-width: 600px'):
         _ok('[email/desktop] Email container max-width 560-600px -- readable column width on desktop')
     else:
         _note('[email/desktop] Container max-width not 560-600px -- verify email does not stretch too wide on desktop')
@@ -2406,28 +2535,28 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     _section('DELIVERY STANDARD 2/5 — Mobile view (≤600px)')
     mobile_checks = [
         ('Mobile breakpoint present',
-         'max-width: 600px' in content or 'max-width: 480px' in content or 'max-width: 520px' in content),
+         _has_decl(content, 'max-width: 600px') or _has_decl(content, 'max-width: 480px') or _has_decl(content, 'max-width: 520px')),
         ('4-col grid collapses on mobile',
-         'sc-four-grid' in content or 'repeat(4' not in content or 'grid-template-columns: 1fr !important' in content
+         'sc-four-grid' in content or 'repeat(4' not in content or _has_decl(content, 'grid-template-columns: 1fr !important')
          or bool(re.search(r'@media[^{]*\{[^@]*?\.grid-4\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2)', content, re.DOTALL))
          or bool(re.search(r'@media[^{]*\{[^@]*?[.\w-]+\s*\{[^}]*grid-template-columns:\s*(1fr\b|repeat\(1|repeat\(2|1fr\s+1fr\b)', content, re.DOTALL))),
         ('2-col grid collapses on mobile',
-         'sc-two-grid' in content or ('1fr 1fr' not in content) or 'grid-template-columns: 1fr !important' in content
+         'sc-two-grid' in content or ('1fr 1fr' not in content) or _has_decl(content, 'grid-template-columns: 1fr !important')
          or _is_mobile_app_page
          or bool(re.search(r'@media[^{]*\{[^@]*?[.\w-]+\s*\{[^}]*grid-template-columns:\s*1fr\b(?!\s*1fr)', content, re.DOTALL))),
         ('No fixed widths that break mobile',
          not any(
-             f'width: {n}px' in content and
+             _has_decl(content, f'width: {n}px') and
              f'max-width: {n}px' not in content and
              f'max-width:{n}px' not in content
              for n in range(700, 2000, 10)
          )),
         ('Buttons full-width on mobile or 44px tap targets',
-         _has_44px_tap_target(content) or 'width: 100%' in content or 'width:100%' in content),
+         _has_44px_tap_target(content) or _has_decl(content, 'width: 100%') or 'width:100%' in content),
         ('Font sizes scale on mobile (16px+ body)',
          bool(re.search(r'font-size:\s*(1[6-9]|2[0-5])px', content))),
         ('Single column stack on mobile',
-         'grid-template-columns: 1fr !important' in content or 'flex-direction: column !important' in content
+         _has_decl(content, 'grid-template-columns: 1fr !important') or _has_decl(content, 'flex-direction: column !important')
          or 'auto-fit' in content or 'auto-fill' in content or _is_mobile_app_page or is_detail_page),
     ]
     mobile_fails = 0
@@ -2445,18 +2574,18 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
     _section('DELIVERY STANDARD 3/5 — iPad view (768px–1024px)')
     ipad_checks = [
         ('iPad breakpoint present (@768px)',
-         'max-width: 768px' in content or 'max-width: 900px' in content
-         or 'min-width: 768px' in content or _is_mobile_app_page or is_detail_page),
+         _has_decl(content, 'max-width: 768px') or _has_decl(content, 'max-width: 900px')
+         or _has_decl(content, 'min-width: 768px') or _is_mobile_app_page or is_detail_page),
         ('4-col → 2-col on iPad',
-         ('768px' in content and ('repeat(2' in content or '1fr 1fr' in content or 'grid-template-columns: 1fr' in content))
+         ('768px' in content and ('repeat(2' in content or '1fr 1fr' in content or _has_decl(content, 'grid-template-columns: 1fr')))
          or _is_mobile_app_page or is_detail_page),
         ('No 4-col layout at 768px without breakpoint',
-         'max-width: 768px' in content or 'max-width: 900px' in content
-         or 'min-width: 768px' in content or 'repeat(4' not in content),
+         _has_decl(content, 'max-width: 768px') or _has_decl(content, 'max-width: 900px')
+         or _has_decl(content, 'min-width: 768px') or 'repeat(4' not in content),
         ('Content max-width set (no full-stretch on iPad)',
          'max-width' in content),
         ('Tap targets 44px on iPad',
-         _has_44px_tap_target(content) or 'padding: 1' in content),
+         _has_44px_tap_target(content) or _has_decl(content, 'padding: 1')),
     ]
     ipad_fails = 0
     for label, result in ipad_checks:
@@ -2513,19 +2642,34 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False, is_ad
         # Line height — check new scorecard section scope only
         lh_scope = check_scope  # already scoped to new section or full file
         # Only match CSS line-height (colon syntax), not SVG attributes or other 1-digit hits
-        lh_vals = [float(v) for v in re.findall(r'line-height\s*:\s*([0-9]+\.[0-9]+)', lh_scope)
-                   if re.match(r'^[0-9]+\.[0-9]+$', v)]
-        lh_bad = [v for v in lh_vals if v < 1.5]
-        if lh_bad:
-            if _is_mobile_app_page and all(v >= 1.0 for v in lh_bad):
-                _note(f'[70yr] Line-height {lh_bad} present — verify these are display/title elements only (mobile-app page). Body copy must use 1.6+.')
+        # SL-1.4 — paired with font size; see _lh_audit().
+        _lh_body, _lh_disp, _lh_unk, _lh_glyph = _lh_audit(lh_scope)
+        if _lh_body:
+            if _is_mobile_app_page:
+                _note('[70yr] Tight line-height on body-size text %s — mobile-app page, '
+                      'verify each is a label and not a sentence.'
+                      % [(a, '%gpx' % b, c) for a, b, c in _lh_body])
             else:
-                _fail(f'[70yr] Line-height below 1.5: {lh_bad} — use 1.7+ for elderly readability')
+                _fail('[70yr] Line-height below 1.5 on text UNDER 24px (read as sentences, '
+                      'must clear 1.5): %s'
+                      % [(a, '%gpx' % b, c) for a, b, c in _lh_body])
                 fails += 1
-        elif lh_vals:
-            _ok(f'[70yr] Line-height ≥1.5 throughout (min={min(lh_vals):.1f})')
-        else:
-            _note('[70yr] No explicit line-height found — verify body text has line-height ≥1.7')
+        if _lh_disp:
+            _note('[70yr] Tight line-height on display type ≥24px %s — correct typography '
+                  'at this size, not failed. Verify visually.'
+                  % [(a, '%gpx' % b, c) for a, b, c in _lh_disp])
+        if _lh_unk:
+            _note('[70yr] Line-height below 1.5 in rules that set no font-size %s — '
+                  'verify these are headings or icon wrappers, not body copy.'
+                  % [(a, c) for a, b, c in _lh_unk])
+        if _lh_glyph:
+            _note('[70yr] line-height:1 (single-glyph idiom) on %s — icons and digit '
+                  'badges, not failed. Verify none is body copy.'
+                  % [a for a, c in _lh_glyph])
+        if not _lh_body and not _lh_disp and not _lh_unk and not _lh_glyph:
+            _ok('[70yr] Line-height ≥1.5 throughout')
+        elif not _lh_body:
+            _ok('[70yr] Line-height ≥1.5 on all body-size text')
 
     # CTA buttons large enough
     cta_pads = [int(p) for p in re.findall(r'padding\s*:\s*(\d+)px', check_scope)]
