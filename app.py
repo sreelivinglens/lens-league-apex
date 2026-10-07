@@ -1,3 +1,34 @@
+# SL-VERSION: 182.123 (Session 238, 2026-10-07 -- THE ADVISORY NOW RECORDS ITS OWN OUTCOME.
+#   Founder signal given, from his own observation: "rather than do a page refresh - we should have
+#   a notification of done?" Correct instinct, and the notification was the smaller half.
+#   THE REAL PROBLEM: nothing wrote down what happened. Success wrote the report; FAILURE WROTE
+#   NOTHING -- one WARNING to a log nobody reads, and the user row untouched. So the panel said
+#   "No report yet", which meant BOTH "never started" and "crashed", and the chip said
+#   "Generating..." forever because it was set by JavaScript on click and never updated. A run
+#   that died looked exactly like a run in flight. That ambiguity is how a 100% failure rate
+#   survived the entire life of this feature while the panel reported "9 pending".
+#   WHAT THIS ADDS:
+#   1. Three columns -- evolving_eye_status, evolving_eye_error, evolving_eye_updated_at -- written
+#      at the three real moments: 'generating' when the thread starts, 'done' when the report is
+#      committed, 'failed' plus the error text when it throws. _ee_mark() swallows its own
+#      exceptions on purpose: a status write must never be the thing that breaks a generation.
+#   2. GET /admin/evolving-eye-status -- read-only, admin-only, returns every listed user in one
+#      request so the panel polls once, not once per row.
+#   3. The admin dashboard query and row dict now carry status and error.
+#   Pairs with templates/admin.html admin-3.8, which renders the four states and polls. PUSH BOTH.
+#   A MIGRATION IS INCLUDED. That is the thing that hung a deploy for 36 minutes last week --
+#   182.119 now bounds every migration connection at lock_timeout=15s and fails the deploy loudly
+#   rather than hanging, so this is safe in a way it would not have been seven days ago. Three
+#   ADD COLUMN IF NOT EXISTS on users, no backfill, no rewrite, no index.
+#   DELIBERATELY NOT A PROGRESS BAR. The generation is one web search and one Sonnet call; it
+#   reports nothing in between, so any percentage would be invented. Four honest states beat a
+#   moving bar that means nothing -- and inventing progress is the same failure as inventing a
+#   trend line from twelve images.
+#   STILL NOT FIXED: max_tokens=4000 with a bare json.loads and no stop_reason check. With this
+#   change that failure at least becomes VISIBLE -- it will now read "Failed · Unterminated string"
+#   in the panel instead of vanishing. Visible, not fixed.
+#   RETAINS 182.122 and everything below.
+#
 # SL-VERSION: 182.122 (Session 238, 2026-10-07 -- PLATFORM STANDING OF ZERO. Completes 182.121's
 #   fix 3, which made the number render and immediately showed it was wrong: the live card read
 #   "PLATFORM STANDING 0 of 2". Zero is not a position anyone can hold. Two faults, both invisible
@@ -2974,6 +3005,22 @@ def _run_startup_tasks():
                 # Split into individual execute calls.
                 db.session.execute(db.text(
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_milestone INTEGER DEFAULT NULL"
+                ))
+                # SL-182.123: the advisory never recorded its own outcome. Success
+                # wrote the report; failure wrote NOTHING, so a crashed run and a
+                # run that had not started looked identical in the admin panel
+                # ("No report yet") and the chip said "Generating..." forever.
+                # That ambiguity is what hid the UnboundLocalError for the entire
+                # life of the feature. Three columns, so the outcome is a fact in
+                # the database rather than an inference from an absence.
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_status VARCHAR(16) DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_error TEXT DEFAULT NULL"
+                ))
+                db.session.execute(db.text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS evolving_eye_updated_at TIMESTAMP DEFAULT NULL"
                 ))
                 # SL-176.1d: performance cache columns
                 db.session.execute(db.text(
@@ -7890,8 +7937,27 @@ def _generate_evolving_eye(user_id, milestone):
     import json as _j
     import threading as _t
 
+    # SL-182.123: write the run's outcome to the database so the panel can tell
+    # "never started" from "running" from "failed". Deliberately swallows its own
+    # errors: a status write must never be the thing that breaks a generation.
+    def _ee_mark(_uid, _status, _err=None):
+        try:
+            db.session.execute(db.text("""
+                UPDATE users
+                   SET evolving_eye_status = :s,
+                       evolving_eye_error = :e,
+                       evolving_eye_updated_at = NOW()
+                 WHERE id = :uid
+            """), {'s': _status, 'e': (str(_err)[:500] if _err else None), 'uid': _uid})
+            db.session.commit()
+        except Exception as _mark_err:
+            try: db.session.rollback()
+            except Exception: pass
+            app.logger.warning(f'[evolving_eye] status mark failed ({_status}): {_mark_err}')
+
     def _run():
         with app.app_context():
+            _ee_mark(user_id, 'generating')
             try:
                 from engine.auto_score import auto_score as _dummy  # ensure engine importable
             except Exception:
@@ -8388,6 +8454,7 @@ LIVE CONTEST DATA (searched today — use these, prioritise over any other knowl
                     'uid': user_id
                 })
                 db.session.commit()
+                _ee_mark(user_id, 'done')   # SL-182.123
                 app.logger.info(f'[evolving_eye] generated for user {user_id} at milestone {milestone}')
 
                 # ── Send advisory email to photographer ───────────────────
@@ -8498,6 +8565,11 @@ LIVE CONTEST DATA (searched today — use these, prioritise over any other knowl
                 app.logger.warning(f'[evolving_eye] failed for user {user_id}: {_ee_err}')
                 try: db.session.rollback()
                 except Exception: pass
+                # SL-182.123: record the failure. Before this, a crash wrote one
+                # WARNING to a log nobody reads and left the row untouched, so the
+                # panel still said "No report yet" and the chip still said
+                # "Generating...". The failure is now visible where the work is.
+                _ee_mark(user_id, 'failed', _ee_err)
 
     _t.Thread(target=_run, daemon=True).start()
 
@@ -14785,6 +14857,43 @@ def admin_generate_evolving_eye(user_id):
         'user_id': user_id,
         'milestone': _milestone,
         'total_images': _count
+    }
+
+
+@app.route('/admin/evolving-eye-status', methods=['GET'])
+@login_required
+def admin_evolving_eye_status():
+    """SL-182.123: live status for the admin panel, so a generation resolves to
+    Done or Failed on its own instead of leaving a 'Generating...' chip that was
+    set by JavaScript on click and never updated. Read-only; polled every few
+    seconds while at least one row is running. Returns every user the panel
+    lists, so one request covers the whole table."""
+    if current_user.role != 'admin':
+        abort(403)
+    try:
+        _rows = db.session.execute(db.text("""
+            SELECT id,
+                   evolving_eye_status  AS status,
+                   evolving_eye_error   AS error,
+                   evolving_eye_milestone AS milestone,
+                   (evolving_eye_json IS NOT NULL) AS has_report
+              FROM users
+             WHERE is_active = TRUE AND role != 'admin'
+               AND (evolving_eye_status IS NOT NULL OR evolving_eye_json IS NOT NULL)
+        """)).fetchall()
+    except Exception as _st_err:
+        app.logger.warning(f'[evolving_eye] status endpoint failed: {_st_err}')
+        return {'ok': False, 'users': {}}, 200
+    return {
+        'ok': True,
+        'users': {
+            str(r.id): {
+                'status': r.status,
+                'error': (r.error or '')[:300],
+                'milestone': r.milestone,
+                'has_report': bool(r.has_report),
+            } for r in _rows
+        }
     }
 
 
@@ -24937,7 +25046,9 @@ def admin_dashboard():
             SELECT u.id, u.full_name, u.username, u.email,
                    COUNT(i.id) AS scored_count,
                    u.evolving_eye_json IS NOT NULL AS has_report,
-                   u.evolving_eye_milestone
+                   u.evolving_eye_milestone,
+                   u.evolving_eye_status,
+                   u.evolving_eye_error
             FROM users u
             JOIN images i ON i.user_id = u.id
                 AND i.status = 'scored'
@@ -24945,7 +25056,8 @@ def admin_dashboard():
             WHERE u.is_active = TRUE
               AND u.role != 'admin'
             GROUP BY u.id, u.full_name, u.username, u.email,
-                     u.evolving_eye_json, u.evolving_eye_milestone
+                     u.evolving_eye_json, u.evolving_eye_milestone,
+                     u.evolving_eye_status, u.evolving_eye_error
             HAVING COUNT(i.id) >= 10
             ORDER BY has_report ASC, COUNT(i.id) DESC
             LIMIT 30
@@ -24958,6 +25070,10 @@ def admin_dashboard():
                 'scored':     r.scored_count,
                 'has_report': bool(r.has_report),
                 'milestone':  r.evolving_eye_milestone,
+                # SL-182.123: real outcome, so the panel stops inferring state
+                # from the absence of a report.
+                'status':     r.evolving_eye_status,
+                'error':      (r.evolving_eye_error or '')[:300],
             }
             for r in _ee_rows
         ]
