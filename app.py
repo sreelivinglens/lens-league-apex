@@ -1,3 +1,87 @@
+# SL-VERSION: 182.118 (Session 238, 2026-10-07 -- FIXED AT THE INPUT, NOT ONLY THE OUTPUT. The
+# founder asked for a recheck because we were going back and forth, and the recheck found the
+# reason: I had been fixing what the engine WROTE while still feeding it the thing that made it
+# write that.
+#
+# TWO INCONSISTENCIES, both mine, both found by reading my own morning's work end to end:
+#
+# (1) THE SPECIES NAME WAS STILL BEING INJECTED AS GROUND TRUTH. The VERIFIED SUBJECT block built
+#     the line "Primary subject: {subject_type}" straight from the pre-call. On image 151 that read
+#     "Primary subject: Seagull" -- on the same frame the same pre-call had called a White egret an
+#     hour before. So 182.117 was stripping "seagull" twenty-three times from an output that the
+#     prompt had asked for twenty-three times. Fixing the output while poisoning the input is the
+#     shape of every loop this morning.
+#     FIX: new _generalise_subject() turns the pre-call subject into its family noun before it ever
+#     reaches the prompt -- "White egret" -> "white bird", "Bengal tiger" -> "animal". A visible
+#     adjective survives, because colour and size are observable and not an identification. Non
+#     creature subjects are untouched: "Person", "Landscape", "Street vendor transaction" are
+#     descriptions, and blurring them would gain nothing.
+#
+# (2) THE PROMPT BAN AND THE CODE SCRUB DISAGREED. 182.108 banned the species name only when the
+#     creature was incidental OR confidence was low -- leaving open precisely the failing case, a
+#     creature subject at HIGH confidence, which is exactly how "seagull" reached a card
+#     twenty-three times. The confidence flag is worthless here: the same photograph came back
+#     "White egret" and "Seagull", both high. There is no threshold at which naming is safe on this
+#     tier, so the ban is now unconditional and the prompt says what the code does.
+#
+# NET EFFECT: the free card now has ONE position on species, stated once at the input, once in the
+# prompt, and enforced once at the output -- instead of three rules disagreeing with each other.
+# Verified: eight subject cases generalise correctly, and eleven consistency checks across the
+# whole Haiku path (child gate, depicted-figure gate, gaze ban, species ban, output scrub,
+# species_note clearing, master roster, usage logging) all agree.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a rescore. Expect the log to show the
+# vision call still naming a species (that is its job) while the CARD never does, and the SPECIES
+# GENERALISED line to fall quiet over time as the prompt stops being asked for a name it cannot
+# give. RETAINS 182.117.)
+# SL-VERSION: 182.117 (Session 238, 2026-10-07 -- THE FREE CARD STOPS NAMING SPECIES, AND I UNDO
+# A FIX OF MINE THAT MADE THINGS WORSE.
+#
+# 182.113 replaced any species word that contradicted the pre-call with the pre-call's own answer.
+# That rested on an assumption the 7 Oct 07:28 log destroys -- that the pre-call is ground truth:
+#     image 147   [haiku_vision] subject=White egret ... confidence=high
+#     image 151   [haiku_vision] subject=Seagull     ... confidence=high
+# THE SAME PHOTOGRAPH. The same Sassoon Dock frame, uploaded by two users, named as two different
+# species, both times at HIGH confidence. Haiku's species identification is not merely fallible --
+# it is not stable on identical input, and its confidence signal carries no information at all.
+#
+# AND MY SCRUB AMPLIFIED IT. On image 151 it took "Seagull" as truth and propagated it through
+# every field: the delivered card says seagull TWENTY-THREE TIMES. Before the scrub it said it
+# twice. I turned a mistake that read as a slip into one that reads as conviction, on the free card
+# a photographer judges the whole platform by, in front of readers who can tell an egret from a
+# gull at fifty metres. The founder caught it in the card text, not me.
+#
+# THE RULE IS NOW THE ONE THE FOUNDER STATED AT THE START AND I WALKED BACK by allowing
+# high-confidence naming: THE FREE CARD DOES NOT NAME SPECIES. Every species word is replaced with
+# its family noun -- "the seagull's arrival" becomes "the bird's arrival", "seagulls as
+# punctuation" becomes "birds as punctuation" -- which is true of every frame, costs the card
+# nothing, and cannot be wrong. What the creature DOES (arriving, lifting off, feeding) is
+# untouched and was always the better observation. species_note is cleared outright: it is an
+# identification field, and this tier cannot identify.
+#
+# TWO BUGS OF MY OWN CAUGHT IN TESTING BEFORE SHIPPING, both of which would have corrupted correct
+# prose -- a scrub that does that is worse than the claim it removes:
+#   * crane, duck, kite, swallow and swift are EXCLUDED from the vocabulary. Each is an ordinary
+#     English word long before it is a bird, and a card in this very project has already written
+#     "your work across Mumbai streets and crane reflections", which the first version turned into
+#     "bird reflections".
+#   * a compound guard, because "a tiger moth" became "an animal moth". A species word followed by
+#     moth / lily / shark / beetle / fish / bar and the rest is a compound naming something else.
+#   * plus article agreement, so "an egret" becomes "a bird" and not "an bird".
+# Verified on the delivered card's own sentences: all four seagull forms generalised correctly,
+# while "crane reflections", "a tiger moth", "duck under the rope" and "a kite in the wires" are
+# all left exactly as written.
+#
+# THIS IS ALSO WHERE THE PAID TIER EARNS ITS NAME. Sonnet's species gate demands stated evidence
+# and throws out a weak claim -- it downgraded "Little Egret" to Unknown three times in one night
+# on evidence that read completely convincing. Identification is a thing the League can do and the
+# free read cannot, and saying so honestly is worth more than a guess.
+#
+# ALSO CONFIRMED WORKING in the same log: the photographer name -- both cards from the fresh upload
+# carry "Carmen", so 182.113 and 182.116 together have closed all three places the name is
+# resolved. And 182.116's roster fix held: "master_check OK -- 'Raghu Rai' is tagged for Street
+# (29 in roster)" where 182.114 had wrongly replaced him, while Vincent Munier was still correctly
+# enforced off a Street card.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a rescore of 147 or 151. RETAINS 182.116.)
 # SL-VERSION: 182.116 (Session 238, 2026-10-07 -- TWO FIXES, ONE OF THEM MY OWN OVERREACH.
 #
 # (1) THE WEB CARD STILL SHOWED THE ACCOUNT HANDLE, AND NOT BECAUSE OF OLD UPLOADS. I told the
@@ -43964,6 +44048,43 @@ _HAIKU_VISION_PROMPT = (
 )
 
 
+_HAIKU_GROUP_FAMILY = {
+    'A': 'bird', 'B': 'bird', 'C': 'animal', 'D': 'animal',
+    'E': 'marine animal', 'F': 'insect', 'G': 'animal',
+}
+
+
+def _generalise_subject(subject_type, subject_group):
+    """
+    SL-182.118. Turn a pre-call subject into something the free card can say
+    without being wrong: "White egret" -> "bird", "Bengal tiger" -> "animal".
+
+    The free tier does not identify species (182.117), but until now the name
+    was still being handed to the scoring call as ground truth, so the model
+    wrote it and the scrub removed it -- the same claim fought twice, once in
+    each direction. This stops it at the input.
+
+    Keeps a non-creature subject as-is: "Person", "Landscape", "Street vendor
+    transaction" are descriptions, not identifications, and nothing is gained
+    by blurring them.
+    """
+    _st = (subject_type or '').strip()
+    _fam = _HAIKU_GROUP_FAMILY.get((subject_group or '').strip().upper())
+    if not _fam:
+        return _st                      # H human / I landscape / J other — leave alone
+    if not _st:
+        return _fam
+    # Carry a visible adjective if there is one, since colour and size are
+    # observable and not an identification: "White egret" -> "white bird".
+    _words = _st.split()
+    if len(_words) > 1 and _words[0].lower() in (
+        'white','black','grey','gray','brown','golden','green','blue','red',
+        'small','large','young','adult','juvenile','spotted','striped'
+    ):
+        return '%s %s' % (_words[0].lower(), _fam)
+    return _fam
+
+
 def _log_haiku_usage(tag, parsed_json, user_id=None, image_id=None):
     """
     SL-182.108. Every cost figure for the free tier has been a CHARACTER-COUNT
@@ -45503,7 +45624,19 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     if _vision:
         _vs_lines = ['VERIFIED SUBJECT (identified by pre-call vision analysis — do not contradict):']
         if _v_subject:
-            _vs_lines.append(f'Primary subject: {_v_subject}')
+            # SL-182.118 -- the species name was being injected here as VERIFIED
+            # GROUND TRUTH. On image 151 that line read "Primary subject:
+            # Seagull" on a frame the same pre-call had called a White egret an
+            # hour earlier. So the engine was TOLD the wrong species, wrote it
+            # twenty-three times, and 182.117 then stripped it twenty-three
+            # times from the output. Fixing the output while still poisoning the
+            # input is the mistake this whole morning kept repeating.
+            # The family noun goes in instead: specific enough to be useful
+            # ("a bird in flight" is a different photograph from "a parked
+            # truck"), general enough to be true whichever way the pre-call
+            # guessed. The paid tier keeps the species, because its gate makes
+            # the claim earn its place.
+            _vs_lines.append('Primary subject: %s' % _generalise_subject(_v_subject, _v_group))
         if _v_group:
             _vs_lines.append(f'Subject group: {_v_group}')
         if _v_behaviour:
@@ -45612,24 +45745,25 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
         # at HIGH confidence. This bans the specific name from the whole card
         # unless confidence is high AND the creature is actually the subject of
         # the photograph. A bird incidental to a street scene is never named.
-        _subject_is_creature = _v_group in ('A', 'B', 'C', 'D', 'E', 'F', 'G')
-        if not _subject_is_creature:
-            _vs_lines.append(
-                'SPECIES NAMING: BANNED on this card. Any animal or bird here is incidental '
-                'to the photograph, not its subject, and has not been identified. Do NOT name '
-                'a species anywhere in the output — not "seagull", not "egret", not "pigeon", '
-                'not a guess softened with "likely" or "appears to be". Say "the bird", '
-                '"the birds", "the animal". Describing what it DOES (arriving, lifting off, '
-                'feeding) is always allowed and is the better observation anyway.'
-            )
-        elif _v_conf != 'high':
-            _vs_lines.append(
-                'SPECIES NAMING: BANNED on this card — the pre-call could not identify the '
-                'subject with high confidence. Refer to it by what is visible ("the wading '
-                'bird", "the raptor", "the cat") and never by a specific species name. An '
-                'honest general description costs you nothing; a wrong species name costs '
-                'the reader all trust in everything else on the card.'
-            )
+        # SL-182.118 -- THE BAN IS NOW UNCONDITIONAL. 182.108 banned the species
+        # name only when the creature was incidental OR confidence was low,
+        # which left exactly the failing case open: a creature subject at HIGH
+        # confidence. That is precisely how "seagull" reached a card
+        # twenty-three times. The confidence flag has been shown to carry no
+        # information -- the same frame came back "White egret" and "Seagull",
+        # both at high -- so there is no threshold at which naming is safe here.
+        # The prompt and the post-processing scrub now say the same thing, where
+        # before the prompt invited a name and the code removed it.
+        _vs_lines.append(
+            'SPECIES NAMING: BANNED on this card, with no exception. Do NOT name a species '
+            'anywhere in the output — not "seagull", not "egret", not "pigeon", not a Latin '
+            'name, and not a guess softened with "likely", "appears to be" or "probably". '
+            'Say "the bird", "the birds", "the animal". This is not caution: the free read '
+            'genuinely cannot identify species reliably, and a wrong name costs the reader '
+            'their trust in everything else on the card. Describing what the creature DOES — '
+            'arriving, lifting off, feeding, holding still — is always allowed and is the '
+            'better observation anyway.'
+        )
 
         # -- SL-182.110 -- DEPICTED FIGURES ARE NOT PEOPLE --------------------
         # Street photography is full of painted and printed faces: murals,
@@ -46051,81 +46185,111 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     except Exception as _mse:
         app.logger.warning('[try_haiku] MINOR SCRUB skipped (non-fatal): %s' % _mse)
 
-    # -- SL-182.113 -- SPECIES CONTRADICTION SCRUB ---------------------------
-    # The 7 Oct 06:07 run on image 147 is the clearest case yet of a scoring
-    # call ignoring its own ground truth. The pre-call got it RIGHT:
-    #   [haiku_vision] group=A subject=White egret ... confidence=high
-    # That went into the prompt as "Primary subject: White egret". The card then
-    # called them "the seagull", twice, and never once said egret.
+    # -- SL-182.117 -- NO SPECIES NAME ON THE FREE CARD. AT ALL. ------------
+    # 182.113 replaced any species word that contradicted the pre-call with the
+    # pre-call's own answer. That was built on an assumption the 7 Oct 07:28 log
+    # destroys: that the pre-call is ground truth.
     #
-    # So this is not a seeing failure and not a confidence failure -- the engine
-    # was told the answer and wrote something else. 182.108's species gate does
-    # not catch it either, by design: that gate bans a species NAME when the
-    # creature is incidental or confidence is low, and here the bird IS the
-    # subject at high confidence, so naming it was permitted. What was never
-    # checked is whether the name used MATCHES the verified one.
+    #   image 147  [haiku_vision] subject=White egret ... confidence=high
+    #   image 151  [haiku_vision] subject=Seagull     ... confidence=high
     #
-    # Deterministic, no API call: if the pre-call named a subject, any OTHER
-    # species word in the card is replaced with the verified one. Nothing is
-    # rewritten, only the wrong noun swapped for the right noun. A photographer
-    # who knows an egret from a gull -- which is most of them -- stops seeing
-    # the engine contradict itself.
+    # THE SAME PHOTOGRAPH. The same Sassoon Dock frame, uploaded twice, named as
+    # two different species, both times at HIGH confidence. Haiku's species
+    # identification is not merely fallible, it is not even stable on identical
+    # input, and its own confidence signal carries no information about it.
+    #
+    # And my scrub made that worse, not better. On image 151 it took "Seagull"
+    # as truth and propagated it: the delivered card says seagull TWENTY-THREE
+    # times. Before the scrub it said it twice. I turned a mistake that looked
+    # like a slip into one that reads as conviction, on the free card a
+    # photographer judges the whole platform by, in front of a reader who can
+    # tell an egret from a gull at fifty metres.
+    #
+    # So the rule is the one the founder stated at the start of this and I
+    # walked back by allowing high-confidence naming: THE FREE CARD DOES NOT
+    # NAME SPECIES. Every species word is replaced with its family-level noun --
+    # "the seagull's arrival" becomes "the bird's arrival" -- which is true of
+    # every frame, costs the card nothing, and cannot be wrong. What the
+    # creature DOES (arriving, lifting off, feeding) is untouched and was always
+    # the better observation.
+    #
+    # This is also where the paid tier earns its name: Sonnet's species gate
+    # demands stated evidence and throws out a weak claim (it downgraded
+    # "Little Egret" three times in one night). Identification is a thing the
+    # League can do and the free read cannot, and saying so honestly is worth
+    # more than a guess.
     try:
-        _v_subj = str(_vision.get('subject_type', '') or '').strip()
-        if _v_subj:
-            import re as _re_sp
-            # Head noun of the verified subject: "White egret" -> "egret".
-            _verified_head = _re_sp.sub(r'[^a-z ]', '', _v_subj.lower()).split()
-            _verified_head = _verified_head[-1] if _verified_head else ''
-            _SPECIES_VOCAB = [
-                'seagulls', 'seagull', 'gulls', 'gull', 'pigeons', 'pigeon',
-                'crows', 'crow', 'ravens', 'raven', 'herons', 'heron',
-                'storks', 'stork', 'cranes', 'crane', 'ibises', 'ibis',
-                'egrets', 'egret', 'eagles', 'eagle', 'hawks', 'hawk',
-                'kites', 'kite', 'falcons', 'falcon', 'owls', 'owl',
-                'terns', 'tern', 'ducks', 'duck', 'swans', 'swan',
-                'sparrows', 'sparrow', 'mynas', 'myna', 'parrots', 'parrot',
-                'pelicans', 'pelican', 'cormorants', 'cormorant',
-                'flamingos', 'flamingo', 'vultures', 'vulture',
-            ]
-            _sp_fixed, _sp_fields = 0, []
-            if _verified_head:
-                for _k, _v in list(d.items()):
-                    if not isinstance(_v, str) or not _v:
-                        continue
-                    _new_sp, _n_sp = _v, 0
-                    for _sp in _SPECIES_VOCAB:
-                        _sp_sing = _sp[:-1] if _sp.endswith('s') else _sp
-                        # Leave the verified species alone, in any inflection.
-                        if _sp_sing == _verified_head or _sp_sing in _v_subj.lower():
-                            continue
-                        _repl = _verified_head + ('s' if _sp.endswith('s') else '')
-                        _new_sp, _c = _re_sp.subn(
-                            r'\b' + _sp + r'\b',
-                            (lambda _r: (lambda _m: _r.upper() if _m.group(0).isupper()
-                                         else (_r[:1].upper() + _r[1:]
-                                               if _m.group(0)[:1].isupper() else _r)))(_repl),
-                            _new_sp, flags=_re_sp.I
-                        )
-                        _n_sp += _c
-                    if _n_sp:
-                        d[_k] = _new_sp
-                        _sp_fields.append('%s(%d)' % (_k, _n_sp))
-                        _sp_fixed += _n_sp
-            if _sp_fixed:
-                app.logger.warning(
-                    '[try_haiku] SPECIES SCRUB: the card named a species that contradicts the '
-                    'verified subject %r -- %d word(s) corrected to %r in: %s. The scoring call '
-                    'was given the right answer and wrote a different one. (SL-182.113)'
-                    % (_v_subj, _sp_fixed, _verified_head, ', '.join(_sp_fields))
-                )
-            else:
-                app.logger.info(
-                    '[try_haiku] species_scrub OK — card is consistent with verified subject %r'
-                    % _v_subj
-                )
+        import re as _re_sp
+        # Deliberately EXCLUDED, after testing caught them: crane, duck, kite,
+        # swallow, swift. Each is an ordinary English word long before it is a
+        # bird, and a card in this project has already written "your work across
+        # Mumbai streets and crane reflections" -- which this would have turned
+        # into "bird reflections". A scrub that corrupts correct prose is worse
+        # than the claim it removes.
+        _BIRDS = ['seagulls','seagull','gulls','gull','pigeons','pigeon','crows','crow',
+                  'ravens','raven','herons','heron','storks','stork',
+                  'ibises','ibis','egrets','egret','eagles','eagle','hawks','hawk',
+                  'falcons','falcon','owls','owl','terns','tern',
+                  'swans','swan','sparrows','sparrow','mynas','myna',
+                  'parrots','parrot','pelicans','pelican','cormorants','cormorant',
+                  'flamingos','flamingo','vultures','vulture','kingfishers','kingfisher',
+                  'peacocks','peacock','starlings','starling']
+        _BEASTS = ['elephants','elephant','tigers','tiger','leopards','leopard',
+                   'lions','lion','monkeys','monkey','langurs','langur',
+                   'buffaloes','buffalo','cows','cow','dogs','dog','cats','cat',
+                   'horses','horse','goats','goat']
+        # A species word followed by one of these is a compound naming something
+        # else entirely -- a tiger moth is an insect, a crow bar is a tool.
+        _COMPOUND_NEXT = (r'moth|lily|shark|beetle|snake|fish|nut|wood|bar|eye|skin|'
+                          r'prawn|spider|orchid|plant|flower|weed|grass|balm|boy|bird')
+        def _family(_w, _fam):
+            return _fam + ('s' if _w.lower().endswith('s') else '')
+        _sp_fixed, _sp_fields = 0, []
+        for _k, _v in list(d.items()):
+            if not isinstance(_v, str) or not _v:
+                continue
+            _new_sp, _n_sp = _v, 0
+            for _vocab, _fam in ((_BIRDS, 'bird'), (_BEASTS, 'animal')):
+                for _sp in _vocab:
+                    _repl = _family(_sp, _fam)
+                    _new_sp, _c = _re_sp.subn(
+                        r'\b' + _sp + r'\b(?!\s+(?:' + _COMPOUND_NEXT + r')\b)',
+                        (lambda _r: (lambda _m: _r.upper() if _m.group(0).isupper()
+                                     else (_r[:1].upper() + _r[1:]
+                                           if _m.group(0)[:1].isupper() else _r)))(_repl),
+                        _new_sp, flags=_re_sp.I
+                    )
+                    _n_sp += _c
+            # "the bird bird" / "a bird bird" can only come from a two-word name
+            # ("White egret" -> "White bird" is fine, but "egret bird" is not).
+            _new_sp = _re_sp.sub(r'\b(bird|animal)s?\s+\1s?\b', r'\1', _new_sp, flags=_re_sp.I)
+            # "a egret" -> "a bird" is fine; "an egret" -> "an bird" is not, and
+            # "a animal" is the same fault the other way.
+            _new_sp = _re_sp.sub(r'\ban(\s+bird)', r'a\1', _new_sp)
+            _new_sp = _re_sp.sub(r'\bAn(\s+bird)', r'A\1', _new_sp)
+            _new_sp = _re_sp.sub(r'\ba(\s+animal)', r'an\1', _new_sp)
+            _new_sp = _re_sp.sub(r'\bA(\s+animal)', r'An\1', _new_sp)
+            if _n_sp:
+                d[_k] = _new_sp
+                _sp_fields.append('%s(%d)' % (_k, _n_sp))
+                _sp_fixed += _n_sp
+        # species_note is an identification field by definition. On a tier that
+        # cannot identify, it has nothing honest to say.
+        if d.get('species_note'):
+            d['species_note'] = ''
+            _sp_fields.append('species_note(cleared)')
+        if _sp_fixed or _sp_fields:
+            app.logger.info(
+                '[try_haiku] SPECIES GENERALISED: %d species word(s) replaced with the '
+                'family noun in: %s. The free card does not identify species -- the pre-call '
+                'named this frame two different species on two uploads, both at high '
+                'confidence. (SL-182.117)'
+                % (_sp_fixed, ', '.join(_sp_fields) or 'none')
+            )
+        else:
+            app.logger.info('[try_haiku] species_check OK — no species named in card text')
     except Exception as _spe:
-        app.logger.warning('[try_haiku] SPECIES SCRUB skipped (non-fatal): %s' % _spe)
+        app.logger.warning('[try_haiku] SPECIES GENERALISE skipped (non-fatal): %s' % _spe)
 
     # -- SL-182.114 -- MASTER REFERENCE ENFORCEMENT --------------------------
     # 182.113 stopped _pick_master_haiku() handing a wildlife photographer to a
