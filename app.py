@@ -1,3 +1,34 @@
+# SL-VERSION: 182.115 (Session 238, 2026-10-07 -- FREE SCORECARD COPY PASS. Pairs with
+# image_detail_haiku.html 3.0, which carries the design half (nine pastel zones collapsed to two
+# surfaces, a real dark theme, a share card, and the aspiration block).
+#
+# The percentile strings on the free card read as product analytics rather than as a mentor:
+#   "Strong Maverick-tier result -- you are in the top 38%. Refine your weakest dimension to break
+#    into Master."
+# That is the exact register the founder has said from the start this product must never use, and
+# the sibling strings were the same voice: "Elite territory", "Above average", "Every evaluation
+# builds your picture". Rewritten to say what the number means about the PHOTOGRAPH and what
+# happens next, in the register the rest of the card already uses -- "Top 43% on this platform. One
+# dimension is holding this frame back more than the others -- it is named below." No threshold, no
+# number, no tier logic and no scoring behaviour changed; these are display strings only.
+#
+# ALSO CONFIRMED THIS PASS, and it closes an item I flagged as unfixable from here: upload.html
+# ALREADY HAS the photographer-name input (line ~648, name="photographer_name", marked required,
+# pre-filled with the account name, and NOT gated behind is_trial). So 182.113's change to read it
+# will work with no template edit at all. The reason images 147 and 150 still print "The
+# Livinglens" is simply that they were uploaded BEFORE 182.113 -- their stored photographer_name is
+# the account name and a rescore does not change it. A fresh upload with the name typed over will
+# carry it; the existing rows would need a one-off update if the founder wants them corrected.
+#
+# SEPARATELY NOTED, NOT TOUCHED: templates/try.html is a SECOND, older Haiku scorecard
+# (try-172.5-staging, Session 192) with a different design, blurred "locked" sections and an FAQ.
+# NOTHING in this file renders it -- there is no render_template('try.html') anywhere. It carries a
+# stale dimension naming scheme ("Timing & Moment", "Emotional Impact", "Affective Quotient") that
+# contradicts the live card and a pip loop hardcoded to range(3) while the free limit is 10. Left
+# in place rather than deleted, because confirming it is truly unreachable is the founder's call,
+# not mine -- but it should not be trusted or maintained until that is settled.
+# NOT YET CONFIRMED LIVE -- needs the founder's push, then the free card read on a phone in dark
+# mode and a real tap on Share. RETAINS 182.114.)
 # SL-VERSION: 182.114 (Session 238, 2026-10-07 -- MASTER REFERENCE IS NOW ENFORCED, NOT SUGGESTED.
 # 182.113's genre guard worked: the 06:17 log carries NO "[try_haiku] master override" line, so
 # _pick_master_haiku() correctly declined to hand a wildlife photographer to a Street photograph and
@@ -47921,16 +47952,24 @@ def try_result(image_id):
             if percentile_data and img.tier:
                 _pct  = percentile_data.get('top_pct', 50)
                 _tier = img.tier or ''
+                # SL-182.115 -- COPY PASS. These read as product analytics, not as
+                # a mentor: "Strong Maverick-tier result -- you are in the top X%.
+                # Refine your weakest dimension to break into Master." Nobody
+                # talks to a photographer that way, and "elite territory",
+                # "above average" and "builds your picture" are the same voice.
+                # Rewritten to say what the number means about the photograph
+                # and what happens next, in the register the rest of the card
+                # already uses. No logic, thresholds or numbers changed.
                 if _tier in ('Grandmaster', 'Legend'):
-                    _ctx = f'Elite territory — this is a {_tier}-tier image, placing you among the highest evaluated on the platform.'
+                    _ctx = f'Only a handful of frames on this platform read at {_tier} level. This is one of them.'
                 elif _tier == 'Master':
-                    _ctx = f'Master-tier result — your photograph is in the top {_pct}% of all evaluated images on this platform.'
+                    _ctx = f'This frame sits in the top {_pct}% of everything evaluated here. It holds up.'
                 elif _tier == 'Maverick':
-                    _ctx = f'Strong Maverick-tier result — you are in the top {_pct}%. Refine your weakest dimension to break into Master.'
+                    _ctx = f'Top {_pct}% on this platform. One dimension is holding this frame back more than the others — it is named below.'
                 elif _pct <= 35:
-                    _ctx = f'Above average — you are in the top {_pct}%. Keep building to close the gap to the next tier.'
+                    _ctx = f'Top {_pct}%. The eye is there; the next tier is a matter of consistency.'
                 else:
-                    _ctx = f'Every evaluation builds your picture — focus on your lowest dimension to move up.'
+                    _ctx = 'Every frame you put through here sharpens the read on your eye. This is the first mark on the page.'
                 percentile_data['context'] = _ctx
         except Exception as _pe:
             app.logger.warning(f'[try_result] percentile failed: {_pe}')
