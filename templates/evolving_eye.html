@@ -1,5 +1,26 @@
 {% extends "base.html" %}
-{# SL-VERSION: evolving_eye-176.13-main (Session 207, 2026-09-02 — Topbar: #fff cream→rgba(26,24,20,0.98) dark navy. Text/button colours updated for dark bg. sl-top-nav stays suppressed — /my-eye is a report, not a nav destination. RETAINS 176.12.) #}
+{# SL-VERSION: evolving_eye-176.14-main (Session 238, 2026-10-07 — FIRST ADVISORY EVER RENDERED
+   EXPOSED FOUR DEFECTS IN THIS FILE. Founder signal given. Found by reading the first Evolving Eye
+   report this platform has ever produced (staging, user 10, 22:40 IST) — app.py 182.120 unblocked
+   generation, and the output immediately showed what no one had been able to see before.
+   (1) NAME: the header printed current_user — the person LOOKING at the report. On the admin view
+       route that is the admin, so the header said one name while the advisory prose said another,
+       in the same document. Now uses admin_view_name when present. The route had always passed it.
+   (2) KYC: "Platform rank" → "Platform standing"; "not scoring photographs" → "not measuring";
+       "A grader tells you the score… what the score means" → rewritten without the banned word;
+       "images scoring 8.5+" → "images evaluating at 8.5 and above". This template has never been
+       through sl_audit and the same copy is what members receive. CSS class names (ey-acc-score)
+       and Jinja state ('scored') are untouched — they are not user-facing.
+   (3) PLATFORM STANDING rendered BLANK as "of 2": app.py wrote advisory['platform_rank'] and this
+       file read advisory['platform_standing']. A key mismatch, silent, showing an empty number to
+       every reader. app.py 182.121 now writes platform_standing; a fallback here keeps already
+       stored reports rendering.
+   (4) THIRD LABEL SET: the "why Shutter League" panel named the dimensions "Timing" and "the WOW
+       Factor" and credited "the Apex DDI". Decisive Moment and Wonder Factor are the settled
+       customer-facing names (Standards §2); Apex DDI is Lens League Apex branding.
+   NOT fixed here: the advisory email in app.py builds its own HTML and does not include this
+   panel, so it never carried the label set — but it is a second copy of the same content and will
+   drift. Worth collapsing into one source one day. RETAINS 176.13.) #}
 {% block title %}My Evolving Eye — So Far · Shutter League{% endblock %}
 {% block body_class %}page-evolving-eye{% endblock %}
 
@@ -126,7 +147,12 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
   <div>
     <div class="ey-tb-title">My evolving eye — so far</div>
     <div class="ey-tb-sub">
-      {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}
+      {# SL-176.14: was current_user.full_name — that is the person LOOKING at the
+         report, not the person it is about. On /admin/view-evolving-eye/<id> it
+         printed the admin's name in the header while the advisory prose used the
+         photographer's, so one document carried two different names. The route has
+         always passed admin_view_name for exactly this; the template never used it. #}
+      {{ admin_view_name if admin_view_name else (current_user.full_name.split()[0] if current_user.full_name else current_user.username) }}
       {% if advisory %}&nbsp;·&nbsp; {{ advisory.total_images }} images &nbsp;·&nbsp; {{ advisory.milestone }}-image advisory{% endif %}
       {% if advisory and advisory.generated_at %}&nbsp;·&nbsp; {{ advisory.generated_at[:10] }}{% endif %}
     </div>
@@ -139,9 +165,14 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
 
   {# Stats row #}
   <div class="ey-stats">
-    <div class="ey-stat"><div class="ey-sl">Images</div><div class="ey-sv">{{ advisory.total_images }}</div><div class="ey-ss">{{ advisory.get('genres', [])|length }} genres</div></div>
+    <div class="ey-stat"><div class="ey-sl">Images</div><div class="ey-sv">{{ advisory.total_images }}</div><div class="ey-ss">{{ advisory.get('genres', [])|length }} interests</div></div>
     <div class="ey-stat"><div class="ey-sl">Overall average</div><div class="ey-sv gold">{{ '%.2f'|format(advisory.avg_score) }}</div></div>
-    <div class="ey-stat"><div class="ey-sl">Platform rank</div><div class="ey-sv green">{{ advisory.platform_standing }}</div><div class="ey-ss">of {{ advisory.platform_total }}</div></div>
+    {# SL-176.14: label was "Platform rank" — KYC substitution table, rank → standing.
+       The value also rendered blank: app.py set advisory['platform_rank'] and this
+       read advisory['platform_standing'], so the number was never there. app.py
+       182.121 now sets platform_standing; the fallback keeps older stored reports
+       rendering instead of showing a bare "of N". #}
+    <div class="ey-stat"><div class="ey-sl">Platform standing</div><div class="ey-sv green">{{ advisory.platform_standing if advisory.platform_standing else advisory.platform_rank }}</div><div class="ey-ss">of {{ advisory.platform_total }}</div></div>
     <div class="ey-stat"><div class="ey-sl">Milestone</div><div class="ey-sv">{{ advisory.milestone }}</div><div class="ey-ss">images</div></div>
   </div>
 
@@ -175,7 +206,10 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
   {# Per-genre accordions #}
   {% if advisory.get('genres') %}
   <div class="ey-card">
-    <div class="ey-ch"><div class="ey-lbl">Your eye by genre — tap to read</div></div>
+    {# SL-176.14: the heading used a KYC-restricted word — sl_audit's own table says
+       use "Interests". Only the heading wording changes; the per-accordion names
+       still come from the DB field via advisory.genres. #}
+    <div class="ey-ch"><div class="ey-lbl">Your eye by interest — tap to read</div></div>
     {% for genre in advisory.genres %}
     <div class="ey-acc-row" onclick="this.classList.toggle('open')">
       <div class="ey-acc-head" onclick="this.closest('.ey-acc-row').classList.toggle('open')" role="button" tabindex="0">
@@ -220,10 +254,16 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
       <div class="sl-diff-sub">This section appears once — at your 10-image milestone</div>
     </div>
     <div class="sl-diff-body">
-      <div class="diff-row"><div class="diff-icon">📊</div><div class="diff-text"><strong>Five dimensions evaluated simultaneously.</strong> Most platforms tell you if an image is sharp or well-composed. The Apex DDI analyses Depth of Difficulty, Timing, Visual Disruption, the WOW Factor, and Emotion — in every image, every time.</div></div>
-      <div class="diff-row"><div class="diff-icon">👁️</div><div class="diff-text"><strong>We watch your trajectory, not just your image.</strong> Every evaluation is cross-referenced with your previous work. Shutter League is not scoring photographs — it is reading a photographer.</div></div>
+      {# SL-176.14: this panel carried a THIRD dimension label set — "Timing" and
+         "the WOW Factor" — contradicting the settled customer-facing names. Decisive
+         Moment and Wonder Factor are current (Standards §2: "WOW Factor" was a June
+         proposal, superseded by Brand Guidelines v1.1); Emotion (AQ) was settled in
+         Session 237. "Apex DDI" is Lens League Apex branding and does not belong in
+         Shutter League copy. If these five names change anywhere, change them here. #}
+      <div class="diff-row"><div class="diff-icon">📊</div><div class="diff-text"><strong>Five dimensions evaluated simultaneously.</strong> Most platforms tell you if an image is sharp or well-composed. Shutter League asks how hard this was to make, whether the timing was right, whether it breaks the pattern, whether it made you feel something, and what it leaves you with — in every image, every time.</div></div>
+      <div class="diff-row"><div class="diff-icon">👁️</div><div class="diff-text"><strong>We watch your trajectory, not just your image.</strong> Every evaluation is cross-referenced with your previous work. Shutter League is not measuring photographs — it is reading a photographer.</div></div>
       <div class="diff-row"><div class="diff-icon">🎯</div><div class="diff-text"><strong>Customised to the way you shoot.</strong> The photographers in this system have evolved in ways specific to their eye. Your advisory is built from your {{ advisory.total_images }} images. No one else receives this advisory.</div></div>
-      <div class="diff-row"><div class="diff-icon">🏆</div><div class="diff-text"><strong>A true mentor, not a grader.</strong> A grader tells you the score. A mentor tells you what the score means for who you are becoming as a photographer. That is what Shutter League does.</div></div>
+      <div class="diff-row"><div class="diff-icon">🏆</div><div class="diff-text"><strong>A true mentor, not a grader.</strong> A grader hands you a number and stops. A mentor tells you what it means for who you are becoming as a photographer. That is what Shutter League does.</div></div>
     </div>
   </div>
   {% endif %}
@@ -235,7 +275,7 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
   <div class="ey-card">
     <div class="ey-ch">
       <div class="ey-lbl">Open calls worth entering now</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:4px">Your images scoring 8.5+ are ready. Enter directly — no submission fee for free entries.</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:4px">Your images evaluating at 8.5 and above are ready. Enter directly — no fee to enter the free ones.</div>
     </div>
 
     {% if _free_contests %}
