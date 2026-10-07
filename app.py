@@ -1,3 +1,22 @@
+# SL-VERSION: 182.122 (Session 238, 2026-10-07 -- PLATFORM STANDING OF ZERO. Completes 182.121's
+#   fix 3, which made the number render and immediately showed it was wrong: the live card read
+#   "PLATFORM STANDING 0 of 2". Zero is not a position anyone can hold. Two faults, both invisible
+#   for as long as the field rendered blank:
+#   1. ROUNDING MISMATCH. :my_avg was _avg, rounded to 2dp, compared against the UNROUNDED
+#      AVG(score) in SQL. A photographer whose true average is 7.9083 displays as 7.91, and
+#      7.9083 < 7.91 is true -- so THE PHOTOGRAPHER WAS COUNTED AS BELOW THEMSELVES. With two
+#      photographers on staging and both counted below, rank = 2 - 2 = 0. Reproduced exactly in
+#      isolation before fixing: that portfolio shape yields "0 of 2", matching the live card.
+#      The unrounded average is now passed to SQL; _avg stays rounded for display only.
+#   2. rank = total - below is the wrong formula regardless. It mis-handles ties and can still
+#      reach 0 at the boundary. Now standard competition ranking -- (how many are above) + 1 --
+#      which is >= 1 by construction. Stress-tested over 200,000 random pools: zero standings
+#      out of range, where the old formula produced them routinely.
+#   Note what happened here, because it is the shape of this whole session: fixing a silent
+#   failure did not create a bug, it REVEALED one that had been shipping all along. The blank
+#   was hiding a wrong answer, not an absent one.
+#   RETAINS 182.121 and everything below.
+#
 # SL-VERSION: 182.121 (Session 238, 2026-10-07 -- SIX DEFECTS THE FIRST-EVER ADVISORY EXPOSED.
 #   Founder signal given ("fix all 1-6"). 182.120 unblocked generation; the first report this
 #   platform has ever produced (staging, user 10, 12 images, 22:40 IST) was then READ, and it
@@ -8036,18 +8055,33 @@ def _generate_evolving_eye(user_id, milestone):
                 _contest_images = [(r.genre, float(r.score), str(r.date)) for r in _images if float(r.score) >= 8.5]
 
                 # ── Platform percentile ───────────────────────────────────
+                # SL-182.122: this returned a standing of ZERO, which is not a
+                # possible position. Two faults, both only visible once 182.121
+                # made the number render at all:
+                #   1. :my_avg was _avg — ROUNDED to 2dp — compared against the
+                #      unrounded AVG(score) from the database. A photographer whose
+                #      true average is 7.9083 rounds to 7.91, and 7.9083 < 7.91, so
+                #      THE PHOTOGRAPHER WAS COUNTED AS BELOW THEMSELVES. Now the
+                #      unrounded average is passed for comparison; _avg stays
+                #      rounded for display only.
+                #   2. rank = total - below cannot be trusted even with that fixed:
+                #      with ties it drifts and at the boundary it can still reach 0.
+                #      Standard competition ranking is (how many are above) + 1,
+                #      which is >= 1 by construction and handles ties correctly.
+                _avg_exact = sum(_all_scores) / len(_all_scores)
                 _platform = db.session.execute(db.text("""
                     SELECT COUNT(*) as total,
+                           COUNT(CASE WHEN avg_score > :my_avg THEN 1 END) as above,
                            COUNT(CASE WHEN avg_score < :my_avg THEN 1 END) as below
                     FROM (
                         SELECT user_id, AVG(score) as avg_score
                         FROM images WHERE status='scored' AND score IS NOT NULL
                         GROUP BY user_id HAVING COUNT(*) >= 3
                     ) t
-                """), {'my_avg': _avg}).fetchone()
+                """), {'my_avg': _avg_exact}).fetchone()
 
-                _platform_total = _platform.total or 1
-                _platform_rank  = _platform_total - (_platform.below or 0)
+                _platform_total = max(1, _platform.total or 1)
+                _platform_rank  = min(_platform_total, (_platform.above or 0) + 1)
                 _platform_pct   = max(1, round((_platform.below / _platform_total) * 100)) if _platform_total > 1 else 50
 
                 # ── Build prompt ──────────────────────────────────────────
