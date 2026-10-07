@@ -1,3 +1,56 @@
+# SL-VERSION: 171.66 (Session 238, 2026-10-07 -- TWO DEFECTS FOUND BY READING ELEVEN CARDS SENT
+#   TO AN OUTSIDE PHOTOGRAPHER. Founder signal given. Carmen Drake -- street and wildlife
+#   photographer, club president, London -- received eleven Sonnet cards on 7 Oct. First external
+#   reader qualified to audit this engine. Reading them found these two.
+#
+#   1. THE LONGITUDINAL LINE -- AND THE ADDENDUM'S DIAGNOSIS WAS WRONG.
+#      Addendum S1 recorded that the per-genre average was probably invented by the model and said
+#      "expect the second". It is not invented. Every figure comes from one GROUP BY over the
+#      photographer's scored images, computed in app.py and passed in. Checked, not assumed.
+#      What was actually wrong is subtler and is a prompt-design fault: the instruction handed the
+#      model a worked EXAMPLE SENTENCE containing TWO averages -- the best genre's and the current
+#      genre's -- and asked it to paraphrase. Paraphrasing a sentence that carries two numbers is
+#      how "your Street work averages 8.15" and "your Street work averages 8.74" both reached the
+#      same reader on the same day from the same account. A TRANSCRIPTION error, not a
+#      hallucination. Fixed by removing the example entirely: the figures are now stated once as
+#      facts, with an explicit rule to copy them exactly, never recompute, never carry a figure
+#      from one genre onto another, and to omit the number entirely if unsure which genre it
+#      belongs to.
+#      SECOND, SEPARATE DEFECT IN THE SAME BLOCK: the cross-genre instruction was only emitted
+#      when the current genre was NOT the photographer's strongest. Shoot in your best genre and
+#      the engine said NOTHING about your record -- which is exactly why the eleventh card had no
+#      longitudinal line at all. Not model whim: a missing branch. That branch now exists and says
+#      the more interesting thing -- you are in your strongest genre, here is what still separates
+#      this frame from your own best work in it.
+#      STILL OPEN, needs a product decision, not a code change: the line says "your work" but
+#      measures THE ACCOUNT. Carmen's 33 images went in through the founder's login, so "your
+#      Street work across 24 images" blended two photographers. Any shared or agency account hits
+#      this. Flagged in Addendum S1; not fixable here.
+#
+#   2. THE GATES COVERED THE SUBJECT, NEVER THE PHOTOGRAPHER.
+#      The Baptism card: "You were in the water with them" ... "you entered the water" ... "that is
+#      the access most documentary photographers never earn." The founder's correction: SHE WAS
+#      NEVER IN THE WATER. Every gate built in 171.53/171.54 checks claims about what is IN THE
+#      FRAME -- species, gaze, counts, blur. The photographer is not in the frame, so nothing
+#      covered her. The vision pass cannot verify it either, which is why the new ban is appended
+#      to BOTH paths: a successful vision call tells you nothing about where the photographer
+#      stood. New _PHOTOGRAPHER_ACTION_BAN draws the line at evidence: VIEWPOINT is geometry and
+#      is inferable (an overhead frame implies an overhead position); access, permission, trust,
+#      physical presence, duration and intent are not, however strongly the image suggests them.
+#      WHY THIS ONE MATTERED MOST: how_it_works.html 17.0 now PUBLICLY promises the engine "will
+#      not say someone is looking at the camera unless it can point to the eyes" -- while a card in
+#      the same batch told a photographer where she had been standing. The refusal copy and the
+#      card contradicted each other in front of the first outside reader.
+#
+#   NOT FIXED, and not to be described as fixed: DUPLICATION. The 7 Oct live log gave the first
+#   genuine before/after ever recorded -- 11 raw pairs, 5 surviving the corrective pass, with "the
+#   two girls in the foreground" appearing across FIVE fields. The 171.54 FUNCTION ASSIGNMENT
+#   architecture is not holding. The corrector is working; the thing it is correcting for is not
+#   fixed. Earlier counts of 6/7/10 are NOT comparable -- they were uncorrected passes measured
+#   under a broken ceiling -- so 11 is the first real baseline, not a regression. Needs a session,
+#   not a patch.
+#   UNPROVEN until a Railway log and a rendered card show otherwise. RETAINS 171.65.)
+#
 # SL-VERSION: 171.65 (Session 238, 2026-10-07 -- THE CORRECTOR CAP NOW TRIAGES INSTEAD OF
 # REFUSING. Founder signal given after it sat open for a day.
 #
@@ -6267,6 +6320,63 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
         return {}
 
 
+# SL-171.66 — THE GATES COVERED THE SUBJECT, NOT THE PHOTOGRAPHER.
+# Found by reading eleven cards sent to Carmen Drake on 7 Oct 2026 — the first
+# outside reader qualified to audit them. The Baptism card said "You were in the
+# water with them", "you entered the water", "that is the access most documentary
+# photographers never earn". The founder's correction: SHE WAS NEVER IN THE WATER.
+# She was near it.
+#
+# Every gate built in 171.53/171.54 checks claims about what is IN THE FRAME --
+# species, gaze, subject counts, blur. None of them covers a claim about the
+# person holding the camera, because the frame does not contain them. The
+# vision pass cannot verify it either, which is why this ban applies on BOTH
+# paths -- grounded and ungrounded alike. A successful vision call tells you
+# nothing about where the photographer was standing.
+#
+# This is not a cosmetic accuracy issue. how_it_works.html 17.0 now publicly
+# promises the engine "will not say someone is looking at the camera unless it
+# can point to the eyes" -- and a card in the same batch told a photographer
+# where she had been standing. The refusal copy and the card contradicted each
+# other in front of the first outside reader.
+#
+# THE LINE DRAWN: viewpoint is geometry and is legitimately inferable -- an
+# overhead frame does imply an overhead position. Access, permission, trust,
+# physical presence, effort and intent are NOT inferable from pixels, however
+# strongly the image suggests them. Describe the frame; do not narrate the
+# photographer's afternoon.
+_PHOTOGRAPHER_ACTION_BAN = """
+
+CLAIMS ABOUT THE PHOTOGRAPHER — HARD CONSTRAINT (applies to EVERY field):
+A photograph shows you the frame. It does not show you the photographer. You may
+describe what is visible and what the VIEWPOINT geometrically implies. You may NOT
+state what the photographer physically did, earned, felt or intended.
+
+BANNED unless the frame itself carries the evidence:
+- Physical presence or movement: "you were in the water", "you entered", "you
+  climbed", "you waded in", "you got close", "you followed them", "you stood among".
+- Access, permission or trust: "you were trusted", "they let you in", "you earned
+  this access", "the access most photographers never get", "they accepted you".
+- Duration, effort or patience: "you waited hours", "you held your position",
+  "you came back day after day", "you were there before dawn" — unless time of
+  day is plainly visible, in which case say what is visible, not what it cost.
+- Intent or inner state: "you knew what you wanted", "you sensed it coming",
+  "you were looking for this", "you anticipated the moment".
+
+PERMITTED, because the frame carries it:
+- Viewpoint as geometry: "shot from above", "at eye level with the subject",
+  "low to the ground", "from across the street" — the angle is in the picture.
+- Choices legible in the frame: framing, exclusion, timing of the shutter, the
+  decision to keep or cut an element, depth of field, the moment selected.
+
+THE TEST, apply it to every sentence about the photographer: could I point to
+the pixels that prove this? "Shot from water level" — yes, the horizon line
+proves it. "You were in the water" — no, a long lens from the bank produces the
+same frame. When in doubt, write about the photograph and not about the person.
+A reader who was NOT in the water and is told they were stops believing
+everything else on the card, and they are right to."""
+
+
 def build_scene_context(vision: dict, genre: str = "") -> str:
     """
     Converts the vision_analyse() result into a ground-truth block
@@ -6316,6 +6426,7 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
             "and the photographer's evident decisions. A shorter, fully defensible card is the\n"
             "required outcome here. A confident claim that turns out to be wrong about a real\n"
             "person or a real animal is the single worst failure this scorecard can produce."
+            + _PHOTOGRAPHER_ACTION_BAN
         )
 
     subjects = vision.get("subjects", [])
@@ -6475,6 +6586,7 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
             lines.append("  Environment) or Creative as a better fit — but frame it as an opportunity, not a mistake.")
             lines.append("  Do not say the genre cost them points or capped the score.")
 
+    lines.append(_PHOTOGRAPHER_ACTION_BAN)
     return "\n".join(lines)
 
 
@@ -7225,20 +7337,61 @@ def _build_portfolio_context(portfolio_summary: dict, image_number: int = 1) -> 
             _cross_genre_lines.append(
                 f"  {_xg['genre']}: average evaluation {_xg['avg']:.2f} across {_xg['count']} image(s){_marker}"
             )
+        # SL-171.66: two defects fixed here, both found by reading eleven real
+        # cards sent to an outside photographer on 7 Oct 2026.
+        #
+        # 1. THE FIGURES WERE NEVER INVENTED -- the Session 238 Addendum guessed
+        #    the model was making them up. It was not: every number above comes
+        #    from one GROUP BY over the photographer's scored images. What the
+        #    old instruction did was hand the model a worked EXAMPLE SENTENCE
+        #    carrying TWO averages (the best genre's and the current genre's) and
+        #    invite it to paraphrase. Paraphrasing a sentence with two numbers in
+        #    it is how "your Street work averages 8.15" and "your Street work
+        #    averages 8.74" both appeared on the same day from the same account.
+        #    A transcription error, not a hallucination -- and the cure is to stop
+        #    asking for a paraphrase. The numbers are stated once, as facts, with
+        #    an explicit instruction to copy them exactly and never recompute.
+        #
+        # 2. THE LINE VANISHED ENTIRELY when the photographer's current genre WAS
+        #    their strongest -- the old code emitted no instruction at all in that
+        #    case. That is why one of the eleven cards had no longitudinal line:
+        #    not model whim, a missing branch. A photographer shooting in their
+        #    best genre has the MOST interesting thing to be told, and was told
+        #    nothing. Both branches now produce a line.
+        _cross_genre_lines.append(
+            "USING THESE FIGURES (mandatory): the averages above are computed from "
+            "this photographer's actual record. If you state one, copy it EXACTLY as "
+            "written above, to two decimals, attached to the genre it belongs to. Do "
+            "not recalculate, round, average two of them together, or carry a figure "
+            "from one genre onto another. If you are not certain which genre a number "
+            "belongs to, do not use the number. "
+            "NEVER use the word 'score' — always 'evaluation'. "
+            "NEVER suggest switching genres as a solution."
+        )
         if _current_xg and _best['genre'] != _current_genre:
             _gap = round(_best['avg'] - _current_xg['avg'], 2)
             _cross_genre_lines.append(
-                f"CROSS-GENRE INSTRUCTION: This photographer's strongest genre is {_best['genre']} "
-                f"(average {_best['avg']:.2f}). They are currently submitting {_current_genre} "
-                f"(average {_current_xg['avg']:.2f}) — a gap of {_gap:.2f}. "
-                f"If this image shows the same pattern that is holding {_current_genre} below their "
-                f"{_best['genre']} level, name it specifically. Do not soften it. "
-                f"Example: 'Your {_best['genre']} work evaluates at {_best['avg']:.2f} on average. "
-                f"Your {_current_genre} work is at {_current_xg['avg']:.2f}. The gap is not the engine — "
-                f"it is [the specific compositional/timing/emotional decision that differs between the two]. "
-                f"Fix that one thing and your {_current_genre} evaluations will follow.' "
-                f"NEVER use the word 'score' — always 'evaluation'. "
-                f"NEVER suggest switching genres as a solution."
+                f"CROSS-GENRE INSTRUCTION: strongest genre is {_best['genre']} at "
+                f"{_best['avg']:.2f}; they are currently submitting {_current_genre} at "
+                f"{_current_xg['avg']:.2f} — a gap of {_gap:.2f}. If this image shows the "
+                f"same pattern holding {_current_genre} below their {_best['genre']} level, "
+                f"name it specifically and do not soften it. Name the compositional, timing "
+                f"or emotional decision that differs between the two — the gap is never "
+                f"'the engine'."
+            )
+        elif _current_xg:
+            _others = [g for g in _cross_genre if g['genre'] != _current_genre]
+            _next_best = max(_others, key=lambda g: g['avg']) if _others else None
+            _lead = round(_current_xg['avg'] - _next_best['avg'], 2) if _next_best else None
+            _cross_genre_lines.append(
+                f"CROSS-GENRE INSTRUCTION: this photographer is submitting in their STRONGEST "
+                f"genre — {_current_genre} at {_current_xg['avg']:.2f}"
+                + (f", ahead of {_next_best['genre']} at {_next_best['avg']:.2f} by {_lead:.2f}. "
+                   if _next_best else ". ")
+                + "Say so — it is the most useful thing they can hear and they are not being "
+                  "told it anywhere else. Then do the harder half: name what still separates "
+                  "this frame from their own best work in this genre, not from some abstract "
+                  "standard. Do NOT tell them to shoot their weaker genres instead."
             )
         _cross_genre_lines.append("")
 
