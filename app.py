@@ -1,3 +1,67 @@
+# SL-VERSION: 182.108 (Session 238, 2026-10-07 -- HAIKU FREE TIER: GROUNDING GATES, OUTPUT BANS,
+# REAL COST MEASUREMENT, AND THE SHERPA TRIM. Founder signal given. Four changes, one file.
+#
+# (1) CHILD EVIDENCE GATE -- the actual root cause, found from the founder's 19:44 log:
+#       [haiku_vision] ... human_count=3+ child_present=True confidence=high
+#     on a photograph of FOUR ADULTS. Every gate downstream then behaved correctly: 182.102 lifted
+#     the child ban because a child was "confirmed", and the scoring call wrote an honest card about
+#     a child that does not exist -- seven mentions, the Decisive Moment score, and the entire "what
+#     to do next" built on waiting for its eyes to lift. The hallucination was never in the scoring
+#     call. It was in the pre-call, and 182.107's nesting fix (kept, still correct) would not have
+#     stopped it. The system prompt ALREADY said "only call someone a child if their face and body
+#     proportions are themselves unambiguously those of a minor"; Haiku read that and answered yes
+#     anyway -- the same finding this project reached on the Sonnet side four times in one night: a
+#     prose rule does not hold, a code gate does. FIX, modelled exactly on the Sonnet species gate
+#     (proven live -- it threw out "Little Egret" three times in one night on evidence that read
+#     completely convincing): the pre-call must now return child_evidence naming the specific
+#     visible features, and _try_vision_analyse() downgrades child_present to False when that
+#     evidence is absent, under five words, hedged, or framing-based (smaller / seated / crouching /
+#     lower / shorter / distant / behind / position / likely / appears to be). FAILS CLOSED, including
+#     if the gate itself raises. Logged as "[haiku_vision] CHILD GATE: downgrading ... Evidence was:"
+#     exactly like the species gate. Verified before shipping against seven evidence strings taken
+#     from the real failure: the bare assertion, the "smaller figure seated beside" excuse, the
+#     height-and-position claim and the hedged guess are all rejected; genuine anatomical evidence is
+#     accepted. Seven of seven.
+#
+# (2) SPECIES NAMING GATE -- the same 6 Oct Sassoon Dock card called the birds "the seagull" five
+#     times. They are egrets; the Sonnet vision pass on this same dock says so. Haiku had no species
+#     gate at all. The only prior rule silenced species_note on LOW confidence, which is the wrong
+#     field (a footer, while the damage was in the narrative) at the wrong threshold (the bad call
+#     came back at HIGH confidence). Now: a specific species name is banned across the WHOLE card
+#     unless the creature is the actual subject (vision group A-G) AND confidence is high. A bird
+#     incidental to a street scene is "the bird". Describing behaviour is always still allowed and
+#     is the better observation anyway.
+#
+# (3) GAZE BAN -- the Sonnet engine has a dedicated gaze gate with stated evidence, built after the
+#     founder found a card claiming eye contact from a subject plainly looking at her own hands --
+#     his highest-severity item. The Haiku pre-call asks no gaze question at all, so nothing
+#     constrained the scoring call. Nothing verified means nothing claimed: no eye contact, no
+#     holding the viewer's gaze, no scores or advice built on where the eyes point.
+#
+# (4) TOKEN USAGE NOW MEASURED, AND THE SHERPA CALL TRIMMED. New _log_haiku_usage() mirrors
+#     auto_score.py's _log_api_usage (which has existed since 171.44) and is wired into all THREE
+#     Haiku calls -- vision, main scoring, and the sherpa synthesis. Until now the Haiku path logged
+#     no usage at all, which is exactly why cost-per-free-image has had five conflicting values
+#     across the project documents and has blocked three pricing decisions; one free evaluation now
+#     prints the real numbers. The sherpa synthesis was firing on EVERY scored image -- about
+#     Rs 0.85 of a Rs 3.83 image, 22% of the free tier's whole cost, running NINE times across a
+#     10-image trial and re-reading the same portfolio with one more row each time. It now runs at
+#     2 and 4 images then every third (4 runs, not 9), saving ~Rs 3.88 per free signup -- Rs 3,880
+#     per thousand -- with NO change to any scorecard, since it feeds the dashboard advice only.
+#     SL_SHERPA_EVERY=1 restores the old behaviour without a deploy, same switch pattern as
+#     SL_DISABLE_AI_JOBS and SL_AQ_CAP.
+#
+# ESTIMATED EFFECT: Rs 3.75 -> Rs 3.36 per image, Rs 37.45 -> Rs 33.57 per 10-image free user. Both
+# figures are still ARITHMETIC, not measurement -- which is the point of (4). The next free
+# evaluation replaces them with the truth.
+# DELIBERATELY NOT DONE: max_tokens on the scoring call stays at 2800. Lowering it is the next
+# largest cost lever but it directly shortens what the photographer reads, so it needs the founder's
+# eyes on a before/after card, not a quiet trim. Prompt caching also not done -- the static prefix is
+# only 4,108 tokens of 15,549 (first placeholder at token 4,108) and clears Haiku's 4,096 minimum by
+# twelve tokens, so it needs the prompt restructured first and that is its own build.
+# NOT YET CONFIRMED LIVE -- needs the founder's push, a fresh /try evaluation on the four-adult
+# image, and the Railway log showing: [haiku][usage] lines on all three calls, a CHILD GATE line,
+# and a card with no child, no species name and no gaze claim. RETAINS 182.107.)
 # SL-VERSION: 182.107 (Session 238, 2026-10-07 -- HAIKU FREE-TIER GROUNDING: ONE REAL CODE BUG
 # FIXED, THREE UNGATED FAILURE CLASSES DOCUMENTED. Founder brought two live 6 Oct Haiku /try
 # scorecards: "Mumbai fresh veggies" (the_livinglens, 7.85) and "Sasoon Dock Mumbai" (krish, 7.31).
@@ -42752,6 +42816,36 @@ def _generate_haiku_sherpa(user_id):
         if not _rows or len(_rows) < 2:
             return
 
+        # -- SL-182.108 -- SHERPA FREQUENCY GATE ------------------------------
+        # This synthesis fired on EVERY scored free image. Measured against the
+        # prompt sizes it is roughly Rs 0.85 of a Rs 3.83 image -- 22% of the
+        # free tier's entire cost -- and on a 10-image free trial it ran NINE
+        # times, each one re-reading the same portfolio with one more row.
+        #
+        # It now runs only where the answer can actually have changed: at 2 and
+        # 4 images, then every third. Across a full 10-image trial that is 4
+        # runs instead of 9, saving about Rs 4.25 per free user with no change
+        # to what any card says -- this feeds the dashboard advice, not the
+        # scorecard. A side benefit: advice that is rewritten on every single
+        # upload reads as unstable; advice that holds for a few images and then
+        # moves reads as a considered view.
+        #
+        # SL_SHERPA_EVERY=1 restores firing on every image; any other integer N
+        # sets the interval. Same env-switch pattern as SL_DISABLE_AI_JOBS and
+        # SL_AQ_CAP so this can be changed without a deploy.
+        try:
+            _every = int(os.getenv('SL_SHERPA_EVERY', '3') or 3)
+        except (TypeError, ValueError):
+            _every = 3
+        _n_imgs = len(_rows)
+        if _every > 1 and _n_imgs > 2 and (_n_imgs % _every) != 1:
+            app.logger.info(
+                '[haiku_sherpa] SKIPPED for user %s at %d images '
+                '(runs at 2, 4, then every %d). Set SL_SHERPA_EVERY=1 to run every time.'
+                % (user_id, _n_imgs, _every)
+            )
+            return
+
         # Build image summaries for the prompt
         # ── EXIF pattern analysis across all images ──────────────────────
         _exif_patterns = {}
@@ -43074,6 +43168,7 @@ Return ONLY valid JSON, no markdown:
 
         with _sur.urlopen(_req, timeout=45) as _resp:
             _raw = _sj.loads(_resp.read().decode())
+        _log_haiku_usage('sherpa', _raw, user_id=user_id)  # SL-182.108
 
         _text = ''.join(
             b.get('text', '') for b in (_raw.get('content') or [])
@@ -43481,6 +43576,9 @@ _HAIKU_VISION_SYSTEM = (
     "due to distance or angle, or positioned lower than another person — those are framing "
     "facts, not age facts. Only call someone a child if their face and body proportions are "
     "themselves unambiguously those of a minor. "
+    "When you assert a child is present you MUST name the specific visible features that "
+    "prove it. An assertion without stated visible evidence will be rejected and treated as "
+    "no child. Saying nothing is always safer than saying something you cannot point to. "
     "Respond ONLY with valid JSON. No preamble, no markdown fences. "
     "Never use a literal double-quote inside a string value — use single quotes instead."
 )
@@ -43507,7 +43605,13 @@ _HAIKU_VISION_PROMPT = (
     "(a minor — by face shape, body proportions, or height relative to any adults present), "
     "not just an adult who happens to be smaller, seated, crouching, or farther from the "
     "camera? A seated or distant adult is NOT a child. If you are not certain, answer no.\n"
-    "   Is a child clearly present? (yes/no)\n\n"
+    "   Is a child clearly present? (yes/no)\n"
+    "10. CHILD EVIDENCE — if and only if you answered yes to 9, state the SPECIFIC visible "
+    "features that made you certain: the facial proportions, the head-to-body ratio, the limb "
+    "proportions you can actually see. Name what is visible in THIS photograph. Position, size "
+    "in frame, posture, distance from camera and being shorter than someone else are NOT "
+    "evidence of age and will be rejected. If you answered no, leave this empty.\n"
+    "   What specific features? (one sentence, or empty)\n\n"
     "Return this exact JSON:\n"
     "{\n"
     "  \"subject_type\": \"<common name of primary subject>\",\n"
@@ -43518,9 +43622,42 @@ _HAIKU_VISION_PROMPT = (
     "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
     "  \"confidence\": \"<high|medium|low>\",\n"
     "  \"human_count\": \"<0|1|2|3+>\",\n"
-    "  \"child_present\": <true|false>\n"
+    "  \"child_present\": <true|false>,\n"
+    "  \"child_evidence\": \"<specific visible features, or empty string>\"\n"
     "}"
 )
+
+
+def _log_haiku_usage(tag, parsed_json, user_id=None, image_id=None):
+    """
+    SL-182.108. Every cost figure for the free tier has been a CHARACTER-COUNT
+    ESTIMATE, because nothing on the Haiku path ever read the API's own usage
+    block -- while the Sonnet engine has logged it since 171.44. That is why the
+    cost per free image has had five conflicting values across the project
+    documents and has blocked three separate pricing decisions.
+
+    The API returns usage on every call whether anything asks for it or not, so
+    reading it costs nothing. With this, one free evaluation prints its real
+    token counts and the per-image cost becomes a measured number.
+
+    Never raises: a missing or malformed usage block must never break scoring,
+    it only means this one log line is skipped.
+    """
+    try:
+        _u = (parsed_json or {}).get('usage') or {}
+        _in  = _u.get('input_tokens')
+        _out = _u.get('output_tokens')
+        _cr  = _u.get('cache_read_input_tokens', 0) or 0
+        _cc  = _u.get('cache_creation_input_tokens', 0) or 0
+        _who = []
+        if user_id  is not None: _who.append('user=%s' % user_id)
+        if image_id is not None: _who.append('image=%s' % image_id)
+        app.logger.info(
+            '[haiku][usage][%s] input=%s output=%s cache_read=%s cache_creation=%s%s'
+            % (tag, _in, _out, _cr, _cc, (' ' + ' '.join(_who)) if _who else '')
+        )
+    except Exception as _lue:
+        app.logger.debug('[haiku][usage][%s] log skipped (non-fatal): %s' % (tag, _lue))
 
 
 def _try_vision_analyse(img_b64):
@@ -43567,6 +43704,7 @@ def _try_vision_analyse(img_b64):
     try:
         with _ur.urlopen(req, timeout=25) as resp:
             raw = _json.loads(resp.read().decode('utf-8'))
+        _log_haiku_usage('vision', raw)          # SL-182.108
         text = ''.join(
             b.get('text', '') for b in (raw.get('content') or [])
             if b.get('type') == 'text'
@@ -43577,6 +43715,67 @@ def _try_vision_analyse(img_b64):
             app.logger.warning('[haiku_vision] empty response — scoring continues without pre-call')
             return {}
         result = _json.loads(text)
+
+        # -- SL-182.108 -- CHILD EVIDENCE GATE -------------------------------
+        # The 6 Oct 19:44 log is why this exists:
+        #   [haiku_vision] ... human_count=3+ child_present=True confidence=high
+        # on a photograph of four adults. Everything downstream then behaved
+        # perfectly: the ban lifted because a child was "confirmed", and the
+        # scoring call wrote an honest card about a child that does not exist --
+        # seven mentions, the Decisive Moment score, and the entire "what to do
+        # next" built on waiting for its eyes to lift.
+        #
+        # The system prompt ALREADY said, in these words, "only call someone a
+        # child if their face and body proportions are themselves unambiguously
+        # those of a minor". Haiku read that and answered yes anyway. Same
+        # lesson this project has now learned on both engines: a prose rule does
+        # not hold, a code gate does.
+        #
+        # Modelled exactly on the Sonnet species gate (auto_score.py
+        # vision_analyse, "SPECIES GATE: downgrading"), which is proven in the
+        # live logs -- it threw out "Little Egret" three times in one night on
+        # evidence that read completely convincing. The model must now state
+        # WHAT IT SAW; this code decides whether that counts as evidence.
+        # FAILS CLOSED: missing, thin, hedged or framing-based evidence is no child.
+        try:
+            if result.get('child_present') is True:
+                _ev   = str(result.get('child_evidence', '') or '').strip()
+                _ev_l = _ev.lower()
+                # Being small, seated or far away is not being young. These are
+                # precisely the excuses the prompt already bans in prose.
+                _FRAMING = ('smaller', 'seated', 'sitting', 'crouch', 'squat',
+                            'lower', 'shorter', 'distan', 'background', 'behind',
+                            'position', 'angle', 'perspective', 'next to', 'beside',
+                            'compared', 'relative to', 'appears to be', 'seems',
+                            'likely', 'probably', 'presumably', 'suggests')
+                _reason = None
+                if not _ev:
+                    _reason = 'no evidence given'
+                elif len(_ev.split()) < 5:
+                    _reason = 'evidence too thin (%d words)' % len(_ev.split())
+                else:
+                    _hit = [_w for _w in _FRAMING if _w in _ev_l]
+                    if _hit:
+                        _reason = 'evidence is framing/position, not age: ' + ', '.join(_hit[:4])
+                if _reason:
+                    app.logger.info(
+                        '[haiku_vision] CHILD GATE: downgrading child_present True -> False '
+                        '(%s). Evidence was: %r' % (_reason, _ev[:200])
+                    )
+                    result['child_present']  = False
+                    result['child_evidence'] = ''
+                    result['_child_downgraded'] = True
+                else:
+                    app.logger.info(
+                        '[haiku_vision] CHILD GATE: child_present=True ACCEPTED on stated '
+                        'evidence: %r' % (_ev[:200],)
+                    )
+        except Exception as _cge:
+            app.logger.warning(
+                '[haiku_vision] CHILD GATE errored, defaulting to NO child (fail closed): %s' % _cge
+            )
+            result['child_present'] = False
+
         app.logger.info(
             f'[haiku_vision] group={result.get("subject_group","?")} '
             f'subject={result.get("subject_type","?")} '
@@ -45024,6 +45223,55 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'Confidence: LOW — subject may be silhouette, small, or distant. '
                 'Do not name species in species_note. Return blank species_note.'
             )
+
+        # -- SL-182.108 -- SPECIES NAMING GATE --------------------------------
+        # The 6 Oct Sassoon Dock free card called the birds "the seagull" five
+        # times. They are egrets. The Sonnet engine's own vision pass on this
+        # same dock returns white egrets and is conservative enough to downgrade
+        # "Little Egret" to Unknown on thin evidence -- three times in one night.
+        # Haiku had no species gate whatsoever, so a guessed name went straight
+        # onto the card, repeated, with no hedge.
+        #
+        # The old rule only silenced species_note on LOW confidence. That is the
+        # wrong field and the wrong threshold: species_note is a small footer,
+        # while the damage was done in the narrative, and the bad call came back
+        # at HIGH confidence. This bans the specific name from the whole card
+        # unless confidence is high AND the creature is actually the subject of
+        # the photograph. A bird incidental to a street scene is never named.
+        _subject_is_creature = _v_group in ('A', 'B', 'C', 'D', 'E', 'F', 'G')
+        if not _subject_is_creature:
+            _vs_lines.append(
+                'SPECIES NAMING: BANNED on this card. Any animal or bird here is incidental '
+                'to the photograph, not its subject, and has not been identified. Do NOT name '
+                'a species anywhere in the output — not "seagull", not "egret", not "pigeon", '
+                'not a guess softened with "likely" or "appears to be". Say "the bird", '
+                '"the birds", "the animal". Describing what it DOES (arriving, lifting off, '
+                'feeding) is always allowed and is the better observation anyway.'
+            )
+        elif _v_conf != 'high':
+            _vs_lines.append(
+                'SPECIES NAMING: BANNED on this card — the pre-call could not identify the '
+                'subject with high confidence. Refer to it by what is visible ("the wading '
+                'bird", "the raptor", "the cat") and never by a specific species name. An '
+                'honest general description costs you nothing; a wrong species name costs '
+                'the reader all trust in everything else on the card.'
+            )
+
+        # -- SL-182.108 -- GAZE / EYE-CONTACT BAN -----------------------------
+        # The Sonnet engine has a dedicated gaze gate with stated evidence
+        # (auto_score.py: "Gaze: away_from_camera | Evidence: ..."), built after
+        # the founder found a card claiming eye contact from a subject plainly
+        # looking at her own hands -- his highest-severity item. The Haiku
+        # pre-call asks no gaze question at all, so the scoring call has nothing
+        # to constrain it. Nothing verified means nothing claimed.
+        _vs_lines.append(
+            'GAZE: NOT VERIFIED on this card. Do NOT claim any subject is looking at the '
+            'camera, meeting the viewer\'s eye, holding the gaze, looking away, or looking '
+            'at any particular thing. Where a subject is looking has not been checked and '
+            'you cannot see it reliably. Describe the head or body direction only if it is '
+            'unmistakable, and never build an observation, a score, or advice on where the '
+            'eyes are pointed.'
+        )
         # Inject group-specific DOD anchors
         _dod_anchor = _build_dod_anchors(_v_group, _v_behaviour)
         if _dod_anchor:
@@ -45195,6 +45443,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     try:
         with _ur.urlopen(req, timeout=90) as resp:
             raw = _json.loads(resp.read().decode())
+        _log_haiku_usage('main_scoring', raw, user_id=user_id, image_id=image_id)  # SL-182.108
     except Exception as e:
         app.logger.error(f'[try_haiku] API call failed: {e}')
         return None
