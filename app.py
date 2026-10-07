@@ -1,3 +1,16 @@
+# SL-VERSION: 182.119 (Session 238, 2026-10-07 -- MIGRATION CAN NO LONGER HANG A DEPLOY.
+#   Founder signal given. A staging deploy sat at "Running pre-deploy command" for 36 minutes
+#   and never failed or recovered. Cause: 99 ALTER TABLE statements, each needing ACCESS
+#   EXCLUSIVE, run while the PREVIOUS deployment is still Online and serving -- one open
+#   transaction on users or images stops them, and with no lock_timeout anywhere in this file,
+#   stopped meant forever. Now: every connection the migrate process opens carries
+#   lock_timeout=15s and statement_timeout=120s, AND a migration that fails on a lock exits
+#   the process non-zero naming the statements it could not apply. That second half is the
+#   important one -- the migration loop prints exceptions and continues, so a timeout on its
+#   own would have converted an infinite hang into a deploy that SUCCEEDS with a missing
+#   column. Verified live 07 Oct: an unblocked migration finishes in 2s (10:31:28 -> 10:31:30).
+#   RETAINS everything below.
+#
 # SL-VERSION: 182.118 (Session 238, 2026-10-07 -- FIXED AT THE INPUT, NOT ONLY THE OUTPUT. The
 # founder asked for a recheck because we were going back and forth, and the recheck found the
 # reason: I had been fixing what the engine WROTE while still feeding it the thing that made it
@@ -1614,6 +1627,88 @@ def backfill_residency_months():
         )
 
 
+# ── SL-182.119 — MIGRATION LOCK SAFETY ──────────────────────────────────────
+# Session 238, 07 Oct 2026. A staging deploy sat at "Running pre-deploy
+# command" for 36 minutes and never failed. Nothing was wrong with the push:
+# this function issues 99 ALTER TABLE statements, every one of which needs
+# Postgres's ACCESS EXCLUSIVE lock, and the PREVIOUS deployment is still Online
+# and serving while the migration runs. One worker holding an open transaction
+# on users or images is enough to stop the ALTER dead -- and with no
+# lock_timeout, "stopped" means forever. Worse, a waiting ACCESS EXCLUSIVE
+# queues every later query on that table behind it, so the live app degrades
+# the longer it waits.
+#
+# The docstring below used to end "No locking needed." That was true of the
+# problem it was written for -- concurrent GUNICORN WORKERS racing each other,
+# fixed by moving migrations into a single pre-deploy process. It was never
+# true of the old deployment still serving traffic, and that false confidence
+# is why no timeout was ever added. The claim is corrected there.
+#
+# Two things change here, and the second matters more than the first:
+#   1. every connection this process opens gets lock_timeout and
+#      statement_timeout, so nothing can wait indefinitely;
+#   2. a migration that fails ON A LOCK now FAILS THE DEPLOY.
+# (2) is not optional. The migration loop catches every exception and merely
+# prints it, so adding a timeout on its own would have turned an infinite hang
+# into something far worse: a deploy that SUCCEEDS with a column missing.
+# Timing out is only an improvement if somebody is told.
+_SL_MIGRATION_LOCK_FAILURES = []
+
+_SL_LOCK_ERROR_MARKERS = (
+    'lock timeout', 'lock_timeout',
+    'statement timeout', 'statement_timeout',
+    'canceling statement due to',
+    'deadlock detected',
+)
+
+
+def _sl_is_lock_failure(err_text):
+    """True if this migration error is contention, not a schema problem."""
+    _t = (err_text or '').lower()
+    return any(_m in _t for _m in _SL_LOCK_ERROR_MARKERS)
+
+
+def _sl_install_migration_timeouts():
+    """
+    Put a ceiling on every connection this process opens.
+
+    Registered as a SQLAlchemy connect-event rather than a one-off SET,
+    because db.create_all() and seed_master_references() take their own
+    connections from the pool and would otherwise still be able to hang.
+    The process is short-lived and exits straight after migrating, so there
+    is nothing to unregister.
+
+    lock_timeout 15s   -- how long to wait for a lock before giving up. Short
+                          on purpose: if the table is busy, waiting longer
+                          will not help, it will only hide the problem.
+    statement_timeout 120s -- a backstop for a statement that acquires its
+                          lock and then runs long (a CREATE INDEX on a large
+                          table). Generous enough not to fire in normal use.
+    """
+    try:
+        from sqlalchemy import event as _sa_event
+    except Exception as _imp:
+        print(f'[migrate_timeouts] sqlalchemy event unavailable, skipping: {_imp}')
+        return
+
+    def _set_timeouts(_dbapi_conn, _record):
+        try:
+            _cur = _dbapi_conn.cursor()
+            _cur.execute("SET lock_timeout = '15s'")
+            _cur.execute("SET statement_timeout = '120s'")
+            _cur.close()
+        except Exception as _se:
+            # Never block a deploy because the ceiling could not be set --
+            # that would be the hang this code exists to prevent.
+            print(f'[migrate_timeouts] could not set timeouts on a connection: {_se}')
+
+    try:
+        _sa_event.listen(db.engine, 'connect', _set_timeouts)
+        print('[migrate_timeouts] lock_timeout=15s statement_timeout=120s armed')
+    except Exception as _le:
+        print(f'[migrate_timeouts] listener not registered: {_le}')
+
+
 def _run_startup_tasks():
     """
     All one-time startup tasks: schema migrations, admin account upsert,
@@ -1628,12 +1723,21 @@ def _run_startup_tasks():
 
     Now gated behind `if __name__ == '__main__':` below, so it ONLY runs
     when this file is invoked directly as a one-shot script -- Railway's
-    Pre-Deploy Command (`python app.py`) -- never when Gunicorn imports
+    Pre-Deploy Command (`python app.py migrate`) -- never when Gunicorn imports
     `app:app` as a module to serve requests. Migrations are now fully
     decoupled from worker boot: they run exactly once, in a single
-    process, before any worker exists. No locking needed.
+    process, before any worker exists.
+
+    SL-182.119 CORRECTION: this docstring used to end "No locking needed."
+    It is not true and it cost 36 minutes of a live deploy on 07 Oct 2026.
+    Worker-vs-worker racing is solved, but this process still contends with
+    the PREVIOUS deployment, which stays Online and serving for the whole
+    migration. Locking is very much needed, so every connection opened here
+    is given lock_timeout and statement_timeout, and a migration that fails
+    on a lock fails the deploy instead of being printed and forgotten.
     """
     with app.app_context():
+        _sl_install_migration_timeouts()
         try:
             db.create_all()
             seed_master_references()  # Session 153 — load 101-entry master pool
@@ -2131,7 +2235,29 @@ def _run_startup_tasks():
                         with conn.begin():
                             conn.execute(db.text(sql))
                     except Exception as _e:
-                        if 'already exists' not in str(_e).lower():
+                        _etxt = str(_e)
+                        if _sl_is_lock_failure(_etxt):
+                            # SL-182.119 -- contention, not a schema fault. The
+                            # statement did NOT run, so the column or table is
+                            # missing. Recorded here and re-raised at the end of
+                            # the migrate entrypoint so the deploy fails rather
+                            # than going live with a half-applied schema.
+                            _SL_MIGRATION_LOCK_FAILURES.append(
+                                (sql.strip().split('\n')[0][:120], _etxt.strip()[:200]))
+                            print(f'[migration][LOCK] NOT APPLIED: {sql.strip().splitlines()[0][:120]}')
+                            # SL-182.119 -- STOP AT THE FIRST ONE. Tested against a
+                            # real Postgres 16 with a lock deliberately held: after a
+                            # lock_timeout fires, the NEXT statement on this same
+                            # connection hangs with no ceiling at all, so a loop that
+                            # carried on would still have produced the 36-minute
+                            # deploy it is meant to prevent -- only now after one
+                            # tidy error message. Breaking here bounds the whole
+                            # migration at a single lock_timeout.
+                            # Nothing is lost by stopping: the deploy is already
+                            # failing, and if one table is locked by the outgoing
+                            # deployment the rest very likely are too.
+                            break
+                        elif 'already exists' not in _etxt.lower():
                             print(f'[migration] {_e}')
 
             # Mentor seed deferred — MENTORS dict is defined later in this module.
@@ -48825,6 +48951,30 @@ if __name__ == '__main__':
         # afterward -- never falls through to app.run() below.
         _run_startup_tasks()
         _seed_mentors()
+        # SL-182.119 -- the last word on whether this deploy may proceed.
+        # _run_startup_tasks() wraps its work in a broad `except Exception`
+        # that prints "Migration warning" and carries on, so raising inside it
+        # would be swallowed. The check belongs here, after it returns, where
+        # a non-zero exit actually reaches Railway and marks the deploy FAILED.
+        if _SL_MIGRATION_LOCK_FAILURES:
+            print('')
+            print('=' * 72)
+            print('DEPLOY STOPPED -- %d migration(s) could not get a database lock.'
+                  % len(_SL_MIGRATION_LOCK_FAILURES))
+            print('')
+            print('The schema was NOT fully applied. Shipping this build would put')
+            print('the app live against a database missing these changes:')
+            for _sql, _err in _SL_MIGRATION_LOCK_FAILURES:
+                print('   - %s' % _sql)
+                print('     %s' % _err)
+            print('')
+            print('CAUSE: the previous deployment is still serving and something is')
+            print('holding a transaction open on one of these tables.')
+            print('FIX:   restart the service (drops the stale connection), then')
+            print('       redeploy. The migration itself takes about two seconds.')
+            print('=' * 72)
+            sys.exit(1)
+        print('[migrate] all migrations applied cleanly.')
     else:
         # Local development: `python app.py` (no args) -- unchanged behavior.
         app.run(debug=True)
