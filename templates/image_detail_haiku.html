@@ -1,4 +1,46 @@
-{# image_detail_haiku.html — SL-VERSION: 2.12 (Session 237, 2026-10-06 — founder-flagged: the
+{# image_detail_haiku.html — SL-VERSION: 3.0 (Session 238, 2026-10-07 — THE FREE SCORECARD, FOR
+   THE PEOPLE WHO ACTUALLY READ IT. Founder asked whether this page works for Gen Z and whether it
+   is aspirational. Four changes, all four requested.
+
+   (1) NINE PASTEL ZONES -> TWO SURFACES. The page ran through a blue-grey, a beige, a sage, a sand,
+       a lavender, a gold gradient, a pale blue and two more. The hero is near-black, so two screens
+       down the page fell off a cliff into a crayon box, and nine hues read as corporate wellness
+       rather than a darkroom. Section changes are now carried by the gold rule and the eyebrow —
+       which is what they were already for; colour was doing a job structure had already done. The
+       PALETTE IS UNCHANGED: the same gold and the same navy, used in fewer places.
+   (2) A REAL DARK THEME. There was none — zero prefers-color-scheme in the file. Most people under
+       thirty never leave dark mode, and a full-bleed cream page at 11pm is a wince. Every surface,
+       text and rule colour is now a token, redefined under dark. The hero is already #0C1018, so
+       dark mode makes this page MORE coherent, not less. The inline-styled blocks (CSI cards,
+       upgrade grid, EXIF footer, processing state) were moved onto the tokens too, or they would
+       have stayed light inside a dark page.
+   (3) A SHARE CARD — the biggest gap, and it was structural, not cosmetic. This page had NO share
+       affordance at all; the word did not appear in the file. The paid page has one. On a free tier
+       whose entire job is acquisition, the shareable artefact IS the growth loop: the card builds
+       to an emotional peak and then gave the photographer nowhere to put it. Now a square 1080
+       card is drawn IN THE BROWSER, on a canvas, from the photograph already on the page — photo
+       cover-cropped, score bottom-left where it already sits, tier, name, title, and a small
+       wordmark. Deliberately NOT a server route and NOT a public token: nothing is exposed unless
+       the photographer chooses to send it, and there is no new surface to secure. Web Share API
+       with the file on mobile, where sharing actually happens; falls back to a download elsewhere;
+       and if the photo host taints the canvas it says "Use Save PDF" rather than failing silently.
+   (4) COPY AND LABEL. "Affective Quotient" -> "Emotion (AQ)", matching the paid card, which was
+       renamed in Session 237 while this page was missed — the same dimension was being named two
+       different ways, and the free one in jargon. And a new aspiration block: the tier ladder
+       implied a climb with nobody on it, and "higher than 57% of images" is a statistic, not an
+       aspiration. It now names the next rung, what it costs ("You are 0.11 from Master. That is one
+       frame, not one year"), and links to where those frames are. The SaaS percentile strings live
+       in app.py and are rewritten there (182.115).
+
+   AUDIT: sl_audit caught three real things I had broken and they are fixed, not argued with —
+   Rule 41's CSI card colours (restored exactly, with dark mode as an override instead), the house
+   rule against Jinja inside a script tag (values now arrive as data attributes), and the [70yr]
+   line-height on the story badge. Rendered with real data and verified: dark mode, share canvas,
+   data attributes, no Jinja in script, the relabel, the aspiration line, both CSI colours, reduced
+   motion and focus rings — eleven of eleven.
+   PAIRS WITH app.py 182.115. NOT YET CONFIRMED LIVE — needs the founder's push, then a look on a
+   phone in dark mode and a real tap on Share. RETAINS 2.12.)
+   SL-VERSION: 2.12 (Session 237, 2026-10-06 — founder-flagged: the
    "Save PDF" link at the top was plain small text, much less visible than the matching gold
    button on the Sonnet member page. Restyled to a real gold button (#D6A428/#1A1814, same
    colours as image_detail.html's "Download full scorecard PDF" button) -- same link target
@@ -20,48 +62,86 @@
 {% endblock %}
 {% block extra_css %}
 <style>
-/* ═══ SCORECARD v2.3 ═══════════════════════════════════════════
-   Full image hero, score overlay, no italics, red delete,
-   seven distinct zone backgrounds. Session 212.
+/* ═══ SCORECARD v3.0 — SL-182.115 ═══════════════════════════════
+   The photograph is the subject. Everything else gets out of its way.
+
+   WAS: nine different pastel zone backgrounds (#F0F4F8 blue-grey, #EEEAE2
+   beige, #EDF5EE sage, #F8F4EE sand, #F0EBF5 lavender, a gold gradient,
+   #EBF3FB blue, #E8F0E9 green, #F5F3EF). The hero is near-black, so the
+   page fell off a cliff into a crayon box two screens down, and nine hues
+   read as corporate wellness rather than a darkroom.
+   NOW: two surfaces, alternating. Section changes are carried by the gold
+   rule and the eyebrow, which is what they were already for — colour was
+   doing a job that structure already did.
+   AND: a real dark theme. There was none. The hero is already #0C1018, so
+   dark mode makes this page MORE coherent, not less, and most people under
+   thirty never leave it.
+   Palette unchanged — the same gold and navy, used in fewer places.
 ══════════════════════════════════════════════════════════════ */
-main{padding:0!important;background:#E0DDD7}
+:root{
+  --sl-ink:       #0C1018;   /* the hero's own black — now the page's */
+  --sl-surface:   #FFFFFF;
+  --sl-surface-2: #F2EFE9;
+  --sl-card:      #FFFFFF;
+  --sl-text:      #1A2744;
+  --sl-text-dim:  rgba(26,39,68,0.62);
+  --sl-text-faint:rgba(26,39,68,0.42);
+  --sl-gold:      #C8A84B;
+  --sl-gold-deep: #8A6A00;
+  --sl-rule:      rgba(26,39,68,0.12);
+  --sl-shell:     #E0DDD7;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --sl-surface:   #10151D;
+    --sl-surface-2: #161C26;
+    --sl-card:      #1B2330;
+    --sl-text:      #ECE9E3;
+    --sl-text-dim:  rgba(236,233,227,0.64);
+    --sl-text-faint:rgba(236,233,227,0.44);
+    --sl-gold:      #D8B860;
+    --sl-gold-deep: #D8B860;
+    --sl-rule:      rgba(255,255,255,0.10);
+    --sl-shell:     #0A0E14;
+  }
+}
+main{padding:0!important;background:var(--sl-shell)}
 @media(max-width: 900px){main{padding:0!important}}
 @media(max-width: 768px){main{padding:0!important}}
 @media(max-width: 600px){main{padding:0!important}}
-.sl-page{background:#F5F3EF;max-width:1200px;margin:0 auto}
+.sl-page{background:var(--sl-surface);max-width:1200px;margin:0 auto}
 
 /* TOP BAR */
-.sl-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 48px;border-bottom:0.5px solid rgba(26,39,68,0.10);background:#F5F3EF}
-.sl-topbar-back{font-size:14px;color:rgba(26,39,68,0.45);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
-.sl-topbar-back:hover{color:#C8A84B}
-/* SL-VERSION 2.12 (Session 237, 2026-10-06 -- founder-flagged: this link was plain
-   small text, easy to miss, while the Sonnet member page (image_detail.html) has a
-   prominent gold button for the same action ("Download full scorecard PDF"). Same
-   treatment here now -- same gold/dark colours (#D6A428 / #1A1814), real button
-   padding and background, not just styled text. Link target (try_result_download)
-   and position are unchanged -- visual weight only. RETAINS 2.11. */
-.sl-topbar-save{font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;text-decoration:none;color:#1A1814;background:#D6A428;padding:9px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
-.sl-topbar-save:hover{background:#C8A84B;color:#1A1814}
+.sl-topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 48px;border-bottom:0.5px solid var(--sl-rule);background:var(--sl-surface)}
+.sl-topbar-back{font-size:14px;color:var(--sl-text-faint);letter-spacing:0.07em;text-transform:uppercase;text-decoration:none}
+.sl-topbar-back:hover{color:var(--sl-gold)}
+.sl-topbar-actions{display:flex;align-items:center;gap:10px}
+.sl-topbar-save{font-size:13px;font-weight:700;text-decoration:none;color:#1A1814;background:#D6A428;padding:9px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.sl-topbar-save:hover{background:var(--sl-gold);color:#1A1814}
+/* Share — SL-182.115. The page had no share affordance at all. On a free
+   tier whose job is acquisition, the shareable artefact is the growth loop. */
+.sl-share-btn{font-size:13px;font-weight:700;color:var(--sl-text);background:transparent;border:1.5px solid var(--sl-rule);padding:8px 15px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s}
+.sl-share-btn:hover{border-color:var(--sl-gold);color:var(--sl-gold)}
+.sl-share-btn[disabled]{opacity:.5;cursor:default}
 
-/* IMAGE HERO — full, uncropped, natural ratio, object-fit:contain on dark bg */
-.sl-img-hero{position:relative;background:#0C1018;width:100%;overflow:hidden}
-.sl-img-hero img{width:100%;display:block;object-fit:contain;max-height:70vh;background:#0C1018}
+/* IMAGE HERO */
+.sl-img-hero{position:relative;background:var(--sl-ink);width:100%;overflow:hidden}
+.sl-img-hero img{width:100%;display:block;object-fit:contain;max-height:70vh;background:var(--sl-ink)}
 .sl-img-expand{position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.60);border:1px solid rgba(255,255,255,0.28);border-radius:3px;padding:9px 15px;font-size:13px;color:rgba(255,255,255,0.85);letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:background .15s}
-.sl-img-expand:hover{background:rgba(0,0,0,0.85);color:#C8A84B}
+.sl-img-expand:hover{background:rgba(0,0,0,0.85);color:var(--sl-gold)}
 
-/* SCORE GRADIENT OVERLAY — bottom of image */
+/* SCORE OVERLAY */
 .sl-score-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(8,12,20,0.92) 0%,rgba(8,12,20,0.55) 55%,transparent 100%);padding:44px 36px 22px}
 .sl-score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
 .sl-score-num{font-size:60px;font-weight:700;color:#fff;line-height:1;letter-spacing:-0.04em}
 .sl-score-denom{font-size:22px;color:rgba(255,255,255,0.48);font-weight:400}
 .sl-photo-name{font-size:20px;font-weight:600;color:#fff;margin-bottom:5px;line-height:1.5}
 .sl-tier-row{display:flex;align-items:center;gap:8px}
-.sl-tier-badge{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8A84B}
+.sl-tier-badge{font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sl-gold)}
 .sl-tier-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.35)}
 .sl-genre-text{font-size:13px;color:rgba(255,255,255,0.60);letter-spacing:0.5px;text-transform:uppercase}
 
-/* PHOTO META BAR — below image (title, asset name, small context) */
-.sl-photo-meta{width:100%;padding:11px 36px;background:#0C1018;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sl-photo-meta{width:100%;padding:11px 36px;background:var(--sl-ink);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 
 /* LIGHTBOX */
 .sl-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.93);align-items:center;justify-content:center;cursor:zoom-out}
@@ -70,127 +150,138 @@ main{padding:0!important;background:#E0DDD7}
 .sl-lightbox-close{position:absolute;top:20px;right:24px;font-size:32px;color:rgba(255,255,255,0.65);cursor:pointer;line-height:1}
 .sl-lightbox-close:hover{color:#fff}
 
-/* TIER STRIP — journey */
-.sl-tier-strip{display:flex;align-items:center;flex-wrap:wrap;padding:10px 36px;background:#F0EDE6;border-bottom:0.5px solid rgba(26,39,68,0.12)}
-.sl-t{font-size:13px;letter-spacing:0.04em;text-transform:uppercase;padding:5px 11px 5px 0;white-space:nowrap;color:rgba(26,39,68,0.40)}
-.sl-t.done{color:rgba(26,39,68,0.52)}
-.sl-t.active{color:#1A2744;font-weight:700;border-bottom:2.5px solid #C8A84B;margin-bottom:-1px}
+/* TIER STRIP */
+.sl-tier-strip{display:flex;align-items:center;flex-wrap:wrap;padding:10px 36px;background:var(--sl-surface-2);border-bottom:0.5px solid var(--sl-rule)}
+.sl-t{font-size:13px;letter-spacing:0.04em;text-transform:uppercase;padding:5px 11px 5px 0;white-space:nowrap;color:var(--sl-text-faint)}
+.sl-t.done{color:var(--sl-text-dim)}
+.sl-t.active{color:var(--sl-text);font-weight:700;border-bottom:2.5px solid var(--sl-gold);margin-bottom:-1px}
 
-/* SCROLL 1 — VERDICT: white */
-.sl-verdict{padding:36px 36px 32px;background:#FFFFFF;max-width:860px;margin:0 auto;width:100%;box-sizing:border-box}
-.sl-percentile{font-size:16px;color:rgba(26,39,68,0.52);margin-bottom:18px;line-height:1.65;font-weight:400}
-.sl-gold-rule{width:24px;height:2px;background:#C8A84B;margin-bottom:22px}
+/* VERDICT */
+.sl-verdict{padding:36px 36px 32px;background:var(--sl-surface);max-width:860px;margin:0 auto;width:100%;box-sizing:border-box}
+.sl-percentile{font-size:16px;color:var(--sl-text-dim);margin-bottom:18px;line-height:1.65;font-weight:400}
+.sl-gold-rule{width:24px;height:2px;background:var(--sl-gold);margin-bottom:22px}
+.sl-takeaway{font-size:21px;font-weight:600;line-height:1.75;color:var(--sl-text);padding:22px 28px;border-left:4px solid var(--sl-gold);background:var(--sl-card);box-shadow:inset 0 0 0 1px rgba(200,168,75,0.18);border-radius:0 4px 4px 0;margin-bottom:20px}
+.sl-what-next{padding:22px 28px;background:var(--sl-surface-2);border-left:4px solid var(--sl-gold);border-radius:0 4px 4px 0}
+.sl-what-next-label{font-size:13px;font-weight:700;letter-spacing:0.20em;text-transform:uppercase;color:var(--sl-gold-deep);margin-bottom:12px}
+.sl-what-next-body{font-size:18px;line-height:1.85;color:var(--sl-text);font-weight:400}
 
-/* Takeaway — NO italic, strong weight */
-.sl-takeaway{font-size:21px;font-weight:600;line-height:1.75;color:#1A2744;padding:22px 28px;border-left:4px solid #C8A84B;background:#FEFEFE;box-shadow:inset 0 0 0 1px rgba(200,168,75,0.18);border-radius:0 4px 4px 0;margin-bottom:20px}
-
-/* What to explore — amber */
-.sl-what-next{padding:22px 28px;background:#FBF5E8;border-left:4px solid #C8A84B;border-radius:0 4px 4px 0}
-.sl-what-next-label{font-size:13px;font-weight:700;letter-spacing:0.20em;text-transform:uppercase;color:#8A6A00;margin-bottom:12px}
-.sl-what-next-body{font-size:18px;line-height:1.85;color:#1A2744;font-weight:400}
-
-/* Scroll hint */
-.sl-scroll-hint{text-align:center;padding:14px;font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.10em;text-transform:uppercase;border-top:0.5px solid rgba(26,39,68,0.08);background:#FAFAF8}
+.sl-scroll-hint{text-align:center;padding:14px;font-size:13px;color:var(--sl-text-faint);letter-spacing:0.10em;text-transform:uppercase;border-top:0.5px solid var(--sl-rule);background:var(--sl-surface)}
 @keyframes sl-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 .sl-bounce{display:inline-block;animation:sl-bounce 2s infinite}
+@media (prefers-reduced-motion: reduce){.sl-bounce{animation:none}}
 
-/* ══ SCROLL 2 — EVIDENCE ══ */
-.sl-zone-dims{background:#F0F4F8;padding:48px 0 40px}
-.sl-zone-narr{background:#EEEAE2;padding:48px 0 40px}
-.sl-zone-master{background:#EDF5EE;padding:44px 0 44px}
+/* ══ ZONES — two surfaces, alternating. Was nine hues. ══ */
+.sl-zone-dims,.sl-zone-master,.sl-zone-edit,.sl-zone-award{background:var(--sl-surface-2);padding:48px 0 40px}
+.sl-zone-narr,.sl-zone-tech,.sl-zone-imagine,.sl-zone-conclusion,.sl-zone-species{background:var(--sl-surface);padding:48px 0 40px}
+.sl-zone-award{padding:36px 0;text-align:center}
+.sl-zone-conclusion{padding:48px 36px 52px;border-top:1px solid var(--sl-rule);border-bottom:1px solid var(--sl-rule);text-align:center}
 .sl-zone-inner{max-width:860px;margin:0 auto;padding:0 36px}
 
-/* Eyebrows — three levels */
-.sl-eyebrow-gold{font-size:13px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#C8A84B;margin-bottom:28px}
-.sl-eyebrow-mid{font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(26,39,68,0.52);margin-bottom:20px}
-.sl-eyebrow-dim{font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(26,39,68,0.40);margin-bottom:16px}
+/* Eyebrows */
+.sl-eyebrow-gold{font-size:13px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--sl-gold);margin-bottom:28px}
+.sl-eyebrow-mid{font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--sl-text-dim);margin-bottom:20px}
+.sl-eyebrow-dim{font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--sl-text-faint);margin-bottom:16px}
 
-/* Dim rows: score LEFT, text RIGHT — single read direction */
-.sl-dim-row{display:grid;grid-template-columns:72px 1fr;gap:0 22px;padding:20px 0;border-bottom:0.5px solid rgba(26,39,68,0.08);align-items:start}
+/* Dimension rows */
+.sl-dim-row{display:grid;grid-template-columns:72px 1fr;gap:0 22px;padding:20px 0;border-bottom:0.5px solid var(--sl-rule);align-items:start}
 .sl-dim-row:last-of-type{border-bottom:none}
 .sl-dim-score-col{display:flex;flex-direction:column;align-items:center;padding-top:3px}
-.sl-dim-val{font-size:30px;color:#1A2744;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.sl-dim-val{font-size:30px;color:var(--sl-text);font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
 .sl-dim-tag{font-size:13px;letter-spacing:0.07em;text-transform:uppercase;margin-top:5px;text-align:center}
-.sl-dim-tag.strongest{color:#C8A84B;font-weight:700}
-.sl-dim-tag.gap{color:rgba(26,39,68,0.58)}
-.sl-dim-tag.ok{color:rgba(26,39,68,0.42)}
+.sl-dim-tag.strongest{color:var(--sl-gold);font-weight:700}
+.sl-dim-tag.gap{color:var(--sl-text-dim)}
+.sl-dim-tag.ok{color:var(--sl-text-faint)}
 .sl-dim-text-col{display:flex;flex-direction:column;gap:4px}
-.sl-dim-code{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(26,39,68,0.42);font-weight:500}
-.sl-dim-plain{font-size:18px;color:#1A2744;line-height:1.5;font-weight:500}
-.sl-dim-inline{font-size:16px;color:rgba(26,39,68,0.62);line-height:1.75;padding-top:7px;font-weight:400}
-.sl-band{text-align:center;font-size:14px;color:rgba(26,39,68,0.40);margin:20px 0 8px;line-height:1.9}
-.sl-band-sep{margin:0 8px;color:#C8A84B;opacity:0.45}
-.sl-dim-note{font-size:14px;color:rgba(26,39,68,0.40);line-height:1.7;text-align:center;margin-top:10px}
+.sl-dim-code{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--sl-text-faint);font-weight:500}
+.sl-dim-plain{font-size:18px;color:var(--sl-text);line-height:1.5;font-weight:500}
+.sl-dim-inline{font-size:16px;color:var(--sl-text-dim);line-height:1.75;padding-top:7px;font-weight:400}
+.sl-band{text-align:center;font-size:14px;color:var(--sl-text-faint);margin:20px 0 8px;line-height:1.9}
+.sl-band-sep{margin:0 8px;color:var(--sl-gold);opacity:0.45}
+.sl-dim-note{font-size:14px;color:var(--sl-text-faint);line-height:1.7;text-align:center;margin-top:10px}
 
 /* Narrative */
-.sl-narr-body{font-size:21px;line-height:1.85;color:#1A2744;margin-bottom:28px;font-weight:400}
-
-/* Strength cards — differentiated */
-.sl-strength-card{background:#FFFFFF;border-radius:4px;padding:22px 24px;margin-bottom:14px;border-left:3px solid rgba(200,168,75,0.42)}
-.sl-strength-card.leap{border-left:3px solid rgba(26,39,68,0.40)}
-.sl-strength-label{font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#8A6A00;margin-bottom:10px}
-.sl-strength-label.navy{color:rgba(26,39,68,0.48)}
-.sl-strength-body{font-size:18px;line-height:1.80;color:#1A2744;font-weight:400}
+.sl-narr-body{font-size:21px;line-height:1.85;color:var(--sl-text);margin-bottom:28px;font-weight:400}
+.sl-strength-card{background:var(--sl-card);border-radius:4px;padding:22px 24px;margin-bottom:14px;border-left:3px solid rgba(200,168,75,0.42)}
+.sl-strength-card.leap{border-left:3px solid var(--sl-rule)}
+.sl-strength-label{font-size:13px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--sl-gold-deep);margin-bottom:10px}
+.sl-strength-label.navy{color:var(--sl-text-dim)}
+.sl-strength-body{font-size:18px;line-height:1.80;color:var(--sl-text);font-weight:400}
 
 /* Master reference */
-.sl-ref-name{font-size:32px;font-weight:700;color:#1A2744;margin-bottom:10px}
-.sl-ref-desc{font-size:18px;color:rgba(26,39,68,0.68);line-height:1.80;margin-bottom:16px;font-weight:400}
-.sl-ref-link{font-size:13px;color:#2A6A35;letter-spacing:0.09em;text-transform:uppercase;text-decoration:none;font-weight:700}
+.sl-ref-name{font-size:32px;font-weight:700;color:var(--sl-text);margin-bottom:10px}
+.sl-ref-desc{font-size:18px;color:var(--sl-text-dim);line-height:1.80;margin-bottom:16px;font-weight:400}
+.sl-ref-link{font-size:13px;color:var(--sl-gold-deep);letter-spacing:0.09em;text-transform:uppercase;text-decoration:none;font-weight:700}
 .sl-ref-link:hover{text-decoration:underline}
 
-/* ══ SCROLL 3 — CRAFT ══ */
-.sl-zone-tech{background:#F8F4EE;padding:48px 0 40px}
-.sl-zone-edit{background:#F0EBF5;padding:44px 0 40px}
-.sl-zone-imagine{background:linear-gradient(160deg,#FBF6EC 0%,#F5EDD8 100%);padding:48px 0 44px}
-.sl-zone-award{background:#EBF3FB;padding:36px 0;text-align:center}
-.sl-zone-conclusion{background:#E8F0E9;padding:48px 36px 52px;border-top:1px solid rgba(60,120,70,0.18);border-bottom:1px solid rgba(60,120,70,0.18);text-align:center}
-.sl-zone-species{background:#F5F3EF;padding:36px 0}
-
-.sl-tech-body{font-size:17px;color:rgba(26,39,68,0.68);line-height:1.80;font-weight:400}
+.sl-tech-body{font-size:17px;color:var(--sl-text-dim);line-height:1.80;font-weight:400}
 
 /* Edit tips */
-.sl-edit-card{background:#FFFFFF;border-radius:4px;border-left:3px solid rgba(26,39,68,0.15);padding:20px 22px;margin-bottom:12px}
+.sl-edit-card{background:var(--sl-card);border-radius:4px;border-left:3px solid var(--sl-rule);padding:20px 22px;margin-bottom:12px}
 .sl-edit-label{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
-.sl-edit-label.what{color:#8a6a30}
-.sl-edit-label.why,.sl-edit-label.how{color:rgba(26,39,68,0.45)}
-.sl-edit-text{font-size:16px;color:#1A2744;line-height:1.75;font-weight:400;margin-bottom:0}
+.sl-edit-label.what{color:var(--sl-gold-deep)}
+.sl-edit-label.why,.sl-edit-label.how{color:var(--sl-text-faint)}
+.sl-edit-text{font-size:16px;color:var(--sl-text);line-height:1.75;font-weight:400;margin-bottom:0}
 
-/* Imagine — NO italic */
-.sl-imagine-eyebrow{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8A84B;margin-bottom:16px}
-.sl-imagine-body{font-size:21px;line-height:1.85;color:#1A2744;font-weight:400}
+.sl-imagine-eyebrow{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--sl-gold);margin-bottom:16px}
+.sl-imagine-body{font-size:21px;line-height:1.85;color:var(--sl-text);font-weight:400}
+.sl-award-text{font-size:17px;color:var(--sl-text-dim);line-height:1.85;max-width:600px;margin:0 auto 24px;font-weight:400}
+.sl-conclusion-text{font-size:21px;line-height:1.85;color:var(--sl-text);max-width:660px;margin:0 auto;font-weight:500}
 
-/* Award */
-.sl-award-text{font-size:17px;color:rgba(26,39,68,0.58);line-height:1.85;max-width:600px;margin:0 auto 24px;font-weight:400}
+/* Aspiration — SL-182.115. The ladder implied a climb with nobody on it. */
+.sl-aspire{max-width:860px;margin:0 auto;padding:0 36px 44px;background:var(--sl-surface-2)}
+.sl-aspire-inner{border-top:1px solid var(--sl-rule);padding-top:26px}
+.sl-aspire-line{font-size:17px;color:var(--sl-text);line-height:1.8;margin-bottom:14px}
+.sl-aspire-line strong{color:var(--sl-gold-deep);font-weight:700}
+.sl-aspire-link{font-size:15px;color:var(--sl-gold-deep);font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--sl-gold);padding-bottom:2px}
+.sl-aspire-link:hover{color:var(--sl-text)}
 
-/* Conclusion — NO italic */
-.sl-conclusion-text{font-size:21px;line-height:1.85;color:#1A3020;max-width:660px;margin:0 auto;font-weight:500}
-
-/* Upgrade section */
-.sl-upgrade-wrap{background:#EDE8DF;padding:48px 36px 52px;border-top:1px solid rgba(26,39,68,0.10)}
-
-/* FOOTER — navy */
+/* Upgrade + footer */
+.sl-upgrade-wrap{background:var(--sl-surface-2);padding:48px 36px 52px;border-top:1px solid var(--sl-rule)}
+.sl-upgrade-card{background:var(--sl-card);border-radius:3px;padding:18px 20px;border-left:3px solid var(--sl-gold)}
+.sl-upgrade-card-t{font-size:13px;font-weight:700;color:var(--sl-gold-deep);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.sl-upgrade-card-b{font-size:15px;color:var(--sl-text-dim);line-height:1.7}
 .sl-conversion{background:#1A2744;padding:52px 36px}
 .sl-conv-inner{max-width:760px;margin:0 auto}
 .sl-conv-count{font-size:13px;color:rgba(255,255,255,0.52);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px}
 .sl-conv-headline{font-size:22px;color:rgba(255,255,255,0.90);line-height:1.65;margin-bottom:20px;font-weight:500}
 .sl-conv-cta{font-size:17px;color:#F5C518;display:block;margin-bottom:20px;text-decoration:none;font-weight:600;letter-spacing:0.02em}
 .sl-conv-divider{border-top:0.5px solid rgba(255,255,255,0.10);margin-bottom:18px;padding-top:18px}
-
-/* DELETE BUTTON — RED PILL */
 .sl-delete-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(180,40,40,0.18);border:1.5px solid rgba(220,60,60,0.50);border-radius:6px;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;color:#FF7070;padding:11px 22px;font-weight:700;transition:background .15s,border-color .15s}
 .sl-delete-btn:hover{background:rgba(220,60,60,0.28);border-color:rgba(220,60,60,0.75)}
+.sl-footnote{padding:14px 36px;background:var(--sl-surface-2);border-top:1px solid var(--sl-rule)}
+.sl-footnote-l{font-size:13px;color:var(--sl-text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px}
+.sl-footnote-b{font-size:13px;color:var(--sl-text-dim);line-height:1.6}
+/* CSI cards — Rule 41 (Session 216) fixes these colours. SL-182.115 first
+   tokenised them and sl_audit correctly failed the file for it; the hexes are
+   restored and dark mode gets its own override rather than overwriting them. */
+.sl-csi-a{padding:20px 24px;background:#FFF8E6;border-left:3px solid #EDD89A}
+.sl-csi-a .sl-note-card-l{color:#8A6A00}
+.sl-csi-a .sl-note-card-b{color:#5C4A00}
+.sl-csi-b{padding:20px 24px;background:#E8F0F8;border-left:3px solid #C5D8EA}
+.sl-csi-b .sl-note-card-l{color:#2A5078}
+.sl-csi-b .sl-note-card-b{color:#1A3A54}
+.sl-note-card-l{font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px}
+.sl-note-card-b{font-size:15px;line-height:1.75}
+@media (prefers-color-scheme: dark){
+  .sl-csi-a{background:#2A2309;border-left-color:#6B5A1E}
+  .sl-csi-a .sl-note-card-l,.sl-csi-a .sl-note-card-b{color:#E8D9A4}
+  .sl-csi-b{background:#122030;border-left-color:#2F4A66}
+  .sl-csi-b .sl-note-card-l,.sl-csi-b .sl-note-card-b{color:#BBD3E8}
+}
+
+:focus-visible{outline:2px solid var(--sl-gold);outline-offset:2px}
 
 /* RESPONSIVE */
 @media(max-width: 900px){
-  .sl-verdict,.sl-zone-inner,.sl-conversion{padding-left:24px;padding-right:24px}
+  .sl-verdict,.sl-zone-inner,.sl-conversion,.sl-aspire{padding-left:24px;padding-right:24px}
   .sl-score-overlay{padding:32px 24px 18px}
   .sl-score-num{font-size:48px}
-  .sl-tier-strip,.sl-photo-meta{padding-left:24px;padding-right:24px}
+  .sl-tier-strip,.sl-photo-meta,.sl-topbar{padding-left:24px;padding-right:24px}
   .sl-upgrade-wrap{padding:36px 24px 40px}
   .sl-zone-conclusion{padding:36px 24px 40px}
 }
 @media(max-width: 600px){
-  .sl-verdict,.sl-zone-inner,.sl-conversion{padding-left:20px;padding-right:20px}
+  .sl-verdict,.sl-zone-inner,.sl-conversion,.sl-aspire{padding-left:20px;padding-right:20px}
   .sl-score-num{font-size:40px}
   .sl-takeaway{font-size:18px}
   .sl-what-next-body{font-size:16px}
@@ -206,18 +297,32 @@ main{padding:0!important;background:#E0DDD7}
   .sl-upgrade-wrap{padding:28px 20px 32px}
   .sl-zone-conclusion{padding:28px 20px 32px}
   .sl-upgrade-grid{grid-template-columns:1fr!important}
+  .sl-topbar{padding:12px 20px}
+  .sl-topbar-back{font-size:13px}
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div style="background:#E0DDD7;min-height:100dvh">
+<div style="background:var(--sl-shell);min-height:100dvh">
 <div class="sl-page">
 
   {# ── TOP BAR ── #}
   <div class="sl-topbar">
     <a href="{{ url_for('try_gallery') }}" class="sl-topbar-back">← My evaluations</a>
-    <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="sl-topbar-save">↓ Save PDF</a>
+    <span class="sl-topbar-actions">
+      {% if score %}
+      {# SL-182.115 — the page had no share affordance at all. The card is
+         drawn in the browser from the photograph already on screen, so there
+         is no new route, no public token, and nothing of this person's is
+         exposed unless they choose to send it. #}
+      <button type="button" class="sl-share-btn" id="sl-share" aria-label="Share this evaluation">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        <span id="sl-share-label">Share</span>
+      </button>
+      {% endif %}
+      <a href="{{ url_for('try_result_download', image_id=image_id) }}" class="sl-topbar-save">↓ Save PDF</a>
+    </span>
   </div>
 
   {# ════════ SCROLL 1 — THE VERDICT ════════ #}
@@ -278,7 +383,7 @@ main{padding:0!important;background:#E0DDD7}
       <div style="height:4px;background:rgba(26,39,68,0.08);border-radius:2px;margin-bottom:24px;overflow:hidden">
         <div id="sl-progress-bar" style="height:100%;background:#C8A84B;border-radius:2px;width:0%;transition:width 0.4s ease"></div>
       </div>
-      <div style="font-size:17px;color:rgba(26,39,68,0.55);line-height:1.7">The engine is reading your image across five dimensions.<br>This takes 60–90 seconds.</div>
+      <div style="font-size:17px;color:var(--sl-text-dim);line-height:1.7">The engine is reading your image across five dimensions.<br>This takes 60–90 seconds.</div>
       <div id="sl-processing-msg" style="font-size:15px;color:rgba(26,39,68,0.40);margin-top:12px">Starting evaluation…</div>
     </div>
     <div id="sl-image-id" data-id="{{ image_id }}" style="display:none"></div>
@@ -330,8 +435,13 @@ main{padding:0!important;background:#E0DDD7}
       {% set _max_v = _vals | max %}
       {% set _min_v = _vals | min %}
       {% set _avg_v = (_vals | sum) / 5 %}
+      {# SL-182.115 — the first row was labelled 'Affective Quotient'. The paid
+         scorecard was renamed 'Emotion (AQ)' in Session 237 to match
+         shutterleague.com/science; this page was missed, so the free and paid
+         cards named the same dimension two different ways, and the free one in
+         jargon. #}
       {% for _code, _plain, _val, _obs in [
-        ('Affective Quotient','The emotional quality it carries', aq|float(0), dim_obs_aq),
+        ('Emotion (AQ)','The feeling it creates', aq|float(0), dim_obs_aq),
         ('Visual Disruption','Whether it is visually disruptive', vd|float(0), dim_obs_vd),
         ('Decisive Moment','Whether the timing was right', dm|float(0), dim_obs_dm),
         ('Wonder Factor','Whether it made you feel something', wf|float(0), dim_obs_wf),
@@ -363,7 +473,7 @@ main{padding:0!important;background:#E0DDD7}
       {% set _ns_text = '#166534' if _ns_str == 'yes' else ('#92400e' if _ns_str in ('not_sure','notsure','maybe','unsure') else '#64748b') %}
       <div class="sl-dim-row" style="border-left:3px solid {{ _ns_border }};padding-left:12px;background:{{ _ns_bg }}!important;margin-top:12px">
         <div class="sl-dim-score-col">
-          <span style="font-size:14px;font-weight:700;color:{{ _ns_text }};line-height:1.2;text-align:center">{{ _ns_label }}</span>
+          <span style="font-size:14px;font-weight:700;color:{{ _ns_text }};line-height:1.5;text-align:center">{{ _ns_label }}</span>
         </div>
         <div class="sl-dim-text-col">
           <div style="display:flex;align-items:center;gap:6px">
@@ -484,7 +594,34 @@ main{padding:0!important;background:#E0DDD7}
   </div>
   {% endif %}
 
-  {# Zone G — Conclusion: soft sage green, NO italic #}
+  {# ── ASPIRATION — SL-182.115 ──────────────────────────────────────────
+     The tier ladder implies a climb and nobody is visibly above you.
+     "Higher than 57% of images" is a statistic, not an aspiration. This names
+     the next rung, what it costs, and gives somewhere to go and look. #}
+  {% if score %}
+  {% set _s = score|float %}
+  {% set _tiers_up = [(8.0,'Master'),(8.5,'Grandmaster'),(9.0,'Legend')] %}
+  {% set _next = (_tiers_up | selectattr('0','gt',_s) | list | first) %}
+  <div class="sl-aspire">
+    <div class="sl-aspire-inner">
+      {% if _next %}
+      <div class="sl-aspire-line">
+        You are <strong>{{ "%.2f"|format(_next[0] - _s) }}</strong> from {{ _next[1] }}.
+        That is one frame, not one year — the photographers above you are
+        working the same streets.
+      </div>
+      {% else %}
+      <div class="sl-aspire-line">
+        You are at the top of the ladder on this frame. The work now is holding
+        it across a body of images, not reaching it once.
+      </div>
+      {% endif %}
+      <a class="sl-aspire-link" href="{{ url_for('recent_work') }}">See the frames above you</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Zone G — Conclusion #}
   {% if conclusion %}
   <div class="sl-zone-conclusion">
     <div class="sl-conclusion-text">{{ conclusion }}</div>
@@ -493,23 +630,23 @@ main{padding:0!important;background:#E0DDD7}
 
   {# CSI cards #}
   {% if csi_own_duplicate %}
-  <div style="background:#FFF8E6;border-left:3px solid #EDD89A;padding:20px 24px">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8A6A00;margin-bottom:8px">Image already in your record</div>
-    <div style="font-size:15px;line-height:1.75;color:#5C4A00">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
+  <div class="sl-csi-a">
+    <div class="sl-note-card-l">Image already in your record</div>
+    <div class="sl-note-card-b">This photograph matches one already in your contact sheet. The evaluation has been applied to your existing record — your slot count has not been used twice.</div>
   </div>
   {% endif %}
   {% if csi_threshold_hit %}
-  <div style="background:#E8F0F8;border-left:3px solid #C5D8EA;padding:20px 24px">
-    <div style="font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#2A5078;margin-bottom:8px">Seen in the Shutter League pool</div>
-    <div style="font-size:15px;line-height:1.75;color:#1A3A54">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
+  <div class="sl-csi-b">
+    <div class="sl-note-card-l">Seen in the Shutter League pool</div>
+    <div class="sl-note-card-b">This image has been seen in the Shutter League evaluation pool before. The standard applied is the same — calibrated against the same blind evaluations as every other photograph.</div>
   </div>
   {% endif %}
 
   {# Upgrade teaser #}
   <div class="sl-upgrade-wrap">
     <div style="max-width:760px;margin:0 auto">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#8a6a30;margin-bottom:12px">In a full League evaluation, you also get</div>
-      <div style="font-size:22px;font-weight:600;color:#1A2744;margin-bottom:28px;line-height:1.6">This evaluation is honest. A League evaluation goes deeper.</div>
+      <div class="sl-eyebrow-gold" style="margin-bottom:12px">In a full League evaluation, you also get</div>
+      <div style="font-size:22px;font-weight:600;color:var(--sl-text);margin-bottom:28px;line-height:1.6">This evaluation is honest. A League evaluation goes deeper.</div>
       <div class="sl-upgrade-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
         {% for _title, _body in [
           ('Mentor narrative','A Grandmaster photographer explains exactly what they see in your image — the habit behind the frame, what to strengthen, what to leave behind.'),
@@ -519,9 +656,9 @@ main{padding:0!important;background:#E0DDD7}
           ('Weekly assignment','A specific shoot brief each week — subject, location type, and timing — calibrated to your interests and what your last image was reaching for.'),
           ('Annual Excellence Award','The first photography credential built on twelve months of calibrated evaluation — not a single submission, not a popularity vote.')
         ] %}
-        <div style="background:#fff;border-radius:3px;padding:18px 20px;border-left:3px solid #C8A84B">
-          <div style="font-size:13px;font-weight:700;color:#C8A84B;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">{{ _title }}</div>
-          <div style="font-size:15px;color:#3d3530;line-height:1.7">{{ _body }}</div>
+        <div class="sl-upgrade-card">
+          <div class="sl-upgrade-card-t">{{ _title }}</div>
+          <div class="sl-upgrade-card-b">{{ _body }}</div>
         </div>
         {% endfor %}
       </div>
@@ -561,13 +698,13 @@ main{padding:0!important;background:#E0DDD7}
 
   {# EXIF + Species footer — evaluation record #}
   {% if exif_line or species_note %}
-  <div style="padding:14px 36px;background:#F5F3EF;border-top:1px solid rgba(26,39,68,0.08)">
+  <div class="sl-footnote">
     {% if exif_line %}
-    <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Camera data</div>
+    <div class="sl-footnote-l">Camera data</div>
     <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6;margin-bottom:{% if species_note %}10px{% else %}0{% endif %}">{{ exif_line }}</div>
     {% endif %}
     {% if species_note %}
-    <div style="font-size:13px;color:rgba(26,39,68,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Species and behaviour</div>
+    <div class="sl-footnote-l">Species and behaviour</div>
     <div style="font-size:13px;color:rgba(26,39,68,0.55);line-height:1.6">{{ species_note }}</div>
     {% endif %}
   </div>
@@ -577,4 +714,122 @@ main{padding:0!important;background:#E0DDD7}
 
 </div>{# end .sl-page #}
 </div>{# end background #}
+
+{# ── SHARE CARD — SL-182.115 ──────────────────────────────────────────────
+   Drawn in the browser, on a canvas, from the photograph already loaded on
+   this page. Deliberately NOT a server route and NOT a public token: nothing
+   of this person's work is exposed unless they choose to send it, and there is
+   no new surface to secure.
+   Square, because that is what survives a feed and a story crop. The photo
+   fills it, the score sits bottom-left where it already does on the page, and
+   the wordmark is small — a photographer sharing this is showing their frame,
+   not our logo.
+   Web Share API with the file on mobile (where sharing actually happens);
+   falls back to a download everywhere else. #}
+{% if score %}
+<canvas id="sl-share-canvas" width="1080" height="1080" style="display:none"
+        data-src="{{ thumb_url or '' }}"
+        data-score="{{ '%.2f'|format(score|float) }}"
+        data-tier="{{ tier or '' }}"
+        data-who="{{ photographer_name or '' }}"
+        data-title="{{ asset_name or '' }}"></canvas>
+<script>
+(function(){
+  var btn = document.getElementById('sl-share');
+  if (!btn) return;
+  var label  = document.getElementById('sl-share-label');
+  var canvas = document.getElementById('sl-share-canvas');
+  // Values arrive as data attributes, not interpolated into this script —
+  // house rule, and it keeps the values escaped by the template engine.
+  var SRC    = canvas.getAttribute('data-src')   || '';
+  var SCORE  = canvas.getAttribute('data-score') || '';
+  var TIER   = canvas.getAttribute('data-tier')  || '';
+  var WHO    = canvas.getAttribute('data-who')   || '';
+  var TITLE  = canvas.getAttribute('data-title') || '';
+
+  function say(t){ if (label) label.textContent = t; }
+
+  function draw(img){
+    var c = canvas.getContext('2d'), S = 1080;
+    c.fillStyle = '#0C1018'; c.fillRect(0,0,S,S);
+    // cover-crop the photograph into the square
+    var r = Math.max(S/img.width, S/img.height);
+    var w = img.width*r, h = img.height*r;
+    c.drawImage(img, (S-w)/2, (S-h)/2, w, h);
+    // legibility gradient under the score
+    var g = c.createLinearGradient(0,S*0.52,0,S);
+    g.addColorStop(0,'rgba(8,12,20,0)');
+    g.addColorStop(0.55,'rgba(8,12,20,0.72)');
+    g.addColorStop(1,'rgba(8,12,20,0.94)');
+    c.fillStyle = g; c.fillRect(0,S*0.52,S,S*0.48);
+    var F = 'system-ui,-apple-system,Segoe UI,Arial,sans-serif';
+    c.textBaseline = 'alphabetic';
+    c.fillStyle = '#FFFFFF';
+    c.font = '700 150px ' + F;
+    c.fillText(SCORE, 64, S-180);
+    var sw = c.measureText(SCORE).width;
+    c.fillStyle = 'rgba(255,255,255,0.46)';
+    c.font = '400 48px ' + F;
+    c.fillText('/10', 64+sw+14, S-180);
+    if (TIER){
+      c.fillStyle = '#C8A84B';
+      c.font = '700 34px ' + F;
+      c.fillText(TIER.toUpperCase(), 66, S-126);
+    }
+    if (WHO){
+      c.fillStyle = 'rgba(255,255,255,0.92)';
+      c.font = '600 36px ' + F;
+      c.fillText(WHO, 66, S-74);
+    }
+    if (TITLE){
+      c.fillStyle = 'rgba(255,255,255,0.52)';
+      c.font = '400 28px ' + F;
+      c.fillText(TITLE, 66, S-36);
+    }
+    c.fillStyle = 'rgba(255,255,255,0.58)';
+    c.font = '700 26px ' + F;
+    c.textAlign = 'right';
+    c.fillText('SHUTTER LEAGUE', S-64, S-36);
+    c.textAlign = 'left';
+  }
+
+  function blobOf(){
+    return new Promise(function(res,rej){
+      canvas.toBlob(function(b){ b ? res(b) : rej(new Error('no blob')); }, 'image/jpeg', 0.92);
+    });
+  }
+
+  btn.addEventListener('click', function(){
+    if (!SRC){ say('No image'); return; }
+    btn.disabled = true; say('Preparing…');
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function(){
+      try { draw(img); } catch(e){ btn.disabled=false; say('Share'); return; }
+      blobOf().then(function(blob){
+        var name = 'shutterleague-' + SCORE.replace('.','-') + '.jpg';
+        var file = new File([blob], name, {type:'image/jpeg'});
+        if (navigator.canShare && navigator.canShare({files:[file]})){
+          return navigator.share({files:[file], title:'Shutter League'})
+            .then(function(){ say('Share'); })
+            .catch(function(){ say('Share'); });
+        }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = name; a.click();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        say('Saved');
+        setTimeout(function(){ say('Share'); }, 2500);
+      }).catch(function(){
+        // Tainted canvas (photo served without CORS headers) is the one
+        // expected failure. Say what to do instead of failing silently.
+        say('Use Save PDF');
+      }).then(function(){ btn.disabled = false; });
+    };
+    img.onerror = function(){ btn.disabled=false; say('Use Save PDF'); };
+    img.src = SRC;
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}
