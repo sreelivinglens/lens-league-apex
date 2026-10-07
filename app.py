@@ -1,3 +1,39 @@
+# SL-VERSION: 182.116 (Session 238, 2026-10-07 -- TWO FIXES, ONE OF THEM MY OWN OVERREACH.
+#
+# (1) THE WEB CARD STILL SHOWED THE ACCOUNT HANDLE, AND NOT BECAUSE OF OLD UPLOADS. I told the
+#     founder that images 147 and 150 said "The Livinglens" only because they predated 182.113, and
+#     that a fresh upload typed as "Carmen" would carry. That was wrong. try_result() resolves the
+#     name with its OWN query -- SELECT full_name FROM users -- ignoring img.photographer_name
+#     entirely, so the web card would have shown the account handle on a brand new upload too. The
+#     name is resolved in THREE places (upload storage, the PDF, and here) and I had only fixed two.
+#     Now: the image's own photographer_name first, the account name as fallback. The Session 211
+#     rule is kept -- always the image OWNER, never the viewer, since an admin may be looking at
+#     someone else's card.
+#
+# (2) MY MASTER ENFORCEMENT WAS TOO STRICT AND MADE A CARD WORSE. 182.114 validated the chosen
+#     master against the library rows shown in the prompt. That query is
+#     "ORDER BY ... RANDOM() LIMIT 15" -- a random DRAW, not the genre's roster. The 06:54 log shows
+#     exactly the false positive that invites:
+#       MASTER ENFORCED: the card named 'Raghu Rai', who is not in the Street library offered for
+#       this genre -- replaced with 'Ashok Kochhar'
+#     Raghu Rai is the definitive Indian street photographer and is almost certainly tagged Street;
+#     he simply did not come up in that draw of fifteen. The engine made a good call on a Mumbai
+#     dock frame and my check overrode it. A gate that rejects correct work is the exact failure
+#     this project has now hit three times (sl_audit 1.1 max_tokens, sl_audit 1.2 version header,
+#     and now this), and it is in SL_STANDARDS section 4.8 in those words.
+#     FIX: enforcement now validates against EVERY active master tagged for the genre, while the
+#     prompt still shows the random fifteen for variety. Verified: Raghu Rai is kept, Ashok Kochhar
+#     is kept, and Tim Laman and Vincent Munier are still correctly replaced on a Street card -- so
+#     the wildlife-on-street problem 182.113/114 were built for is still caught. The log line now
+#     reports the roster size so a future false positive is visible.
+#
+# WHAT THE SAME 06:54 RUN CONFIRMS IS WORKING: SPECIES SCRUB fired again and corrected the card;
+# minor_scrub OK and child_present=False for the fourth consecutive card; and the enforcement
+# machinery itself ran exactly as designed -- it was the roster it was checking against that was
+# wrong, not the mechanism.
+# NOT YET CONFIRMED LIVE -- needs the founder's push, then a FRESH upload with the photographer
+# name typed in (the existing rows store the account name and a rescore will not change them).
+# RETAINS 182.115.)
 # SL-VERSION: 182.115 (Session 238, 2026-10-07 -- FREE SCORECARD COPY PASS. Pairs with
 # image_detail_haiku.html 3.0, which carries the design half (nine pastel zones collapsed to two
 # surfaces, a real dark theme, a share card, and the aspiration block).
@@ -45657,7 +45693,8 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     # Session 210: build master reference library from DB for this genre
     # Used as fallback when Python dict returns None (non-wildlife genres)
     _master_lib_lines = []
-    _master_lib_rows = []          # SL-182.114 — [(name, known_for), ...]
+    _master_lib_rows = []          # SL-182.114 — the random 15 shown in the prompt
+    _master_valid_names = []       # SL-182.116 — EVERY master tagged for this genre
     try:
         with app.app_context():
             _ref_rows = db.session.execute(db.text(
@@ -45669,6 +45706,25 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'WHEN \'Contest Winner\' THEN 2 WHEN \'Tier 2\' THEN 3 ELSE 4 END, '
                 'RANDOM() LIMIT 15'
             ), {'pat': f'%{genre or "General"}%'}).fetchall()
+            # SL-182.116 -- the query above is ORDER BY ... RANDOM() LIMIT 15, so
+            # the rows shown to the model are a random DRAW, not the genre's full
+            # roster. 182.114 enforced against that draw and the 06:54 log shows
+            # exactly the false positive that invites:
+            #   MASTER ENFORCED: the card named 'Raghu Rai', who is not in the
+            #   Street library offered for this genre -- replaced with 'Ashok Kochhar'
+            # Raghu Rai is the definitive Indian street photographer and almost
+            # certainly IS tagged Street -- he simply did not come up in that
+            # draw of fifteen. Replacing him made the card worse, not better.
+            # So the enforcement now validates against EVERY active master tagged
+            # for this genre, while the prompt still shows the random fifteen for
+            # variety. A name the photographer would recognise as right for the
+            # genre is no longer thrown out for losing a dice roll.
+            _ref_all = db.session.execute(db.text(
+                'SELECT name, known_for FROM master_references '
+                'WHERE is_active = TRUE AND genre_tags ILIKE :pat'
+            ), {'pat': f'%{genre or "General"}%'}).fetchall()
+            for _ra in _ref_all:
+                _master_valid_names.append((_ra.name, _ra.known_for or ''))
             for _rr in _ref_rows:
                 _origin = f'({_rr.region})' if _rr.region else ''
                 _when = f' Use when: {_rr.reference_when}' if _rr.reference_when else ''
@@ -46092,9 +46148,13 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     # library was actually fetched and the Python dict did NOT deliberately
     # override (Wildlife and Nature keep their chosen master untouched).
     try:
-        if _master_lib_rows and not _python_master_name:
+        # SL-182.116 -- validate against the FULL genre roster, not the random
+        # fifteen the prompt happened to show. Falls back to the shown rows only
+        # if the roster query failed.
+        _check_rows = _master_valid_names or _master_lib_rows
+        if _check_rows and _master_lib_rows and not _python_master_name:
             _named = str(d.get('master_name', '') or '').strip()
-            _allowed = {_n.strip().lower(): (_n, _kf) for _n, _kf in _master_lib_rows}
+            _allowed = {_n.strip().lower(): (_n, _kf) for _n, _kf in _check_rows}
             _named_l = _named.lower()
             _ok = any(_named_l == _a or _named_l in _a or _a in _named_l
                       for _a in _allowed) if _named else False
@@ -46114,15 +46174,15 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                     )
                 app.logger.warning(
                     '[try_haiku] MASTER ENFORCED: the card named %r, who is not in the %s '
-                    'library offered for this genre -- replaced with %r and the rationale '
+                    'roster (%d masters tagged for it) -- replaced with %r and the rationale '
                     'rebuilt from the reference library. The scoring call was given the list '
-                    'and chose outside it. (SL-182.114)'
-                    % (_named, genre or 'General', _sub_name)
+                    'and chose outside it. (SL-182.116)'
+                    % (_named, genre or 'General', len(_check_rows), _sub_name)
                 )
             else:
                 app.logger.info(
-                    '[try_haiku] master_check OK — %r is in the %s reference library'
-                    % (_named, genre or 'General')
+                    '[try_haiku] master_check OK — %r is tagged for %s (%d in roster)'
+                    % (_named, genre or 'General', len(_check_rows))
                 )
     except Exception as _mee:
         app.logger.warning('[try_haiku] MASTER ENFORCEMENT skipped (non-fatal): %s' % _mee)
@@ -48109,11 +48169,20 @@ def try_result(image_id):
         evals_limit        = FREE_IMAGE_LIMIT,
         evals_display      = _display_count,
         milestone_strength = _milestone_strength,
+        # SL-182.116 -- was querying users.full_name directly, so the web card
+        # ALWAYS showed the account handle and never the photographer entered on
+        # the upload form. 182.113 fixed the storage and the PDF; this is the
+        # third place the name is resolved and it was still reading the account.
+        # A fresh upload typed as "Carmen" would still have said "The Livinglens"
+        # here. Image first, account as the fallback.
+        # Session 211 note retained: use the image OWNER, never the viewer, since
+        # an admin may be looking at someone else's card.
         photographer_name  = (
-            db.session.execute(db.text('SELECT full_name FROM users WHERE id=:uid'),
-            {'uid': img.user_id}).scalar() or ''
+            (getattr(img, 'photographer_name', '') or '').strip()
+            or db.session.execute(db.text('SELECT full_name FROM users WHERE id=:uid'),
+                                  {'uid': img.user_id}).scalar()
+            or ''
         ),
-        # Session 211: use image owner name, not viewer (admin may be viewing)
         exif_line          = _exif_line,
     )
 
