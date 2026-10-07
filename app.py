@@ -1,3 +1,32 @@
+# SL-VERSION: 182.124 (Session 238, 2026-10-07 -- THE THIRD LABEL SET, AND A SILENT EXPORT FAULT.
+#   Founder signal given. Pairs with engine/auto_score.py 171.66 -- PUSH BOTH TOGETHER.
+#   1. THIRD LABEL SET REMOVED (lessons doc 10.2, open since Session 237). The PDF trend panel
+#      called the five dimensions Emotion / Timing / Difficulty / Visual Impact / Disruption while
+#      the dimension-observation section of the SAME DOCUMENT called them Decisive Moment /
+#      Wonder Factor / Emotion (AQ). 10.2 flagged two names for one thing on one page; this was
+#      the third. Now the settled customer-facing names, at all THREE sites (~L14071, ~L14420,
+#      ~L15317) -- the third had different indentation and was missed by the first pass.
+#      THE PART THAT WOULD HAVE BROKEN SILENTLY: _rmd_msgs is a dict of pattern advice keyed by
+#      the very label strings being changed, read through _rmd_msgs.get(_weakest_label, <generic>).
+#      Renaming the labels without renaming the keys would have made every lookup miss and fall
+#      through to the generic fallback -- no error, no log line, just a card that quietly stopped
+#      saying anything specific. Keys moved with labels; verified by extracting both sets and
+#      comparing them, not by reading.
+#      A FOURTH SET EXISTS AND IS NOT TOUCHED: _DIM_NAMES at ~L15155 says 'Degree of Difficulty',
+#      'Wonder', 'Affective Quotient' for the Top-10 PDF. Different surface, different audience,
+#      no founder decision on it. Named here so it is found rather than rediscovered.
+#   2. CONTEST JUDGE "Photographer: Unknown" (Addendum S3) -- diagnosed, and it is NOT a binding
+#      bug. _cj_parse_filename takes the name from the FILENAME ("Name_I_Title.ext"); Carmen's
+#      files were camera defaults (L1030898.jpg) with no name in them. Code cannot invent a name
+#      that was never supplied, so there is nothing to "fix" in the parser. What was wrong is that
+#      it failed SILENTLY -- all 44 rows read Unknown and nobody saw until the cards were out.
+#      Now every unnamed file logs a warning naming the file and the expected convention.
+#      The other two Addendum S3 items are MEASUREMENT, not defects, and are untouched: official
+#      vs trial standings diverging (L1030898 8.15 -> 7.23) and Contest Judge running +0.6 to +0.9
+#      against Sonnet on this photographer's bird frames. Both need a measured comparison before
+#      anyone changes a weight. Do not "fix" a number that has not been measured.
+#   RETAINS 182.123 and everything below.
+#
 # SL-VERSION: 182.123 (Session 238, 2026-10-07 -- THE ADVISORY NOW RECORDS ITS OWN OUTCOME.
 #   Founder signal given, from his own observation: "rather than do a page refresh - we should have
 #   a notification of done?" Correct instinct, and the notification was the smaller half.
@@ -14065,11 +14094,18 @@ def public_card(token):
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
-                    ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
-                    ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
-                    ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
-                    ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
-                    ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
+                    # SL-182.124: THIRD LABEL SET, removed. This panel called the
+                    # five dimensions Emotion / Timing / Difficulty / Visual Impact /
+                    # Disruption while the dimension-observation section of the SAME
+                    # PDF called them Decisive Moment / Wonder Factor / Emotion (AQ).
+                    # Lessons doc 10.2 flagged two names for one thing on one page;
+                    # this was the third. Now matches the settled customer-facing
+                    # names. If those change, change them here in the same commit.
+                    ('Emotion (AQ)',       _feeling,    '#F5C518', '#BA7517'),
+                    ('Decisive Moment',    _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('Depth of Difficulty', _difficulty, '#BA7517', '#BA7517'),
+                    ('Wonder Factor',      _impact,     '#5A7A3A', '#3A5A2A'),
+                    ('Visual Disruption',  _disruption, '#6A4A9A', '#4A3A7A'),
                 ]:
                     if len(_vals) >= 2:
                         _sp, _pts  = _spark(_vals)
@@ -14407,11 +14443,13 @@ def image_detail(image_id):
 
                     _dims = []
                     for _label, _vals, _color, _flat_color in [
-                        ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
-                        ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
-                        ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
-                        ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
-                        ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
+                        # SL-182.124: third site of the same label set — see the
+                        # two blocks above. All three must stay identical.
+                        ('Emotion (AQ)',        _feeling,    '#F5C518', '#BA7517'),
+                        ('Decisive Moment',     _timing,     '#2C3E6B', '#2C3E6B'),
+                        ('Depth of Difficulty', _difficulty, '#BA7517', '#BA7517'),
+                        ('Wonder Factor',       _impact,     '#5A7A3A', '#3A5A2A'),
+                        ('Visual Disruption',   _disruption, '#6A4A9A', '#4A3A7A'),
                     ]:
                         if len(_vals) >= 2:
                             _sp, _pts = _spark(_vals)
@@ -15306,11 +15344,18 @@ def download_card_pdf(image_id):
 
                 _dims = []
                 for _lbl, _vals, _color, _flat_color in [
-                    ('Emotion',       _feeling,    '#F5C518', '#BA7517'),
-                    ('Timing',        _timing,     '#2C3E6B', '#2C3E6B'),
-                    ('Difficulty',    _difficulty, '#BA7517', '#BA7517'),
-                    ('Visual Impact', _impact,     '#5A7A3A', '#3A5A2A'),
-                    ('Disruption',    _disruption, '#6A4A9A', '#4A3A7A'),
+                    # SL-182.124: THIRD LABEL SET, removed. This panel called the
+                    # five dimensions Emotion / Timing / Difficulty / Visual Impact /
+                    # Disruption while the dimension-observation section of the SAME
+                    # PDF called them Decisive Moment / Wonder Factor / Emotion (AQ).
+                    # Lessons doc 10.2 flagged two names for one thing on one page;
+                    # this was the third. Now matches the settled customer-facing
+                    # names. If those change, change them here in the same commit.
+                    ('Emotion (AQ)',       _feeling,    '#F5C518', '#BA7517'),
+                    ('Decisive Moment',    _timing,     '#2C3E6B', '#2C3E6B'),
+                    ('Depth of Difficulty', _difficulty, '#BA7517', '#BA7517'),
+                    ('Wonder Factor',      _impact,     '#5A7A3A', '#3A5A2A'),
+                    ('Visual Disruption',  _disruption, '#6A4A9A', '#4A3A7A'),
                 ]:
                     if len(_vals) >= 2:
                         _pts            = _spark(_vals)
@@ -15343,23 +15388,28 @@ def download_card_pdf(image_id):
                             _weakest_pill  = _d['pill'] or ''
                     if _weakest_label and ('Dipped' in _weakest_pill or 'Steady' in _weakest_pill):
                         _rmd_msgs = {
-                            'Emotion': [
+                            # SL-182.124: these keys are looked up by _weakest_label,
+                            # which comes from the label tuples above. When those labels
+                            # were corrected the keys HAD to move with them or every
+                            # lookup would miss and fall through to the generic message --
+                            # silently, with no error. Keys and labels are one thing.
+                            'Emotion (AQ)': [
                                 'Your Emotion has been under pressure across recent images. This is not a bad day — it is a pattern worth examining. The frames that move people share one thing: the photographer cared about what was in the frame, not just how it looked.',
                                 'Emotional resonance is your most consistent gap right now. Your images are getting technically stronger — but the feeling is not coming through. Shoot something that matters to you personally and see what changes.',
                             ],
-                            'Timing': [
+                            'Decisive Moment': [
                                 'Timing has been your most persistent challenge. The moment you are capturing is close to the peak — but consistently arriving a fraction early or late. Start staying with subjects longer than feels comfortable. The frame you want comes after the obvious one.',
                                 'Your Timing has been flat or declining. This is fixable — it is a waiting problem, not a seeing problem. You already know what to look for. The practice is standing still longer.',
                             ],
-                            'Difficulty': [
+                            'Depth of Difficulty': [
                                 'You have been shooting within your comfort zone recently. The difficulty readings suggest familiar subjects in familiar light. The next level of your work probably requires deliberately harder conditions.',
                                 'Difficulty has been your quietest dimension lately. That often means you are in a productive groove — but grooves become ruts. One session deliberately outside your usual parameters would change this.',
                             ],
-                            'Visual Impact': [
+                            'Wonder Factor': [
                                 'Visual Impact has been steady but not climbing. Your frames are clear and well-composed — but not yet magnetic. The gap is usually in the light. Wait for one more improbable quality of light before pressing the shutter.',
                                 'Your Visual Impact has plateaued. The composition is working. The subject is right. The missing element is almost always the light quality — and that means being in the right place before the light arrives, not reacting to it after.',
                             ],
-                            'Disruption': [
+                            'Visual Disruption': [
                                 'Your frames have been consistent but predictable lately. The Disruption reading suggests you are still working within conventions familiar to photographers of similar subjects. What would you do with this scene if you had never seen another photograph of it?',
                                 'Disruption has been your most stubborn dimension. Your technical execution is outpacing your originality right now. Spend one session deliberately making the frame you would normally reject as too strange.',
                             ],
@@ -17733,6 +17783,20 @@ def admin_contest_judge_upload():
 
             # ── New image — judge with Sonnet (Open Call DDI v182.27) ──
             photographer, title = _cj_parse_filename(fname)
+            # SL-182.124: on the Carmen Drake export (7 Oct 2026) the Photographer
+            # column read "Unknown" on ALL 44 rows, and nobody noticed until the
+            # cards had been sent. Not a binding bug — _cj_parse_filename takes the
+            # name from the FILENAME ("Name_I_Title.jpg"), and camera-default names
+            # like L1030898.jpg carry no name to take. Code cannot invent one.
+            # What it can do is stop failing quietly: count the unnamed rows and
+            # say so in the log, so a whole batch of "Unknown" is caught before the
+            # export leaves the building rather than after.
+            if photographer == 'Unknown':
+                app.logger.warning(
+                    f'[contest_judge] no photographer in filename "{fname}" — row will '
+                    f'read Unknown. Expected "Name_I_Title.ext". Rename before export, '
+                    f'or the Photographer column is useless for this entry.'
+                )
             image_b64 = _cj_thumb_b64(tmp_path)
             verdict = _cj_judge_gated(image_b64, photographer, title, theme, theme_threshold, batch_ref=batch_ref)
 
