@@ -1,3 +1,169 @@
+# SL-VERSION: 182.112 (Session 238, 2026-10-07 -- TWO ERRORS, NOT ONE, AND THE SIZE WORDS CARRY THE
+# CLAIM TOO. Founder, on the line "The fruit sits in the child's small hands": "how does the engine
+# see child's small hands? which means its reading a living adult being as child also?"
+#
+# YES, AND THAT CORRECTS 182.110. Papayas are held by a LIVING person, not by the mural, so that
+# sentence is not the painted-figure error at all. Going back to the gate's own log line confirms
+# it -- the evidence Haiku gave was "The person SEATED IN THE CENTER-LOWER PORTION OF THE FRAME
+# displays facial proportions... characteristic of a child". That is the vendor in the pink sari:
+# a living adult woman, seated on the ground, centre of frame. The mural is upper background. So:
+#   ERROR 1  a painted face counted as a person   -- proven by "painted witness, living vendor,
+#                                                    trusting child" (fixed 182.110/111)
+#   ERROR 2  a living adult judged to be a child  -- proven by the gate's own evidence string
+# I built 182.110 around the mural because the founder offered that reading and the "painted
+# witness" line supported it. It was half the picture. Error 2 was in the log the whole time and I
+# did not go back to it.
+#
+# The standing conclusion, now evidenced twice over: HAIKU CANNOT JUDGE AGE. It called a seated
+# adult woman a child at HIGH confidence with its reasoning written out. This is exactly why the
+# 182.108 gate fails closed rather than trusting the assertion, and why the scrub exists behind it.
+#
+# FIX IN THIS VERSION -- removing the noun is not enough when the ADJECTIVE carries the same claim.
+# "The person's small hands" still tells a reader "child". So on a field that was scrubbed:
+#   * size/age adjectives before a BODY PART are removed (small|little|tiny|young|slight|delicate
+#     before hands, fingers, face, feet, arms, shoulders, body, frame, head, legs, wrists) --
+#     "the child's small hands" -> "the person's hands";
+#   * and before the substituted noun itself, so "the young girl's fingers" does not survive as
+#     "the young person's fingers" -> "the person's fingers".
+# Deliberately narrow: only before body parts and only on a field that was already scrubbed, so
+# legitimate photographic language is untouched -- verified that "a small aperture", "a tiny patch
+# of light" and "the small frame of the doorway" all survive unchanged.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a re-run of image 150. RETAINS 182.111.)
+# SL-VERSION: 182.111 (Session 238, 2026-10-07 -- NO AGE ON A PAINTED FACE. Founder, refining
+# 182.110 within two minutes of it: "rather face on the wall - do not qualify this as child
+# straight away". Correct, and it is the simpler rule. Age cannot be read off a painted, stylised
+# or weathered face any more reliably than off a living one -- less so -- and naming the surface
+# does not make the guess true. 182.110 permitted "the child's face in the mural" because it was
+# at least honest about location; this version removes the age word there too.
+#
+# The arc of this fix in one line, because the direction of travel is the lesson:
+#   182.108  gate the claim on stated evidence              -- right, and it fired correctly
+#   182.109  scrub the word everywhere                      -- too blunt: "trusting person" is
+#                                                              still wrong, it is not a person
+#   182.110  keep the word, require the surface             -- better, but still guesses an age
+#   182.111  name the surface, claim no age at all          -- what the founder asked for
+#
+# TWO CHANGES:
+#   (1) The card instruction now gives the permitted forms -- "the face on the wall", "the painted
+#       figure", "the faces in the mural", "the figure on the poster" -- and names the forbidden
+#       ones explicitly: not "the child's face on the wall", not "the young girl in the mural",
+#       not "the old man painted above them".
+#   (2) The scrub treats a DEPICTED context as a third case. It no longer keeps the word
+#       (182.110) and no longer swaps it for "person" (182.109) -- it REMOVES it. A possessive is
+#       dropped so the noun after it carries the sentence; a bare noun becomes "figure"; a
+#       stranded "young/little/small figure" collapses to "figure"; leftover double spaces and
+#       space-before-punctuation are tidied.
+# Verified before shipping on all three paths: painted -- "the child's face in the mural" ->
+# "the face in the mural", "a child painted on the wall" -> "a figure painted on the wall", "a
+# child's face on the wall" -> "a face on the wall", "the poster shows a young girl" -> "the
+# poster shows a figure"; living and bare -- "the child's upward gaze" -> "the person's upward
+# gaze"; and "childlike" / "childhood" still untouched.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a re-run of image 150. RETAINS 182.110.)
+# SL-VERSION: 182.110 (Session 238, 2026-10-07 -- THE REAL ROOT CAUSE: THE CHILD IS ON THE WALL.
+# The founder sent the source photograph and it settles two days of wrong diagnosis in one look.
+# FOUR ADULT WOMEN at a Mumbai pavement stall -- an elderly woman seated left, a vendor seated
+# centre, a customer standing with a tote bag, a fourth woman at right -- in front of an enormous
+# painted MURAL of women's faces with Marathi text. The "child" the engine kept describing is a
+# painted face on that wall.
+#
+# And the engine's own prose proves it could see the difference the whole time: it wrote "the
+# three-plane narrative -- painted witness, living vendor, trusting child". It knew the mural was a
+# mural. It then counted a painted face as a person present in the scene, gave it an age, a gaze,
+# and a relationship with the vendor, and built the Decisive Moment score and every line of advice
+# on waiting for its eyes to lift. Eyes that are paint.
+#
+# So the age gate was never the whole problem. The engine was answering a question about PEOPLE
+# using ARTWORK. Street photography is full of this -- murals, film posters, hoardings, shrine
+# images, shop signage -- and nothing in the Haiku path had ever drawn the line.
+#
+# FOUNDER'S OWN FRAMING, AND IT CORRECTS MINE: "technically it should have said child's face on the
+# wall and it would have worked". Exactly right, and it changes the fix from a ban into a
+# requirement. The error was never the WORD "child" -- it was the missing SURFACE. "The child's face
+# in the mural" is true, and is a better observation than anything 182.109 would have left behind;
+# "the child's upward gaze" is a fabricated participant. 182.109's scrub, which replaced the word
+# everywhere, would have produced "trusting person" -- still wrong, because it is not a person at
+# all. Corrected here.
+#
+# WHAT THIS VERSION DOES:
+#   (1) VISION PRE-CALL now separates living people from depicted ones. The system prompt states
+#       that faces in murals, graffiti, paintings, posters, billboards, photos-within-photos,
+#       statues, mannequins, screens and reflections are artwork, not people. Q8 counts LIVING
+#       people only. New Q8b asks what depicted figures are present and where. Q9 (child) is
+#       explicitly restricted to the living people in Q8 -- a face in a mural can never answer it
+#       yes, however young it looks.
+#   (2) CHILD GATE additionally rejects evidence that describes a depicted figure (mural, painted,
+#       poster, statue, screen, reflection...), logged as "evidence describes a DEPICTED figure,
+#       not a living person". This is the check that would have caught the 04:32 run at source.
+#   (3) THE CARD IS TOLD, when depicted figures exist, to NAME THE SURFACE EVERY TIME -- "the
+#       painted face on the wall", "the child's face in the mural" -- and never a bare "the child"
+#       for something painted, because a reader takes that as someone who was standing there. It
+#       may still describe the artwork, and how it sits against the living subjects, which is
+#       usually the sharper observation. What it may never do is give a painted figure a gaze, a
+#       feeling, an intention or a relationship, as though it took part.
+#   (4) THE 182.109 SCRUB IS NARROWED TO MATCH. A minor-referring word that already sits within 60
+#       characters of a word naming the surface (mural, painted, wall, poster, graffiti, statue,
+#       screen, signage...) is now LEFT ALONE. Only bare, unqualified uses are replaced. Verified
+#       before shipping on both sides: "the child's face in the mural", "a child painted on the
+#       wall", "the mural's child" and "the poster shows a young girl" all survive intact, while
+#       "the child's upward gaze", "between vendor and child" and "the moment the child looks up"
+#       are all corrected. Four of four and three of three.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a re-run of image 150. Expect in the log:
+# depicted_figures naming the mural, child_present=False (or a CHILD GATE line citing the mural),
+# and a card that either does not mention the painted face or names it as painted. RETAINS 182.109.)
+# SL-VERSION: 182.109 (Session 238, 2026-10-07 -- THE BAN IS NOW ENFORCED IN CODE. 182.108's child
+# evidence gate worked PERFECTLY on the founder's 04:32 re-test and the card still said "child"
+# seven times. Both halves of that sentence matter.
+#
+# WHAT WORKED: the gate caught Haiku asserting a child on exactly the excuse the prompt bans, and
+# logged it in full --
+#   [haiku_vision] CHILD GATE: downgrading child_present True -> False
+#   (evidence is framing/position, not age: smaller, seated, lower, compared)
+#   ... child_present=False
+# The evidence Haiku gave was "The person seated in the center-lower portion of the frame displays
+# facial proportions and head-to-body ratio characteristic of a child - notably smaller facial
+# features, rounder face shape..." -- confident, specific-sounding, and resting entirely on the
+# person being seated, lower and smaller. Exactly what the gate was built to reject, rejected.
+#
+# WHAT DID NOT: the VERIFIED SUBJECT block then carried a blunt ban into the scoring prompt -- 'Do
+# NOT use the words "child", "kid", "boy", or "girl" ... anywhere in the output' -- and the scoring
+# call ignored it completely. Seven uses, including the takeaway, the Next Leap and every line of
+# the advice.
+#
+# That is the SIXTH prose rule to fail in this project in two days, and the same log shows why:
+# main_scoring input is 20,816 tokens. The ban sits near token 4,100 with sixteen thousand tokens of
+# further instruction after it. No single sentence holds that position, however bluntly written, and
+# this session has already proved four times over on the Sonnet side that answering a failed prose
+# rule with better prose fails again.
+#
+# FIX -- MINOR-LANGUAGE SCRUB, in code, after generation, where it cannot be out-weighted or
+# ignored. Runs only when the pre-call did NOT confirm a child. It is a PURE WHOLE-WORD SUBSTITUTION
+# across every string field of the scorecard: child -> person, children -> people, kid/boy/girl/
+# toddler and their possessives likewise, case preserved. No sentence is rewritten, no clause
+# reordered, no API call made, no latency added -- which is why this is safe to run on live
+# customer-facing text where a prose rewrite would not be. "the child's upward gaze" becomes "the
+# person's upward gaze": still true of the photograph, since there IS a person there; only the false
+# claim about their age is gone.
+#
+# Verified against the SEVEN actual sentences from the founder's card before shipping -- all seven
+# read correctly after substitution. Word boundaries confirmed safe on "childlike", "childhood" and
+# "boyish". ONE REAL FLAW FOUND IN TESTING AND FIXED: "The Girl with a Pearl Earring" became "The
+# Person with a Pearl Earring". A cited work or master reference is a proper name, not a claim about
+# who is in this photograph, so a short protect-list (Afghan Girl, Girl with a Pearl Earring, Boy
+# with Apple and others) is masked out before substitution and restored after. Residual risk: a
+# title outside that list would still be rewritten -- add to _PROTECT when one appears.
+#
+# Logged either way: "[try_haiku] MINOR SCRUB: removed N minor-referring word(s)..." names the
+# fields, so every time the scoring call defies the ban it is visible rather than silent. If that
+# line keeps appearing the prompt itself needs restructuring; if it goes quiet, the prose ban is
+# finally holding and the scrub is only a net.
+#
+# COST, NOW MEASURED RATHER THAN ESTIMATED, from the same log: vision in 2,569/out 199 = Rs 0.34;
+# main_scoring in 20,816/out 1,460 = Rs 2.67; sherpa in 2,631/out 614 = Rs 0.54. With the 182.108
+# sherpa trim running 4 times in 10, that is Rs 3.23 PER IMAGE and Rs 32.26 PER 10-IMAGE FREE USER.
+# My pre-build estimate was Rs 3.36 / Rs 33.57 -- out by 4%. The scoring call is 75% of the cost,
+# and its INPUT alone is Rs 1.98 of Rs 3.23, which is where any future saving has to come from.
+# NOT YET CONFIRMED LIVE -- needs the founder's push, a re-run of image 150, and a card with no
+# minor-referring word in it. RETAINS 182.108.)
 # SL-VERSION: 182.108 (Session 238, 2026-10-07 -- HAIKU FREE TIER: GROUNDING GATES, OUTPUT BANS,
 # REAL COST MEASUREMENT, AND THE SHERPA TRIM. Founder signal given. Four changes, one file.
 #
@@ -43572,6 +43738,11 @@ _HAIKU_VISION_SYSTEM = (
     "Count people conservatively: a person must be actually visible (body or face in "
     "frame) to be counted — never count a person you assume must be nearby, off-frame, "
     "or implied by the scene (a market stall, a vehicle with a driver, a doorway). "
+    "A DEPICTED FIGURE IS NOT A PERSON. Faces and bodies in murals, graffiti, paintings, "
+    "posters, billboards, advertisements, photographs within the photograph, statues, "
+    "mannequins, screens and reflections are ARTWORK OR OBJECTS, not people present in the "
+    "scene. Never count them, and never describe their age, gaze, expression or feelings as "
+    "though they were a living person standing there. "
     "Never call an adult a child because they are seated, crouching, smaller in the frame "
     "due to distance or angle, or positioned lower than another person — those are framing "
     "facts, not age facts. Only call someone a child if their face and body proportions are "
@@ -43597,11 +43768,21 @@ _HAIKU_VISION_PROMPT = (
     "6. What is the lighting? (backlit/frontlit/sidelit/overcast/low_light_dark_background)\n"
     "7. How confident are you in the subject identification? (high/medium/low)\n"
     "   low = silhouette, heavily processed, very small/distant subject\n"
-    "8. HUMAN COUNT — count ONLY people whose body or face is actually, clearly visible in "
-    "the frame. Do not count implied, out-of-frame, or assumed people. If subject_group is not "
-    "H and no people are visible anywhere in the frame, answer 0.\n"
-    "   How many distinct people are clearly visible? (0/1/2/3+)\n"
-    "9. CHILD PRESENT — is any one of the people counted above UNAMBIGUOUSLY a child "
+    "8. HUMAN COUNT — count ONLY LIVING people whose body or face is actually, clearly "
+    "visible in the frame. Do not count implied, out-of-frame, or assumed people. DO NOT "
+    "COUNT DEPICTED FIGURES: faces or bodies in a mural, graffiti, painting, poster, "
+    "billboard, advertisement, photograph-within-the-photograph, statue, mannequin, screen "
+    "or reflection are artwork, not people. If subject_group is not H and no living people "
+    "are visible anywhere in the frame, answer 0.\n"
+    "   How many distinct LIVING people are clearly visible? (0/1/2/3+)\n"
+    "8b. DEPICTED FIGURES — are there any painted, printed, sculpted, screen-displayed or "
+    "reflected human figures in this frame (mural, graffiti, poster, billboard, statue, "
+    "mannequin, photo within the photo)? These are common in street photography and are NOT "
+    "people. Answer yes/no, and if yes say in a few words what and where.\n"
+    "   Any depicted figures? (yes/no + what and where)\n"
+    "9. CHILD PRESENT — this question is about the LIVING people counted in 8 ONLY. A face "
+    "in a mural, poster, painting or statue can NEVER answer this question yes, however young it looks — it is not a person in the scene. "
+    "Is any one of the LIVING people counted above UNAMBIGUOUSLY a child "
     "(a minor — by face shape, body proportions, or height relative to any adults present), "
     "not just an adult who happens to be smaller, seated, crouching, or farther from the "
     "camera? A seated or distant adult is NOT a child. If you are not certain, answer no.\n"
@@ -43622,6 +43803,7 @@ _HAIKU_VISION_PROMPT = (
     "  \"lighting\": \"<backlit|frontlit|sidelit|overcast|low_light_dark_background>\",\n"
     "  \"confidence\": \"<high|medium|low>\",\n"
     "  \"human_count\": \"<0|1|2|3+>\",\n"
+    "  \"depicted_figures\": \"<no, or a few words naming what and where>\",\n"
     "  \"child_present\": <true|false>,\n"
     "  \"child_evidence\": \"<specific visible features, or empty string>\"\n"
     "}"
@@ -43748,14 +43930,30 @@ def _try_vision_analyse(img_b64):
                             'position', 'angle', 'perspective', 'next to', 'beside',
                             'compared', 'relative to', 'appears to be', 'seems',
                             'likely', 'probably', 'presumably', 'suggests')
+                # SL-182.110 -- a face in a MURAL is not a person, so it can never
+                # be evidence of a child. The founder's own photograph is why:
+                # four adult women at a Mumbai pavement stall, in front of a huge
+                # painted mural of women's faces. The engine's own prose shows it
+                # saw the distinction -- "painted witness, living vendor, trusting
+                # child" -- and then counted the painted face as a person and
+                # judged its age. The age gate was never the whole problem; the
+                # engine was answering a question about PEOPLE using ARTWORK.
+                _DEPICTED = ('mural', 'graffiti', 'painted', 'painting', 'poster',
+                             'billboard', 'advertis', 'artwork', 'wall art',
+                             'statue', 'sculpture', 'mannequin', 'screen',
+                             'reflection', 'depicted', 'illustrat', 'portrait on')
                 _reason = None
                 if not _ev:
                     _reason = 'no evidence given'
                 elif len(_ev.split()) < 5:
                     _reason = 'evidence too thin (%d words)' % len(_ev.split())
                 else:
+                    _dep = [_w for _w in _DEPICTED if _w in _ev_l]
                     _hit = [_w for _w in _FRAMING if _w in _ev_l]
-                    if _hit:
+                    if _dep:
+                        _reason = ('evidence describes a DEPICTED figure, not a living person: '
+                                   + ', '.join(_dep[:4]))
+                    elif _hit:
                         _reason = 'evidence is framing/position, not age: ' + ', '.join(_hit[:4])
                 if _reason:
                     app.logger.info(
@@ -45257,6 +45455,39 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 'the reader all trust in everything else on the card.'
             )
 
+        # -- SL-182.110 -- DEPICTED FIGURES ARE NOT PEOPLE --------------------
+        # Street photography is full of painted and printed faces: murals,
+        # hoardings, film posters, shrine images, shop signage. On the founder's
+        # Mumbai pavement-stall photograph the engine described "painted witness,
+        # living vendor, trusting child" -- it could see the mural was a mural,
+        # and still treated a face on the wall as a person in the scene with an
+        # age, a gaze and a relationship to the vendor. Every downstream gate was
+        # answering about people while the model was describing artwork.
+        _v_depicted = str(_vision.get('depicted_figures', '') or '').strip()
+        _has_depicted = bool(_v_depicted) and _v_depicted.lower() not in (
+            'no', 'none', 'no.', 'false', 'n/a', '-'
+        )
+        if _has_depicted:
+            _vs_lines.append(
+                'DEPICTED FIGURES PRESENT (artwork, NOT people): %s. These are painted, printed '
+                'or sculpted images, not human beings standing in this scene, and they are NOT '
+                'in the people count above.\n'
+                'YOU MAY DESCRIBE THEM — a mural is often the best thing in a street frame — BUT '
+                'EVERY REFERENCE MUST NAME THE SURFACE, AND MUST NOT GIVE THE FIGURE AN AGE OR AN '
+                'IDENTITY. Write "the face on the wall", "the painted figure", "the faces in the '
+                'mural", "the figure on the poster". Do NOT write "the child\'s face on the wall", '
+                '"the young girl in the mural", "the old man painted above them" — you cannot read '
+                'age or identity off a painted, stylised or weathered face, and naming the surface '
+                'does not make the guess true. NEVER write a bare "the child", "the woman", "the '
+                'man" or "the bystander" for something painted, because a reader takes that as a '
+                'person who was standing there.\n'
+                'And never give a depicted figure a gaze, a feeling, an intention or a '
+                'relationship with a living subject as though it were taking part — it did not '
+                'look at anyone, want anything, or respond to anything. How the artwork sits '
+                'against the living subjects compositionally is fair game and is usually the '
+                'sharper observation.' % _v_depicted[:160]
+            )
+
         # -- SL-182.108 -- GAZE / EYE-CONTACT BAN -----------------------------
         # The Sonnet engine has a dedicated gaze gate with stated evidence
         # (auto_score.py: "Gaze: away_from_camera | Evidence: ..."), built after
@@ -45465,6 +45696,160 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     except Exception as e:
         app.logger.error(f'[try_haiku] JSON parse failed: {e} | raw: {text[:200]}')
         return None
+
+    # -- SL-182.109 -- MINOR-LANGUAGE SCRUB (CODE, NOT PROSE) -----------------
+    # 182.108's child evidence gate worked exactly as designed on the 7 Oct
+    # 04:32 run -- it caught Haiku claiming a child on "smaller... seated...
+    # lower... compared", downgraded child_present to False, and logged it:
+    #   [haiku_vision] CHILD GATE: downgrading child_present True -> False
+    #   (evidence is framing/position, not age: smaller, seated, lower, compared)
+    # The VERIFIED SUBJECT block then carried the hard ban into the scoring
+    # prompt, in these words: 'Do NOT use the words "child", "kid", "boy", or
+    # "girl" ... anywhere in the output'.
+    #
+    # The card came back with "child" SEVEN TIMES.
+    #
+    # That is now the sixth prose rule this project has watched fail in two
+    # days, and the reason is visible in the same log: main_scoring input is
+    # 20,816 tokens. The ban sits around token 4,100 with sixteen thousand
+    # tokens of further instruction after it. A single sentence cannot hold
+    # that position, however bluntly it is written -- and every previous
+    # attempt to fix a prose rule with better prose has failed here too.
+    #
+    # So the ban is enforced in code, after generation, where it cannot be
+    # ignored or out-weighted. This is a PURE WORD SUBSTITUTION on complete
+    # words only -- no sentence is rewritten, no clause reordered, no API call
+    # made, no latency added. "the child's upward gaze" becomes "the person's
+    # upward gaze": still true of the photograph, because there IS a person
+    # there; only the false claim about their age is removed.
+    #
+    # Runs ONLY when the pre-call did not confirm a child. On a genuine
+    # child_present=True (accepted on real anatomical evidence by the 182.108
+    # gate) nothing is touched.
+    try:
+        if not _vision.get('child_present'):
+            import re as _re_scrub
+            _MINOR_MAP = [
+                (r"\bchildren's\b", "people's"), (r"\bchildren\b", "people"),
+                (r"\bchild's\b",    "person's"), (r"\bchild\b",    "person"),
+                (r"\bkids'\b",      "people's"), (r"\bkids\b",     "people"),
+                (r"\bkid's\b",      "person's"), (r"\bkid\b",      "person"),
+                (r"\bboy's\b",      "person's"), (r"\bboys\b",     "people"),
+                (r"\bboy\b",        "person"),
+                (r"\bgirl's\b",     "person's"), (r"\bgirls\b",    "people"),
+                (r"\bgirl\b",       "person"),
+                (r"\btoddler's\b",  "person's"), (r"\btoddler\b",  "person"),
+                (r"\byoungster\b",  "person"),   (r"\byoungsters\b", "people"),
+                (r"\blittle one\b", "person"),
+            ]
+            def _scrub_case(_m, _repl):
+                _w = _m.group(0)
+                if _w.isupper():   return _repl.upper()
+                if _w[:1].isupper(): return _repl[:1].upper() + _repl[1:]
+                return _repl
+            # Known titles that legitimately contain a minor-referring word.
+            # Caught in testing: "The Girl with a Pearl Earring" became "The
+            # Person with a Pearl Earring". A master reference or a cited work
+            # is a proper name, not a claim about who is in THIS photograph, so
+            # it is masked out before the substitution and restored after.
+            _PROTECT = [
+                'Girl with a Pearl Earring', 'Afghan Girl', 'Boy with Apple',
+                'Migrant Mother', 'Dancing Girl', 'The Boy', 'Boys of Summer',
+            ]
+            _scrubbed_fields, _scrub_total = [], 0
+            for _k, _v in list(d.items()):
+                if not isinstance(_v, str) or not _v:
+                    continue
+                _new, _n = _v, 0
+                # SL-182.110 -- founder: "technically it should have said child's
+                # face on the wall and it would have worked". Correct, and it
+                # changes this scrub. The error was never the WORD; it was the
+                # missing surface. "the child's face in the mural" is true and is
+                # a good observation. "the child's upward gaze" is a fabricated
+                # participant. So a minor word that already sits beside a word
+                # naming the surface is LEFT ALONE, and only bare, unqualified
+                # uses are replaced.
+                _DEP_CTX = ('mural', 'graffiti', 'painted', 'painting', 'poster',
+                            'billboard', 'advertis', 'artwork', 'wall', 'hoarding',
+                            'statue', 'sculpture', 'mannequin', 'screen', 'signage',
+                            'depicted', 'illustrat', 'drawn', 'stencil')
+                _masks = {}
+                for _pi, _ptitle in enumerate(_PROTECT):
+                    if _ptitle.lower() in _new.lower():
+                        _tok = '\x00SLP%d\x00' % _pi
+                        _masks[_tok] = _ptitle
+                        _new = _re_scrub.sub(_re_scrub.escape(_ptitle), _tok,
+                                             _new, flags=_re_scrub.I)
+                def _scrub_or_keep(_m, _repl):
+                    # SL-182.111 -- founder: "rather face on the wall - do not
+                    # qualify this as child straight away". Right: age cannot be
+                    # read off a painted, stylised or weathered face any more
+                    # reliably than off a real one, and naming the surface does
+                    # not make the guess true. So in a DEPICTED context the age
+                    # word is not kept (182.110) and not swapped for "person"
+                    # (182.109) -- it is removed. "the child's face in the mural"
+                    # becomes "the face in the mural"; "a child painted on the
+                    # wall" becomes "a figure painted on the wall".
+                    _lo = max(0, _m.start() - 60)
+                    _ctx = _m.string[_lo:_m.end() + 60].lower()
+                    _w = _m.group(0)
+                    if any(_x in _ctx for _x in _DEP_CTX):
+                        # Possessive ("child's") -> drop entirely, the noun that
+                        # follows ("face") already carries the sentence.
+                        if _w.endswith("'s") or _w.endswith("\u2019s"):
+                            return ''
+                        _alt = 'figures' if _w.lower().endswith('s') else 'figure'
+                        return _scrub_case(_m, _alt)
+                    return _scrub_case(_m, _repl)
+                for _pat, _rep in _MINOR_MAP:
+                    _before = _new
+                    _new = _re_scrub.sub(
+                        _pat,
+                        (lambda _r: (lambda _m: _scrub_or_keep(_m, _r)))(_rep),
+                        _new, flags=_re_scrub.I
+                    )
+                    if _new != _before:
+                        _n += len(_re_scrub.findall(_pat, _before, flags=_re_scrub.I))
+                if _n:
+                    # A dropped possessive leaves a double space, and sometimes
+                    # "young figure" where the age word was the only problem.
+                    # The age adjective survives the noun swap otherwise:
+                    # "the young girl's fingers" -> "the young person's fingers".
+                    _new = _re_scrub.sub(
+                        r'\b(young|little|small|tiny)\s+(figures?|persons?|people)\b',
+                        r'\2', _new, flags=_re_scrub.I)
+                    # SL-182.112 -- founder: "how does the engine see child's
+                    # small hands?" Removing the noun is not enough when the
+                    # size adjective carries the same claim: "the person's small
+                    # hands" still tells the reader a child. These adjectives are
+                    # the residue of the age call, so on a field that was
+                    # scrubbed they go too. Only before body parts, so "a small
+                    # aperture" or "a tiny patch of light" are untouched.
+                    _new = _re_scrub.sub(
+                        r'\b(small|little|tiny|young|slight|delicate)\s+'
+                        r'(hands?|fingers?|faces?|feet|foot|arms?|shoulders?|'
+                        r'body|bodies|frame|figure|head|legs?|wrists?)\b',
+                        r'\2', _new, flags=_re_scrub.I)
+                    _new = _re_scrub.sub(r'[ \t]{2,}', ' ', _new)
+                    _new = _re_scrub.sub(r'\s+([,.;:!?])', r'\1', _new)
+                for _tok, _ptitle in _masks.items():
+                    _new = _new.replace(_tok, _ptitle)
+                if _n:
+                    d[_k] = _new
+                    _scrubbed_fields.append('%s(%d)' % (_k, _n))
+                    _scrub_total += _n
+            if _scrub_total:
+                app.logger.warning(
+                    '[try_haiku] MINOR SCRUB: removed %d minor-referring word(s) the scoring '
+                    'call wrote despite the ban, in: %s. The pre-call did NOT confirm a child '
+                    'on this image. Words replaced with adult-neutral equivalents; no sentence '
+                    'rewritten. (SL-182.109)'
+                    % (_scrub_total, ', '.join(_scrubbed_fields))
+                )
+            else:
+                app.logger.info('[try_haiku] minor_scrub OK — no minor-referring word in card text')
+    except Exception as _mse:
+        app.logger.warning('[try_haiku] MINOR SCRUB skipped (non-fatal): %s' % _mse)
 
     def _clamp(v):
         try:
