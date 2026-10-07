@@ -1,3 +1,41 @@
+# SL-VERSION: 171.65 (Session 238, 2026-10-07 -- THE CORRECTOR CAP NOW TRIAGES INSTEAD OF
+# REFUSING. Founder signal given after it sat open for a day.
+#
+# THE OLD RULE: more than 8 fields flagged for duplication, fix NOTHING. Not eight fixed and the
+# rest left -- ZERO fixed, on precisely the cards that needed it most. Session 238 logs show it
+# refusing on an 11-field card and again on a 13-field card; on the second, 24 duplicate groups
+# went to the photographer uncorrected while the detector dutifully logged every one of them.
+#
+# The comment I wrote defending that cap said a card that bad "needs a human look, not a blind
+# rewrite". The rewrite was never blind. Every returned field is validated on its own below -- too
+# long, still carrying the flagged phrase, still carrying an internal heading, empty -- and a field
+# that fails any check keeps its original text. The cap was guarding against a risk the per-field
+# validation already covered, and the price of that duplicated protection was the three worst cards
+# of the session getting no correction at all.
+#
+# NOW: the merged-phrase computation moves ABOVE the cap (it is what makes a choice possible), then
+# fields are ranked by HOW MUCH duplicated text each one actually carries -- a field repeating a
+# whole sentence outranks one repeating a four-word fragment, which is what a reader notices. The
+# worst 8 are rewritten and THE REMAINDER IS NAMED IN THE LOG, so what was left undone is visible
+# rather than silently dropped. Leak fields are never deferred: an internal prompt heading on a
+# customer card has no legitimate reading, so it goes in the batch regardless of rank.
+# The "may only improve or no-op" invariant is untouched -- a deferred field keeps its original
+# text, exactly as it would have under the old cap.
+#
+# Replayed against the real 13-field card from the 6 Oct 19:17 log, which was skipped entirely:
+# the batch now takes conclusion (121 chars duplicated), byline_1 (86), imagine (69), byline_2 (63),
+# impression (62), master_why (46), dim_obs_dm (44) and mentor_moment (35), and defers five fields
+# carrying 13-31 chars each. The eight longest duplications get fixed; the fragments wait.
+#
+# ALSO: the correction call max_tokens 1500 -> 2500. Live runs returned 499 and 819 output tokens on
+# 8-field batches so 1500 was never hit -- but this file has silently truncated JSON three times
+# (171.12, 171.14, 171.38), each time producing a card missing its last fields with no error
+# anywhere, and the cap now always sends a FULL batch where before it sent none. Costs nothing
+# unless needed.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a rescore that flags more than 8 fields.
+# Expect "[TEXT_REPEAT_FIX] N fields flagged, above the 8-field batch limit -- rewriting the 8
+# carrying the most duplicated text: ... NOT corrected this pass: ..." where it used to say SKIPPED.
+# RETAINS 171.64.)
 # SL-VERSION: 171.64 (Session 238, 2026-10-06 -- ONE FALSE POSITIVE, FIXED STRUCTURALLY. The 19:05
 # rescore is the best card this engine has produced and the log is clean except for one line:
 #     [auto_score][MASTER_REPEAT] "In Street" appears in multiple fields: hard_truth, impression
@@ -7517,15 +7555,12 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         _log.append('[auto_score][TEXT_REPEAT_FIX] nothing to rewrite (no field had a non-owner repeat)')
         return result, _log
 
-    if len(_fields_to_rewrite) > 8:
-        _log.append(f'[auto_score][TEXT_REPEAT_FIX] SKIPPED — {len(_fields_to_rewrite)} fields flagged, above the 8-field safety cap; '
-                     f'this image\'s card needs a human look, not a blind rewrite. Fields: {", ".join(_fields_to_rewrite)}')
-        return result, _log
-
     # For each (owner, rewrite-field) pair, find the ACTUAL longest shared
     # phrase from their real text — not an arbitrary 6-word window — so the
     # model is shown the real sentence to remove, and the later safety check
     # tests against the real duplicate too.
+    # SL-171.65 — this now runs BEFORE the cap, because the merged phrases are
+    # what let the cap choose WHICH fields to fix instead of refusing all of them.
     _rewrite_reasons = {}  # field -> list of (merged_phrase, owner_field)
     for _owner, _f in _owner_pairs:
         _owner_words = norm_words_fn(str(result.get(_owner, '') or ''))
@@ -7533,6 +7568,49 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
         _merged = _longest_common_run(_owner_words, _f_words)
         if _merged:
             _rewrite_reasons.setdefault(_f, []).append((_merged, _owner))
+
+    # ── SL-171.65 — THE CAP NOW TRIAGES INSTEAD OF REFUSING ──────────────────
+    # Founder signal given. The old rule was: more than 8 fields flagged, fix
+    # NOTHING. Not eight fixed and the rest left — zero fixed, on precisely the
+    # cards that needed it most. Session 238 logs show it refusing on an
+    # 11-field card and a 13-field card; 24 duplicate groups went to the
+    # photographer uncorrected while the detector logged every one of them.
+    #
+    # My own comment defending that cap said a card this bad "needs a human
+    # look, not a blind rewrite". The rewrite was never blind: every returned
+    # field is validated on its own below — too long, still carrying the flagged
+    # phrase, still carrying an internal heading, empty — and a field that fails
+    # keeps its original text. The cap was guarding against a risk the per-field
+    # checks already cover, and the cost of that duplicated protection was the
+    # three worst cards of the night getting nothing.
+    #
+    # Now: rank by how much duplicated text each field actually carries, fix the
+    # worst MAX_REWRITE, and NAME THE REMAINDER in the log so what was left
+    # undone is visible rather than silently dropped. Leak fields are never
+    # deferred — an internal heading on a customer card has no legitimate
+    # reading, so it goes in the batch regardless of rank.
+    # The "may only improve or no-op" invariant is untouched: a deferred field
+    # keeps its original text, exactly as it would have under the old cap.
+    _MAX_REWRITE = 8
+    _deferred = []
+    if len(_fields_to_rewrite) > _MAX_REWRITE:
+        def _dup_weight(_fname):
+            # Total length of the duplicated runs this field carries. A field
+            # repeating one four-word fragment ranks below one repeating a
+            # whole sentence, which is what a reader actually notices.
+            return sum(len(_p) for _p, _o in _rewrite_reasons.get(_fname, []))
+        _ranked = sorted(_fields_to_rewrite,
+                         key=lambda _f: (_f not in _leak_set, -_dup_weight(_f), _f))
+        _keep     = _ranked[:_MAX_REWRITE]
+        _deferred = sorted(_ranked[_MAX_REWRITE:])
+        _fields_to_rewrite = sorted(_keep)
+        _log.append(
+            f'[auto_score][TEXT_REPEAT_FIX] {len(_ranked)} fields flagged, above the '
+            f'{_MAX_REWRITE}-field batch limit — rewriting the {len(_keep)} carrying the most '
+            f'duplicated text: {", ".join(_fields_to_rewrite)}. NOT corrected this pass '
+            f'(original text kept, still duplicated): {", ".join(_deferred)}. '
+            f'(SL-171.65 — was: refuse all of them)'
+        )
     # A field flagged by the raw detector but with no merged phrase found
     # (should not happen, but never assume) still needs a hint — fall back to
     # the field's plain presence in _fields_to_rewrite with an empty phrase.
@@ -7589,7 +7667,14 @@ def _attempt_text_repeat_fix(result, text_repeats, repeat_fields, ngram_len, nor
             },
             json={
                 "model":       MODEL,
-                "max_tokens":  1500,
+                # SL-171.65 -- 1500 -> 2500. Live runs came back at 499 and 819 output
+                # tokens on 8-field batches, so 1500 was never actually hit -- but this
+                # file has silently truncated JSON three times (171.12, 171.14, 171.38)
+                # and each time the symptom was a card missing its last fields with no
+                # error anywhere. Now that the cap always sends a FULL batch of 8 rather
+                # than refusing, the worst case is larger than anything measured. Costs
+                # nothing unless it is needed.
+                "max_tokens":  2500,
                 "temperature": 0.4,  # some variation is the point — a second identical rewrite helps no one
                 "messages": [{"role": "user", "content": _prompt}],
             },
