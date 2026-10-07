@@ -1,3 +1,39 @@
+# SL-VERSION: 182.114 (Session 238, 2026-10-07 -- MASTER REFERENCE IS NOW ENFORCED, NOT SUGGESTED.
+# 182.113's genre guard worked: the 06:17 log carries NO "[try_haiku] master override" line, so
+# _pick_master_haiku() correctly declined to hand a wildlife photographer to a Street photograph and
+# fell through to the genre-filtered DB library as designed. The card came back with Tim Laman
+# anyway, on a Sassoon Dock fishing boat, with the rationale "Laman positions himself at the
+# distance the bird will tolerate, not the distance that fills the frame" -- which is almost
+# verbatim the hint string from the wildlife branch of that same function. The engine was handed a
+# library of Street masters and named someone outside it, most likely copied from its own history
+# block where the PREVIOUS evaluation of this image carried Laman.
+#
+# That is the third time in one morning that the right answer was in the prompt and the model wrote
+# a different one -- the child (182.109), the seagull (182.113), and now the master. The pattern is
+# settled, and so is the response: where a verified source of truth exists, enforce it in code after
+# generation rather than asking for it before.
+#
+# FIX: the DB library rows are now kept as (name, known_for) and the chosen master_name is checked
+# against them after the card is parsed. A name outside the library is replaced with the library's
+# top entry, and master_why is REBUILT from that entry's own factual known_for text -- deterministic,
+# no API call, no invented rationale. Substring matching both ways so "Raghu Rai" and "raghu rai"
+# and a name carrying an honorific all pass. Logged as [try_haiku] MASTER ENFORCED or master_check
+# OK, so a recurring mismatch is visible rather than silent.
+# EXPLICIT CARVE-OUT: this only runs when the Python dict did NOT choose the master. Wildlife and
+# Nature genres go through the override path and keep their chosen photographer untouched, which is
+# the whole point of that path -- verified in testing that an override case is left alone.
+#
+# WHAT THE SAME RUN CONFIRMS IS WORKING:
+#   * [try_haiku] SPECIES SCRUB fired and corrected the card -- "egret" x6 and "seagull" x0 on the
+#     delivered PDF, where the previous card said seagull twice and egret never.
+#   * minor_scrub OK and child_present=False again -- no age language, third clean card running.
+#   * The card itself is now a street-photography read: "shift the bird to the right third so the
+#     fishermen's labour becomes compositional weight, not supporting cast."
+# STILL OPEN AND NOT FIXABLE FROM HERE: the photographer name still prints as the account handle
+# ("The Livinglens") because the /try upload FORM does not post a photographer-name field. 182.113
+# made the route read one if it arrives and the Haiku PDF render it; the input itself has to be
+# added to the upload template, which is not in this session.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a re-run of image 147. RETAINS 182.113.)
 # SL-VERSION: 182.113 (Session 238, 2026-10-07 -- THE ENGINE CONTRADICTED ITS OWN GROUND TRUTH, A
 # WILDLIFE MASTER LANDED ON A STREET CARD, AND THE FREE PDF CARRIED NO PHOTOGRAPHER NAME. Three
 # founder-reported issues from the 7 Oct 06:07 run on image 147, all confirmed in the log and the PDF.
@@ -45590,6 +45626,7 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     # Session 210: build master reference library from DB for this genre
     # Used as fallback when Python dict returns None (non-wildlife genres)
     _master_lib_lines = []
+    _master_lib_rows = []          # SL-182.114 — [(name, known_for), ...]
     try:
         with app.app_context():
             _ref_rows = db.session.execute(db.text(
@@ -45607,6 +45644,9 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 _master_lib_lines.append(
                     f'- {_rr.name} {_origin}: {_rr.known_for or ""}.{_when}'
                 )
+                # SL-182.114 -- keep the rows themselves so the choice can be
+                # ENFORCED after generation, not only suggested before it.
+                _master_lib_rows.append((_rr.name, _rr.known_for or ''))
     except Exception as _ml_err:
         app.logger.warning(f'[try_haiku] master_library query failed (non-fatal): {_ml_err}')
     _master_lib_fallback = '\n'.join(_master_lib_lines) if _master_lib_lines else (
@@ -45999,6 +46039,62 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
                 )
     except Exception as _spe:
         app.logger.warning('[try_haiku] SPECIES SCRUB skipped (non-fatal): %s' % _spe)
+
+    # -- SL-182.114 -- MASTER REFERENCE ENFORCEMENT --------------------------
+    # 182.113 stopped _pick_master_haiku() handing a wildlife photographer to a
+    # human-centred genre, and the 06:17 log proves that half worked -- there is
+    # no "[try_haiku] master override" line any more. The card still came back
+    # with Tim Laman on a STREET photograph, with the rationale "Laman positions
+    # himself at the distance the bird will tolerate, not the distance that
+    # fills the frame" -- which is almost verbatim the hint text from the
+    # wildlife branch of that very function.
+    #
+    # So the engine was offered a library of Street masters from the DB and
+    # named someone who was not in it. Most likely it copied from its own
+    # history block, where the PREVIOUS evaluation of this same image carried
+    # Laman. Either way it is the same failure as the seagull an hour earlier:
+    # the right answer was in the prompt and the model wrote a different one.
+    #
+    # Same cure, for the same reason. The DB rows are the source of truth and
+    # they carry their own factual "known_for" text, so the correction is
+    # deterministic -- no API call, no invented rationale. Only applies when a
+    # library was actually fetched and the Python dict did NOT deliberately
+    # override (Wildlife and Nature keep their chosen master untouched).
+    try:
+        if _master_lib_rows and not _python_master_name:
+            _named = str(d.get('master_name', '') or '').strip()
+            _allowed = {_n.strip().lower(): (_n, _kf) for _n, _kf in _master_lib_rows}
+            _named_l = _named.lower()
+            _ok = any(_named_l == _a or _named_l in _a or _a in _named_l
+                      for _a in _allowed) if _named else False
+            if _named and not _ok:
+                _sub_name, _sub_kf = _master_lib_rows[0]
+                d['master_name'] = _sub_name
+                if _sub_kf:
+                    d['master_why'] = (
+                        '%s is known for %s Look at how that choice is made, and where '
+                        'this frame is already reaching for it.'
+                        % (_sub_name, _sub_kf.rstrip('.') + '.')
+                    )
+                else:
+                    d['master_why'] = (
+                        'Look at how %s builds a frame, and where this photograph is '
+                        'already reaching for the same thing.' % _sub_name
+                    )
+                app.logger.warning(
+                    '[try_haiku] MASTER ENFORCED: the card named %r, who is not in the %s '
+                    'library offered for this genre -- replaced with %r and the rationale '
+                    'rebuilt from the reference library. The scoring call was given the list '
+                    'and chose outside it. (SL-182.114)'
+                    % (_named, genre or 'General', _sub_name)
+                )
+            else:
+                app.logger.info(
+                    '[try_haiku] master_check OK — %r is in the %s reference library'
+                    % (_named, genre or 'General')
+                )
+    except Exception as _mee:
+        app.logger.warning('[try_haiku] MASTER ENFORCEMENT skipped (non-fatal): %s' % _mee)
 
     def _clamp(v):
         try:
