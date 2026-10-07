@@ -1,3 +1,4 @@
+{# SL-VERSION: admin-3.8 (Session 238, 2026-10-07 — THE "GENERATING…" CHIP WAS A LIE, AND "NO REPORT YET" MEANT TWO DIFFERENT THINGS. Founder signal given. The Evolving Eye chip was set by the click handler in this file and then never touched again: it read "Generating…" whether the run was working, had finished, or had died. And the status cell only ever showed "Report ready" or "No report yet" — with "No report yet" covering BOTH never-started and crashed. That ambiguity is exactly how a 100% failure rate in _generate_evolving_eye stayed invisible for the entire life of the feature; the panel's own summary read "9 pending" while nothing had ever succeeded. Now: (1) the status cell renders the recorded outcome from app.py 182.123 — Failed (with the real error text), Generating…, Report ready, or No report yet, as four distinct states; (2) a poller hits /admin/evolving-eye-status every 5s so a run resolves itself without a page refresh — it starts on click, also picks up a run already in flight when the page loads, stops as soon as nothing is running, and gives up after 10 minutes so an overnight tab is not polling forever; (3) new .s-err pill, red, wrapping, 14px — it carries the actual failure reason, and a truncated reason is no better than none. NOT a progress bar: the generation is one Sonnet call and reports no intermediate progress, so there is nothing honest to show between start and finish. Four states, truthfully, beats a fake percentage. REQUIRES app.py 182.123 — the columns and the endpoint live there. PUSH BOTH TOGETHER. RETAINS 3.7.) #}
 {# SL-VERSION: admin-3.7 (Session 237, 2026-10-06 — Founder: rescoring on the admin image grid gave no feedback — "i do not know if its being done or not." The Sonnet "Rescore" button (image-grid tile, Sonnet tab) was a plain form POST causing a full-page redirect with zero in-page progress; the Session-211 progress-bar markup already sat in every tile but was only ever wired to the Haiku button. Fixed with NO backend change — both routes already supported this: /admin/image/<id>/force-rescore already returns JSON instead of redirecting when sent the X-Requested-With header, and /score-status/<id> already works for any image an admin can view (not Haiku-only like /try/status/<id>). New sonnetRescore() JS function mirrors haikuRescore()'s progress-bar + polling pattern, posts via fetch, polls every 4s, updates score/tier on the tile in place. Added a shared _rescoreSecTicker() helper used by BOTH haikuRescore() and the new sonnetRescore() — a live "Scoring… Ns" counter that ticks every second and is stopped the instant the job ends (success, error, or timeout), plus a green "✓ Done · Ns" on completion for both. Haiku's own polling/bar logic is otherwise unchanged. RETAINS admin-3.6.) #}
 {# SL-VERSION: admin-3.6 (Session 236, 2026-10-04 — Founder request: no way to export the member list, and no single place showing Haiku/Sonnet/UAT members together. Added: (1) a new "Users" item at the top of the Members sidebar group, linking to the existing /admin/users page, with a badge showing the combined paid+UAT+Haiku count. (2) A "CSV" download link in each of the three existing member panel headers (Paid subscribers, UAT & Learning, Haiku members) — each links to the new /admin/users/export.csv?type=... route (app.py v182.97) and downloads that one segment as a spreadsheet file with ID, Name, Email, Type, Plan, Joined, Scored images, Best evaluation, Last scored. The links use event.stopPropagation() so clicking "CSV" does not also collapse/expand the panel underneath it. No existing table, button or route was removed or renamed. RETAINS admin-3.5.) #}
 {# SL-VERSION: admin-3.5 (Session 235, 2026-10-04 — Links and note only: Curation (Bulk Special Run, /admin/curation) added to the sidebar (Images group), the mobile menu and Quick actions; the grey bulk-upload note now points to it. No other change. RETAINS admin-3.4.) #}
@@ -283,6 +284,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .spill{font-size:11px;padding:3px 8px;border-radius:99px;white-space:nowrap;font-weight:500;display:inline-block}
 .s-active{background:#E8F5E9;color:#2E7D32}
 .s-warn{background:#FFF3CD;color:#92400E}
+/* SL-admin-182.123: failure state. Overrides the pill's nowrap because this one
+   carries the actual error text — a truncated reason is no better than none.
+   14px, not 11px: this is the line that tells you something is broken. */
+.s-err{background:#FEF2F2;color:#B91C1C;white-space:normal;max-width:380px;font-size:14px;line-height:1.5;text-align:left}
 .s-new{background:#F3E8FF;color:#6B21A8}
 .s-none{background:#F5F3EF;color:#8A8A86;border:1px solid #E0DDD6}
 .row-actions{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
@@ -1129,8 +1134,17 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
               <div style="font-size:12px;color:#8A8A86">ID {{ eu.id }}</div>
             </td>
             <td style="font-size:14px;padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle;font-weight:500">{{ eu.scored }}</td>
-            <td style="padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle">
-              {% if eu.has_report %}
+            {# SL-admin-182.123: the status cell used to show only "Report ready" or
+               "No report yet" — and "No report yet" meant BOTH never-started and
+               crashed, which is how a 100% failure rate stayed invisible. It now
+               reads the recorded outcome. data-ee-cell lets the poller below
+               rewrite it when a run finishes, so "Generating…" ends by itself. #}
+            <td style="padding:10px 8px 10px 0;border-bottom:1px solid #F5F3EF;vertical-align:middle" data-ee-cell="{{ eu.id }}">
+              {% if eu.status == 'failed' %}
+              <span class="spill s-err">Failed{% if eu.error %} · {{ eu.error }}{% endif %}</span>
+              {% elif eu.status == 'generating' %}
+              <span class="spill s-warn">Generating…</span>
+              {% elif eu.has_report %}
               <span class="spill s-active">Report ready · milestone {{ eu.milestone }}</span>
               {% else %}
               <span class="spill s-warn">No report yet</span>
@@ -2496,6 +2510,86 @@ function executeBulkDelete(delType){
       setTimeout(function(){ result.style.display = 'none'; }, 5000);
     });
 }
+// ── EVOLVING EYE LIVE STATUS — SL-182.123 ────────────────────────────────────
+// The "Generating…" chip used to be set by the click handler below and never
+// touched again: it said Generating whether the run was working, finished or
+// dead. This polls the recorded outcome and lets the chip finish by itself.
+// It stops on its own once nothing is running, and gives up after 10 minutes so
+// a browser tab left open overnight is not asking the server forever.
+// _eeSeenRunning / _eeGraceUntil exist because of a race found in testing:
+// eeStartPolling() polls immediately, but the generation runs in a background
+// thread that has not yet written status='generating'. On a RE-generate the
+// endpoint therefore still returns the PREVIOUS run's 'done', the poller
+// concludes nothing is running and stops on its first tick — and the chip never
+// resolves. So: never stop until we have actually seen a run in flight, or until
+// a short grace window has passed without one appearing.
+var _eePoll = null, _eePollUntil = 0, _eeSeenRunning = false, _eeGraceUntil = 0;
+
+function eeApplyStatus(uid, s) {
+  var cell = document.querySelector('[data-ee-cell="' + uid + '"]');
+  if (!cell) return;
+  var pill = cell.querySelector('.spill');
+  if (!pill) return;
+  if (s.status === 'failed') {
+    pill.className = 'spill s-err';
+    pill.textContent = 'Failed' + (s.error ? ' · ' + s.error : '');
+  } else if (s.status === 'generating') {
+    pill.className = 'spill s-warn';
+    pill.textContent = 'Generating…';
+  } else if (s.status === 'done' || s.has_report) {
+    pill.className = 'spill s-active';
+    pill.textContent = 'Report ready' + (s.milestone ? ' · milestone ' + s.milestone : '');
+    var b = document.getElementById('ee-btn-' + uid);
+    if (b) { b.textContent = 'Re-generate'; b.disabled = false; }
+  }
+}
+
+function eePollOnce() {
+  fetch('/admin/evolving-eye-status', { headers: { 'Accept': 'application/json' } })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.ok || !d.users) return;
+      var stillRunning = false;
+      Object.keys(d.users).forEach(function (uid) {
+        var s = d.users[uid];
+        eeApplyStatus(uid, s);
+        if (s.status === 'generating') stillRunning = true;
+      });
+      if (stillRunning) _eeSeenRunning = true;
+      // Hard cap first: an overnight tab must stop asking regardless.
+      if (Date.now() > _eePollUntil) { eeStopPolling(); return; }
+      // Otherwise only stop once there is genuinely nothing in flight AND we
+      // either saw it running, or waited out the grace window for it to appear.
+      if (!stillRunning && (_eeSeenRunning || Date.now() > _eeGraceUntil)) eeStopPolling();
+    })
+    .catch(function () { /* transient network error - the next tick retries */ });
+}
+
+function eeStartPolling() {
+  _eePollUntil  = Date.now() + 10 * 60 * 1000;  // 10 minutes, then give up
+  _eeGraceUntil = Date.now() + 30 * 1000;       // 30s for the thread to register
+  _eeSeenRunning = false;
+  if (_eePoll) return;                          // already polling
+  _eePoll = setInterval(eePollOnce, 5000);
+  eePollOnce();                                 // don't wait 5s for the first one
+}
+
+function eeStopPolling() {
+  if (_eePoll) { clearInterval(_eePoll); _eePoll = null; }
+}
+
+// If a generation was already running when this page was opened (someone else
+// triggered it, or the tab was reloaded mid-run), pick it up without a click.
+document.addEventListener('DOMContentLoaded', function () {
+  if (document.querySelector('[data-ee-cell]')) {
+    var running = Array.prototype.some.call(
+      document.querySelectorAll('[data-ee-cell] .spill'),
+      function (p) { return (p.textContent || '').indexOf('Generating') !== -1; }
+    );
+    if (running) eeStartPolling();
+  }
+});
+
 // ── EVOLVING EYE TRIGGER ─────────────────────────────────────────────────────
 function triggerEye(uid, name, btn) {
   if (!confirm('Generate Evolving Eye advisory for ' + name + '?\nThis fires the generation engine and sends the advisory email.')) return;
@@ -2516,6 +2610,7 @@ function triggerEye(uid, name, btn) {
           var spill = row.querySelector('.spill');
           if (spill) { spill.className = 'spill s-warn'; spill.textContent = 'Generating…'; }
         }
+        eeStartPolling();   // SL-182.123 — let the chip resolve itself
       } else {
         flash.style.background = '#FEF2F2'; flash.style.color = '#B91C1C'; flash.style.border = '1px solid #FECACA';
         flash.textContent = '✗ ' + (d.error || 'Generation failed');
