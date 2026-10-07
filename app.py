@@ -1,3 +1,54 @@
+# SL-VERSION: 182.113 (Session 238, 2026-10-07 -- THE ENGINE CONTRADICTED ITS OWN GROUND TRUTH, A
+# WILDLIFE MASTER LANDED ON A STREET CARD, AND THE FREE PDF CARRIED NO PHOTOGRAPHER NAME. Three
+# founder-reported issues from the 7 Oct 06:07 run on image 147, all confirmed in the log and the PDF.
+#
+# (1) SPECIES CONTRADICTION -- "Big issue - these arent seagulls :) they are egrets". The striking
+#     part is that THE PRE-CALL GOT IT RIGHT:
+#         [haiku_vision] group=A subject=White egret ... confidence=high
+#     That went into the scoring prompt as "Primary subject: White egret", and the card called them
+#     "the seagull" twice and never once said egret. So this is not a seeing failure and not a
+#     confidence failure -- the engine was handed the answer and wrote a different one. 182.108's
+#     species gate cannot catch it by design: that gate bans a species NAME when the creature is
+#     incidental or confidence is low, and here the bird IS the subject at high confidence, so
+#     naming it was permitted. What nothing checked was whether the name used MATCHED the verified
+#     one. FIX: a deterministic species-contradiction scrub, no API call -- when the pre-call named
+#     a subject, any OTHER species word in the card is replaced with the verified head noun
+#     ("White egret" -> "egret"), inflection and capitalisation preserved. Verified on the live card
+#     text: "The seagull's arrival" -> "The egret's arrival", plurals and sentence-initial caps
+#     handled, and a card that already agrees with the pre-call is left untouched. Logged as
+#     [try_haiku] SPECIES SCRUB or species_scrub OK. A photographer who knows an egret from a gull
+#     -- which is most of them -- stops watching the engine contradict itself.
+#
+# (2) WILDLIFE MASTER ON A STREET PHOTOGRAPH -- from the same log:
+#         [try_haiku] master override: Tim Laman (group=A)
+#     on a frame the photographer filed as STREET: a Sassoon Dock fishing boat, six men working the
+#     catch, an egret crossing it. Laman is a wildlife photographer, so the advice came out as
+#     "position at the distance the bird will tolerate... move closer still" -- to a street
+#     photographer standing on a dock. Root cause: _pick_master_haiku() has ALWAYS taken `genre` as
+#     an argument and NEVER used it. Every branch keys off subject_group alone. The pre-call is not
+#     wrong that the egret is visually primary -- it is the brightest, sharpest moving thing in the
+#     frame -- but the photographer said what the photograph is ABOUT when they chose the genre, and
+#     on a human-centred genre that intent has to win or the whole card answers the wrong question.
+#     FIX: on Street / People / Wedding / Documentary / Fashion / Portrait / Photojournalism / Event,
+#     a creature subject_group no longer selects the master; the function returns None and falls
+#     through to the existing DB library path, which selects on genre. Wildlife and Nature genres are
+#     completely unchanged.
+#
+# (3) PHOTOGRAPHER NAME -- two separate gaps, both closed. The /try upload route hardcoded
+#     photographer_name to the ACCOUNT name, so a card always carried the signup handle: the founder
+#     uploaded as "The Livinglens" with the photographer entered as "Carmen", and the card said The
+#     Livinglens. The Image model already has the per-image field and the paid scorecard has rendered
+#     it as a credit since 237.1 -- only this route never read the form. It now reads
+#     photographer_name / photographer / credit from the form and falls back to the account name
+#     exactly as before, so nothing breaks if the input is absent. AND the Haiku PDF never printed
+#     the name at all; a credit line now sits under the asset title.
+#     NEEDS ONE THING I CANNOT DO FROM HERE: the /try upload FORM must actually post a photographer
+#     name field. I do not have that template in this session. If the input is not there, this route
+#     will keep falling back to the account name and the card will keep saying The Livinglens --
+#     flagged rather than silently assumed fixed.
+# NOT YET CONFIRMED LIVE -- needs the founder's push and a re-run of image 147. Expect:
+# species_scrub firing or OK, NO Tim Laman on a Street card, and the photographer name on the PDF
+# once the form field exists. RETAINS 182.112.)
 # SL-VERSION: 182.112 (Session 238, 2026-10-07 -- TWO ERRORS, NOT ONE, AND THE SIZE WORDS CARRY THE
 # CLAIM TOO. Founder, on the line "The fruit sits in the child's small hands": "how does the engine
 # see child's small hands? which means its reading a living adult being as child also?"
@@ -44003,6 +44054,28 @@ def _pick_master_haiku(subject_group, environment, genre):
     _env = (environment or '').lower()
     _genre = (genre or '').lower()
 
+    # -- SL-182.113 -- GENRE BEATS SUBJECT GROUP ON HUMAN-CENTRED GENRES -----
+    # This function has always taken `genre` and never used it: every branch
+    # below keys off subject_group alone. On the founder's 7 Oct run that
+    # produced, from the log,
+    #     [try_haiku] master override: Tim Laman (group=A)
+    # on a photograph the photographer filed as STREET -- a Sassoon Dock
+    # fishing boat with a crew of six working the catch and an egret crossing
+    # the frame. Tim Laman is a wildlife photographer, so the card's advice
+    # came out as "position at the distance the bird will tolerate... move
+    # closer still", offered to a street photographer standing on a dock.
+    #
+    # The pre-call is not wrong to call the egret the visually primary subject;
+    # it is the brightest, sharpest thing moving. But the photographer told us
+    # what the photograph is ABOUT when they chose the genre, and on a
+    # human-centred genre that intent must win, or the whole card is answered
+    # to the wrong question. Returning None here falls through to the DB
+    # library path, which selects on genre.
+    _HUMAN_GENRES = ('street', 'people', 'wedding', 'documentary', 'fashion',
+                     'portrait', 'photojournalism', 'event')
+    if _g in ('A', 'B', 'C', 'D', 'E', 'F', 'G') and _genre in _HUMAN_GENRES:
+        return (None, None)
+
     # ── Group A: Water birds ─────────────────────────────────────────────────
     if _g == 'A':
         # Flamingos → Salgado
@@ -45851,6 +45924,82 @@ def _try_run_haiku(image_id, img_b64, genre, user_id=None, photographer_context=
     except Exception as _mse:
         app.logger.warning('[try_haiku] MINOR SCRUB skipped (non-fatal): %s' % _mse)
 
+    # -- SL-182.113 -- SPECIES CONTRADICTION SCRUB ---------------------------
+    # The 7 Oct 06:07 run on image 147 is the clearest case yet of a scoring
+    # call ignoring its own ground truth. The pre-call got it RIGHT:
+    #   [haiku_vision] group=A subject=White egret ... confidence=high
+    # That went into the prompt as "Primary subject: White egret". The card then
+    # called them "the seagull", twice, and never once said egret.
+    #
+    # So this is not a seeing failure and not a confidence failure -- the engine
+    # was told the answer and wrote something else. 182.108's species gate does
+    # not catch it either, by design: that gate bans a species NAME when the
+    # creature is incidental or confidence is low, and here the bird IS the
+    # subject at high confidence, so naming it was permitted. What was never
+    # checked is whether the name used MATCHES the verified one.
+    #
+    # Deterministic, no API call: if the pre-call named a subject, any OTHER
+    # species word in the card is replaced with the verified one. Nothing is
+    # rewritten, only the wrong noun swapped for the right noun. A photographer
+    # who knows an egret from a gull -- which is most of them -- stops seeing
+    # the engine contradict itself.
+    try:
+        _v_subj = str(_vision.get('subject_type', '') or '').strip()
+        if _v_subj:
+            import re as _re_sp
+            # Head noun of the verified subject: "White egret" -> "egret".
+            _verified_head = _re_sp.sub(r'[^a-z ]', '', _v_subj.lower()).split()
+            _verified_head = _verified_head[-1] if _verified_head else ''
+            _SPECIES_VOCAB = [
+                'seagulls', 'seagull', 'gulls', 'gull', 'pigeons', 'pigeon',
+                'crows', 'crow', 'ravens', 'raven', 'herons', 'heron',
+                'storks', 'stork', 'cranes', 'crane', 'ibises', 'ibis',
+                'egrets', 'egret', 'eagles', 'eagle', 'hawks', 'hawk',
+                'kites', 'kite', 'falcons', 'falcon', 'owls', 'owl',
+                'terns', 'tern', 'ducks', 'duck', 'swans', 'swan',
+                'sparrows', 'sparrow', 'mynas', 'myna', 'parrots', 'parrot',
+                'pelicans', 'pelican', 'cormorants', 'cormorant',
+                'flamingos', 'flamingo', 'vultures', 'vulture',
+            ]
+            _sp_fixed, _sp_fields = 0, []
+            if _verified_head:
+                for _k, _v in list(d.items()):
+                    if not isinstance(_v, str) or not _v:
+                        continue
+                    _new_sp, _n_sp = _v, 0
+                    for _sp in _SPECIES_VOCAB:
+                        _sp_sing = _sp[:-1] if _sp.endswith('s') else _sp
+                        # Leave the verified species alone, in any inflection.
+                        if _sp_sing == _verified_head or _sp_sing in _v_subj.lower():
+                            continue
+                        _repl = _verified_head + ('s' if _sp.endswith('s') else '')
+                        _new_sp, _c = _re_sp.subn(
+                            r'\b' + _sp + r'\b',
+                            (lambda _r: (lambda _m: _r.upper() if _m.group(0).isupper()
+                                         else (_r[:1].upper() + _r[1:]
+                                               if _m.group(0)[:1].isupper() else _r)))(_repl),
+                            _new_sp, flags=_re_sp.I
+                        )
+                        _n_sp += _c
+                    if _n_sp:
+                        d[_k] = _new_sp
+                        _sp_fields.append('%s(%d)' % (_k, _n_sp))
+                        _sp_fixed += _n_sp
+            if _sp_fixed:
+                app.logger.warning(
+                    '[try_haiku] SPECIES SCRUB: the card named a species that contradicts the '
+                    'verified subject %r -- %d word(s) corrected to %r in: %s. The scoring call '
+                    'was given the right answer and wrote a different one. (SL-182.113)'
+                    % (_v_subj, _sp_fixed, _verified_head, ', '.join(_sp_fields))
+                )
+            else:
+                app.logger.info(
+                    '[try_haiku] species_scrub OK — card is consistent with verified subject %r'
+                    % _v_subj
+                )
+    except Exception as _spe:
+        app.logger.warning('[try_haiku] SPECIES SCRUB skipped (non-fatal): %s' % _spe)
+
     def _clamp(v):
         try:
             return min(10.0, max(0.0, round(float(v), 1)))
@@ -47539,7 +47688,18 @@ def try_upload():
             user_id           = current_user.id,
             original_filename = filename,
             asset_name        = (request.form.get('asset_name') or '').strip()[:120] or filename.rsplit('.', 1)[0][:120],  # SL-204: read title from form, fall back to filename
-            photographer_name = current_user.full_name or current_user.username,
+            # SL-182.113 -- was hardcoded to the ACCOUNT name, so a card always
+            # carried the handle the person signed up with. The founder uploaded
+            # as "The Livinglens" and entered the photographer as "Carmen"; the
+            # card said The Livinglens. The paid path already stores a per-image
+            # photographer_name and renders it as the credit, so the field and
+            # the plumbing both existed -- only this route never read the form.
+            # Falls back to the account name exactly as before when the form
+            # does not carry one, so nothing breaks if the input is absent.
+            photographer_name = ((request.form.get('photographer_name')
+                                  or request.form.get('photographer')
+                                  or request.form.get('credit') or '').strip()[:120]
+                                 or current_user.full_name or current_user.username),
             genre             = genre,
             width             = w,
             height            = h,
@@ -47870,6 +48030,10 @@ def try_result_download(image_id):
     _tier           = img.tier or ''
     _genre          = img.genre or ''
     _asset          = img.asset_name or img.original_filename or 'Untitled'
+    # SL-182.113 -- the Haiku PDF never printed the photographer at all, while
+    # the paid scorecard has carried it as a credit line since 237.1. A free
+    # card with no name on it is not something anyone shows to a friend.
+    _credit_name    = (getattr(img, 'photographer_name', '') or '').strip()
     _name           = getattr(current_user, 'display_name', '') or current_user.username or ''
     _impression     = _audit.get('impression', '')
     _strength_name  = _audit.get('strength_name', '')
@@ -48047,8 +48211,10 @@ def try_result_download(image_id):
             except Exception as _ie:
                 app.logger.warning(f'[try_result_download] photo embed failed: {_ie}')
 
-        # Asset name + EXIF
+        # Asset name + photographer credit + EXIF  (SL-182.113)
         _story.append(Paragraph(_asset, _s_head2))
+        if _credit_name:
+            _story.append(Paragraph(_credit_name, _s_body))
         if _exif_line:
             _story.append(Paragraph(_exif_line, _s_body_it))
 
