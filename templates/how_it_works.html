@@ -1,3 +1,10 @@
+{# SL-VERSION: how_it_works.html 17.0 — Session 238
+   17.0  Refusal discipline made concrete (was an unbacked assertion);
+         timing split into eValuate ~1 min / eLevate ~2.5 min with the reason;
+         SL-VERSION header added — this file had none since Session 16.
+         Dimension count stays FIVE here and everywhere (founder, S238).
+   16    Original build.
+#}
 {% extends "base.html" %}
 {% block title %}How Shutter League Works — Honest Feedback. Real Improvement.{% endblock %}
 
@@ -311,6 +318,66 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   text-align: justify;
 }
 
+/* ━━ REFUSAL DISCIPLINE ━━━━━━━━━━━━━━━━━
+   SL-238. Full-width band, NOT a fifth column in the diff grid. The grid is
+   repeat(4, 1fr) with one-line bodies; dropping ninety words into column one
+   would make it four times the height of its neighbours and the row would
+   read as broken. The claim is also the strongest thing on the page, so it
+   earns its own band rather than a quarter of a row. */
+.sl-hiw-refuse {
+  margin-top: 56px;
+  padding: 44px 48px;
+  background: #0D0D0B;
+  border-left: 3px solid #F5C518;
+}
+.sl-hiw-refuse-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.sl-hiw-refuse-body {
+  font-size: 17px;
+  font-weight: 500;
+  color: #E8E6E1;
+  line-height: 1.7;
+  max-width: 760px;
+}
+.sl-hiw-refuse-body + .sl-hiw-refuse-body {
+  margin-top: 16px;
+}
+.sl-hiw-refuse-list {
+  margin: 18px 0;
+  padding: 0;
+  list-style: none;
+  max-width: 760px;
+}
+.sl-hiw-refuse-list li {
+  font-size: 17px;
+  font-weight: 500;
+  color: #E8E6E1;
+  line-height: 1.7;
+  padding-left: 22px;
+  position: relative;
+}
+.sl-hiw-refuse-list li + li {
+  margin-top: 12px;
+}
+.sl-hiw-refuse-list li::before {
+  content: "\2014";
+  position: absolute;
+  left: 0;
+  color: #F5C518;
+}
+.sl-hiw-refuse-close {
+  font-size: 17px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+
 /* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-hiw-cta {
   background: #0D0D0B;
@@ -359,9 +426,21 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
 .sl-hiw-cta-micro {
   font-size: 15px;
   color: #FFFFFF;
+  line-height: 1.7;
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 8px;
+  flex-basis: 100%;
+  max-width: 680px;
+  margin-top: 4px;
+}
+.sl-hiw-cta-micro svg {
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+.sl-hiw-cta-micro strong {
+  font-weight: 700;
+  color: #F5C518;
 }
 
 /* ━━ EXAMPLE PHOTO + OVERLAYS ━━━━━━━━━━━ */
@@ -532,6 +611,9 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
   .sl-hiw-feature-grid { grid-template-columns: 1fr; }
   .sl-hiw-feature-img { min-height: 220px; aspect-ratio: 16 / 9; }
   .sl-hiw-diff-grid { grid-template-columns: 1fr 1fr; }
+  .sl-hiw-refuse { padding: 28px 22px; margin-top: 40px; }
+  .sl-hiw-refuse-title { font-size: 20px; }
+  .sl-hiw-cta-micro { font-size: 14px; }
   .sl-hiw-steps { grid-template-columns: 1fr !important; }
   .sl-hiw-dims { grid-template-columns: 1fr !important; }
   .sl-hiw-diff-col { padding: 24px 18px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.10); }
@@ -965,8 +1047,8 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
               <path d="M14 4l2.5 5 5.5.8-4 3.9.9 5.5L14 16.5l-4.9 2.7.9-5.5L6 9.8l5.5-.8z"/>
             </svg>
           </div>
-          <p class="sl-hiw-diff-title">Honest evaluation</p>
-          <p class="sl-hiw-diff-body">An evaluation gives feedback a spine. We never soften the truth.</p>
+          <p class="sl-hiw-diff-title">It will not guess</p>
+          <p class="sl-hiw-diff-body">Where it cannot see something, it says so — instead of inventing it.</p>
         </div>
 
         <div class="sl-hiw-diff-col">
@@ -1002,6 +1084,27 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
         </div>
 
       </div>
+
+      <!-- SL-238 — REFUSAL DISCIPLINE.
+           Every sentence below names a gate that exists in the engine, which
+           is the only reason it can be said on a public page: the species gate
+           (no name without high-confidence identification), the gaze gate
+           (no eye-contact claim without visible eyes), and the depicted-figure
+           gate (a face on a wall is a face on a wall). If any of those three
+           is ever removed from the engine, the matching line here comes out
+           the same day. Do not soften this copy into a promise — it is a list
+           of refusals, and the refusals are what make it credible. -->
+      <div class="sl-hiw-refuse">
+        <p class="sl-hiw-refuse-title">It will not guess.</p>
+        <p class="sl-hiw-refuse-body">Most evaluation tools are built to sound certain. This one is built to stop.</p>
+        <ul class="sl-hiw-refuse-list">
+          <li>It will not name a bird it cannot identify.</li>
+          <li>It will not tell you a subject is looking at the camera unless it can point to the eyes.</li>
+          <li>It will not describe a face painted on a wall as though that person were standing in the frame.</li>
+        </ul>
+        <p class="sl-hiw-refuse-close">You will sometimes get less than you hoped for. You will not get something invented.</p>
+      </div>
+
     </div>
   </section>
 
@@ -1077,7 +1180,13 @@ body.page-hiw main { padding: 0 !important; max-width: none !important; margin: 
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
           </svg>
-          Usually under a minute
+          <!-- SL-238 — founder correction. "Usually under a minute" was true of
+               eValuate and wrong about eLevate, which is the tier people pay
+               for; a member watching a 2.5-minute read against a one-minute
+               promise reads it as broken rather than as thorough. The reason is
+               given so the longer wait is the selling point it actually is. -->
+          <strong>eValuate — about a minute.</strong> One read, five dimensions, the subject verified before a word is written.<br>
+          <strong>eLevate — about two and a half minutes.</strong> It reads the photograph at roughly three times the detail, checks every claim against what it can actually see, and compares the result with your own history first.
         </span>
       </div>
     </div>
