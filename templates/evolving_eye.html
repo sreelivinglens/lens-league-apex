@@ -1,4 +1,31 @@
 {% extends "base.html" %}
+{# SL-VERSION: evolving_eye-176.16-main (Session 239, 2026-10-08 — THE SAVED PDF WAS DROPPING A
+   WHOLE SECTION. STAGING FILE — do NOT push to production; see the note at the end.
+   Founder signal given ("2. Yes"). Print stylesheet only, plus one <span>. No logic, no data, no
+   copy removed; the on-screen page is byte-for-byte identical in behaviour.
+
+   FOUND BY READING THE FIRST ADVISORY PRODUCTION HAS EVER PRODUCED (user 4, 30 images, 8 Oct,
+   after app.py 182.19.2 unblocked generation). The on-screen version and the extracted text both
+   looked complete. The PDF did not: "Your eye by interest" printed as five names and five numbers
+   — Wildlife 8.48, Documentary 8.41, Street 7.87, People 7.76, Creative 8.33 — with NOT ONE WORD
+   of insight beneath any of them. The per-interest insight is the only reason that section exists.
+   CAUSE: .ey-acc-body is display:none until a tap adds .open to its row. A tap never happens in
+   print, and the @media print block hid the nav and the Save button but never forced those panels
+   open. So every member who saved their advisory lost that section, silently, and the screen gave
+   no hint of it. A defect you can only see in the artefact, not in the page and not in the log —
+   which is why reading the output keeps finding things that reading the code does not.
+   ALSO: "— tap to read" is now wrapped in .ey-screen-only. On paper the panels are already open,
+   so the instruction is not merely useless, it is wrong.
+
+   THE SAME FAULT IS LIVE ON PRODUCTION (template 176.13) and is NOT fixed there by this file.
+   Pushing a 176.x template to main would drag the 176.14/15 changes with it — the admin-name fix,
+   the KYC rewrites, the platform_standing key — which is a partial merge, not a one-line fix, and
+   the exact branch-mixing this session has been careful to avoid. It arrives on production with
+   the merge, like the other four faults that advisory exposed.
+
+   UNPROVEN. Needs pushing to staging, then Save as PDF from the advisory page and a look at the
+   interest section — five headings each followed by their paragraph. Per Rules 3/16 it counts for
+   nothing until that PDF exists. RETAINS 176.15 and 176.14 in full.) #}
 {# SL-VERSION: evolving_eye-176.15-main (Session 239, 2026-10-08 — COMMENT CORRECTION ONLY.
    NO RENDERED COPY CHANGED. NOTHING A MEMBER SEES IS DIFFERENT IN THIS VERSION.
    Founder signal given ("ok go") to restore "WOW Factor" as the customer-facing label after his
@@ -150,6 +177,20 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
   .ey-wrap { max-width:100% !important; }
   body { background:#fff !important; }
   .ey-card, .one-thing, .next-push { break-inside:avoid; }
+  /* ── SL-176.16: THE SAVED PDF WAS LOSING A WHOLE SECTION ──────────────
+     .ey-acc-body is display:none until its row gets .open from a tap. A tap
+     never happens in print, so "Your eye by interest" printed as five names
+     and five numbers with every insight paragraph missing -- the only part of
+     that section worth reading. Confirmed on the first advisory production
+     ever generated (user 4, 30 images, 8 Oct): five interests listed, not one
+     word of insight beneath any of them. Forced open for print only; the
+     on-screen tap-to-open behaviour is untouched. The chevron is hidden
+     because it points at an interaction that does not exist on paper, and
+     each row is kept off a page break so a heading cannot strand its text. */
+  .ey-acc-body  { display:block !important; }
+  .ey-acc-chev  { display:none  !important; }
+  .ey-acc-row   { break-inside:avoid; }
+  .ey-screen-only { display:none !important; }
 }
 </style>
 {% endblock %}
@@ -223,7 +264,10 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
     {# SL-176.14: the heading used a KYC-restricted word — sl_audit's own table says
        use "Interests". Only the heading wording changes; the per-accordion names
        still come from the DB field via advisory.genres. #}
-    <div class="ey-ch"><div class="ey-lbl">Your eye by interest — tap to read</div></div>
+    {# SL-176.16: "tap to read" is an instruction that makes no sense on paper,
+       and in the printed PDF the panels are now already open, so it would be
+       actively wrong. Wrapped so print hides it; on screen it is unchanged. #}
+    <div class="ey-ch"><div class="ey-lbl">Your eye by interest<span class="ey-screen-only"> — tap to read</span></div></div>
     {% for genre in advisory.genres %}
     <div class="ey-acc-row" onclick="this.classList.toggle('open')">
       <div class="ey-acc-head" onclick="this.closest('.ey-acc-row').classList.toggle('open')" role="button" tabindex="0">
