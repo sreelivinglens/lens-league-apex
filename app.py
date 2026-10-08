@@ -1,3 +1,12 @@
+# SL-VERSION: 182.126 (Session 239, 2026-10-09 -- KYC: THREE BANNED WORDS IN THE EVOLVING EYE PROMPT.
+#   The open call readiness block in _generate_evolving_eye() instructed the engine in banned
+#   vocabulary: "contest-ready" (x2) and "competition-ready" (x1). The engine reproduced these
+#   directly in member-facing advisory text and email. All three replaced with "open call–ready".
+#   Prompt intent is unchanged: the engine still distinguishes above/below the 8.5 threshold and
+#   still uses the correct "open calls" phrasing in the triggered sentence it was already using.
+#   Copy and prompt text only -- no scoring formula, no weight, no route, no query touched.
+#   sl_audit.py run. RETAINS 182.125 and everything below.)
+#
 # SL-VERSION: 182.125 (Session 239, 2026-10-08 -- THE FOURTH LABEL SET CLOSED, A FIFTH FOUND LIVE
 #   IN MEMBER EMAIL, AND A PROMPT THAT BANNED A NAME ITS OWN EXAMPLE USED. Founder signal given
 #   ("ok go"). Copy and prompt text only -- no scoring formula, no weight, no dimension count, no
@@ -8329,7 +8338,7 @@ RULES (non-negotiable):
   thinking, feeling, and wanting the viewer to experience. Use this.
 - 8.5 threshold rule: if best image >= 8.5, lead contests section with
   "Your work is ready for these open calls — now." If below 8.5, tell them
-  specifically what dimension to improve and by how much to reach contest-ready.
+  specifically what dimension to improve and by how much to reach open call–ready.
   Never be vague about this gap. Name it precisely.
 - Write as if you have been watching this photographer for months. Because you have."""
 
@@ -8338,10 +8347,10 @@ RULES (non-negotiable):
                 _contest_trigger_note = (
                     f"CONTEST TRIGGER: Best image scored {_best} — ABOVE 8.5 threshold. "
                     f"Lead the contests section with 'Your work is ready for these open calls — now.' "
-                    f"Be specific and direct. This photographer is competition-ready."
+                    f"Be specific and direct. This photographer is open call–ready."
                 ) if _has_contest_score else (
                     f"CONTEST TRIGGER: Best image scored {_best} — {_gap_to_contest} points below "
-                    f"the 8.5 contest-ready threshold. Do NOT show contests. Instead, name the single "
+                    f"the 8.5 open call–ready threshold. Do NOT show contests. Instead, name the single "
                     f"dimension that is holding them back and tell them precisely what to work on "
                     f"to close that gap. Make 8.5 feel reachable, not distant. Be specific — "
                     f"not 'improve your composition' but 'whether the timing was right is "
