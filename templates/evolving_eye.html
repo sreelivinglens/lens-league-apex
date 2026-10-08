@@ -1,4 +1,18 @@
 {% extends "base.html" %}
+{# SL-VERSION: evolving_eye-176.15-main (Session 239, 2026-10-08 — COMMENT CORRECTION ONLY.
+   NO RENDERED COPY CHANGED. NOTHING A MEMBER SEES IS DIFFERENT IN THIS VERSION.
+   Founder signal given ("ok go") to restore "WOW Factor" as the customer-facing label after his
+   ruling "wow - is wow factor". On reading the file, this template turned out not to need that
+   change: the "why Shutter League" panel names the five dimensions by their plain-language
+   QUESTION forms, not by label, so it was already correct under either naming and sl_audit was
+   already satisfied. Delivering a cosmetic edit to look responsive would have been worse than
+   saying so.
+   What DID need correcting was 176.14's inline note, which recorded the now-overturned reasoning
+   ("WOW Factor was a June proposal, superseded by Brand Guidelines v1.1") as settled fact. A
+   future session reading it would have reinstated the wrong name. Rewritten in place per Rule 13.
+   The label work this ruling does require landed in science.html 239.1 and app.py 182.125.
+   RETAINS 176.14 in full — all four of its fixes (name, KYC, platform_standing key, third label
+   set) are intact and untouched.) #}
 {# SL-VERSION: evolving_eye-176.14-main (Session 238, 2026-10-07 — FIRST ADVISORY EVER RENDERED
    EXPOSED FOUR DEFECTS IN THIS FILE. Founder signal given. Found by reading the first Evolving Eye
    report this platform has ever produced (staging, user 10, 22:40 IST) — app.py 182.120 unblocked
@@ -254,12 +268,23 @@ body.page-evolving-eye{font-family:'Avenir Next',system-ui,sans-serif}
       <div class="sl-diff-sub">This section appears once — at your 10-image milestone</div>
     </div>
     <div class="sl-diff-body">
-      {# SL-176.14: this panel carried a THIRD dimension label set — "Timing" and
-         "the WOW Factor" — contradicting the settled customer-facing names. Decisive
-         Moment and Wonder Factor are current (Standards §2: "WOW Factor" was a June
-         proposal, superseded by Brand Guidelines v1.1); Emotion (AQ) was settled in
-         Session 237. "Apex DDI" is Lens League Apex branding and does not belong in
-         Shutter League copy. If these five names change anywhere, change them here. #}
+      {# SL-176.15: the rendered copy below is CORRECT and is deliberately unchanged.
+         It names the five dimensions by their plain-language QUESTION forms — "whether
+         the timing was right", "whether it made you feel something" — which is what
+         sl_audit enforces on templates (its SCORECARD_KYC_TERMS fails the bare labels
+         "Decisive Moment" and "Wonder Factor" in user-facing copy) and what the
+         Evolving Eye prompt in app.py orders the model to write. This panel therefore
+         carries no dimension label at all, which is why the founder's 8 Oct naming
+         ruling does not change a word of it.
+         WHAT WAS WRONG was 176.14's note here, now deleted: it asserted that "WOW
+         Factor" was "a June proposal, superseded by Brand Guidelines v1.1". The
+         founder overruled that on 8 Oct — "wow - is wow factor". The customer-facing
+         label is THE WOW FACTOR (live on the homepage as dimension 04 and on
+         science.html 239.1); "Wonder Factor" is internal engine vocabulary per
+         CONSTITUTION_SESSION220.md. Neither belongs in this panel.
+         "Apex DDI" removal stands — that is Lens League Apex branding, correctly gone.
+         If this panel is ever rewritten to use labels instead of question forms, it
+         must use the question forms anyway, or sl_audit will fail the template. #}
       <div class="diff-row"><div class="diff-icon">📊</div><div class="diff-text"><strong>Five dimensions evaluated simultaneously.</strong> Most platforms tell you if an image is sharp or well-composed. Shutter League asks how hard this was to make, whether the timing was right, whether it breaks the pattern, whether it made you feel something, and what it leaves you with — in every image, every time.</div></div>
       <div class="diff-row"><div class="diff-icon">👁️</div><div class="diff-text"><strong>We watch your trajectory, not just your image.</strong> Every evaluation is cross-referenced with your previous work. Shutter League is not measuring photographs — it is reading a photographer.</div></div>
       <div class="diff-row"><div class="diff-icon">🎯</div><div class="diff-text"><strong>Customised to the way you shoot.</strong> The photographers in this system have evolved in ways specific to their eye. Your advisory is built from your {{ advisory.total_images }} images. No one else receives this advisory.</div></div>
