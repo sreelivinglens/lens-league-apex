@@ -1,3 +1,81 @@
+# SL-VERSION: 182.125 (Session 239, 2026-10-08 -- THE FOURTH LABEL SET CLOSED, A FIFTH FOUND LIVE
+#   IN MEMBER EMAIL, AND A PROMPT THAT BANNED A NAME ITS OWN EXAMPLE USED. Founder signal given
+#   ("ok go"). Copy and prompt text only -- no scoring formula, no weight, no dimension count, no
+#   tier band, no route, no query touched. Pairs with science.html 239.1 and
+#   evolving_eye.html 176.15; they are independent files and may be pushed together or apart.
+#
+#   FOUNDER RULINGS BEHIND THIS VERSION, both 8 Oct 2026, both verbatim:
+#     "Depth is correct"  -- Depth of Difficulty, not Degree of Difficulty.
+#     "wow - is wow factor" -- customer-facing short form is "the WOW Factor"; "Wonder Factor"
+#                              remains the engine/dimension name (CONSTITUTION_SESSION220.md,
+#                              uploaded to the knowledge base this session). Source Register B8
+#                              is CLOSED. Note what this means for THIS file: the PDF and email
+#                              surfaces use dimension names and are therefore already right with
+#                              "Wonder Factor" -- the WOW form belongs on the public pages, and
+#                              nothing here was renamed to it.
+#
+#   1. THE FOURTH LABEL SET -- CLOSED. _DIM_NAMES, both copies (_ne_top10_pdf ~L21139 and
+#      _ne_photographer_report_pdf ~L21300). 182.124 found this set and deliberately left it
+#      ("no founder decision on it"); the decision has now been given. All FOUR of its five names
+#      were wrong against the set the PDF trend panel already uses:
+#        'Degree of Difficulty' -> 'Depth of Difficulty'   (founder ruling)
+#        'Disruption'           -> 'Visual Disruption'
+#        'Wonder'               -> 'Wonder Factor'
+#        'Affective Quotient'   -> 'Emotion (AQ)'          (settled Session 237, Source Register B1)
+#      THIS ONE REACHED PHOTOGRAPHERS: _ne_photographer_report_pdf is the feedback letter, and it
+#      prints "Strongest dimension: ..." and "Area to develop: ..." from this list. Photographers
+#      were handed names for dimensions that exist nowhere else on the platform.
+#      _DIM_KEYS and _DIM_ADVICE keys are UNCHANGED -- these strings are display only, read by
+#      zip() and _DIM_KEYS.index(), never used as lookup keys.
+#
+#   2. A FIFTH SET, LIVE IN THE MEMBER SCORECARD EMAIL, NOT PREVIOUSLY RECORDED ANYWHERE.
+#      _send_scorecard_email's _dim_scores used 'Affective Quotient' as a key, and that key is
+#      rendered straight into the member's plain-text email: "Weakest dimension: Affective
+#      Quotient" and "To improve your Affective Quotient:". Session 237 retired that display name
+#      and changed four other sites; this one survived because the string doubles as a lookup key
+#      and reads like internal vocabulary. -> 'Emotion (AQ)'.
+#      THE _rmd_msgs TRAP, SECOND TIME: that key is read from THREE places -- _dim_short,
+#      _why_def's second column, and _dim_scores[_full] -- so _lab_of[_weakest_name] would have
+#      raised KeyError on the next scorecard email if any one had been missed. All three moved in
+#      this edit. VERIFIED BY EXTRACTING ALL THREE KEY SETS AND COMPARING THEM, not by reading --
+#      and the same check confirms 182.124's _rmd_msgs/trend-panel pairs are still in lockstep.
+#
+#   3. A PROMPT THAT FORBADE A NAME AND THEN DEMONSTRATED IT. The Evolving Eye prompt's
+#      _contest_trigger_note carried the worked example "your Decisive Moment is your strongest
+#      dimension -- now bring that same instinct to your Visual Display." Twelve lines further
+#      down, the same prompt banned both "Visual Display" (retired) and bare labels. This is the
+#      failure Part 3 §4 names FOUR separate times, and the Addendum's longitudinal-average fault
+#      exactly: a rule loses to an example the model is invited to paraphrase. Rewriting the ban
+#      list alone would have left the ban outvoted. Example now speaks in question forms.
+#
+#   4. THE BAN LIST ITSELF, rewritten for precision rather than volume. It had lumped "the WOW
+#      Factor" in with genuinely retired names, which is now wrong -- WOW Factor is the correct
+#      customer-facing label, simply not what this advisory speaks in. Now two separate lists:
+#      correct-labels-wrong-surface (use the question form) and retired-names-that-do-not-exist.
+#      Precision on a gate is not polish; lessons doc 4.8/4.11 is what happens when a gate cries
+#      wolf.
+#
+#   NOT FIXED, SPECIFIED, NEEDS A DECISION -- nine further live occurrences of retired names found
+#   by extraction while doing the above, listed so they are found rather than rediscovered:
+#     PHOTOGRAPHER-FACING, should go: _ne_scorecard_html ~L20614/20620 and
+#       _ne_scorecard_reportlab_pdf ~L20854/20858 ('Degree of Difficulty', 'Affective Quotient');
+#       _build_progress_data ~L8897 ('Aesthetic Quality') and ~L9131 ('Affective Quotient').
+#     MODEL/ADMIN-FACING, lower risk: _cj_ddi_compare_ensure_table ~L20150;
+#       admin_contest_judge_new_eval_csv ~L20511 column header; judge_score_image ~L36707;
+#       _generate_haiku_sherpa ~L44001.
+#     AND THE THIRD LABEL SET IS NOT ACTUALLY GONE: _why_def's first column in
+#       _send_scorecard_email still reads Difficulty / Visual impact / Timing / Disruption /
+#       Emotion -- the very set 182.124's header says was "REMOVED". It was removed from the PDF
+#       only. Left alone deliberately: its own comment says these mirror image_detail.html, which
+#       was not supplied this session, so changing them blind risks making the email disagree with
+#       the page it exists to match -- lessons doc 10.2 again. Read that template, then make both
+#       agree in ONE commit.
+#
+#   UNPROVEN. Per Rules 3/16 nothing here counts until a Railway log and a real rendered artefact
+#   say otherwise. sl_audit.py 1.5 run on this file and reported with it. What a local audit cannot
+#   check: open one feedback-letter PDF and one scorecard email and read the dimension names.
+#   RETAINS 182.124 and everything below.
+#
 # SL-VERSION: 182.124 (Session 238, 2026-10-07 -- THE THIRD LABEL SET, AND A SILENT EXPORT FAULT.
 #   Founder signal given. Pairs with engine/auto_score.py 171.66 -- PUSH BOTH TOGETHER.
 #   1. THIRD LABEL SET REMOVED (lessons doc 10.2, open since Session 237). The PDF trend panel
@@ -8228,8 +8306,14 @@ RULES (non-negotiable):
     Visual Disruption    -> "whether it breaks the pattern"
     Wonder Factor        -> "whether it made you feel something"
     Emotion (AQ)         -> "the emotion it leaves"
-  Never write the labels "Decisive Moment", "Wonder Factor", "the WOW Factor",
-  "Timing", "Visual Display", "Aesthetic Quality" or "Apex DDI" in your output.
+  Do not write any dimension LABEL in your output, not even a correct one. Use
+  the question form above every time. The correct labels are "Depth of
+  Difficulty", "Visual Disruption", "Decisive Moment", "Wonder Factor" (whose
+  customer-facing short form is "the WOW Factor") and "Emotion (AQ)" -- they are
+  right, they are simply not what this advisory speaks in.
+  These names are RETIRED and do not exist anywhere on the platform. Never write
+  them: "Timing", "Visual Display", "Aesthetic Quality", "Affective Quotient",
+  "Degree of Difficulty", "Apex DDI".
 - Never reference other photographers on the platform by name
 - Never use dimension codes: AQ, DM, DOD, WF — use full human names only
 - Never write "Shutter League" as "SL" — always full name
@@ -8260,9 +8344,24 @@ RULES (non-negotiable):
                     f"the 8.5 contest-ready threshold. Do NOT show contests. Instead, name the single "
                     f"dimension that is holding them back and tell them precisely what to work on "
                     f"to close that gap. Make 8.5 feel reachable, not distant. Be specific — "
-                    f"not 'improve your composition' but 'your Decisive Moment is your strongest "
-                    f"dimension — now bring that same instinct to your Visual Display.'"
+                    f"not 'improve your composition' but 'whether the timing was right is "
+                    f"your strongest reading — now bring that same instinct to whether it "
+                    f"made you feel something.'"
                 )
+                # SL-182.125: the worked example above used to read "your Decisive Moment
+                # is your strongest dimension — now bring that same instinct to your
+                # Visual Display." Two faults in one sentence, both of which this same
+                # prompt forbids twelve lines further down:
+                #   - "Visual Display" is a RETIRED name that exists nowhere on the
+                #     platform. The ban list names it explicitly.
+                #   - "Decisive Moment" is a correct label but a label, and this advisory
+                #     is ordered to speak in question forms only.
+                # This is the pattern Part 3 §4 names four times over and the Addendum's
+                # longitudinal-average fault exactly: a RULE loses to a worked EXAMPLE the
+                # model is invited to paraphrase. Fixing the ban list without fixing the
+                # example would have left the contradiction in place and the ban still
+                # outvoted. Search this prompt for example sentences before trusting any
+                # rule in it.
 
                 _early_eye_note = """
 EARLY EYE MODE — sub-10 images:
@@ -21136,7 +21235,20 @@ def _ne_top10_pdf(batch_ref):
     if not rows:
         raise ValueError('No trial results found for this batch.')
 
-    _DIM_NAMES = ['Degree of Difficulty', 'Disruption', 'Decisive Moment', 'Wonder', 'Affective Quotient']
+    # SL-182.125: THE FOURTH LABEL SET, closed. 182.124 found this one and deliberately
+    # left it ("different surface, different audience, no founder decision on it"). The
+    # decision came on 8 Oct: "Depth is correct". All four names were wrong against the
+    # set the PDF trend panel already uses (~L14098, ~L14447, ~L15348):
+    #   'Degree of Difficulty' -> 'Depth of Difficulty'  (founder ruling, 8 Oct)
+    #   'Disruption'           -> 'Visual Disruption'    (spelled in full like the other four)
+    #   'Wonder'               -> 'Wonder Factor'        (this is a PDF: dimension names, not the
+    #                                                     customer-facing "WOW Factor" short form
+    #                                                     that the public pages use)
+    #   'Affective Quotient'   -> 'Emotion (AQ)'         (settled Session 237, Source Register B1)
+    # _DIM_KEYS is UNCHANGED and is the only thing indexed; these strings are display
+    # only, read by zip() and by _DIM_KEYS.index(), never used as lookup keys. Verified
+    # by extraction, not by reading -- see the 182.124 _rmd_msgs note for why that matters.
+    _DIM_NAMES = ['Depth of Difficulty', 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', 'Emotion (AQ)']
     _DIM_KEYS  = ['dod', 'disruption', 'dm', 'wonder', 'aq']
 
     buf = _io.BytesIO()
@@ -21297,7 +21409,12 @@ def _ne_photographer_report_pdf(batch_ref):
         pname = r.photographer or 'Unknown'
         phot_map.setdefault(pname, []).append(r)
 
-    _DIM_NAMES = ['Degree of Difficulty', 'Disruption', 'Decisive Moment', 'Wonder', 'Affective Quotient']
+    # SL-182.125: second copy of the fourth label set -- see the note in _ne_top10_pdf
+    # above. This one matters more: these strings go into the PHOTOGRAPHER FEEDBACK
+    # LETTER ("Strongest dimension: ...", "Area to develop: ..."), so a photographer was
+    # being handed a name for a dimension that exists nowhere else on the platform.
+    # Both copies must stay identical. _DIM_KEYS and _DIM_ADVICE keys are unchanged.
+    _DIM_NAMES = ['Depth of Difficulty', 'Visual Disruption', 'Decisive Moment', 'Wonder Factor', 'Emotion (AQ)']
     _DIM_KEYS  = ['dod', 'disruption', 'dm', 'wonder', 'aq']
     _DIM_ADVICE = {
         'dod':        'Challenge yourself with harder technical or situational conditions — a difficult moment, tricky light, or an unexpected angle that few could have captured.',
@@ -37355,19 +37472,31 @@ def _send_scorecard_email(img, user, preview=False):
     _loc = _clean_md(_loc)  # location stays as plain text — already short
 
     # Weakest dimension
+    # SL-182.125: 'Affective Quotient' -> 'Emotion (AQ)'. A FIFTH live occurrence of a
+    # retired display name, found while closing the fourth set and not previously
+    # recorded anywhere. These are not internal keys: _weakest_name is this dict's key
+    # and it is rendered straight into the member's email -- "Weakest dimension:
+    # Affective Quotient" and "To improve your Affective Quotient:" (see the plain-text
+    # body below). Session 237 retired that display name in favour of "Emotion (AQ)"
+    # (Source Register B1) and changed four other sites; this one was missed because the
+    # string doubles as a lookup key and reads like internal vocabulary.
+    # THE COUPLING, which is the _rmd_msgs trap again: this key is looked up from THREE
+    # places -- _dim_short below, _why_def's second column, and _dim_scores[_full] --
+    # so all three move in the same edit or _lab_of[_weakest_name] raises KeyError on
+    # the next scorecard email. Verified by extracting all three sets and comparing.
     _dim_scores = {
         'Depth of Difficulty': float(img.dod_score or 0),
         'Visual Disruption':   float(img.disruption_score or 0),
         'Decisive Moment':     float(img.dm_score or 0),
         'Wonder Factor':       float(img.wonder_score or 0),
-        'Affective Quotient':  float(img.aq_score or 0),
+        'Emotion (AQ)':        float(img.aq_score or 0),
     }
     _dim_short = {
         'Depth of Difficulty': 'DoD',
         'Visual Disruption':   'Disruption',
         'Decisive Moment':     'DM',
         'Wonder Factor':       'Wonder',
-        'Affective Quotient':  'AQ',
+        'Emotion (AQ)':        'AQ',
     }
     _weakest_name  = min(_dim_scores, key=_dim_scores.get)
     _weakest_score = _dim_scores[_weakest_name]
@@ -37550,8 +37679,20 @@ def _send_scorecard_email(img, user, preview=False):
             ('Visual impact', 'Wonder Factor',       ('dim_obs_wf', 'wonder_reasoning')),
             ('Timing',        'Decisive Moment',     ('dim_obs_dm', 'dm_reasoning')),
             ('Disruption',    'Visual Disruption',   ('dim_obs_vd', 'disruption_reasoning')),
-            ('Emotion',       'Affective Quotient',  ('dim_obs_aq', 'aq_reasoning')),
+            # SL-182.125: second column is a _dim_scores KEY and must match it exactly.
+            # 'Affective Quotient' -> 'Emotion (AQ)' here or _dim_scores[_full] raises.
+            ('Emotion',       'Emotion (AQ)',        ('dim_obs_aq', 'aq_reasoning')),
         ]
+        # SL-182.125 -- NOT FIXED, NEEDS A FOUNDER DECISION, FLAGGED SO IT IS NOT LOST:
+        # the FIRST column above (Difficulty / Visual impact / Timing / Disruption /
+        # Emotion) is the THIRD LABEL SET -- the one 182.124 removed from the PDF trend
+        # panel at all three sites. It is still live here, in the member scorecard email.
+        # 182.124's own header claims that set was "REMOVED"; it was removed from the PDF
+        # only. Left alone deliberately: the comment below says these are "the same
+        # member-facing names as the scorecard", and image_detail.html was not supplied
+        # this session, so changing them blind would risk making the email disagree with
+        # the page it exists to mirror -- which is lessons-doc 10.2 all over again.
+        # Check image_detail.html's labels, then make both agree in one commit.
         _lab_of = {_f: _l for _l, _f, _k in _why_def}   # scorecard names; the page names strength/next leap from the scores, so the email does too
         _why_rows = []
         for _lab, _full, _keys in _why_def:
