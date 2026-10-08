@@ -13,6 +13,48 @@ Usage:
 Rule 9: No push to GitHub/Railway without explicit founder approval.
 Always run this before delivering any file. Never deliver a file that fails.
 
+SL-VERSION: 1.6 (Session 239, 08 Oct 2026 -- A PAGE THAT COULD NOT PASS, AND A CHECK THAT LOOKED
+  FOR LETTERS INSTEAD OF FORM FIELDS. Founder signal given ("yes do the audit repair").
+  Found by running 1.5 on evolving_eye.html 176.15 and on its untouched baseline: BOTH returned
+  the SAME 14 failures, line for line, so none was introduced by the edit and all 14 were
+  pre-existing. Diagnosed rather than waived:
+
+  (1) evolving_eye.html was in NEITHER exemption list, so a standalone advisory page was audited
+      as the HOMEPAGE -- tested for a 480px hero, a hero fade, hero content margins, a hero-sub
+      line, a two-column categories grid, justified body copy and onerror on DB images. It has
+      none of those and should have none. 11 of the 14 failures were "this is not the homepage".
+      THE REASON THIS MATTERS MORE THAN 14 RED MARKS: 176.14's own header records that this
+      template "has never been through sl_audit". That was not an oversight -- it COULD NOT PASS,
+      so the standing rule ("never deliver a file that fails sl_audit") was unsatisfiable for it
+      and the gate was routed around. On a page whose copy is also EMAILED to members, and which
+      1.5 would have caught four real KYC violations in. Identical disease to 1.1 (engine modules
+      failing Flask checks for 237 sessions) and 1.2 (reportlab_card.py's docstring version
+      header). Third time. Added to _is_detail_page.
+      Also added to _is_mobile_app_page: its four stat boxes are deliberately two-across on a
+      phone -- bigger boxes and less scrolling, which is the 70-year-old call -- so the
+      single-column-stack check does not apply. That was the 14th failure.
+
+  (2) THE INPUT-ZOOM CHECK WAS MATCHING A SUBSTRING, AND MISFIRES ON ANY TEMPLATE WITH
+      JAVASCRIPT IN IT. It asked `'select' in content.lower()` to decide whether a page has a
+      dropdown. That matches the letters "select" anywhere -- inside
+      `document.querySelectorAll(...)` and inside Jinja's `selectattr` filter. evolving_eye.html
+      has no <form>, no <input> and no <textarea> at all, and still hard-failed with "form inputs
+      found". `'input'` had the same fault and matched `oninput=`. This file had ALREADY fixed
+      precisely this for the sibling check ~20 lines above, using a negative lookbehind, and the
+      fix was never carried down. Now requires an opening tag: '<input', '<select', '<textarea'.
+      THIS ONE IS NOT ABOUT ONE PAGE -- it was a false failure waiting on every template that
+      contains any script, and the real iOS auto-zoom risk it exists to catch was buried under
+      the noise.
+
+  NOTHING IS RELAXED. No check was deleted, no threshold moved, no KYC term dropped. Both changes
+  make the audit catch MORE by making it stop crying wolf: (1) lets a real page reach its real
+  checks, (2) frees a genuine iOS check from a false positive. Verified by running 1.6 against
+  1.5 on every file to hand and diffing the OK/XX/note lines -- app.py and science.html are
+  BYTE-IDENTICAL between the two versions, so the Flask and homepage audits are untouched.
+  KNOWN AND NOT FIXED: this file still fails its own self-audit (~18 meaningless failures) because
+  it quotes Flask patterns as data -- pre-existing since 1.2, cosmetic, flagged not worked around.
+  RETAINS everything below.
+
 SL-VERSION: 1.5 (Session 238, 07 Oct 2026 -- BARE `line-height:1` NO LONGER FAILS.
   1.4 flagged image_detail.html's .sc-acc-chev -- an 18px inline-block chevron with
   transition:transform and rotate(180deg) -- as cramped body copy. A bare integer line-height:1
@@ -770,6 +812,13 @@ def audit_html(filepath):
         'try_gallery',                   # SL 181: Haiku gallery, extends base
         'image_detail_haiku',            # SL 176: Haiku scorecard, extends base
         'upload-staging',                # Haiku upload page, extends base
+        'evolving_eye.html',             # SL 1.6: standalone advisory page -- no hero, no
+                                         # categories grid, no DB images. It was being audited
+                                         # as the HOMEPAGE and failed 11 checks for not being
+                                         # one. The file's own header said it "has never been
+                                         # through sl_audit" -- it could not pass, so it was
+                                         # routed around, on a page whose text is also EMAILED
+                                         # to members. Same disease as 1.1 and 1.2.
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -790,6 +839,10 @@ def audit_html(filepath):
         'try_gallery',                   # SL 181: Haiku gallery
         'image_detail_haiku',            # SL 176: Haiku scorecard
         'upload-staging',                # Haiku upload
+        'evolving_eye.html',             # SL 1.6: the four stat boxes are deliberately
+                                         # two-across on a phone (bigger boxes, less
+                                         # scrolling -- the 70yr call), so the single-column
+                                         # stack check does not apply.
     ])
     # ── APPROVED FONT SIZE EXCEPTIONS (Session 175, approved by Sree) ──────────
     # dashboard.html body-text: 14px (deliberate 70yr improvement, Session 175)
@@ -1072,9 +1125,20 @@ def audit_html(filepath):
     else:
         _note('[mobile] -webkit-font-smoothing not set -- text may appear heavier in Safari vs Chrome')
 
+    # SL-1.6 -- THIS CHECK WAS LOOKING FOR LETTERS, NOT FORM FIELDS, AND MISFIRED ON ANY
+    # TEMPLATE CONTAINING JAVASCRIPT. It tested `'select' in content.lower()`, which is a
+    # bare substring: it matches the word "select" wherever it appears, including inside
+    # `document.querySelectorAll(...)` and inside Jinja's own `selectattr` filter. On
+    # evolving_eye.html -- a page with no <form>, no <input> and no <textarea> anywhere --
+    # that produced a hard FAILURE claiming form inputs were found. `'input'` had the same
+    # fault and matched `oninput=`; this file already fixed exactly that for the sibling
+    # check twenty lines above, with a negative lookbehind, and the fix was never applied
+    # here. Now requires an actual opening TAG. A check that fails correct work is the
+    # disease this whole file keeps catching (see 1.1, 1.2, 1.3 and lessons doc 4.8/4.11):
+    # it does not get fixed, it gets ignored, and then it protects nothing.
     input_fonts_all = re.findall(r'font-size:\s*(\d+)px', content)
     if any(int(s) < 16 for s in input_fonts_all if s.isdigit()):
-        if 'input' in content.lower() or 'select' in content.lower() or 'textarea' in content.lower():
+        if '<input' in content.lower() or '<select' in content.lower() or '<textarea' in content.lower():
             if _is_detail_page:
                 _note('[mobile] 13px label fonts present near form inputs -- verify inputs themselves are 16px+ to prevent iOS Safari auto-zoom')
             elif _is_homepage:
