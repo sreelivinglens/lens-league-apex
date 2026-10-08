@@ -1,4 +1,4 @@
 [deploy]
-startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5"
+startCommand = "gunicorn app:app --workers 9 --timeout 300 --keep-alive 5 --worker-class gthread --threads 2"
 restartPolicyType = "ALWAYS"
 restartPolicyMaxRetries = 10
