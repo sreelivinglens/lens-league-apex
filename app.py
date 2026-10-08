@@ -1,3 +1,58 @@
+# SL-VERSION: 182.19.2 (Session 239, 2026-10-08 -- PRODUCTION HOTFIX, ONE CHANGE ONLY: THE EVOLVING
+#   EYE ADVISORY HAS NEVER ONCE RUN ON PRODUCTION. Founder signal given ("1 & 2 = Yes").
+#   DELIBERATELY NOT A MERGE. staging is 182.125 and ~9,500 lines ahead; this is a targeted hotfix
+#   on the 182.19 production line so paying members stop losing their advisories WITHOUT dragging
+#   the unfinished homepage rewrite into production. Numbered .2 on the old line, not 182.126, so
+#   it is obvious this is a hotfix and not a merge.
+#
+#   THE BUG. In _generate_evolving_eye() the soul-profile block read _genres, _first10 and _last10
+#   BEFORE the blocks that assign them. Python binds a name as function-local the moment it is
+#   assigned anywhere in the function, so those reads did not fall back to a global or to None --
+#   they raised UnboundLocalError. Nothing in that block is conditional, so it fired on EVERY call,
+#   for EVERY photographer, on every milestone upload and every admin trigger, for the entire life
+#   of the feature. 100% failure. Every paying member who reached their 10th, 20th or 30th
+#   photograph was supposed to receive this advisory; nobody on production ever has.
+#
+#   WHY NOBODY SAW IT. The exception was caught, logged as a WARNING, and the function returned
+#   having written nothing -- so the panel reads "No report yet", which means both "not generated
+#   yet" and "crashed". A failure that writes no record is indistinguishable from work not started.
+#   That is the single most expensive pattern in this codebase (lessons doc 4.10).
+#
+#   THE FIX, and it is only this: the genre-breakdown block and the trajectory block are moved
+#   ABOVE the soul profile that reads them. EIGHT LINES RELOCATED, BYTE-IDENTICAL -- verified by
+#   diffing against origin/main, where the only non-comment changes are the same eight lines
+#   removed from one place and added in another. No logic, no formula, no weight, no dimension, no
+#   tier band, no query, no route, no template touched. _genre_lines and _dim_by_genre stay where
+#   they were; nothing reads them earlier.
+#
+#   HOW IT WAS VERIFIED. An AST check walks the function and flags any local read before its first
+#   assignment. Against untouched origin/main it REPRODUCES the bug and finds all three variables;
+#   against this file it reports clean; against staging 182.125 (already fixed and proven live) it
+#   also reports clean. Verified against the bug CLASS and calibrated on a known-good file, not
+#   against one symptom. NOTE FOR WHOEVER RUNS IT NEXT: the first version of that check used
+#   ast.walk order to decide which assignment came "first". ast.walk is breadth-first, not source
+#   order, so it MISSED _genres entirely and reported two problems instead of three. Take the
+#   minimum line number per name, and exclude lambda/comprehension parameters, which have their
+#   own scope and are false positives.
+#
+#   DELIBERATELY NOT FIXED HERE, because this is a hotfix and each would widen the blast radius:
+#   production's _dim_by_genre still labels the dimensions 'Aesthetic Quality' and 'Visual Display'
+#   (both retired names, fixed on staging in 182.121) and those keys are printed verbatim into the
+#   Sonnet prompt, so the first advisories production generates will speak slightly stale
+#   vocabulary. Staging also carries six further defects found by READING the first report this
+#   platform ever produced -- KYC violations in copy that is also emailed, two names in one
+#   document, a blank platform standing from a key mismatch, a third label set, an arithmetically
+#   empty trajectory claim, and contest rules the JSON schema permitted breaking. None of those
+#   stop an advisory being produced; this bug stopped all of them. Fix the blocker now, inherit the
+#   rest at merge.
+#
+#   UNPROVEN. Per Rules 3/16 this counts for nothing until a Railway log from production shows an
+#   advisory generated. WHAT TO LOOK FOR, in this order: after deploy, trigger one advisory from
+#   the admin panel for a member with 10+ evaluated images. Success looks like
+#   "[evolving_eye] generated for user <id> at milestone <n>". The old failure looks like
+#   "[evolving_eye] failed for user <id>: cannot access local variable '_genres' where it is not
+#   associated with a value" -- if that line appears, this fix did not land. RETAINS 182.19.1.)
+#
 # SL-VERSION: 182.19.1 (Session 235, 2026-10-04 -- PRODUCTION HOTFIX, ONE CHANGE ONLY: /dashboard returned Internal Server Error for any Sonnet/admin account whose users.mentor_advice_json held the Haiku Sherpa shape (has 'observation', no 'detail'), because dashboard.html reads mentor_advice.detail. The dashboard route now passes mentor_advice to the template only when it carries title, action and detail as text; otherwise None, so the page's own fallback text shows. Saved data is not changed. Nothing else touched. RETAINS 182.19.)
 # SL-VERSION: 182.19 (Session 218, 2026-09-10 — Calibration rescore: POST /admin/calibration/rescore/<id> (single row, uses stored thumb_path) and POST /admin/calibration/rescore-bulk (multi-row). Both Sonnet and Haiku paths. No file re-upload needed. Returns same JSON shape as upload route.)
 
@@ -6848,6 +6903,30 @@ def _generate_evolving_eye(user_id, milestone):
                             f"[{r.genre} {r.score}] \"{r.asset_name.strip()}\""
                         )
 
+                # ── Genre breakdown ───────────────────────────────────────
+                # SL-182.19.2: MOVED UP, ABOVE THE SOUL PROFILE. This block used
+                # to sit BELOW the soul profile that reads _genres, and the
+                # trajectory block below used to sit below the line that reads
+                # _first10/_last10. Python binds a name as function-local the
+                # moment it is assigned anywhere in the function, so those
+                # earlier reads did not fall back to a global or to None -- they
+                # raised UnboundLocalError, on every call, for every
+                # photographer, for the entire life of this feature. Nothing in
+                # the soul-profile block is conditional, so it fired every time.
+                # Moving these two blocks above their readers is the whole fix.
+                # DO NOT MOVE THEM BACK DOWN.
+                from collections import defaultdict
+                _genres = defaultdict(list)
+                for r in _images:
+                    if r.genre:
+                        _genres[r.genre].append(float(r.score))
+
+                # ── Trajectory ────────────────────────────────────────────
+                # SL-182.19.2: moved up with the block above -- read at
+                # _score_direction, a few lines below.
+                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
+                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+
                 # ── Soul profile — read the person behind the images ──────
                 # SL-177 (P32): Built from genre commitment, score trajectory,
                 # title language, and upload behaviour. Passed as preamble
@@ -6862,13 +6941,9 @@ def _generate_evolving_eye(user_id, milestone):
                     else 'descriptive'
                 )
 
-                # ── Genre breakdown ───────────────────────────────────────
-                from collections import defaultdict
-                _genres = defaultdict(list)
-                for r in _images:
-                    if r.genre:
-                        _genres[r.genre].append(float(r.score))
-
+                # SL-182.19.2: the _genres build that was here has moved above
+                # the soul profile. _genre_lines stays here -- nothing reads it
+                # earlier, so it did not need to move.
                 _genre_lines = []
                 for g, scores in sorted(_genres.items(), key=lambda x: -len(x[1])):
                     _genre_lines.append(
@@ -6888,9 +6963,8 @@ def _generate_evolving_eye(user_id, milestone):
                         'Depth of Difficulty': round(sum(float(r.dod_score) for r in _gi if r.dod_score) / max(1, sum(1 for r in _gi if r.dod_score)), 2),
                     }
 
-                # ── Trajectory ────────────────────────────────────────────
-                _first10 = round(sum(_all_scores[:10]) / min(10, len(_all_scores)), 2)
-                _last10  = round(sum(_all_scores[-10:]) / min(10, len(_all_scores)), 2)
+                # SL-182.19.2: the trajectory block that was here has moved
+                # above the soul profile, which reads _first10/_last10.
 
                 # ── Last 10 audit texts ───────────────────────────────────
                 _recent_audits = _images[-10:]
