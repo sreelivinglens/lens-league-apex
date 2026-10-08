@@ -1,3 +1,68 @@
+# SL-VERSION: 171.68 (Session 239, 2026-10-08 -- THE TWO REMAINING §13 FIXES. Founder signal given
+#   ("1 & 2 = Yes"). Both were fully specified in HANDOFF_SESSION238_PART3.md §13.3. Both are FREE:
+#   prompt wording and detector precision, NO extra API call, nothing added to the time budget.
+#
+#   (a) THE WORD "ACCESS" IS STRUCK FROM dim_obs_dod's OWNERSHIP LINE, AND FROM EVERY OTHER
+#       OWNERSHIP STATEMENT THAT CARRIED IT. 171.67 rewrote this field's REGISTER DESCRIPTION and
+#       left its OWNERSHIP LINE untouched -- which still read "THIS FIELD OWNS the access/difficulty
+#       explanation". A field told it owns ACCESS writes about access, so the next live card still
+#       said "the access most photographers would not attempt" about a photographer who had never
+#       been in the water. That is the SAME MISTAKE ONE LAYER FURTHER IN: 171.66 was outvoted by a
+#       field mandate, and 171.67 was outvoted by a field OWNERSHIP line. Fifth occurrence of the
+#       pattern Part 3 §4 names -- A RULE LOSES TO WHATEVER ELSE THE PROMPT IS ORDERING. When a rule
+#       fails, read what else the prompt says before writing the rule louder.
+#       Eight sites changed, each with an asserted expected count so a silent miss was impossible:
+#       the FIELD OWNERSHIP RULE block (3), the OWNERSHIP REMINDER (1), dim_obs_dod's schema entry
+#       (2), dim_obs_disruption's cross-reference (1), and the Haiku-side field rule (1). The field
+#       now owns the DIFFICULTY explanation, and the prompt states what that means: what the FRAME
+#       SHOWS was hard -- the vantage, the light, the instant, the conditions visible in it -- never
+#       what the photographer did, endured, was permitted or was trusted to do. The changelog
+#       entries below still quote the old wording; that is history and is left alone.
+#
+#   (b) THE [PHOTOGRAPHER_ACTION] DETECTOR NO LONGER FLAGS SENTENCES ABOUT MASTERS. 171.67 scanned
+#       each field as one blob, so it could not tell WHO a phrase was about, and it flagged byline_1
+#       for "trusted enough to" in a sentence about W. EUGENE SMITH -- a correct and desirable
+#       statement about a master. It now splits each field into sentences and skips any sentence
+#       whose subject is a master: one that names a master, or one with a third-person subject that
+#       never says "you"/"your". "You were in the water and he was too" is still checked, because it
+#       says "you".
+#       THREE THINGS THAT WOULD HAVE BROKEN IT, all found by testing rather than by reading:
+#        - A naive split on ". " cuts "W. Eugene Smith" in half and would have defeated the fix on
+#          the very sentence that motivated it. Initials and honorifics are protected before the
+#          split.
+#        - Taking every capitalised token of 3+ characters as a master name pulled in "Mark" from
+#          "Mary Ellen Mark" -- an ordinary English word. A sentence about "the marks on the wall"
+#          would then have been skipped, and five of the 19 patterns ("being in the water", "the
+#          community trusted", "access most photographers never"...) contain no "you" and depend on
+#          this rule not over-matching. Tokens are now 5+ characters, plus full-name matching.
+#        - A gate that silently ignores text is indistinguishable from a gate that found nothing
+#          (lessons doc 4.10), so the skip count is now PRINTED per field. If this rule is ever too
+#          broad, that line is the only thing that will show it.
+#       WHY PRECISION AND NOT LENIENCE: a detector that cries wolf gets ignored, which is exactly
+#       how sl_audit stopped protecting THIS FILE for 237 sessions (Standards 4.8/4.11).
+#       Verified on the REAL sentences from the 7-8 Oct Carmen Drake cards -- 8 cases, all passing:
+#       the W. Eugene Smith false positive is clean; both real violations ("you were in the water",
+#       "access most photographers would not attempt") still fire; 171.67's correct replacement text
+#       stays clean; and the three hazards above are each covered by a case.
+#
+#   THE ESCALATION ADVICE IN 171.67's HEADER IS NOW WRONG AND IS SUPERSEDED. It said "if this still
+#   fires on a live card, escalate to a corrective pass". DO NOT. The 8 Oct rescore measured
+#   vision_analyse 21.08s + main scoring 107.73s + text_repeat_fix 36.15s -> FAILED (timed out) =
+#   ~165s of the 180s member ceiling the founder set on product grounds ("3 MIN MAX"). THE EXISTING
+#   corrective pass already times out. A second one cannot be added until the time budget is solved,
+#   and that is its own piece of work. The detector's own failure message now says this, so the next
+#   session reads it at the moment it would otherwise make the mistake.
+#
+#   UNPROVEN. Per Rules 3/16 this is nothing until a live rescore says otherwise. HOW TO VERIFY:
+#   rescore "Water fun" (Carmen Drake, Documentary) so it is like-for-like against three previous
+#   runs. In the log you want "[auto_score][photographer_action_check] OK". In the card, read the
+#   Depth of Difficulty observation: it should describe the vantage and what the frame shows was
+#   hard, and must not contain "access", "trusted" or "permitted", or any statement about where the
+#   photographer was standing. "A water-level vantage on a crowded ghat" is evidence; "you
+#   positioned yourself inside the ritual space" is still a claim about the person.
+#   DO NOT COUNT ONE CLEAN CARD AS PROOF -- this gate has passed in isolation twice and failed live
+#   twice. Check two different images, ideally one Documentary and one Wildlife. RETAINS 171.67.)
+#
 # SL-VERSION: 171.67 (Session 238, 2026-10-08 -- THE 171.66 BAN DID NOT HOLD, AND IT WAS NOT
 #   DISOBEYED -- IT WAS OUTVOTED. Founder signal given. The first rescore after 171.66 shipped
 #   (Carmen Drake, "Water fun", 00:35 IST) said "you entered the water", "in the water with them",
@@ -2744,16 +2809,23 @@ ONE field that is allowed to explain WHY it matters. Other fields may refer to t
   - WHY the colour/visual elements create impact (what stops the eye, the colour relationship) —
     OWNED BY dim_obs_wonder. tech_read, dim_obs_disruption, and impression may mention the
     colours exist but must not re-explain why that combination is what creates the pull.
-If you finish a draft and the access/difficulty reasoning, the compositional-break reasoning, or the
+If you finish a draft and the difficulty reasoning, the compositional-break reasoning, or the
 colour-impact reasoning appears with its explanation in more than one field, that is the exact
 failure this rule exists to prevent — keep it in its owning field and cut or shorten it everywhere else.
 
-dim_obs_dod: Why THIS specific DOD score. Name the physical difficulty, access, or technical
-challenge — or what was missing. Image-specific. No generic dimension definition. THIS FIELD
-OWNS the access/difficulty explanation — write the fullest version of it here.
+dim_obs_dod: Why THIS specific DOD score. Name the physical difficulty or the technical
+challenge VISIBLE IN THE FRAME — or what was missing. Image-specific. No generic dimension
+definition. THIS FIELD OWNS the difficulty explanation — write the fullest version of it here.
+SL-171.68 — THE WORD "ACCESS" IS DELIBERATELY GONE FROM THIS OWNERSHIP LINE. It used to read
+"OWNS the access/difficulty explanation", and a field told it owns ACCESS writes about access:
+that is how a live card came to tell a photographer "the access most photographers would not
+attempt" about a scene she had watched from the bank. DIFFICULTY HERE MEANS WHAT THE FRAME
+SHOWS WAS HARD — the vantage, the light, the instant, the conditions visible in it. It does NOT
+mean what the photographer physically did, endured, was permitted or was trusted to do. None of
+that is in the frame and none of it can be verified.
 dim_obs_disruption: Why THIS disruption score. Name the specific compositional choice or
 treatment — what it broke from convention, or why it followed it. Image-specific. THIS FIELD
-OWNS the compositional-break explanation — do not just repeat the access/difficulty point from
+OWNS the compositional-break explanation — do not just repeat the difficulty point from
 dim_obs_dod in different words; say what the TREATMENT does, not how hard it was to get.
 dim_obs_dm: Why THIS moment score. Was this the peak of the act? If not, name exactly what
 stronger moment was available — what the photographer would have needed to wait for.
@@ -2789,7 +2861,7 @@ No career summaries. No 'is known for' as a construction — show the action ins
 TECHNICAL READ:
 tech_read: One paragraph, max 60 words. Forensic examination of this specific image.
 OWNERSHIP REMINDER (see FIELD OWNERSHIP RULE above): this field does NOT own the
-access/difficulty explanation (dim_obs_dod does) or the colour-impact explanation
+difficulty explanation (dim_obs_dod does) or the colour-impact explanation
 (dim_obs_wonder does). You may name the angle or gear as a plain fact in one clause if it is
 needed to explain sharpness/exposure, but do not re-argue why that angle was hard to get or
 why the colours create impact — that reasoning belongs elsewhere and repeating it here is the
@@ -3377,8 +3449,8 @@ Return this exact JSON structure:
   "strength_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is working in the strongest dimension for THIS photograph. Concrete. Physical. Name the specific element. No jargon.>",
   "next_leap_name": "<Plain-English name of the weakest dimension: 'Visual Impact', 'Timing', 'Emotion', 'Difficulty', or 'Authentic Quality'.>",
   "next_leap_obs": "<FUNCTION: OBSERVE (see FUNCTION ASSIGNMENT above). One sentence, max 35 words. What specifically is limiting the weakest dimension for THIS photograph. Name the one decision that would move it into the next band. Honest. No jargon. DELIBERATE TRANSFORMATION RULE: If the image is a deliberate silhouette or high-contrast isolation, describe what strengthens the transformation — never what reverses it.>",
-  "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE sentence, HARD LENGTH LIMIT 32 words (raised from 22 to fit the mandatory principle naming below). Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the 'why the number' line, not another telling of what happened. THIS FIELD OWNS the access/difficulty explanation across the whole scorecard — see FIELD OWNERSHIP RULE above.\nNAME THE PRINCIPLE — MANDATORY WHEN THIS DoD SCORE IS ABOVE 7.5 (SL-171.57, reconciling the long-standing contradiction between the PHOTOGRAPHIC INTELLIGENCE section, which has always required this, and the old prose rule that forbade naming a principle outside tech_read): name the specific photographic intelligence that earned the number — a Gestalt principle, a Japanese principle, or a structural one — explained in plain words in the same sentence, and DIFFERENT from any principle named elsewhere on this card. 'Strong composition' and 'good eye' are BANNED here. See NAMED COMPOSITION PRINCIPLES above. If the DoD score is 7.5 or below, naming a principle is optional and only if genuinely earned.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict that credits what the frame demonstrates and names the intelligence behind it, in the voice of a senior photographer who knows what that vantage costs. SL-171.67 — CREDIT THE EVIDENCE, NOT THE BIOGRAPHY: this field owns the access/difficulty explanation, and that is exactly why it produced 'the water-level vantage required being in the water alongside the participants ... access most photographers would not attempt' on a live card about a photographer who was never in the water. Difficulty here means what the FRAME shows was hard — the vantage, the light, the instant, the conditions visible in it. It does NOT mean narrating what the photographer physically did, endured, or was permitted to do. 'A water-level vantage on a crowded ghat' is evidence; 'you stood in the water among them' is a story you cannot see.>",
-  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. THE ONE-OBJECT TEST FIRST (SL-171.61): Disruption measures whether the frame gives the eye ONE object — a break in a field, or a field coherent enough to read as one mass — and whether that object is RESOLVED with PALPABLE contrast. Many objects competing, or an unresolved object, caps this score out of the upper bands however strong the individual elements are. Say which route the frame took and which channel carries the contrast, in plain words, rather than reframing busyness as geometry. See THE ONE-OBJECT TEST above. Say why this disruption score. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's access/difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. YOU MAY NAME ONE PRINCIPLE here when it genuinely explains what the treatment breaks or follows — Datsuzoku (freedom from convention) and Fukinsei (deliberate asymmetry) are often the honest ones for a disruptive frame — explained in plain words, and DIFFERENT from every other principle on this card. See NAMED COMPOSITION PRINCIPLES above.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict on the treatment itself, not on how hard the shot was.>",
+  "dim_obs_dod": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE sentence, HARD LENGTH LIMIT 32 words (raised from 22 to fit the mandatory principle naming below). Warm Sherpa voice, second person — a brief verdict, not a re-described scene. Say why this DoD score. Do NOT restate the scene already covered in hard_truth, impression, transferable_advice, or tech_read — this is the 'why the number' line, not another telling of what happened. THIS FIELD OWNS the difficulty explanation across the whole scorecard (SL-171.68: the word 'access' was struck from this ownership line -- a field told it owns access writes about access) — see FIELD OWNERSHIP RULE above.\nNAME THE PRINCIPLE — MANDATORY WHEN THIS DoD SCORE IS ABOVE 7.5 (SL-171.57, reconciling the long-standing contradiction between the PHOTOGRAPHIC INTELLIGENCE section, which has always required this, and the old prose rule that forbade naming a principle outside tech_read): name the specific photographic intelligence that earned the number — a Gestalt principle, a Japanese principle, or a structural one — explained in plain words in the same sentence, and DIFFERENT from any principle named elsewhere on this card. 'Strong composition' and 'good eye' are BANNED here. See NAMED COMPOSITION PRINCIPLES above. If the DoD score is 7.5 or below, naming a principle is optional and only if genuinely earned.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict that credits what the frame demonstrates and names the intelligence behind it, in the voice of a senior photographer who knows what that vantage costs. SL-171.67/68 — CREDIT THE EVIDENCE, NOT THE BIOGRAPHY: this field's ownership line used to say it owned the 'access/difficulty' explanation, and that wording is exactly why it produced 'the water-level vantage required being in the water alongside the participants ... access most photographers would not attempt' on a live card about a photographer who was never in the water. Difficulty here means what the FRAME shows was hard — the vantage, the light, the instant, the conditions visible in it. It does NOT mean narrating what the photographer physically did, endured, or was permitted to do. 'A water-level vantage on a crowded ghat' is evidence; 'you stood in the water among them' is a story you cannot see.>",
+  "dim_obs_disruption": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person — a brief verdict, not a re-described scene. THE ONE-OBJECT TEST FIRST (SL-171.61): Disruption measures whether the frame gives the eye ONE object — a break in a field, or a field coherent enough to read as one mass — and whether that object is RESOLVED with PALPABLE contrast. Many objects competing, or an unresolved object, caps this score out of the upper bands however strong the individual elements are. Say which route the frame took and which channel carries the contrast, in plain words, rather than reframing busyness as geometry. See THE ONE-OBJECT TEST above. Say why this disruption score. Do NOT restate hard_truth/impression/tech_read, and do NOT restate dim_obs_dod's difficulty point in different words — THIS FIELD OWNS the compositional-treatment explanation only. YOU MAY NAME ONE PRINCIPLE here when it genuinely explains what the treatment breaks or follows — Datsuzoku (freedom from convention) and Fukinsei (deliberate asymmetry) are often the honest ones for a disruptive frame — explained in plain words, and DIFFERENT from every other principle on this card. See NAMED COMPOSITION PRINCIPLES above.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict on the treatment itself, not on how hard the shot was.>",
   "dim_obs_dm": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. Was this the peak of the act? If not, name in one clause what stronger moment was available and how far away it was. Do NOT restate hard_truth/impression.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: a short second-person verdict naming the instant that was caught and, if it was not the peak, the instant that was.>",
   "dim_obs_wonder": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. THE ONE-OBJECT TEST FIRST (SL-171.61): if the frame gives the eye no single object, or the object it gives is unresolved, Wonder cannot sit in the upper bands — a frame that does not arrest attention has not transported anyone. See THE ONE-OBJECT TEST above. Name the type of wonder (access, eye, cultural, emotional) and what created it. Do NOT restate hard_truth/impression/tech_read — THIS FIELD OWNS the colour/visual-impact explanation only.\nNO REGISTER EXAMPLE IS GIVEN HERE, DELIBERATELY (SL-171.57): the example sentences that used to sit in this field and its siblings were being recited VERBATIM into live cards despite carrying an explicit 'copying this sentence is a failure' guard -- three of five appeared word-for-word on the 6 Oct 2026 Sasson Dock card, and one of them was the #1 logged duplicate pair. They were written about that specific image, which is why they read as perfect observations and got copied. The register is therefore described, not demonstrated: the wonder type named first, then in plain words what in this frame produces it for a stranger.>",
   "dim_obs_aq": "<FUNCTION: TEACH — the visible evidence FIRST, the conclusion SECOND, in that order (see FUNCTION ASSIGNMENT above). Draw freely on the observation ledger; entries are never rationed or used up. ONE short sentence, HARD LENGTH LIMIT 22 words. Warm Sherpa voice, second person. This is the EMOTION dimension — name the specific feeling a stranger would get in one clause. Write 'Emotion', never 'AQ' or 'Authentic Quality', if you name the dimension at all. Do NOT restate hard_truth/impression.\\nA FEELING, NOT A CONCEPT — HARD GATE (SL-171.56, live failure 6 Oct 2026: this field scored 8.1 while naming 'interdependence', which is a theme, not a feeling; the 7.5 ceiling was bypassed because an abstraction was accepted as an emotion). You must name a state a stranger would actually FEEL in their body on seeing this frame, in a word they would use themselves: tenderness, awe, grief, loneliness, defiance, joy, dread, longing, pride, unease, calm, reverence, delight, exhaustion, menace, relief, pity, courage, intimacy, nostalgia. BANNED as emotion names — these are THEMES, and naming one does not satisfy this field: interdependence, coexistence, rhythm, harmony, balance, tension, dynamism, connection, relationship, duality, contrast, energy, movement, atmosphere, mood, narrative, story, humanity, resilience, tradition, culture, timelessness. If the honest answer is that the image creates a theme rather than a feeling, SAY SO and the AQ score must sit at or below 7.5 — 'this reads as a study in coexistence rather than a frame that makes a stranger feel something specific, which is what holds Emotion here' is a correct, honest, publishable sentence and is better than inflating a theme into a feeling.>",
@@ -7612,7 +7684,7 @@ _TEXT_REPEAT_FIELD_HINTS = {
     'mentor_next': 'ONE creative direction. Max two sentences, max 30 words. A possibility, never a correction. Do not reuse the same hypothetical detail as imagine — point to a different next image or technique.',
     'byline_1': "CARD 3 — WHAT YOUR EVALUATION MEANS. Flowing prose, 2-3 paragraphs, no bullets, no word cap: what the score means, the full 9+ description in place, then the habit that gets there with a master name different from transferable_advice's.",
     'byline_2': 'CARD 4 — YOUR ASSIGNMENT TOMORROW. Flowing prose, 1-2 paragraphs, no bullets, no word cap: a gear-specific exercise, then a philosophy line. Do NOT write a body-of-work sequence here — body_of_work owns that. The philosophy line must NOT be about timing/waiting/patience for the moment (mentor_next owns that) — use discipline, consistency, location-independence, or craft instead.',
-    'dim_obs_dod': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person, terse verdict not a re-described scene. Names the access/difficulty fact in one clause. Do not restate hard_truth/impression/tech_read. Invent fresh wording for THIS image — do not reuse any example sentence from your instructions.',
+    'dim_obs_dod': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person, terse verdict not a re-described scene. Names the difficulty fact in one clause. Do not restate hard_truth/impression/tech_read. Invent fresh wording for THIS image — do not reuse any example sentence from your instructions.',
     'dim_obs_disruption': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person, terse verdict not a re-described scene. Names the compositional-treatment fact in one clause. Do not restate hard_truth/impression/tech_read or dim_obs_dod. Invent fresh wording for THIS image — do not reuse any example sentence from your instructions.',
     'dim_obs_dm': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person. States whether this was the peak moment, or what stronger moment was missed, in one clause. Do not restate hard_truth/impression. Invent fresh wording for THIS image — do not reuse any example sentence from your instructions.',
     'dim_obs_wonder': 'ONE short sentence, max 22 words. Warm Sherpa voice, second person. Names the colour/visual-impact fact in one clause. Do not restate hard_truth/impression/tech_read. Invent fresh wording for THIS image — do not reuse any example sentence from your instructions.',
@@ -9077,22 +9149,115 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             r'\byou (?:knew|sensed|anticipated) (?:what|it|the moment)\b',
             r'\byou (?:followed|accompanied) them\b',
         ]
+        # ── SL-171.68 helpers for the master-sentence skip ──────────────────
+        # Sentence split that survives INITIALS. A naive split on ". " breaks
+        # "W. Eugene Smith" into "w." + "eugene smith", which would have split
+        # the very sentence that caused the false positive and defeated the fix.
+        # Single letters and the common honorifics are protected first.
+        def _pa_sentences(_txt):
+            _p = _re_master.sub(r'\b([a-z])\.', r'\1<DOT>', _txt)
+            _p = _re_master.sub(r'\b(mr|mrs|ms|dr|st|jr|sr|vs|etc|no)\.', r'\1<DOT>', _p)
+            _out = []
+            for _s in _re_master.split(r'(?<=[.!?])\s+', _p):
+                _s = _s.replace('<DOT>', '.').strip()
+                if _s:
+                    _out.append(_s)
+            return _out or [_txt]
+
+        # Names to treat as master references: master_name, plus every **bolded**
+        # name the card carries (transferable_advice and byline_1 each name one).
+        # Only capitalised word tokens of 3+ characters are taken, so a bolded
+        # phrase that is not a name cannot poison the skip rule. Accents kept --
+        # a previous detector in this file was blind to "Sebastião".
+        # ONLY TOKENS OF 5+ CHARACTERS, plus each full name. A first pass took
+        # every capitalised token of 3+, which pulled in "Mark" from "Mary Ellen
+        # Mark" -- and "mark" is an ordinary English word. A sentence mentioning
+        # "the marks on the wall" would then have been read as a master
+        # reference and SKIPPED, which could hide a real violation: five of the
+        # 19 patterns ("being in the water", "the community trusted",
+        # "access most photographers never"...) do not contain "you" and so rely
+        # on this rule not over-matching. Short tokens are dropped; a full-name
+        # match covers the case where every token is short.
+        _pa_master_tokens, _pa_master_names = set(), set()
+        _pa_name_src = [str(result.get('master_name', '') or '')]
+        for _fld in ('transferable_advice', 'byline_1', 'byline_2', 'master_why'):
+            _pa_name_src += _re_master.findall(r'\*\*([^*]{3,60})\*\*',
+                                               str(result.get(_fld, '') or ''))
+        for _nm in _pa_name_src:
+            _nm_clean = _re_master.sub(r'\s+', ' ', _nm).strip()
+            if len(_nm_clean.split()) >= 2:
+                _pa_master_names.add(_nm_clean.lower())
+            for _tok in _re_master.findall(r"\b[A-ZÀ-Þ][A-Za-zÀ-ÿ'’\-]{4,}", _nm_clean):
+                _pa_master_tokens.add(_tok.lower())
+
+        _PA_THIRD = (' he ', ' him ', ' his ', ' she ', ' her ', ' hers ',
+                     ' they ', ' them ', ' their ', ' theirs ')
+
+        def _pa_about_master(_sent, _tokens):
+            """True when this sentence is about a master, not the photographer."""
+            _pad = ' ' + _sent + ' '
+            if any(_t in _pad for _t in (' you ', ' you,', ' your ', " you've ",
+                                         " you're ", ' you.', ' your,')):
+                return False          # addresses the photographer -- always check it
+            if _pa_master_names and any(_n in _sent for _n in _pa_master_names):
+                return True           # names a master in full
+            if _tokens and any(_t in _sent for _t in _tokens):
+                return True           # names a distinctive part of a master's name
+            return any(_p in _pad for _p in _PA_THIRD)   # third-person subject only
+
         _pa_hits = {}
+        _pa_skips = {}
         for _pf in _REPEAT_FIELDS:
             _pt = _re_master.sub(r'\s+', ' ', str(result.get(_pf, '') or '')).lower()
             if not _pt:
                 continue
-            for _pp in _PA_PATTERNS:
-                _m = _re_master.search(_pp, _pt)
-                if _m:
-                    _pa_hits.setdefault(_pf, []).append(_m.group(0))
+            # ── SL-171.68: TEST SENTENCE BY SENTENCE, AND SKIP SENTENCES WHOSE
+            # SUBJECT IS A MASTER, NOT THE PHOTOGRAPHER ──────────────────────
+            # 171.67 scanned the whole field as one blob, so it could not tell
+            # WHO a phrase was about. On the 8 Oct card it flagged byline_1 for
+            # "trusted enough to" in this sentence:
+            #   "W. Eugene Smith worked inside communities for months to earn
+            #    the access that let him photograph moments like this -- not as
+            #    an outsider documenting spectacle, but as someone trusted
+            #    enough to be present when life was simply happening."
+            # That is a correct, desirable statement about a master. Flagging it
+            # is a FALSE POSITIVE, and a detector that cries wolf gets ignored --
+            # which is precisely how sl_audit stopped protecting this file for
+            # 237 sessions (Standards doc 4.8/4.11). Precision is not polish on
+            # a gate; it is whether the gate survives.
+            # A sentence is skipped when it names the master, or when it has a
+            # third-person subject and never says "you"/"your" -- i.e. it is not
+            # about the photographer being evaluated. "You were in the water and
+            # he was too" still gets checked, because it says "you".
+            _pa_skipped = 0
+            for _sent in _pa_sentences(_pt):
+                if _pa_about_master(_sent, _pa_master_tokens):
+                    _pa_skipped += 1
+                    continue
+                for _pp in _PA_PATTERNS:
+                    _m = _re_master.search(_pp, _sent)
+                    if _m:
+                        _pa_hits.setdefault(_pf, []).append(_m.group(0))
+            if _pa_skipped:
+                _pa_skips[_pf] = _pa_skipped
+        # Write down what was skipped as well as what fired. A gate that silently
+        # ignores text is indistinguishable from a gate that found nothing
+        # (lessons doc 4.10) -- and if this skip rule is ever too broad, this is
+        # the only line that will show it.
+        if _pa_skips:
+            print(f'[auto_score][photographer_action_check] skipped '
+                  f'{sum(_pa_skips.values())} master-reference sentence(s) across '
+                  f'{len(_pa_skips)} field(s): {_pa_skips} — subject is a named master, '
+                  f'not the photographer (SL-171.68)')
         if _pa_hits:
             for _pf, _phr in _pa_hits.items():
                 print(f'[auto_score][PHOTOGRAPHER_ACTION] {_pf}: "{"; ".join(_phr)}" — states what the '
                       f'PHOTOGRAPHER did, which the frame cannot evidence (SL-171.66/67). A long lens '
                       f'from the bank produces the same picture. Describe the vantage, not the person.')
             print(f'[auto_score][PHOTOGRAPHER_ACTION] {len(_pa_hits)} field(s) affected — the field-level '
-                  f'fix in 171.67 did NOT hold; escalate to a corrective pass.')
+                  f'fix in 171.67/68 did NOT hold. DO NOT add a corrective API pass: the existing '
+                  f'TEXT_REPEAT_FIX already times out at ~165s of the 180s member ceiling '
+                  f'(Part 3 §13.4). Solve the time budget first, or fix this upstream in the prompt.')
         else:
             print('[auto_score][photographer_action_check] OK — no unverifiable claim about what the '
                   'photographer physically did, earned or endured')
